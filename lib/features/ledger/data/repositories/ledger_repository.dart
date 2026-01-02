@@ -1,0 +1,149 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../../config/supabase_config.dart';
+import '../models/ledger_model.dart';
+
+class LedgerRepository {
+  final _client = SupabaseConfig.client;
+
+  // 사용자의 모든 가계부 조회
+  Future<List<LedgerModel>> getLedgers() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다');
+
+    final response = await _client
+        .from('ledgers')
+        .select()
+        .order('created_at', ascending: false);
+
+    return (response as List)
+        .map((json) => LedgerModel.fromJson(json))
+        .toList();
+  }
+
+  // 가계부 상세 조회
+  Future<LedgerModel?> getLedger(String id) async {
+    final response = await _client
+        .from('ledgers')
+        .select()
+        .eq('id', id)
+        .maybeSingle();
+
+    if (response == null) return null;
+    return LedgerModel.fromJson(response);
+  }
+
+  // 가계부 생성
+  Future<LedgerModel> createLedger({
+    required String name,
+    String? description,
+    required String currency,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다');
+
+    final data = LedgerModel.toCreateJson(
+      name: name,
+      description: description,
+      currency: currency,
+      ownerId: userId,
+    );
+
+    final response = await _client
+        .from('ledgers')
+        .insert(data)
+        .select()
+        .single();
+
+    return LedgerModel.fromJson(response);
+  }
+
+  // 가계부 수정
+  Future<LedgerModel> updateLedger({
+    required String id,
+    String? name,
+    String? description,
+    String? currency,
+    bool? isShared,
+  }) async {
+    final updates = <String, dynamic>{
+      'updated_at': DateTime.now().toIso8601String(),
+    };
+    if (name != null) updates['name'] = name;
+    if (description != null) updates['description'] = description;
+    if (currency != null) updates['currency'] = currency;
+    if (isShared != null) updates['is_shared'] = isShared;
+
+    final response = await _client
+        .from('ledgers')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    return LedgerModel.fromJson(response);
+  }
+
+  // 가계부 삭제
+  Future<void> deleteLedger(String id) async {
+    await _client.from('ledgers').delete().eq('id', id);
+  }
+
+  // 가계부 멤버 조회
+  Future<List<LedgerMemberModel>> getMembers(String ledgerId) async {
+    final response = await _client
+        .from('ledger_members')
+        .select('*, profiles(display_name, avatar_url)')
+        .eq('ledger_id', ledgerId)
+        .order('joined_at');
+
+    return (response as List)
+        .map((json) => LedgerMemberModel.fromJson(json))
+        .toList();
+  }
+
+  // 멤버 추가
+  Future<void> addMember({
+    required String ledgerId,
+    required String userId,
+    required String role,
+  }) async {
+    await _client.from('ledger_members').insert({
+      'ledger_id': ledgerId,
+      'user_id': userId,
+      'role': role,
+    });
+  }
+
+  // 멤버 역할 변경
+  Future<void> updateMemberRole({
+    required String memberId,
+    required String role,
+  }) async {
+    await _client
+        .from('ledger_members')
+        .update({'role': role})
+        .eq('id', memberId);
+  }
+
+  // 멤버 제거
+  Future<void> removeMember(String memberId) async {
+    await _client.from('ledger_members').delete().eq('id', memberId);
+  }
+
+  // 실시간 구독
+  RealtimeChannel subscribeLedgers(void Function(List<LedgerModel>) onData) {
+    return _client
+        .channel('ledgers_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'ledgers',
+          callback: (payload) async {
+            final ledgers = await getLedgers();
+            onData(ledgers);
+          },
+        )
+        .subscribe();
+  }
+}
