@@ -170,7 +170,7 @@ flutter emulators --launch apple_ios_simulator
 | `mobile_press_button` | 하드웨어 버튼 (back, home) |
 | `mobile_get_screen_size` | 화면 크기 |
 
-### 2.3 테스트 데이터 준비
+### 2.4 테스트 데이터 준비
 
 Supabase MCP를 사용하여 테스트 데이터를 준비합니다.
 
@@ -184,14 +184,24 @@ INSERT INTO ledgers (id, name, owner_id)
 VALUES ('test-ledger-id', 'Test Ledger', 'test-user-id');
 ```
 
-### 2.4 앱 빌드 및 실행
+### 2.5 앱 빌드 및 실행
 
 ```bash
 # 의존성 설치
 flutter pub get
 
-# 앱 실행
+# 앱 빌드 및 실행
 flutter run -d <device_id>
+```
+
+또는 Mobile MCP로 이미 설치된 앱 실행:
+
+```
+// 설치된 앱 목록 확인
+mcp__mobile-mcp__mobile_list_apps
+
+// 앱 실행
+mcp__mobile-mcp__mobile_launch_app(packageName: "com.example.household_account")
 ```
 
 ---
@@ -212,10 +222,40 @@ Task(
   - 입력 데이터: [테스트 입력]
   - 예상 결과: [예상 출력]
   - 디바이스: [device_id]
+  - 패키지명: com.example.household_account
 
-  에뮬레이터에서 직접 테스트를 수행하고 결과를 반환해주세요.
+  Mobile MCP를 사용하여 에뮬레이터에서 직접 테스트를 수행하세요:
+  1. mobile_screenshot으로 현재 화면 확인
+  2. mobile_list_elements로 UI 요소 파악
+  3. mobile_tap, mobile_type_text로 상호작용
+  4. 결과 스크린샷 캡처 후 검증
   """
 )
+```
+
+### 3.1.1 Mobile MCP 테스트 예시
+
+```
+// 1. 화면 스크린샷 캡처
+mcp__mobile-mcp__mobile_screenshot
+
+// 2. UI 요소 목록 확인 (Accessibility Tree)
+mcp__mobile-mcp__mobile_list_elements
+
+// 3. 버튼 탭 (좌표 또는 요소 기반)
+mcp__mobile-mcp__mobile_tap(x: 200, y: 400)
+
+// 4. 텍스트 입력
+mcp__mobile-mcp__mobile_type_text(text: "test@email.com")
+
+// 5. 스크롤/스와이프
+mcp__mobile-mcp__mobile_swipe(startX: 200, startY: 600, endX: 200, endY: 200)
+
+// 6. 뒤로가기 버튼
+mcp__mobile-mcp__mobile_press_button(button: "back")
+
+// 7. 결과 확인용 스크린샷
+mcp__mobile-mcp__mobile_screenshot
 ```
 
 ### 3.2 테스트 결과 처리

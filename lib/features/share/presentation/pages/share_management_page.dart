@@ -135,32 +135,13 @@ class _MembersTab extends ConsumerWidget {
                 ],
               ),
               subtitle: Text(_getRoleLabel(member.role)),
-              trailing: !isOwner && !isCurrentUser
-                  ? PopupMenuButton(
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'change_role',
-                          child: Text(
-                            member.role == 'admin' ? '멤버로 변경' : '관리자로 변경',
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'remove',
-                          child: Text(
-                            '내보내기',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                      onSelected: (value) {
-                        if (value == 'change_role') {
-                          _changeRole(context, ref, member);
-                        } else if (value == 'remove') {
-                          _removeMember(context, ref, member);
-                        }
-                      },
-                    )
-                  : null,
+              trailing: _buildTrailingWidget(
+                context,
+                ref,
+                member,
+                isCurrentUser,
+                isOwner,
+              ),
             );
           },
         );
@@ -178,6 +159,96 @@ class _MembersTab extends ConsumerWidget {
         return '관리자';
       default:
         return '멤버';
+    }
+  }
+
+  Widget? _buildTrailingWidget(
+    BuildContext context,
+    WidgetRef ref,
+    LedgerMember member,
+    bool isCurrentUser,
+    bool isOwner,
+  ) {
+    // 소유자는 아무 액션 없음
+    if (isOwner) return null;
+
+    // 본인인 경우 나가기 버튼
+    if (isCurrentUser) {
+      return IconButton(
+        icon: const Icon(Icons.exit_to_app, color: Colors.red),
+        tooltip: '가계부 나가기',
+        onPressed: () => _leaveLedger(context, ref),
+      );
+    }
+
+    // 다른 멤버의 경우 관리 메뉴
+    return PopupMenuButton(
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'change_role',
+          child: Text(
+            member.role == 'admin' ? '멤버로 변경' : '관리자로 변경',
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'remove',
+          child: Text(
+            '내보내기',
+            style: TextStyle(color: Colors.red),
+          ),
+        ),
+      ],
+      onSelected: (value) {
+        if (value == 'change_role') {
+          _changeRole(context, ref, member);
+        } else if (value == 'remove') {
+          _removeMember(context, ref, member);
+        }
+      },
+    );
+  }
+
+  Future<void> _leaveLedger(BuildContext context, WidgetRef ref) async {
+    final ledgerId = ref.read(selectedLedgerIdProvider);
+    if (ledgerId == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('가계부 나가기'),
+        content: const Text(
+          '이 가계부에서 나가시겠습니까?\n나가면 더 이상 이 가계부의 내역을 볼 수 없습니다.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('나가기'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref.read(shareNotifierProvider.notifier).leaveLedger(ledgerId);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('가계부에서 나갔습니다')),
+          );
+          Navigator.pop(context); // 공유 관리 페이지 닫기
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('오류: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -299,6 +370,23 @@ class _ReceivedInvitesTab extends ConsumerWidget {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: invite.role == 'admin'
+                            ? Colors.orange.shade100
+                            : Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        invite.role == 'admin' ? '관리자로 초대' : '멤버로 초대',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: invite.role == 'admin' ? Colors.orange.shade700 : Colors.blue.shade700,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -531,9 +619,33 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
                 labelText: '역할',
                 border: OutlineInputBorder(),
               ),
+              isExpanded: true,
+              itemHeight: 60,
               items: const [
-                DropdownMenuItem(value: 'member', child: Text('멤버')),
-                DropdownMenuItem(value: 'admin', child: Text('관리자')),
+                DropdownMenuItem(
+                  value: 'member',
+                  child: _RoleDropdownItem(
+                    title: '멤버',
+                    description: '거래 내역 조회/추가/수정/삭제',
+                  ),
+                ),
+                DropdownMenuItem(
+                  value: 'admin',
+                  child: _RoleDropdownItem(
+                    title: '관리자',
+                    description: '거래 + 카테고리/예산 관리 + 멤버 초대',
+                  ),
+                ),
+              ],
+              selectedItemBuilder: (context) => [
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('멤버'),
+                ),
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text('관리자'),
+                ),
               ],
               onChanged: (value) {
                 if (value != null) {
@@ -592,5 +704,31 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
         setState(() => _isLoading = false);
       }
     }
+  }
+}
+
+// 역할 드롭다운 아이템 위젯
+class _RoleDropdownItem extends StatelessWidget {
+  final String title;
+  final String description;
+
+  const _RoleDropdownItem({
+    required this.title,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(title),
+        Text(
+          description,
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+      ],
+    );
   }
 }

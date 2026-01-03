@@ -5,6 +5,56 @@ import '../../domain/entities/ledger_invite.dart';
 class ShareRepository {
   final _client = SupabaseConfig.client;
 
+  // 이메일로 사용자 조회 (가입 여부 확인)
+  Future<Map<String, dynamic>?> findUserByEmail(String email) async {
+    final response = await _client
+        .from('profiles')
+        .select('id, email, display_name')
+        .eq('email', email.toLowerCase().trim())
+        .maybeSingle();
+    return response;
+  }
+
+  // 이미 멤버인지 확인
+  Future<bool> isAlreadyMember({
+    required String ledgerId,
+    required String email,
+  }) async {
+    // 먼저 해당 이메일의 사용자 조회
+    final user = await findUserByEmail(email);
+    if (user == null) return false;
+
+    final userId = user['id'] as String;
+
+    // ledger_members 테이블에서 소유자(role='owner') 또는 일반 멤버 확인
+    // RLS 정책을 우회하지 않고 ledger_members 테이블만 사용
+    final member = await _client
+        .from('ledger_members')
+        .select('id, role')
+        .eq('ledger_id', ledgerId)
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    return member != null;
+  }
+
+  // 이미 대기 중인 초대가 있는지 확인
+  Future<bool> hasPendingInvite({
+    required String ledgerId,
+    required String email,
+  }) async {
+    final invite = await _client
+        .from('ledger_invites')
+        .select('id')
+        .eq('ledger_id', ledgerId)
+        .eq('invitee_email', email.toLowerCase().trim())
+        .eq('status', 'pending')
+        .gt('expires_at', DateTime.now().toIso8601String())
+        .maybeSingle();
+
+    return invite != null;
+  }
+
   // 초대 생성
   Future<LedgerInvite> createInvite({
     required String ledgerId,
@@ -14,6 +64,30 @@ class ShareRepository {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
 
+    final normalizedEmail = inviteeEmail.toLowerCase().trim();
+
+    // 1. 자기 자신에게 초대 방지
+    final currentUserEmail = _client.auth.currentUser?.email;
+    if (currentUserEmail?.toLowerCase() == normalizedEmail) {
+      throw Exception('자기 자신에게는 초대를 보낼 수 없습니다');
+    }
+
+    // 2. 가입된 사용자인지 확인
+    final targetUser = await findUserByEmail(normalizedEmail);
+    if (targetUser == null) {
+      throw Exception('가입되지 않은 이메일입니다. 가입된 사용자만 초대할 수 있습니다.');
+    }
+
+    // 3. 이미 멤버인지 확인
+    if (await isAlreadyMember(ledgerId: ledgerId, email: normalizedEmail)) {
+      throw Exception('이미 가계부의 멤버입니다');
+    }
+
+    // 4. 이미 대기 중인 초대가 있는지 확인
+    if (await hasPendingInvite(ledgerId: ledgerId, email: normalizedEmail)) {
+      throw Exception('이미 초대를 보냈습니다. 상대방의 수락을 기다려주세요.');
+    }
+
     // 만료일: 7일 후
     final expiresAt = DateTime.now().add(const Duration(days: 7));
 
@@ -22,7 +96,7 @@ class ShareRepository {
         .insert({
           'ledger_id': ledgerId,
           'inviter_user_id': userId,
-          'invitee_email': inviteeEmail,
+          'invitee_email': normalizedEmail,
           'role': role,
           'expires_at': expiresAt.toIso8601String(),
         })

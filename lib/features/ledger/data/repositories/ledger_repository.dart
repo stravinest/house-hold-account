@@ -34,6 +34,7 @@ class LedgerRepository {
   }
 
   // 가계부 생성
+  // 참고: 기본 카테고리는 DB 트리거(on_ledger_created_categories)에서 자동 생성됨
   Future<LedgerModel> createLedger({
     required String name,
     String? description,

@@ -111,12 +111,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           const MoreTabView(),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddTransactionSheet(context, selectedDate),
-        icon: const Icon(Icons.add),
-        label: const Text('기록하기'),
+        child: const Icon(Icons.add),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
@@ -290,7 +289,7 @@ class MoreTabView extends ConsumerWidget {
           title: const Text('카테고리 관리'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            // TODO: 카테고리 관리 페이지로 이동
+            context.push(Routes.category);
           },
         ),
         ListTile(
@@ -298,7 +297,7 @@ class MoreTabView extends ConsumerWidget {
           title: const Text('가계부 관리'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            // TODO: 가계부 관리 페이지로 이동
+            context.push(Routes.ledgerManage);
           },
         ),
         const Divider(),

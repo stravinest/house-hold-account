@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
+import '../features/category/presentation/pages/category_management_page.dart';
 import '../features/ledger/presentation/pages/home_page.dart';
+import '../features/ledger/presentation/pages/ledger_management_page.dart';
 import '../features/search/presentation/pages/search_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/share/presentation/pages/share_management_page.dart';
@@ -28,6 +30,8 @@ class Routes {
   static const String settings = '/settings';
   static const String profile = '/profile';
   static const String search = '/search';
+  static const String category = '/category';
+  static const String ledgerManage = '/ledger-manage';
 }
 
 // 라우터 프로바이더
@@ -109,6 +113,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.search,
         builder: (context, state) => const SearchPage(),
+      ),
+
+      // 카테고리 관리
+      GoRoute(
+        path: Routes.category,
+        builder: (context, state) => const CategoryManagementPage(),
+      ),
+
+      // 가계부 관리
+      GoRoute(
+        path: Routes.ledgerManage,
+        builder: (context, state) => const LedgerManagementPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

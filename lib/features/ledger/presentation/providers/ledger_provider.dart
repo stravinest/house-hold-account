@@ -14,7 +14,15 @@ final selectedLedgerIdProvider = StateProvider<String?>((ref) => null);
 // 사용자의 가계부 목록
 final ledgersProvider = FutureProvider<List<Ledger>>((ref) async {
   final repository = ref.watch(ledgerRepositoryProvider);
-  return repository.getLedgers();
+  final ledgers = await repository.getLedgers();
+
+  // 선택된 가계부가 없고, 가계부가 있으면 첫 번째 가계부 선택
+  final selectedId = ref.read(selectedLedgerIdProvider);
+  if (selectedId == null && ledgers.isNotEmpty) {
+    ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
+  }
+
+  return ledgers;
 });
 
 // 현재 선택된 가계부
