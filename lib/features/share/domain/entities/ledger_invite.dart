@@ -26,8 +26,9 @@ class LedgerInvite {
   });
 
   factory LedgerInvite.fromJson(Map<String, dynamic> json) {
-    final ledger = json['ledgers'] as Map<String, dynamic>?;
-    final inviter = json['profiles'] as Map<String, dynamic>?;
+    // Supabase 조인 alias: ledger:ledgers, inviter:profiles
+    final ledger = json['ledger'] as Map<String, dynamic>?;
+    final inviter = json['inviter'] as Map<String, dynamic>?;
 
     return LedgerInvite(
       id: json['id'] as String,
@@ -44,6 +45,8 @@ class LedgerInvite {
   }
 
   bool get isPending => status == 'pending';
+  bool get isAccepted => status == 'accepted';
+  bool get isRejected => status == 'rejected';
   bool get isExpired => DateTime.now().isAfter(expiresAt);
   bool get isValid => isPending && !isExpired;
 }

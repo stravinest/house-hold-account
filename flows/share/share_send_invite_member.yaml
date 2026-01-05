@@ -1,0 +1,62 @@
+appId: com.household.shared.shared_household_account
+---
+# 테스트: 멤버 초대 보내기
+# 로그인 후 공유 관리 화면에서 새로운 멤버를 초대한다
+
+# 앱 상태 초기화 및 시작
+- clearState
+- launchApp
+- waitForAnimationToEnd
+
+# 로그인 수행
+- assertVisible: '공유 가계부'
+- tapOn: '이메일'
+- inputText: ${TEST_EMAIL}
+- tapOn: '비밀번호'
+- inputText: ${TEST_PASSWORD}
+- pressKey: back
+- tapOn:
+    text: '로그인'
+    index: 0
+
+# 홈 화면 로딩 대기
+- extendedWaitUntil:
+    visible: '내 가계부'
+    timeout: 20000
+
+# 더보기 탭으로 이동 (하단 네비게이션 좌표 사용)
+- tapOn:
+    point: '88%,95%'
+- waitForAnimationToEnd
+
+# 공유 관리 메뉴 탭
+- tapOn: '공유 관리'
+- waitForAnimationToEnd
+
+# 공유 관리 화면 확인
+- assertVisible: '공유 관리'
+
+# 초대하기 FloatingActionButton 탭
+- assertVisible: '초대하기'
+- tapOn: '초대하기'
+- waitForAnimationToEnd
+
+# 초대 다이얼로그 확인
+- assertVisible: '멤버 초대'
+
+# 이메일 입력 필드 탭 및 입력
+- tapOn: '이메일'
+- inputText: ${TEST_EMAIL2}
+- pressKey: back
+
+# 초대 버튼 탭
+- tapOn: '초대'
+- waitForAnimationToEnd
+
+# 스크린샷 (성공 또는 에러 메시지 캡처)
+- takeScreenshot: share_invite_result
+
+# 잠시 대기 후 공유 관리 화면 복귀 확인
+- extendedWaitUntil:
+    visible: '공유 관리'
+    timeout: 5000

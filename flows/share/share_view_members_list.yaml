@@ -1,0 +1,42 @@
+appId: com.household.shared.shared_household_account
+---
+# 테스트: 멤버 목록 조회
+# 로그인 후 공유 관리 화면에서 멤버 목록을 확인한다
+
+# 앱 상태 초기화 및 시작
+- clearState
+- launchApp
+- waitForAnimationToEnd
+
+# 로그인 수행
+- assertVisible: '공유 가계부'
+- tapOn: '이메일'
+- inputText: ${TEST_EMAIL}
+- tapOn: '비밀번호'
+- inputText: ${TEST_PASSWORD}
+- pressKey: back
+- tapOn:
+    text: '로그인'
+    index: 0
+
+# 홈 화면 로딩 대기
+- extendedWaitUntil:
+    visible: '내 가계부'
+    timeout: 20000
+
+# 더보기 탭으로 이동 (하단 네비게이션 좌표 사용)
+- tapOn:
+    point: '88%,95%'
+- waitForAnimationToEnd
+
+# 공유 관리 메뉴 탭
+- assertVisible: '공유 관리'
+- tapOn: '공유 관리'
+- waitForAnimationToEnd
+
+# 공유 관리 화면 확인
+- assertVisible: '공유 관리'
+- assertVisible: '초대하기'
+
+# 멤버 목록이 표시되는지 확인 (스크린샷으로 검증)
+- takeScreenshot: share_members_list

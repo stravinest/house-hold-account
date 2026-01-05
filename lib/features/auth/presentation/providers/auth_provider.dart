@@ -51,7 +51,7 @@ class AuthService {
       debugPrint('[AuthService] user id: ${response.user?.id}');
       debugPrint('[AuthService] user email: ${response.user?.email}');
       debugPrint('[AuthService] session 존재: ${response.session != null}');
-      debugPrint('[AuthService] session access_token: ${response.session?.accessToken?.substring(0, 20)}...');
+      debugPrint('[AuthService] session access_token: ${response.session?.accessToken.substring(0, 20)}...');
 
       // 트리거가 자동으로 profiles 테이블에 데이터를 생성하므로
       // 여기서는 추가 작업 불필요 (handle_new_user 트리거)

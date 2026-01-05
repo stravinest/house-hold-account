@@ -107,6 +107,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
 
   Future<Transaction> createTransaction({
     required String categoryId,
+    String? paymentMethodId,
     required int amount,
     required String type,
     required DateTime date,
@@ -121,6 +122,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     final transaction = await _repository.createTransaction(
       ledgerId: _ledgerId,
       categoryId: categoryId,
+      paymentMethodId: paymentMethodId,
       amount: amount,
       type: type,
       date: date,
@@ -143,6 +145,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
   Future<void> updateTransaction({
     required String id,
     String? categoryId,
+    String? paymentMethodId,
     int? amount,
     String? type,
     DateTime? date,
@@ -155,6 +158,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     await _repository.updateTransaction(
       id: id,
       categoryId: categoryId,
+      paymentMethodId: paymentMethodId,
       amount: amount,
       type: type,
       date: date,

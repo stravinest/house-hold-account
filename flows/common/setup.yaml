@@ -1,0 +1,13 @@
+# Maestro 테스트 공통 설정
+# 모든 테스트 실행 전 앱 상태 초기화
+
+appId: com.household.shared.shared_household_account
+---
+# 앱 상태 초기화
+- clearState
+
+# 앱 실행
+- launchApp
+
+# 애니메이션 대기
+- waitForAnimationToEnd

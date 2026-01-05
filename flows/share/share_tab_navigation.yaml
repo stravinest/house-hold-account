@@ -1,0 +1,63 @@
+appId: com.household.shared.shared_household_account
+---
+# 테스트: 공유 관리 탭 전환
+# 공유 관리 화면에서 세 개의 탭(멤버, 받은 초대, 보낸 초대) 간 전환을 테스트한다
+
+# 앱 상태 초기화 및 시작
+- clearState
+- launchApp
+- waitForAnimationToEnd
+
+# 로그인 수행
+- assertVisible: '공유 가계부'
+- tapOn: '이메일'
+- inputText: ${TEST_EMAIL}
+- tapOn: '비밀번호'
+- inputText: ${TEST_PASSWORD}
+- pressKey: back
+- tapOn:
+    text: '로그인'
+    index: 0
+
+# 홈 화면 로딩 대기
+- extendedWaitUntil:
+    visible: '내 가계부'
+    timeout: 20000
+
+# 더보기 탭으로 이동 (하단 네비게이션 좌표 사용)
+- tapOn:
+    point: '88%,95%'
+- waitForAnimationToEnd
+
+# 공유 관리 메뉴 탭
+- tapOn: '공유 관리'
+- waitForAnimationToEnd
+
+# 공유 관리 화면 확인
+- assertVisible: '공유 관리'
+- assertVisible: '초대하기'
+
+# 초기 상태: 멤버 탭이 선택되어 있음
+- takeScreenshot: share_tab_members
+
+# 받은 초대 탭으로 이동 (Tab 2 좌표 사용)
+- tapOn:
+    point: '50%,11%'
+- waitForAnimationToEnd
+- takeScreenshot: share_tab_received
+
+# 보낸 초대 탭으로 이동 (Tab 3 좌표 사용)
+- tapOn:
+    point: '83%,11%'
+- waitForAnimationToEnd
+- takeScreenshot: share_tab_sent
+
+# 다시 멤버 탭으로 이동 (Tab 1 좌표 사용)
+- tapOn:
+    point: '17%,11%'
+- waitForAnimationToEnd
+- takeScreenshot: share_tab_members_final
+
+# 탭 전환이 정상적으로 동작했는지 확인
+- assertVisible: '공유 관리'
+- assertVisible: '초대하기'

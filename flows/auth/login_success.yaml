@@ -1,0 +1,38 @@
+appId: com.household.shared.shared_household_account
+---
+# 테스트: 정상 로그인
+# 앱 상태를 초기화하고 테스트 계정으로 로그인하여 홈 화면 도달을 확인한다
+
+# 앱 상태 초기화 및 시작
+- clearState
+- launchApp
+- waitForAnimationToEnd
+
+# 로그인 화면 확인
+- assertVisible: '공유 가계부'
+
+# 이메일 입력 필드 탭 및 입력
+- tapOn:
+    text: '이메일'
+- inputText: ${TEST_EMAIL}
+
+# 비밀번호 입력 필드 탭 및 입력
+- tapOn:
+    text: '비밀번호'
+- inputText: ${TEST_PASSWORD}
+
+# 키보드 숨기기
+- pressKey: back
+
+# 로그인 버튼 탭
+- tapOn:
+    text: '로그인'
+    index: 0
+
+# 홈 화면 로딩 대기
+- extendedWaitUntil:
+    visible: '내 가계부'
+    timeout: 20000
+
+# 성공 스크린샷
+- takeScreenshot: login_success_home

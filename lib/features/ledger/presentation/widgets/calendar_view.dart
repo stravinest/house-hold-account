@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
-class CalendarView extends StatelessWidget {
+import '../../../transaction/presentation/providers/transaction_provider.dart';
+
+class CalendarView extends ConsumerWidget {
   final DateTime selectedDate;
   final DateTime focusedDate;
   final ValueChanged<DateTime> onDateSelected;
@@ -17,13 +20,15 @@ class CalendarView extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final dailyTotalsAsync = ref.watch(dailyTotalsProvider);
+    final dailyTotals = dailyTotalsAsync.valueOrNull ?? {};
 
     return Column(
       children: [
         // 월별 요약
-        _MonthSummary(focusedDate: focusedDate),
+        _MonthSummary(focusedDate: focusedDate, ref: ref),
 
         // 캘린더
         TableCalendar(
@@ -34,6 +39,7 @@ class CalendarView extends StatelessWidget {
           calendarFormat: CalendarFormat.month,
           startingDayOfWeek: StartingDayOfWeek.sunday,
           locale: 'ko_KR',
+          rowHeight: 72, // 셀 높이 증가 (기본 52에서 72로)
           headerStyle: HeaderStyle(
             formatButtonVisible: false,
             titleCentered: true,
@@ -63,9 +69,10 @@ class CalendarView extends StatelessWidget {
           ),
           calendarStyle: CalendarStyle(
             outsideDaysVisible: false,
+            cellMargin: const EdgeInsets.all(2),
             todayDecoration: BoxDecoration(
               color: colorScheme.primaryContainer,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(8),
             ),
             todayTextStyle: TextStyle(
               color: colorScheme.onPrimaryContainer,
@@ -73,7 +80,7 @@ class CalendarView extends StatelessWidget {
             ),
             selectedDecoration: BoxDecoration(
               color: colorScheme.primary,
-              shape: BoxShape.circle,
+              borderRadius: BorderRadius.circular(8),
             ),
             selectedTextStyle: TextStyle(
               color: colorScheme.onPrimary,
@@ -87,9 +94,35 @@ class CalendarView extends StatelessWidget {
             ),
           ),
           calendarBuilders: CalendarBuilders(
-            markerBuilder: (context, date, events) {
-              // TODO: 해당 날짜의 거래 데이터를 표시
-              return const SizedBox.shrink();
+            defaultBuilder: (context, day, focusedDay) {
+              return _buildDayCell(
+                context: context,
+                day: day,
+                dailyTotals: dailyTotals,
+                isSelected: false,
+                isToday: false,
+                colorScheme: colorScheme,
+              );
+            },
+            selectedBuilder: (context, day, focusedDay) {
+              return _buildDayCell(
+                context: context,
+                day: day,
+                dailyTotals: dailyTotals,
+                isSelected: true,
+                isToday: false,
+                colorScheme: colorScheme,
+              );
+            },
+            todayBuilder: (context, day, focusedDay) {
+              return _buildDayCell(
+                context: context,
+                day: day,
+                dailyTotals: dailyTotals,
+                isSelected: isSameDay(selectedDate, day),
+                isToday: true,
+                colorScheme: colorScheme,
+              );
             },
           ),
           onDaySelected: (selectedDay, focusedDay) {
@@ -100,22 +133,112 @@ class CalendarView extends StatelessWidget {
       ],
     );
   }
+
+  Widget _buildDayCell({
+    required BuildContext context,
+    required DateTime day,
+    required Map<DateTime, Map<String, int>> dailyTotals,
+    required bool isSelected,
+    required bool isToday,
+    required ColorScheme colorScheme,
+  }) {
+    // 날짜 정규화 (시간 제거)
+    final normalizedDay = DateTime(day.year, day.month, day.day);
+    final totals = dailyTotals[normalizedDay];
+    final income = totals?['income'] ?? 0;
+    final expense = totals?['expense'] ?? 0;
+    final hasData = income > 0 || expense > 0;
+
+    final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
+    final formatter = NumberFormat.compact(locale: 'ko_KR');
+
+    return Container(
+      margin: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? colorScheme.primary
+            : isToday
+                ? colorScheme.primaryContainer
+                : null,
+        borderRadius: BorderRadius.circular(8),
+        border: hasData && !isSelected
+            ? Border.all(
+                color: colorScheme.outline.withAlpha(128),
+                width: 1,
+              )
+            : null,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // 날짜
+          Text(
+            '${day.day}',
+            style: TextStyle(
+              color: isSelected
+                  ? colorScheme.onPrimary
+                  : isToday
+                      ? colorScheme.onPrimaryContainer
+                      : isWeekend
+                          ? colorScheme.error
+                          : colorScheme.onSurface,
+              fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+              fontSize: 14,
+            ),
+          ),
+          // 수입/지출 금액 표시
+          if (hasData) ...[
+            const SizedBox(height: 2),
+            if (income > 0)
+              Text(
+                '+${formatter.format(income)}',
+                style: TextStyle(
+                  color: isSelected
+                      ? colorScheme.onPrimary.withAlpha(204)
+                      : Colors.blue,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            if (expense > 0)
+              Text(
+                '-${formatter.format(expense)}',
+                style: TextStyle(
+                  color: isSelected
+                      ? colorScheme.onPrimary.withAlpha(204)
+                      : Colors.red,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ],
+      ),
+    );
+  }
 }
 
 // 월별 수입/지출 요약 위젯
 class _MonthSummary extends StatelessWidget {
   final DateTime focusedDate;
+  final WidgetRef ref;
 
-  const _MonthSummary({required this.focusedDate});
+  const _MonthSummary({required this.focusedDate, required this.ref});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // TODO: 실제 데이터 연동
-    const income = 0;
-    const expense = 0;
-    const balance = income - expense;
+    // 실제 데이터 연동
+    final monthlyTotalAsync = ref.watch(monthlyTotalProvider);
+
+    final income = monthlyTotalAsync.valueOrNull?['income'] ?? 0;
+    final expense = monthlyTotalAsync.valueOrNull?['expense'] ?? 0;
+    final balance = income - expense;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

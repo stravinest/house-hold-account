@@ -6,6 +6,7 @@ class TransactionModel extends Transaction {
     required super.ledgerId,
     required super.categoryId,
     required super.userId,
+    super.paymentMethodId,
     required super.amount,
     required super.type,
     required super.date,
@@ -20,17 +21,20 @@ class TransactionModel extends Transaction {
     super.categoryIcon,
     super.categoryColor,
     super.userName,
+    super.paymentMethodName,
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     final category = json['categories'] as Map<String, dynamic>?;
     final profile = json['profiles'] as Map<String, dynamic>?;
+    final paymentMethod = json['payment_methods'] as Map<String, dynamic>?;
 
     return TransactionModel(
       id: json['id'] as String,
       ledgerId: json['ledger_id'] as String,
       categoryId: json['category_id'] as String,
       userId: json['user_id'] as String,
+      paymentMethodId: json['payment_method_id'] as String?,
       amount: json['amount'] as int,
       type: json['type'] as String,
       date: DateTime.parse(json['date'] as String),
@@ -47,6 +51,7 @@ class TransactionModel extends Transaction {
       categoryIcon: category?['icon'] as String?,
       categoryColor: category?['color'] as String?,
       userName: profile?['display_name'] as String?,
+      paymentMethodName: paymentMethod?['name'] as String?,
     );
   }
 
@@ -56,6 +61,7 @@ class TransactionModel extends Transaction {
       'ledger_id': ledgerId,
       'category_id': categoryId,
       'user_id': userId,
+      'payment_method_id': paymentMethodId,
       'amount': amount,
       'type': type,
       'date': date.toIso8601String().split('T').first,
@@ -73,6 +79,7 @@ class TransactionModel extends Transaction {
     required String ledgerId,
     required String categoryId,
     required String userId,
+    String? paymentMethodId,
     required int amount,
     required String type,
     required DateTime date,
@@ -86,6 +93,7 @@ class TransactionModel extends Transaction {
       'ledger_id': ledgerId,
       'category_id': categoryId,
       'user_id': userId,
+      'payment_method_id': paymentMethodId,
       'amount': amount,
       'type': type,
       'date': date.toIso8601String().split('T').first,

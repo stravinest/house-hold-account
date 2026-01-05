@@ -1,0 +1,62 @@
+# 예시: 로그인 테스트
+# ID: login_success
+# Description: 정상적인 이메일/비밀번호로 로그인
+# entry_state: logged_out
+# mutation: true
+# shared_state: true
+
+appId: com.household.shared.shared_household_account
+---
+# 앱 상태 초기화 및 시작
+- clearState
+- launchApp
+- waitForAnimationToEnd
+
+# 로그인 화면 확인
+- assertVisible:
+    text: "로그인"
+    optional: true
+
+# 이메일 입력 필드 탭
+- tapOn:
+    id: "email_field"
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: "email_field"
+    commands:
+      - tapOn:
+          text: "이메일"
+
+# 이메일 입력
+- inputText: ${TEST_EMAIL}
+- hideKeyboard
+
+# 비밀번호 입력 필드 탭
+- tapOn:
+    id: "password_field"
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        id: "password_field"
+    commands:
+      - tapOn:
+          text: "비밀번호"
+
+# 비밀번호 입력
+- inputText: ${TEST_PASSWORD}
+- hideKeyboard
+
+# 로그인 버튼 탭
+- tapOn: "로그인"
+- waitForAnimationToEnd
+
+# 홈 화면 도달 확인
+- extendedWaitUntil:
+    visible: "홈"
+    timeout: 10000
+
+# 결과 스크린샷
+- takeScreenshot: login_success

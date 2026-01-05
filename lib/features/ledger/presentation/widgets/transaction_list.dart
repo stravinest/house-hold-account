@@ -105,7 +105,7 @@ class _EmptyState extends StatelessWidget {
                 builder: (context) => AddTransactionSheet(initialDate: date),
               );
             },
-            child: const Text('기록 추가하기'),
+            child: const Text('새 거래'),
           ),
         ],
       ),

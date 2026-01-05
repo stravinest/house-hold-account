@@ -1,0 +1,10 @@
+# Maestro 테스트 공통 정리
+# 모든 테스트 완료 후 정리 작업
+
+appId: com.household.shared.shared_household_account
+---
+# 최종 스크린샷
+- takeScreenshot: teardown
+
+# 앱 종료
+- stopApp

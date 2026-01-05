@@ -15,7 +15,7 @@ class TransactionRepository {
 
     final response = await _client
         .from('transactions')
-        .select('*, categories(name, icon, color), profiles(display_name)')
+        .select('*, categories(name, icon, color), profiles(display_name), payment_methods(name)')
         .eq('ledger_id', ledgerId)
         .eq('date', dateStr)
         .order('created_at', ascending: false);
@@ -36,7 +36,7 @@ class TransactionRepository {
 
     final response = await _client
         .from('transactions')
-        .select('*, categories(name, icon, color), profiles(display_name)')
+        .select('*, categories(name, icon, color), profiles(display_name), payment_methods(name)')
         .eq('ledger_id', ledgerId)
         .gte('date', startStr)
         .lte('date', endStr)
@@ -68,6 +68,7 @@ class TransactionRepository {
   Future<TransactionModel> createTransaction({
     required String ledgerId,
     required String categoryId,
+    String? paymentMethodId,
     required int amount,
     required String type,
     required DateTime date,
@@ -84,6 +85,7 @@ class TransactionRepository {
       ledgerId: ledgerId,
       categoryId: categoryId,
       userId: userId,
+      paymentMethodId: paymentMethodId,
       amount: amount,
       type: type,
       date: date,
@@ -97,7 +99,7 @@ class TransactionRepository {
     final response = await _client
         .from('transactions')
         .insert(data)
-        .select('*, categories(name, icon, color), profiles(display_name)')
+        .select('*, categories(name, icon, color), profiles(display_name), payment_methods(name)')
         .single();
 
     return TransactionModel.fromJson(response);
@@ -107,6 +109,7 @@ class TransactionRepository {
   Future<TransactionModel> updateTransaction({
     required String id,
     String? categoryId,
+    String? paymentMethodId,
     int? amount,
     String? type,
     DateTime? date,
@@ -120,6 +123,7 @@ class TransactionRepository {
       'updated_at': DateTime.now().toIso8601String(),
     };
     if (categoryId != null) updates['category_id'] = categoryId;
+    if (paymentMethodId != null) updates['payment_method_id'] = paymentMethodId;
     if (amount != null) updates['amount'] = amount;
     if (type != null) updates['type'] = type;
     if (date != null) updates['date'] = date.toIso8601String().split('T').first;
@@ -136,7 +140,7 @@ class TransactionRepository {
         .from('transactions')
         .update(updates)
         .eq('id', id)
-        .select('*, categories(name, icon, color), profiles(display_name)')
+        .select('*, categories(name, icon, color), profiles(display_name), payment_methods(name)')
         .single();
 
     return TransactionModel.fromJson(response);

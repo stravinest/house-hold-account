@@ -100,23 +100,28 @@ class ShareRepository {
           'role': role,
           'expires_at': expiresAt.toIso8601String(),
         })
-        .select('*, ledgers(name), profiles(email)')
+        .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)')
         .single();
 
     return LedgerInvite.fromJson(response);
   }
 
-  // 받은 초대 목록 조회
+  // 받은 초대 목록 조회 (pending, accepted, rejected 모두 포함)
   Future<List<LedgerInvite>> getReceivedInvites() async {
     final user = _client.auth.currentUser;
     if (user == null) return [];
 
+    final userEmail = user.email?.toLowerCase().trim() ?? '';
+    if (userEmail.isEmpty) return [];
+
+    // RLS 정책으로 초대받은 사용자도 ledgers 테이블 조회 가능
+    // 조인 쿼리로 가계부 이름과 초대자 정보를 한 번에 조회
+    // pending, accepted, rejected 모두 표시 (만료되지 않은 것만)
     final response = await _client
         .from('ledger_invites')
-        .select('*, ledgers(name), profiles(email)')
-        .eq('invitee_email', user.email ?? '')
-        .eq('status', 'pending')
-        .gt('expires_at', DateTime.now().toIso8601String())
+        .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)')
+        .eq('invitee_email', userEmail)
+        .inFilter('status', ['pending', 'accepted', 'rejected'])
         .order('created_at', ascending: false);
 
     return (response as List)
@@ -128,7 +133,7 @@ class ShareRepository {
   Future<List<LedgerInvite>> getSentInvites(String ledgerId) async {
     final response = await _client
         .from('ledger_invites')
-        .select('*, ledgers(name), profiles(email)')
+        .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)')
         .eq('ledger_id', ledgerId)
         .order('created_at', ascending: false);
 
@@ -148,18 +153,18 @@ class ShareRepository {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
 
-    // 초대 상태 업데이트
-    await _client
-        .from('ledger_invites')
-        .update({'status': 'accepted'})
-        .eq('id', inviteId);
-
-    // 멤버로 추가
+    // 중요: 멤버로 먼저 추가 (RLS 정책이 pending 상태 초대를 확인하므로)
     await _client.from('ledger_members').insert({
       'ledger_id': invite['ledger_id'],
       'user_id': userId,
       'role': invite['role'],
     });
+
+    // 초대 상태 업데이트
+    await _client
+        .from('ledger_invites')
+        .update({'status': 'accepted'})
+        .eq('id', inviteId);
 
     // 가계부를 공유 상태로 변경
     await _client

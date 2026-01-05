@@ -5,6 +5,7 @@ class Transaction extends Equatable {
   final String ledgerId;
   final String categoryId;
   final String userId;
+  final String? paymentMethodId;
   final int amount;
   final String type; // income, expense
   final DateTime date;
@@ -21,12 +22,14 @@ class Transaction extends Equatable {
   final String? categoryIcon;
   final String? categoryColor;
   final String? userName;
+  final String? paymentMethodName;
 
   const Transaction({
     required this.id,
     required this.ledgerId,
     required this.categoryId,
     required this.userId,
+    this.paymentMethodId,
     required this.amount,
     required this.type,
     required this.date,
@@ -41,16 +44,19 @@ class Transaction extends Equatable {
     this.categoryIcon,
     this.categoryColor,
     this.userName,
+    this.paymentMethodName,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     final category = json['categories'] as Map<String, dynamic>?;
+    final paymentMethod = json['payment_methods'] as Map<String, dynamic>?;
 
     return Transaction(
       id: json['id'] as String,
       ledgerId: json['ledger_id'] as String,
       categoryId: json['category_id'] as String,
       userId: json['user_id'] as String,
+      paymentMethodId: json['payment_method_id'] as String?,
       amount: json['amount'] as int,
       type: json['type'] as String,
       date: DateTime.parse(json['date'] as String),
@@ -66,6 +72,7 @@ class Transaction extends Equatable {
       categoryName: category?['name'] as String?,
       categoryIcon: category?['icon'] as String?,
       categoryColor: category?['color'] as String?,
+      paymentMethodName: paymentMethod?['name'] as String?,
     );
   }
 
@@ -77,6 +84,7 @@ class Transaction extends Equatable {
     String? ledgerId,
     String? categoryId,
     String? userId,
+    String? paymentMethodId,
     int? amount,
     String? type,
     DateTime? date,
@@ -91,12 +99,14 @@ class Transaction extends Equatable {
     String? categoryIcon,
     String? categoryColor,
     String? userName,
+    String? paymentMethodName,
   }) {
     return Transaction(
       id: id ?? this.id,
       ledgerId: ledgerId ?? this.ledgerId,
       categoryId: categoryId ?? this.categoryId,
       userId: userId ?? this.userId,
+      paymentMethodId: paymentMethodId ?? this.paymentMethodId,
       amount: amount ?? this.amount,
       type: type ?? this.type,
       date: date ?? this.date,
@@ -111,6 +121,7 @@ class Transaction extends Equatable {
       categoryIcon: categoryIcon ?? this.categoryIcon,
       categoryColor: categoryColor ?? this.categoryColor,
       userName: userName ?? this.userName,
+      paymentMethodName: paymentMethodName ?? this.paymentMethodName,
     );
   }
 
@@ -120,6 +131,7 @@ class Transaction extends Equatable {
         ledgerId,
         categoryId,
         userId,
+        paymentMethodId,
         amount,
         type,
         date,

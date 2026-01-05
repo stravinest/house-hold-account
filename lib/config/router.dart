@@ -8,6 +8,7 @@ import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/category/presentation/pages/category_management_page.dart';
 import '../features/ledger/presentation/pages/home_page.dart';
 import '../features/ledger/presentation/pages/ledger_management_page.dart';
+import '../features/payment_method/presentation/pages/payment_method_management_page.dart';
 import '../features/search/presentation/pages/search_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/share/presentation/pages/share_management_page.dart';
@@ -31,6 +32,7 @@ class Routes {
   static const String profile = '/profile';
   static const String search = '/search';
   static const String category = '/category';
+  static const String paymentMethod = '/payment-method';
   static const String ledgerManage = '/ledger-manage';
 }
 
@@ -119,6 +121,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.category,
         builder: (context, state) => const CategoryManagementPage(),
+      ),
+
+      // 결제수단 관리
+      GoRoute(
+        path: Routes.paymentMethod,
+        builder: (context, state) => const PaymentMethodManagementPage(),
       ),
 
       // 가계부 관리

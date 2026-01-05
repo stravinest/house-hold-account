@@ -16,10 +16,10 @@ final receivedInvitesProvider = FutureProvider<List<LedgerInvite>>((ref) async {
   return repository.getReceivedInvites();
 });
 
-// 받은 초대 개수
+// 받은 초대 개수 (pending 상태만)
 final pendingInviteCountProvider = Provider<int>((ref) {
   final invitesAsync = ref.watch(receivedInvitesProvider);
-  return invitesAsync.valueOrNull?.length ?? 0;
+  return invitesAsync.valueOrNull?.where((invite) => invite.isPending).length ?? 0;
 });
 
 // 보낸 초대 목록
