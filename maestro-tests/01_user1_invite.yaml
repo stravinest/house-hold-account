@@ -1,0 +1,58 @@
+appId: com.household.shared.shared_household_account
+---
+# 사용자 1: 초대 보내기 테스트
+
+- launchApp
+
+# 로그인 화면 대기
+- assertVisible: '로그인'
+
+# 이메일 입력 (테스트 계정 1)
+- tapOn: '이메일'
+- inputText: 'user1@test.com'
+
+# 비밀번호 입력
+- tapOn: '비밀번호'
+- inputText: 'testpass123'
+
+# 로그인 버튼 클릭
+- tapOn: '로그인'
+
+# 홈 화면 로드 대기
+- extendedWaitUntil:
+    visible: '가계부'
+    timeout: 10000
+
+# 가계부가 없으면 생성하기
+- runFlow:
+    when:
+      visible: '가계부 만들기'
+    commands:
+      - tapOn: '가계부 만들기'
+      - inputText: '테스트 가계부'
+      - tapOn: '생성'
+      - extendedWaitUntil:
+          visible: '가계부'
+          timeout: 5000
+
+# 공유 탭으로 이동
+- tapOn: '공유'
+
+# 공유 관리 화면 대기
+- assertVisible: '공유 관리'
+
+# 초대하기 버튼 클릭
+- tapOn: '초대하기'
+
+# 초대 다이얼로그에서 이메일 입력
+- tapOn: '이메일을 입력하세요'
+- inputText: 'user2@test.com'
+
+# 초대 보내기
+- tapOn: '초대하기'
+- extendedWaitUntil:
+    visible: '초대를 보냈습니다'
+    timeout: 5000
+
+# 스크린샷
+- takeScreenshot: screenshots/user1_invite_sent

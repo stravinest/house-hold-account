@@ -1,0 +1,51 @@
+appId: com.household.shared.shared_household_account
+---
+# 사용자 2: 초대 수락하기 테스트
+
+- launchApp
+
+# 로그인 화면 대기
+- assertVisible: '로그인'
+
+# 이메일 입력 (테스트 계정 2)
+- tapOn: '이메일'
+- inputText: 'user2@test.com'
+
+# 비밀번호 입력
+- tapOn: '비밀번호'
+- inputText: 'testpass123'
+
+# 로그인 버튼 클릭
+- tapOn: '로그인'
+
+# 홈 화면 로드 대기
+- extendedWaitUntil:
+    visible: '가계부'
+    timeout: 10000
+
+# 공유 탭으로 이동
+- tapOn: '공유'
+
+# 공유 관리 화면 대기
+- assertVisible: '공유 관리'
+
+# 받은 초대 탭으로 이동
+- tapOn: '받은 초대'
+
+# 초대 목록 확인
+- assertVisible: 'user1@test.com'
+
+# 초대 수락 버튼 클릭
+- tapOn: '수락'
+
+# 수락 확인 대기
+- extendedWaitUntil:
+    visible: '초대를 수락했습니다'
+    timeout: 5000
+
+# 멤버 탭으로 이동하여 확인
+- tapOn: '멤버'
+- assertVisible: 'user1@test.com'
+
+# 스크린샷
+- takeScreenshot: screenshots/user2_invite_accepted

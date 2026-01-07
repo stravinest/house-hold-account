@@ -1,0 +1,35 @@
+appId: com.household.shared.shared_household_account
+---
+# user1 회원가입 플로우
+
+- launchApp
+
+# 로그인 화면에서 회원가입 클릭
+- scroll
+- tapOn: '회원가입'
+
+# 회원가입 화면에서 정보 입력
+- tapOn:
+    id: '이메일'
+- inputText: 'user1@test.com'
+
+- tapOn:
+    id: '비밀번호'
+- inputText: 'testpass123'
+
+- scroll
+
+- tapOn:
+    text: '비밀번호 확인'
+- inputText: 'testpass123'
+
+- tapOn:
+    text: '회원가입'
+    index: 1
+
+# 결과 대기
+- extendedWaitUntil:
+    visible: '가계부'
+    timeout: 10000
+
+- takeScreenshot: screenshots/user1_signup_success

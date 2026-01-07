@@ -213,28 +213,28 @@ class _TransactionCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
 
-                // 카테고리 및 메모
+                // 메모 및 사용자 정보
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        transaction.categoryName ?? '미분류',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
                       if (transaction.memo != null &&
                           transaction.memo!.isNotEmpty) ...[
-                        const SizedBox(height: 2),
                         Text(
                           transaction.memo!,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
+                        ),
+                      ] else ...[
+                        Text(
+                          '메모 없음',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                         ),
                       ],
                       if (transaction.userName != null) ...[

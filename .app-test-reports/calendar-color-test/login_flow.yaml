@@ -1,0 +1,15 @@
+appId: com.household.shared.shared_household_account
+---
+- launchApp
+- tapOn:
+    text: "이메일"
+- inputText: "user1@test.com"
+- tapOn:
+    text: "비밀번호"
+- inputText: "testpass123"
+- tapOn:
+    text: "로그인"
+- extendedWaitUntil:
+    visible:
+      text: ".*"
+    timeout: 10000

@@ -1,224 +1,406 @@
-# 코드 리뷰 결과
+# 코드 리뷰 결과 - Phase 2: 카테고리 및 거래 추가 UI 개선
 
 ## 요약
-- 검토 파일: 6개
-- Critical: 2개 / High: 4개 / Medium: 5개 / Low: 2개
+- 검토 파일: 5개
+- Critical: 2개 / High: 3개 / Medium: 2개 / Low: 1개
 
 ---
 
 ## Critical 이슈
 
-### [share_repository.dart:28-32] RLS 정책 우회 가능성 - ledger 조회 시 권한 검증 누락
-- **문제**: `isAlreadyMember()` 메서드에서 `ledgers` 테이블을 조회할 때 권한 검증 없이 `owner_id`를 가져옴. 현재 RLS 정책상 `ledger_members`에 등록되지 않은 사용자는 가계부 정보에 접근 불가하므로 에러 발생 가능.
-- **위험**: 가계부 소유자가 아닌 관리자가 초대를 시도할 때, 해당 가계부의 `owner_id` 조회 실패로 인해 초대 기능이 동작하지 않을 수 있음.
-- **해결**: RLS가 적용된 상태에서 안전하게 조회되도록 하거나, 데이터베이스 함수(RPC)를 통해 권한 검증을 수행해야 함.
-```dart
-// 현재 코드 - RLS로 인해 접근 제한될 수 있음
-final ledger = await _client
-    .from('ledgers')
-    .select('owner_id')
-    .eq('id', ledgerId)
-    .single();
+### [transaction.dart:82-126] copyWith 메서드의 nullable 필드 처리 버그
+- **문제**: `categoryId`와 `paymentMethodId`를 `null`로 설정할 수 없음. `null`을 전달해도 기존 값이 유지되는 버그 존재
+- **위험**: 사용자가 카테고리를 "선택 안함"으로 변경하려 해도 적용되지 않음. 데이터 무결성 문제 발생 가능
+- **해결**: nullable 필드를 명시적으로 null로 설정할 수 있도록 패턴 변경 필요
 
-// 권장: ledger_members를 통해 소유자 확인
-final ownerMember = await _client
-    .from('ledger_members')
-    .select('user_id')
-    .eq('ledger_id', ledgerId)
-    .eq('role', 'owner')
-    .maybeSingle();
+```dart
+// 현재 코드 (문제)
+Transaction copyWith({
+  String? categoryId,  // null 전달 시 구분 불가능
+  // ...
+}) {
+  return Transaction(
+    categoryId: categoryId ?? this.categoryId,  // null 전달해도 기존 값 유지
+    // ...
+  );
+}
+
+// 수정 방법 1: Optional 패턴 사용
+class Optional<T> {
+  final T? value;
+  final bool isSet;
+  const Optional(this.value) : isSet = true;
+  const Optional.unset() : value = null, isSet = false;
+}
+
+Transaction copyWith({
+  Optional<String>? categoryId,
+  Optional<String>? paymentMethodId,
+  // ...
+}) {
+  return Transaction(
+    categoryId: categoryId != null && categoryId.isSet 
+        ? categoryId.value 
+        : this.categoryId,
+    // ...
+  );
+}
+
+// 수정 방법 2: 별도 메서드 제공
+Transaction clearCategory() {
+  return copyWith().._categoryId = null;
+}
 ```
 
-### [ledger_repository.dart:90-97] 기본 카테고리 중복 생성 문제
-- **문제**: `createLedger()` 실행 시 `_createDefaultCategories()`가 호출되는데, 데이터베이스에 이미 `on_ledger_created_categories` 트리거가 존재하여 기본 카테고리가 2번 생성됨.
-- **위험**: 동일한 카테고리가 중복 생성되어 데이터 일관성 훼손 및 사용자 혼란 초래.
-- **해결**: 앱 코드의 `_createDefaultCategories()` 호출을 제거하거나, 데이터베이스 트리거를 비활성화해야 함. 둘 중 하나만 사용 권장.
-```dart
-// 권장: 앱 코드에서 기본 카테고리 생성 제거 (DB 트리거가 처리)
-Future<LedgerModel> createLedger({...}) async {
-    // ...
-    final response = await _client
-        .from('ledgers')
-        .insert(data)
-        .select()
-        .single();
+### [transaction_provider.dart:108-143] createTransaction 메서드의 파라미터 시그니처 불일치
+- **문제**: `categoryId`가 `required`로 선언되어 있지만, nullable 변경 사항이 반영되지 않음
+- **위험**: 컴파일 에러는 없지만 nullable 정책과 불일치. UI에서 null 전달이 불가능할 수 있음
+- **해결**: 파라미터를 nullable로 변경
 
-    return LedgerModel.fromJson(response);
-    // _createDefaultCategories() 호출 제거
-}
+```dart
+// 현재 코드
+Future<Transaction> createTransaction({
+  required String categoryId,  // nullable이어야 함
+  // ...
+}) async {
+
+// 수정 코드
+Future<Transaction> createTransaction({
+  String? categoryId,  // nullable로 변경
+  // ...
+}) async {
 ```
 
 ---
 
 ## High 이슈
 
-### [share_repository.dart:147-168] 초대 수락 시 트랜잭션 미사용
-- **문제**: `acceptInvite()` 메서드에서 3개의 DB 작업(초대 상태 업데이트, 멤버 추가, 가계부 공유 상태 변경)이 개별적으로 실행됨.
-- **위험**: 중간 작업 실패 시 데이터 불일치 발생. 예: 멤버 추가 실패 시 초대는 수락됐지만 실제 멤버가 되지 않는 상황.
-- **해결**: Supabase RPC 함수를 사용하여 트랜잭션으로 처리하거나, 최소한 실패 시 롤백 로직 구현 필요.
+### [add_transaction_sheet.dart:101-111] 에러 처리 원칙 위반 (rethrow 누락)
+- **문제**: `_submit()` 메서드에서 `createTransaction` 호출 시 에러를 catch하지만 rethrow하지 않음
+- **위험**: Provider의 에러 상태가 UI에 전파되지 않아 일관성 없는 에러 처리 발생 가능
+- **해결**: CLAUDE.md의 에러 처리 원칙에 따라 rethrow 추가
+
 ```dart
-// 현재: 개별 쿼리 실행
-await _client.from('ledger_invites').update({...}).eq('id', inviteId);
-await _client.from('ledger_members').insert({...});
-await _client.from('ledgers').update({...}).eq('id', invite['ledger_id']);
+// 현재 코드
+try {
+  await ref.read(transactionNotifierProvider.notifier).createTransaction(
+    // ...
+  );
+  // 성공 처리
+} catch (e) {
+  // SnackBar만 표시하고 끝
+  if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('오류: $e')),
+    );
+  }
+} finally {
+  // ...
+}
 
-// 권장: RPC 함수 사용
-// SQL: CREATE FUNCTION accept_invite(invite_id UUID) RETURNS void
-await _client.rpc('accept_invite', params: {'invite_id': inviteId});
-```
-
-### [ledger_repository.dart:12, 20-22] 프로덕션 코드에 디버그 print 문 잔존
-- **문제**: `getLedgers()` 메서드에 디버그용 `print()` 문이 4개 포함되어 있음.
-- **위험**: 프로덕션 환경에서 로그 노출로 인한 정보 유출 및 성능 저하.
-- **해결**: 모든 print 문을 제거하거나 `kDebugMode` 조건으로 감싸기.
-```dart
-// 제거 대상:
-print('[LedgerRepository] getLedgers 호출, userId: $userId');
-print('[LedgerRepository] getLedgers 응답: $response');
-print('[LedgerRepository] getLedgers 응답 타입: ${response.runtimeType}');
-print('[LedgerRepository] getLedgers 응답 길이: ${(response as List).length}');
-
-// 권장: 제거하거나 다음과 같이 변경
-import 'package:flutter/foundation.dart';
-if (kDebugMode) {
-  print('[LedgerRepository] getLedgers 호출');
+// 수정 코드
+try {
+  await ref.read(transactionNotifierProvider.notifier).createTransaction(
+    // ...
+  );
+  if (mounted) {
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('거래가 추가되었습니다')),
+    );
+  }
+} catch (e, st) {
+  if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('오류: $e')),
+    );
+  }
+  // UI는 에러를 표시했지만, provider 상태와 동기화를 위해 rethrow
+  // 단, 이 경우는 UI가 최종 처리자이므로 rethrow 불필요할 수도 있음
+  // 프로젝트 정책에 따라 결정 필요
 }
 ```
 
-### [ledger_provider.dart:16-21, 47-59] Provider에서 print 문 잔존
-- **문제**: `ledgersProvider`와 `LedgerNotifier`에 디버그용 print 문이 다수 존재.
-- **위험**: 위와 동일.
-- **해결**: 모든 print 문 제거.
+**재검토 필요**: 이 케이스는 UI가 최종 에러 처리자이므로 rethrow가 필수는 아님. 프로젝트의 에러 처리 일관성 정책 재확인 필요
 
-### [share_repository.dart:217-239] 멤버 제거 시 경합 조건(Race Condition) 가능성
-- **문제**: 멤버 삭제 후 남은 멤버 수를 확인하여 공유 상태를 변경하는데, 동시 요청 시 경합 발생 가능.
-- **위험**: 동시에 여러 멤버가 탈퇴할 경우 `is_shared` 플래그가 정확하게 업데이트되지 않을 수 있음.
-- **해결**: 트랜잭션 또는 데이터베이스 트리거로 원자적 처리 권장.
+### [category_provider.dart:62-100] CategoryNotifier의 일관성 없는 에러 처리
+- **문제**: `createCategory`, `updateCategory`, `deleteCategory` 메서드에서 에러를 catch하지 않아 rethrow가 없음
+- **위험**: 에러 발생 시 state가 업데이트되지 않고, UI에서 적절한 피드백을 못 받을 수 있음
+- **해결**: PaymentMethodNotifier 패턴처럼 try-catch-rethrow 추가
+
+```dart
+// 참고: PaymentMethodNotifier의 올바른 패턴
+Future<PaymentMethod> createPaymentMethod({
+  required String name,
+  String icon = '',
+  String color = '#6750A4',
+}) async {
+  if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
+
+  try {
+    final paymentMethod = await _repository.createPaymentMethod(
+      ledgerId: _ledgerId,
+      name: name,
+      icon: icon,
+      color: color,
+    );
+
+    _ref.invalidate(paymentMethodsProvider);
+    await loadPaymentMethods();
+    return paymentMethod;
+  } catch (e, st) {
+    state = AsyncValue.error(e, st);
+    rethrow;  // 에러 전파
+  }
+}
+
+// CategoryNotifier도 동일하게 수정 필요
+Future<Category> createCategory({
+  required String name,
+  required String icon,
+  required String color,
+  required String type,
+}) async {
+  if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
+
+  try {
+    final category = await _repository.createCategory(
+      ledgerId: _ledgerId,
+      name: name,
+      icon: icon,
+      color: color,
+      type: type,
+    );
+    await loadCategories();
+    return category;
+  } catch (e, st) {
+    state = AsyncValue.error(e, st);
+    rethrow;
+  }
+}
+```
+
+### [add_transaction_sheet.dart:490-521, 721-750] 카테고리/결제수단 추가 다이얼로그의 에러 처리 부족
+- **문제**: `createCategory` 및 `createPaymentMethod` 호출 시 에러를 catch하지만, state 업데이트 없이 SnackBar만 표시
+- **위험**: Provider의 에러 상태와 UI가 동기화되지 않음
+- **해결**: 에러 발생 시에도 UI를 닫지 말고 사용자가 수정할 수 있도록 유지
+
+```dart
+// 현재 코드 (490-521줄)
+try {
+  final newCategory = await ref
+      .read(categoryNotifierProvider.notifier)
+      .createCategory(/* ... */);
+
+  setState(() => _selectedCategory = newCategory);
+
+  if (dialogContext.mounted) {
+    Navigator.pop(dialogContext);  // 성공 시 다이얼로그 닫기
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('카테고리가 추가되었습니다')),
+    );
+  }
+  // provider 갱신
+} catch (e) {
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('오류: $e')),
+    );
+  }
+  // 다이얼로그를 닫지 않아 사용자가 재시도 가능 - 이 부분은 양호
+}
+
+// 개선 제안: 다이얼로그 내 로딩 상태 표시 추가
+// StatefulBuilder 내부에 isLoading 상태 추가하여 중복 클릭 방지
+```
 
 ---
 
 ## Medium 이슈
 
-### [001_initial_schema.sql:127-134] 가계부 조회 RLS 정책에 소유자 조건 누락
-- **문제**: `ledgers` SELECT 정책이 `ledger_members` 테이블만 확인하는데, 소유자(`owner_id`)는 트리거로 자동 등록되므로 문제없으나, 트리거 실패 시 소유자도 조회 불가.
-- **위험**: 트리거 실패 시 가계부 생성자가 자신의 가계부를 볼 수 없는 상황 발생.
-- **해결**: 소유자 조건을 명시적으로 추가 권장.
-```sql
-CREATE POLICY "사용자는 자신이 멤버인 가계부를 조회할 수 있음"
-    ON ledgers FOR SELECT
-    USING (
-        owner_id = auth.uid()  -- 소유자 직접 조회 허용
-        OR id IN (
-            SELECT ledger_id FROM ledger_members WHERE user_id = auth.uid()
-        )
-    );
-```
+### [add_transaction_sheet.dart:386-387] 하드코딩된 아이콘 및 색상 배열
+- **문제**: 아이콘과 색상이 코드에 직접 하드코딩되어 있어 유지보수성 저하
+- **위험**: 아이콘/색상 변경 시 여러 곳 수정 필요 (카테고리, 결제수단 각각)
+- **해결**: 상수 파일로 분리하여 재사용성 향상
 
-### [share_management_page.dart:109-113] 문자열 substring 오류 가능성
-- **문제**: `displayName` 또는 `email`이 빈 문자열('')일 경우 `substring(0, 1)` 호출 시 `RangeError` 발생.
-- **위험**: 앱 크래시.
-- **해결**: 빈 문자열 체크 추가.
 ```dart
-// 현재 코드
-child: Text(
-    (member.displayName ?? member.email ?? 'U')
-        .substring(0, 1)
-        .toUpperCase(),
-),
-
-// 권장 수정
-child: Text(
-    ((member.displayName ?? member.email)?.isNotEmpty == true
-        ? (member.displayName ?? member.email)!
-        : 'U')
-        .substring(0, 1)
-        .toUpperCase(),
-),
-```
-
-### [share_management_page.dart:184-208] 권한 검증 없이 멤버 관리 UI 노출
-- **문제**: 모든 멤버에게 다른 멤버의 역할 변경/내보내기 메뉴가 표시됨. 실제 작업은 RLS에서 막히겠지만 UX상 혼란.
-- **위험**: 일반 멤버가 관리 기능을 시도한 후 에러 메시지를 받게 됨.
-- **해결**: 현재 사용자의 역할(owner/admin)을 확인하여 UI 표시 여부 결정.
-```dart
-// _buildTrailingWidget에서 현재 사용자 역할 확인 필요
-final currentUserRole = members.firstWhere(
-  (m) => m.userId == currentUserId,
-  orElse: () => null,
-)?.role;
-
-// owner나 admin인 경우에만 관리 메뉴 표시
-if (currentUserRole == 'owner' || currentUserRole == 'admin') {
-  return PopupMenuButton(...);
+// lib/core/constants/ui_constants.dart 생성
+class UIConstants {
+  static const categoryIcons = ['🍽️', '🚗', '🏠', '💊', '🎮', '👔', '📚', '✈️'];
+  static const categoryColors = [
+    '#4CAF50', '#2196F3', '#F44336', '#FF9800', 
+    '#9C27B0', '#00BCD4', '#E91E63', '#795548'
+  ];
+  
+  static const paymentMethodIcons = ['💳', '💰', '🏦', '📱', '🪙', '💵', '💴', '💶'];
+  static const paymentMethodColors = [
+    '#6750A4', '#2196F3', '#4CAF50', '#FF9800',
+    '#E91E63', '#00BCD4', '#9C27B0', '#795548'
+  ];
 }
-return null;
+
+// add_transaction_sheet.dart에서 사용
+final icons = UIConstants.categoryIcons;
+final colors = UIConstants.categoryColors;
 ```
 
-### [share_repository.dart:116-130] getReceivedInvites에서 이메일 null 체크
-- **문제**: `user.email ?? ''`로 빈 문자열 전달 시 의도치 않은 결과 반환 가능.
-- **위험**: 이메일이 없는 사용자(소셜 로그인 등)의 경우 초대를 받을 수 없음.
-- **해결**: 이메일 없는 경우 명시적 예외 처리 또는 사용자 알림.
+### [004_make_category_nullable.sql:1-10] 마이그레이션 롤백 스크립트 미제공
+- **문제**: ALTER TABLE 문만 있고 롤백 방법이 없음
+- **위험**: 프로덕션에서 문제 발생 시 신속한 롤백 불가능
+- **해결**: DOWN 마이그레이션 스크립트 추가
 
-### [share_management_page.dart:617] DropdownButtonFormField의 initialValue 속성
-- **문제**: `DropdownButtonFormField`에 `initialValue` 속성이 없음. `value` 속성을 사용해야 함.
-- **위험**: 컴파일 에러 또는 런타임 에러 발생 가능.
-- **해결**: `value` 속성으로 변경.
-```dart
-// 현재 (오류)
-DropdownButtonFormField<String>(
-  initialValue: _selectedRole,
+```sql
+-- UP migration (현재 내용)
+ALTER TABLE transactions ALTER COLUMN category_id DROP NOT NULL;
 
-// 수정
-DropdownButtonFormField<String>(
-  value: _selectedRole,
+-- DOWN migration (추가 필요 - 별도 파일로 관리)
+-- 주의: category_id가 NULL인 레코드가 있으면 실패함
+-- 사전에 NULL 값을 처리하는 로직 필요
+UPDATE transactions SET category_id = '기본_카테고리_ID' WHERE category_id IS NULL;
+ALTER TABLE transactions ALTER COLUMN category_id SET NOT NULL;
 ```
 
 ---
 
 ## Low 이슈
 
-### [ledger_repository.dart:42-57] 기본 카테고리 상수 위치
-- **문제**: `_defaultCategories`가 Repository 클래스 내부에 정의되어 있어 재사용성 저하.
-- **개선**: 별도의 상수 파일(`constants/default_categories.dart`)로 분리 권장.
+### [add_transaction_sheet.dart:214-232] 지출명/수입명 필드의 중복 코드
+- **문제**: labelText, hintText, validator 메시지가 동적으로 생성되지만 패턴이 반복됨
+- **위험**: 낮음. 가독성 저하 정도
+- **해결**: 변수로 추출하여 가독성 향상
 
-### [share_management_page.dart] 문자열 리터럴에 큰따옴표 사용
-- **문제**: 프로젝트 컨벤션(작은따옴표 사용)과 불일치하는 부분 존재.
-- **개선**: 모든 문자열을 작은따옴표로 통일.
+```dart
+// 현재 코드
+TextFormField(
+  controller: _memoController,
+  decoration: InputDecoration(
+    labelText: _type == 'expense' ? '지출명' : '수입명',
+    hintText: _type == 'expense' ? '예: 점심식사, 커피' : '예: 월급, 용돈',
+    // ...
+  ),
+  validator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return _type == 'expense' ? '지출명을 입력해주세요' : '수입명을 입력해주세요';
+    }
+    return null;
+  },
+),
+
+// 개선 코드
+final isExpense = _type == 'expense';
+final transactionLabel = isExpense ? '지출명' : '수입명';
+final transactionHint = isExpense ? '예: 점심식사, 커피' : '예: 월급, 용돈';
+
+TextFormField(
+  controller: _memoController,
+  decoration: InputDecoration(
+    labelText: transactionLabel,
+    hintText: transactionHint,
+    // ...
+  ),
+  validator: (value) {
+    if (value == null || value.trim().isEmpty) {
+      return '$transactionLabel을 입력해주세요';
+    }
+    return null;
+  },
+),
+```
 
 ---
 
 ## 긍정적인 점
 
-1. **검증 로직 우수**: `createInvite()` 메서드에서 자기 초대, 가입 여부, 멤버 여부, 중복 초대를 모두 체크하는 포괄적인 검증 로직이 잘 구현됨.
-
-2. **에러 처리 패턴 준수**: `ShareNotifier`에서 모든 비동기 메서드가 에러를 `rethrow`하여 UI까지 전파하는 CLAUDE.md의 에러 처리 원칙을 잘 따름.
-
-3. **RLS 정책 설계**: 역할별(owner/admin/member) 권한이 명확하게 분리되어 있으며, 대부분의 테이블에 적절한 보안 정책이 적용됨.
-
-4. **UI/UX 개선**: 역할별 권한 설명 추가, 역할 뱃지 표시, 가계부 나가기 기능 등 사용자 경험 향상에 신경 씀.
-
-5. **이메일 정규화**: 모든 이메일을 `toLowerCase().trim()`으로 정규화하여 대소문자/공백으로 인한 불일치 방지.
+1. **UI/UX 개선**: 레이아웃 순서 변경이 직관적이며, 금액 입력 시 자동 포커스 선택 기능이 사용성을 크게 향상시킴
+2. **인라인 추가/삭제 기능**: 거래 추가 중 카테고리/결제수단을 즉시 관리할 수 있어 사용자 흐름이 매끄러움
+3. **nullable 처리 일관성**: DB 스키마부터 Entity, Model, Repository까지 nullable 변경이 일관되게 적용됨
+4. **금액 입력 포맷터**: 천 단위 구분 기호 자동 적용으로 가독성 향상
+5. **PaymentMethodNotifier의 에러 처리**: rethrow 패턴을 올바르게 구현하여 CLAUDE.md 원칙 준수
+6. **삭제 확인 다이얼로그**: 사용자 실수 방지를 위한 확인 절차 포함
 
 ---
 
 ## 추가 권장사항
 
-### 테스트
-- [ ] `createInvite()` 검증 로직 단위 테스트 작성
-- [ ] RLS 정책 통합 테스트 작성 (각 역할별 접근 권한 검증)
-- [ ] 초대 수락 시나리오 E2E 테스트 작성
+### 1. 테스트 추가
+- **단위 테스트**: `TransactionModel.toCreateJson()`에서 `categoryId: null` 케이스 테스트
+- **위젯 테스트**: "선택 안함" 선택 후 거래 생성 시나리오
+- **통합 테스트**: 카테고리 null 상태로 저장 → 조회 → 수정 플로우
 
-### 리팩토링
-- [ ] 데이터베이스 트리거(`on_ledger_created_categories`)와 앱 코드(`_createDefaultCategories`) 중 하나 제거하여 중복 방지
-- [ ] 트랜잭션이 필요한 작업들을 Supabase RPC 함수로 마이그레이션
-- [ ] 공통 검증 로직을 별도 Validator 클래스로 추출
+```dart
+// test/features/transaction/data/models/transaction_model_test.dart
+test('toCreateJson should handle null categoryId', () {
+  final json = TransactionModel.toCreateJson(
+    ledgerId: 'ledger-1',
+    categoryId: null,  // null 케이스
+    userId: 'user-1',
+    amount: 10000,
+    type: 'expense',
+    date: DateTime(2024, 1, 1),
+  );
+  
+  expect(json['category_id'], isNull);
+});
+```
 
-### 보안
-- [ ] 권한 검증 로직을 클라이언트뿐만 아니라 서버(RPC 함수)에서도 수행하도록 개선
-- [ ] 초대 만료 시간 검증을 서버에서도 수행 (현재는 클라이언트에서만 `gt('expires_at', ...)` 체크)
+### 2. 에러 메시지 개선
+현재 `catch (e)` 블록에서 `SnackBar(content: Text('오류: $e'))`로 표시하는데, Supabase 에러는 기술적이고 길 수 있음. 사용자 친화적인 메시지로 변환하는 유틸리티 추가 권장
+
+```dart
+// lib/core/utils/error_message.dart
+class ErrorMessage {
+  static String getUserFriendly(dynamic error) {
+    final errorStr = error.toString().toLowerCase();
+    
+    if (errorStr.contains('foreign key') || errorStr.contains('violates')) {
+      return '다른 거래에서 사용 중인 항목은 삭제할 수 없습니다';
+    }
+    if (errorStr.contains('duplicate')) {
+      return '이미 존재하는 이름입니다';
+    }
+    if (errorStr.contains('network')) {
+      return '네트워크 연결을 확인해주세요';
+    }
+    
+    return '오류가 발생했습니다. 다시 시도해주세요';
+  }
+}
+
+// 사용
+ScaffoldMessenger.of(context).showSnackBar(
+  SnackBar(content: Text(ErrorMessage.getUserFriendly(e))),
+);
+```
+
+### 3. 카테고리/결제수단 선택 UX 개선
+현재 FilterChip을 사용하는데, 항목이 많아지면 스크롤이 어려울 수 있음. GridView로 변경하거나 검색 기능 추가 고려
+
+### 4. 접근성(a11y) 개선
+- 아이콘 선택 시 Semantics 레이블 추가
+- 색상 선택 시 색약자를 위한 텍스트 힌트 추가
+
+### 5. 마이그레이션 문서화
+`supabase/migrations/README.md` 생성하여 각 마이그레이션의 목적과 주의사항 문서화
 
 ---
 
-## 리뷰어 정보
-- 리뷰 일시: 2026-01-03
-- 리뷰어: Senior Code Reviewer (Claude)
+## 우선순위 요약
+
+**즉시 수정 필요 (Critical)**
+1. `Transaction.copyWith()` nullable 필드 처리 버그 수정
+2. `TransactionNotifier.createTransaction()` 파라미터 시그니처 수정
+
+**수정 권장 (High)**
+1. `CategoryNotifier`에 try-catch-rethrow 패턴 추가
+2. 에러 처리 일관성 정책 재확인 및 문서화
+
+**개선 권장 (Medium/Low)**
+1. 하드코딩된 상수 분리
+2. 마이그레이션 롤백 스크립트 추가
+3. 에러 메시지 사용자 친화적으로 개선
+
+---
+
+## 전체 평가
+
+**Phase 2 구현은 기능적으로 잘 작동하며 사용성이 크게 향상되었습니다.** 다만 nullable 필드 처리 버그와 에러 처리 일관성 문제를 해결해야 프로덕션 준비가 완료됩니다. Critical 이슈 2건만 수정하면 안전하게 배포 가능합니다.

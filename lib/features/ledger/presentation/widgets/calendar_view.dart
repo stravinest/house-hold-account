@@ -428,7 +428,6 @@ class _MonthSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final formatter = NumberFormat('#,###', 'ko_KR');
 
     // 실제 데이터 연동
     final monthlyTotalAsync = ref.watch(monthlyTotalProvider);
@@ -436,112 +435,42 @@ class _MonthSummary extends StatelessWidget {
     final income = monthlyTotalAsync.valueOrNull?['income'] ?? 0;
     final expense = monthlyTotalAsync.valueOrNull?['expense'] ?? 0;
     final balance = income - expense;
-    final users = monthlyTotalAsync.valueOrNull?['users'] as Map<String, dynamic>? ?? {};
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
         children: [
-          // 1줄: 전체 합계
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _SummaryItem(
-                label: '수입',
-                amount: income,
-                color: Colors.blue,
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: colorScheme.outlineVariant,
-              ),
-              _SummaryItem(
-                label: '지출',
-                amount: expense,
-                color: Colors.red,
-              ),
-              Container(
-                width: 1,
-                height: 40,
-                color: colorScheme.outlineVariant,
-              ),
-              _SummaryItem(
-                label: '합계',
-                amount: balance,
-                color: balance >= 0 ? Colors.green : Colors.red,
-              ),
-            ],
-          ),
-          if (users.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Divider(height: 1, color: colorScheme.outlineVariant),
-            const SizedBox(height: 8),
-            // 2줄: 사용자별 정보
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              children: users.entries.map((entry) {
-                final userData = entry.value as Map<String, dynamic>;
-                final colorHex = userData['color'] as String? ?? '#A8D8EA';
-                final color = ColorUtils.parseHexColor(colorHex);
-                final userName = userData['name'] as String? ?? '사용자';
-                final userIncome = userData['income'] as int? ?? 0;
-                final userExpense = userData['expense'] as int? ?? 0;
-
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // 색상 동그라미
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    // 이름
-                    Text(
-                      userName,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    // 수입 (있는 경우)
-                    if (userIncome > 0)
-                      Text(
-                        '+${formatter.format(userIncome)}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.blue,
-                        ),
-                      ),
-                    // 구분자
-                    if (userIncome > 0 && userExpense > 0)
-                      const Text(
-                        '/',
-                        style: TextStyle(fontSize: 11),
-                      ),
-                    // 지출 (있는 경우)
-                    if (userExpense > 0)
-                      Text(
-                        '-${formatter.format(userExpense)}',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: Colors.red,
-                        ),
-                      ),
-                  ],
-                );
-              }).toList(),
+          Expanded(
+            child: _SummaryItem(
+              label: '수입',
+              amount: income,
+              color: Colors.blue,
             ),
-          ],
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: colorScheme.outlineVariant,
+          ),
+          Expanded(
+            child: _SummaryItem(
+              label: '지출',
+              amount: expense,
+              color: Colors.red,
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 40,
+            color: colorScheme.outlineVariant,
+          ),
+          Expanded(
+            child: _SummaryItem(
+              label: '합계',
+              amount: balance,
+              color: balance >= 0 ? Colors.green : Colors.red,
+            ),
+          ),
         ],
       ),
     );
@@ -616,15 +545,18 @@ class _CustomCalendarHeader extends StatelessWidget {
             onPressed: isToday ? null : onTodayPressed,
             icon: const Icon(Icons.today, size: 18),
             label: const Text('오늘'),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4, right: 0),
+            ),
           ),
           // 새로고침 버튼
           IconButton(
-            icon: const Icon(Icons.refresh, size: 20),
+            icon: const Icon(Icons.refresh, size: 16),
             onPressed: onRefresh,
-            padding: EdgeInsets.zero,
+            padding: const EdgeInsets.all(4),
             constraints: const BoxConstraints(
-              minWidth: 36,
-              minHeight: 36,
+              minWidth: 28,
+              minHeight: 28,
             ),
           ),
           const Spacer(),

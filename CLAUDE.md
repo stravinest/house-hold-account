@@ -13,6 +13,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **상태관리**: Riverpod (flutter_riverpod + riverpod_annotation)
 - **라우팅**: go_router
 - **환경변수**: flutter_dotenv (`.env` 파일)
+- **푸시 알림**: Firebase (firebase_core, firebase_messaging, flutter_local_notifications)
+- **홈 위젯**: home_widget (빠른 추가, 월간 요약 위젯)
+- **딥링크**: app_links
+- **UI/차트**: fl_chart, table_calendar, flutter_slidable, shimmer
+- **이미지**: image_picker, cached_network_image
+- **로컬 저장소**: shared_preferences
+- **소셜 로그인**: google_sign_in
 
 ## 개발 명령어
 
@@ -92,7 +99,7 @@ lib/
 
 ### 주요 Feature 목록
 
-- `auth`: 인증 (로그인/회원가입)
+- `auth`: 인증 (로그인/회원가입, Google 로그인)
 - `ledger`: 가계부 관리 및 메인 화면
 - `transaction`: 수입/지출 거래 기록
 - `category`: 카테고리 관리
@@ -100,20 +107,38 @@ lib/
 - `statistics`: 통계/차트
 - `share`: 가계부 공유 및 멤버 관리
 - `search`: 거래 검색
-- `settings`: 설정
+- `settings`: 설정 (사용자 색상 설정 포함)
+- `payment_method`: 지출수단(결제수단) 관리
+- `notification`: 푸시 알림 및 로컬 알림 (FCM)
+- `widget`: 홈 화면 위젯 (빠른 추가, 월간 요약)
 
 ## 데이터베이스 스키마
 
-Supabase PostgreSQL 사용. 스키마 정의: `supabase/migrations/001_initial_schema.sql`
+Supabase PostgreSQL 사용. 마이그레이션 파일 위치: `supabase/migrations/`
 
-주요 테이블:
-- `profiles`: 사용자 프로필 (auth.users 확장)
+### 주요 테이블
+
+**핵심 테이블:**
+- `profiles`: 사용자 프로필 (auth.users 확장, color 컬럼 포함)
 - `ledgers`: 가계부
 - `ledger_members`: 가계부 멤버 (role: owner/admin/member)
 - `categories`: 카테고리 (type: income/expense)
-- `transactions`: 거래 기록
+- `transactions`: 거래 기록 (payment_method_id 포함)
 - `budgets`: 예산
 - `ledger_invites`: 가계부 초대
+
+**결제수단 (002_add_payment_methods.sql):**
+- `payment_methods`: 결제수단 관리 (현금, 카드 등)
+
+**알림 관련 (005_add_notification_tables.sql):**
+- `fcm_tokens`: Firebase Cloud Messaging 토큰 저장
+- `notification_settings`: 사용자별 알림 설정
+- `push_notifications`: 알림 히스토리
+
+**기타 마이그레이션:**
+- `003_auto_create_default_ledger.sql`: 회원가입 시 기본 가계부 자동 생성
+- `004_make_category_nullable.sql`: 카테고리 nullable 처리
+- `006_add_profile_color.sql`: 사용자별 색상 지정 기능
 
 RLS (Row Level Security) 정책이 모든 테이블에 적용되어 있음.
 
@@ -189,6 +214,51 @@ TodoWrite(todos: [
 예시: ` 실행 중 ` = 12바이트 (공백1 + 실3 + 행3 + 공백1 + 중3 + 공백1)
 
 자세한 내용은 `rust_string_handling_guide.md` 참고
+
+## 개발 워크플로우
+
+프로젝트에서는 `.workflow/` 디렉토리를 사용하여 기능 개발을 체계적으로 관리합니다.
+
+```
+.workflow/
+├── prd.md          # 현재 작업 중인 PRD (Product Requirements Document)
+├── todo.md         # 현재 작업 목록
+├── context/        # 컨텍스트 파일 (필요시)
+├── results/        # 작업 결과 문서
+└── archived/       # 완료된 PRD/TODO 아카이브
+```
+
+### 워크플로우 사용법
+
+1. 새 기능 개발 시 `prd.md`에 요구사항 정의
+2. `todo.md`에 작업 목록 작성
+3. 작업 완료 후 결과는 `results/`에 저장
+4. 완료된 PRD/TODO는 `archived/`로 이동 (날짜_기능명 형식)
+
+## 테마 및 색상 관리
+
+### 다크모드 지원
+
+앱은 라이트/다크 모드를 지원하며, `ThemeProvider`를 통해 테마를 관리합니다.
+
+관련 파일:
+- `lib/shared/themes/app_theme.dart`: 테마 정의
+- `lib/shared/themes/theme_provider.dart`: 테마 상태 관리
+
+### 사용자별 색상
+
+캘린더에서 각 사용자의 거래를 구분하기 위해 사용자별 고유 색상을 지정할 수 있습니다.
+
+기본 색상 팔레트 (파스텔 톤):
+- 파스텔 블루: `#A8D8EA`
+- 코랄 오렌지: `#FFB6A3`
+- 민트 그린: `#B8E6C9`
+- 라벤더: `#D4A5D4`
+- 피치: `#FFCBA4`
+
+관련 파일:
+- `lib/shared/widgets/color_picker.dart`: 색상 선택 위젯
+- `lib/features/settings/presentation/pages/settings_page.dart`: 색상 설정 UI
 
 ## 에러 처리 원칙
 
