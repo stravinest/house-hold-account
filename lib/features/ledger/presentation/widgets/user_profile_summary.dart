@@ -13,7 +13,12 @@ class UserProfileSummary extends ConsumerWidget {
 
     return monthlyTotal.when(
       data: (total) {
-        final users = total['users'] as Map<String, dynamic>? ?? {};
+        // 안전한 타입 변환
+        final usersRaw = total['users'];
+        if (usersRaw == null || usersRaw is! Map) {
+          return const SizedBox.shrink();
+        }
+        final users = Map<String, dynamic>.from(usersRaw);
 
         if (users.isEmpty) {
           return const SizedBox.shrink();
@@ -24,7 +29,11 @@ class UserProfileSummary extends ConsumerWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: users.entries.map((entry) {
-              final userData = entry.value as Map<String, dynamic>;
+              final userDataRaw = entry.value;
+              if (userDataRaw is! Map) {
+                return const SizedBox.shrink();
+              }
+              final userData = Map<String, dynamic>.from(userDataRaw);
               final displayName = userData['displayName'] as String? ?? '사용자';
               final expense = userData['expense'] as int? ?? 0;
               final colorHex = userData['color'] as String? ?? '#A8D8EA';

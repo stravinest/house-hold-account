@@ -15,7 +15,7 @@ class TransactionRepository {
 
     final response = await _client
         .from('transactions')
-        .select('*, categories(name, icon, color), profiles(display_name), payment_methods(name)')
+        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name)')
         .eq('ledger_id', ledgerId)
         .eq('date', dateStr)
         .order('created_at', ascending: false);

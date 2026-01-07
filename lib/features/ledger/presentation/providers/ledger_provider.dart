@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/repositories/ledger_repository.dart';
 import '../../domain/entities/ledger.dart';
@@ -45,10 +47,48 @@ final ledgerMembersProvider =
 class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
   final LedgerRepository _repository;
   final Ref _ref;
+  RealtimeChannel? _ledgersChannel;
+  RealtimeChannel? _membersChannel;
 
   LedgerNotifier(this._repository, this._ref)
       : super(const AsyncValue.loading()) {
     loadLedgers();
+    _subscribeToChanges();
+  }
+
+  void _subscribeToChanges() {
+    try {
+      // ledgers 테이블 변경 구독
+      _ledgersChannel = _repository.subscribeLedgers((ledgers) {
+        state = AsyncValue.data(ledgers);
+      });
+
+      // ledger_members 테이블 변경 구독 (멤버 나감/들어옴 감지)
+      _membersChannel = _repository.subscribeLedgerMembers(() {
+        // 로딩 상태 없이 데이터만 새로고침
+        _refreshLedgersQuietly();
+      });
+    } catch (e) {
+      // Realtime 구독 실패 시 무시 (기본 기능에는 영향 없음)
+      debugPrint('Realtime 구독 실패: $e');
+    }
+  }
+
+  // 로딩 상태 없이 데이터만 새로고침 (UI 깜빡임 방지)
+  Future<void> _refreshLedgersQuietly() async {
+    try {
+      final ledgers = await _repository.getLedgers();
+      state = AsyncValue.data(ledgers);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  @override
+  void dispose() {
+    _ledgersChannel?.unsubscribe();
+    _membersChannel?.unsubscribe();
+    super.dispose();
   }
 
   Future<void> loadLedgers() async {
@@ -130,6 +170,25 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
 
   void selectLedger(String id) {
     _ref.read(selectedLedgerIdProvider.notifier).state = id;
+  }
+
+  // 멤버 수에 따라 공유 상태 동기화
+  // 멤버가 1명이면 개인 가계부, 2명 이상이면 공유 가계부
+  Future<void> syncShareStatus({
+    required String ledgerId,
+    required int memberCount,
+    required bool currentIsShared,
+  }) async {
+    final shouldBeShared = memberCount >= 2;
+
+    // 현재 상태와 다르면 업데이트
+    if (currentIsShared != shouldBeShared) {
+      await _repository.updateLedger(
+        id: ledgerId,
+        isShared: shouldBeShared,
+      );
+      // Realtime 구독이 자동으로 데이터를 새로고침하므로 별도 호출 불필요
+    }
   }
 }
 

@@ -6,14 +6,27 @@ import 'package:intl/intl.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../providers/ledger_provider.dart';
 import '../../domain/entities/ledger.dart';
-import 'user_profile_summary.dart';
 import '../../../../core/utils/color_utils.dart';
+
+class _CalendarConstants {
+  static const double cellPadding = 4.0;
+  static const double dateBubbleSize = 24.0;
+  static const double dateFontSize = 13.0;
+  static const double amountFontSize = 9.0;
+  static const double dotSize = 6.0;
+  static const double dotSpacing = 3.0;
+  static const int maxVisibleUsers = 3;
+  static const double rowHeight = 70.0;
+  static const double smallScreenThreshold = 360.0;
+  static const double daysOfWeekHeight = 40.0;
+}
 
 class CalendarView extends ConsumerWidget {
   final DateTime selectedDate;
   final DateTime focusedDate;
   final ValueChanged<DateTime> onDateSelected;
   final ValueChanged<DateTime> onPageChanged;
+  final Future<void> Function() onRefresh;
 
   const CalendarView({
     super.key,
@@ -21,6 +34,7 @@ class CalendarView extends ConsumerWidget {
     required this.focusedDate,
     required this.onDateSelected,
     required this.onPageChanged,
+    required this.onRefresh,
   });
 
   @override
@@ -34,14 +48,14 @@ class CalendarView extends ConsumerWidget {
     return Column(
       children: [
         // 월별 요약
-        _MonthSummary(focusedDate: focusedDate, ref: ref),
-
-        // 사용자 프로필 요약
-        const UserProfileSummary(),
+        RepaintBoundary(
+          child: _MonthSummary(focusedDate: focusedDate, ref: ref),
+        ),
 
         // 커스텀 헤더
         _CustomCalendarHeader(
           focusedDate: focusedDate,
+          selectedDate: selectedDate,
           onTodayPressed: () {
             final today = DateTime.now();
             onDateSelected(today);
@@ -55,7 +69,11 @@ class CalendarView extends ConsumerWidget {
             final nextMonth = DateTime(focusedDate.year, focusedDate.month + 1);
             onPageChanged(nextMonth);
           },
+          onRefresh: onRefresh,
         ),
+
+        // 커스텀 요일 헤더
+        _buildDaysOfWeekHeader(colorScheme),
 
         // 캘린더
         TableCalendar(
@@ -67,20 +85,13 @@ class CalendarView extends ConsumerWidget {
           startingDayOfWeek: StartingDayOfWeek.sunday,
           locale: 'ko_KR',
           headerVisible: false,
-          rowHeight: 60,
-          daysOfWeekStyle: DaysOfWeekStyle(
-            weekdayStyle: TextStyle(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w500,
-            ),
-            weekendStyle: TextStyle(
-              color: colorScheme.error,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          rowHeight: _CalendarConstants.rowHeight,
+          daysOfWeekHeight: _CalendarConstants.daysOfWeekHeight,
+          daysOfWeekVisible: false,
+          sixWeekMonthsEnforced: true,
           calendarStyle: CalendarStyle(
-            outsideDaysVisible: false,
-            cellMargin: const EdgeInsets.all(2),
+            outsideDaysVisible: true,
+            cellMargin: EdgeInsets.zero,
             todayDecoration: BoxDecoration(
               color: colorScheme.primaryContainer,
               borderRadius: BorderRadius.circular(8),
@@ -138,6 +149,12 @@ class CalendarView extends ConsumerWidget {
                 currentLedger: currentLedger,
               );
             },
+            outsideBuilder: (context, day, focusedDay) {
+              return _buildEmptyCell(
+                day: day,
+                colorScheme: colorScheme,
+              );
+            },
           ),
           onDaySelected: (selectedDay, focusedDay) {
             onDateSelected(selectedDay);
@@ -157,76 +174,244 @@ class CalendarView extends ConsumerWidget {
     required ColorScheme colorScheme,
     required Ledger? currentLedger,
   }) {
-    // 날짜 정규화 (시간 제거)
     final normalizedDay = DateTime(day.year, day.month, day.day);
     final totals = dailyTotals[normalizedDay];
 
-    // 새로운 데이터 구조에서 totalIncome과 totalExpense 추출
     final income = totals?['totalIncome'] ?? 0;
     final expense = totals?['totalExpense'] ?? 0;
     final hasData = income > 0 || expense > 0;
 
     final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
 
+    // 그리드 선을 위한 요일/주차 계산
+    final dayOfWeek = day.weekday % 7;
+    final firstDayOfMonth = DateTime(day.year, day.month, 1);
+    final weekOfMonth = ((day.day + firstDayOfMonth.weekday - 1) / 7).floor();
+    final isFirstColumn = dayOfWeek == 0;
+    final isFirstRow = weekOfMonth == 0;
+
+    // Border 설정 (중복 방지)
+    final border = Border(
+      top: isFirstRow
+          ? BorderSide(color: colorScheme.outlineVariant.withAlpha(77))
+          : BorderSide.none,
+      left: isFirstColumn
+          ? BorderSide(color: colorScheme.outlineVariant.withAlpha(77))
+          : BorderSide.none,
+      right: BorderSide(color: colorScheme.outlineVariant.withAlpha(77)),
+      bottom: BorderSide(color: colorScheme.outlineVariant.withAlpha(77)),
+    );
+
     return Container(
-      margin: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: isSelected ? colorScheme.primary.withAlpha(26) : null,
+        border: border,
+      ),
+      child: Stack(
+        children: [
+          // 왼쪽 상단: 날짜 숫자
+          Positioned(
+            top: _CalendarConstants.cellPadding,
+            left: _CalendarConstants.cellPadding,
+            child: _buildDateBubble(
+              day: day,
+              isSelected: isSelected,
+              isToday: isToday,
+              isWeekend: isWeekend,
+              colorScheme: colorScheme,
+            ),
+          ),
+          // 오른쪽 하단: 사용자별 금액
+          if (hasData && totals?['users'] != null)
+            Positioned(
+              right: _CalendarConstants.cellPadding,
+              bottom: _CalendarConstants.cellPadding,
+              child: _buildUserAmountList(
+                totals: totals!,
+                isSelected: isSelected,
+                colorScheme: colorScheme,
+                context: context,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDaysOfWeekHeader(ColorScheme colorScheme) {
+    const days = ['일', '월', '화', '수', '목', '금', '토'];
+
+    return Container(
+      height: _CalendarConstants.daysOfWeekHeight,
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: colorScheme.outlineVariant.withAlpha(77)),
+          bottom: BorderSide(color: colorScheme.outlineVariant.withAlpha(77)),
+        ),
+      ),
+      child: Row(
+        children: List.generate(7, (index) {
+          final isWeekend = index == 0 || index == 6;
+          final isFirstColumn = index == 0;
+
+          return Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  left: isFirstColumn
+                      ? BorderSide(color: colorScheme.outlineVariant.withAlpha(77))
+                      : BorderSide.none,
+                  right: BorderSide(color: colorScheme.outlineVariant.withAlpha(77)),
+                ),
+              ),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                days[index],
+                style: TextStyle(
+                  color: isWeekend ? colorScheme.error : colorScheme.onSurface,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildEmptyCell({
+    required DateTime day,
+    required ColorScheme colorScheme,
+  }) {
+    final dayOfWeek = day.weekday % 7;
+    final firstDayOfMonth = DateTime(day.year, day.month, 1);
+    final weekOfMonth = ((day.day + firstDayOfMonth.weekday - 1) / 7).floor();
+    final isFirstColumn = dayOfWeek == 0;
+    final isFirstRow = weekOfMonth == 0;
+
+    final border = Border(
+      top: isFirstRow
+          ? BorderSide(color: colorScheme.outlineVariant.withAlpha(77))
+          : BorderSide.none,
+      left: isFirstColumn
+          ? BorderSide(color: colorScheme.outlineVariant.withAlpha(77))
+          : BorderSide.none,
+      right: BorderSide(color: colorScheme.outlineVariant.withAlpha(77)),
+      bottom: BorderSide(color: colorScheme.outlineVariant.withAlpha(77)),
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        border: border,
+      ),
+    );
+  }
+
+  Widget _buildDateBubble({
+    required DateTime day,
+    required bool isSelected,
+    required bool isToday,
+    required bool isWeekend,
+    required ColorScheme colorScheme,
+  }) {
+    return Container(
+      width: _CalendarConstants.dateBubbleSize,
+      height: _CalendarConstants.dateBubbleSize,
       decoration: BoxDecoration(
         color: isSelected
             ? colorScheme.primary
             : isToday
                 ? colorScheme.primaryContainer
-                : null,
-        borderRadius: BorderRadius.circular(8),
-        border: hasData && !isSelected
-            ? Border.all(
-                color: colorScheme.outline.withAlpha(128),
-                width: 1,
-              )
-            : null,
+                : Colors.transparent,
+        shape: BoxShape.circle,
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+      alignment: Alignment.center,
+      child: Text(
+        '${day.day}',
+        style: TextStyle(
+          color: isSelected
+              ? colorScheme.onPrimary
+              : isToday
+                  ? colorScheme.onPrimaryContainer
+                  : isWeekend
+                      ? colorScheme.error
+                      : colorScheme.onSurface,
+          fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+          fontSize: _CalendarConstants.dateFontSize,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserAmountList({
+    required Map<String, dynamic> totals,
+    required bool isSelected,
+    required ColorScheme colorScheme,
+    required BuildContext context,
+  }) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final showAmount = screenWidth > _CalendarConstants.smallScreenThreshold;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: (totals['users'] as Map<String, dynamic>)
+          .entries
+          .take(_CalendarConstants.maxVisibleUsers)
+          .map((entry) {
+        final userData = entry.value as Map<String, dynamic>;
+        final colorHex = userData['color'] as String? ?? '#A8D8EA';
+        final color = ColorUtils.parseHexColor(colorHex);
+        final expense = userData['expense'] as int? ?? 0;
+
+        return _buildUserAmountRow(
+          color: color,
+          amount: expense,
+          isSelected: isSelected,
+          colorScheme: colorScheme,
+          showAmount: showAmount,
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildUserAmountRow({
+    required Color color,
+    required int amount,
+    required bool isSelected,
+    required ColorScheme colorScheme,
+    required bool showAmount,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 날짜
-          Text(
-            '${day.day}',
-            style: TextStyle(
-              color: isSelected
-                  ? colorScheme.onPrimary
-                  : isToday
-                      ? colorScheme.onPrimaryContainer
-                      : isWeekend
-                          ? colorScheme.error
-                          : colorScheme.onSurface,
-              fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
-              fontSize: 14,
+          Container(
+            width: _CalendarConstants.dotSize,
+            height: _CalendarConstants.dotSize,
+            decoration: BoxDecoration(
+              color: isSelected ? colorScheme.onPrimary : color,
+              shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(height: 4),
-          // 사용자별 점 인디케이터
-          if (hasData && totals?['users'] != null)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: (totals!['users'] as Map<String, dynamic>).entries.take(3).map((entry) {
-                final userData = entry.value as Map<String, dynamic>;
-                final colorHex = userData['color'] as String? ?? '#A8D8EA';
-                final color = ColorUtils.parseHexColor(colorHex);
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 1),
-                  child: Container(
-                    width: 5,
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: isSelected ? colorScheme.onPrimary : color,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                );
-              }).toList(),
-            )
-          else
-            const SizedBox(height: 5),
+          if (showAmount) ...[
+            SizedBox(width: _CalendarConstants.dotSpacing),
+            Text(
+              NumberFormat('#,###').format(amount),
+              style: TextStyle(
+                fontSize: _CalendarConstants.amountFontSize,
+                color: isSelected
+                    ? colorScheme.onPrimary.withAlpha(204)
+                    : colorScheme.onSurface.withAlpha(179),
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ],
         ],
       ),
     );
@@ -243,6 +428,7 @@ class _MonthSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final formatter = NumberFormat('#,###', 'ko_KR');
 
     // 실제 데이터 연동
     final monthlyTotalAsync = ref.watch(monthlyTotalProvider);
@@ -250,37 +436,112 @@ class _MonthSummary extends StatelessWidget {
     final income = monthlyTotalAsync.valueOrNull?['income'] ?? 0;
     final expense = monthlyTotalAsync.valueOrNull?['expense'] ?? 0;
     final balance = income - expense;
+    final users = monthlyTotalAsync.valueOrNull?['users'] as Map<String, dynamic>? ?? {};
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _SummaryItem(
-            label: '수입',
-            amount: income,
-            color: Colors.blue,
+          // 1줄: 전체 합계
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _SummaryItem(
+                label: '수입',
+                amount: income,
+                color: Colors.blue,
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: colorScheme.outlineVariant,
+              ),
+              _SummaryItem(
+                label: '지출',
+                amount: expense,
+                color: Colors.red,
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: colorScheme.outlineVariant,
+              ),
+              _SummaryItem(
+                label: '합계',
+                amount: balance,
+                color: balance >= 0 ? Colors.green : Colors.red,
+              ),
+            ],
           ),
-          Container(
-            width: 1,
-            height: 40,
-            color: colorScheme.outlineVariant,
-          ),
-          _SummaryItem(
-            label: '지출',
-            amount: expense,
-            color: Colors.red,
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: colorScheme.outlineVariant,
-          ),
-          _SummaryItem(
-            label: '합계',
-            amount: balance,
-            color: balance >= 0 ? Colors.green : Colors.red,
-          ),
+          if (users.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Divider(height: 1, color: colorScheme.outlineVariant),
+            const SizedBox(height: 8),
+            // 2줄: 사용자별 정보
+            Wrap(
+              spacing: 16,
+              runSpacing: 8,
+              children: users.entries.map((entry) {
+                final userData = entry.value as Map<String, dynamic>;
+                final colorHex = userData['color'] as String? ?? '#A8D8EA';
+                final color = ColorUtils.parseHexColor(colorHex);
+                final userName = userData['name'] as String? ?? '사용자';
+                final userIncome = userData['income'] as int? ?? 0;
+                final userExpense = userData['expense'] as int? ?? 0;
+
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 색상 동그라미
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    // 이름
+                    Text(
+                      userName,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    // 수입 (있는 경우)
+                    if (userIncome > 0)
+                      Text(
+                        '+${formatter.format(userIncome)}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    // 구분자
+                    if (userIncome > 0 && userExpense > 0)
+                      const Text(
+                        '/',
+                        style: TextStyle(fontSize: 11),
+                      ),
+                    // 지출 (있는 경우)
+                    if (userExpense > 0)
+                      Text(
+                        '-${formatter.format(userExpense)}',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Colors.red,
+                        ),
+                      ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
@@ -326,22 +587,25 @@ class _SummaryItem extends StatelessWidget {
 // 커스텀 캘린더 헤더
 class _CustomCalendarHeader extends StatelessWidget {
   final DateTime focusedDate;
+  final DateTime selectedDate;
   final VoidCallback onTodayPressed;
   final VoidCallback onPreviousMonth;
   final VoidCallback onNextMonth;
+  final Future<void> Function() onRefresh;
 
   const _CustomCalendarHeader({
     required this.focusedDate,
+    required this.selectedDate,
     required this.onTodayPressed,
     required this.onPreviousMonth,
     required this.onNextMonth,
+    required this.onRefresh,
   });
 
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final isTodayMonth = focusedDate.year == now.year &&
-                         focusedDate.month == now.month;
+    final isToday = isSameDay(selectedDate, now);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
@@ -349,9 +613,19 @@ class _CustomCalendarHeader extends StatelessWidget {
         children: [
           // 오늘 버튼
           TextButton.icon(
-            onPressed: isTodayMonth ? null : onTodayPressed,
+            onPressed: isToday ? null : onTodayPressed,
             icon: const Icon(Icons.today, size: 18),
             label: const Text('오늘'),
+          ),
+          // 새로고침 버튼
+          IconButton(
+            icon: const Icon(Icons.refresh, size: 20),
+            onPressed: onRefresh,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(
+              minWidth: 36,
+              minHeight: 36,
+            ),
           ),
           const Spacer(),
           // 이전 월 버튼

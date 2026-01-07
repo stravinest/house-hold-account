@@ -21,6 +21,7 @@ class TransactionModel extends Transaction {
     super.categoryIcon,
     super.categoryColor,
     super.userName,
+    super.userColor,
     super.paymentMethodName,
   });
 
@@ -51,6 +52,7 @@ class TransactionModel extends Transaction {
       categoryIcon: category?['icon'] as String?,
       categoryColor: category?['color'] as String?,
       userName: profile?['display_name'] as String?,
+      userColor: profile?['color'] as String?,
       paymentMethodName: paymentMethod?['name'] as String?,
     );
   }

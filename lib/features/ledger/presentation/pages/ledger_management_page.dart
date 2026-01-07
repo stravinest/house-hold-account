@@ -179,33 +179,11 @@ class _LedgerCard extends ConsumerWidget {
                           ),
                         ),
                         if (ledger.isShared)
-                          membersAsync.when(
-                            data: (members) =>
-                                _buildMembersInfo(context, members, currentUserId),
-                            loading: () => Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Row(
-                                children: [
-                                  SizedBox(
-                                    width: 12,
-                                    height: 12,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    '멤버 정보 로딩 중...',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            error: (error, stack) => Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                '멤버 정보를 불러올 수 없습니다',
-                                style: TextStyle(fontSize: 12, color: Colors.red[600]),
-                              ),
-                            ),
+                          _MemberInfoWidget(
+                            ledger: ledger,
+                            membersAsync: membersAsync,
+                            currentUserId: currentUserId,
+                            buildMembersInfo: _buildMembersInfo,
                           ),
                       ],
                     ),
@@ -570,5 +548,81 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
         );
       }
     }
+  }
+}
+
+// 멤버 정보 위젯 - 한 번만 동기화 실행
+class _MemberInfoWidget extends ConsumerStatefulWidget {
+  final Ledger ledger;
+  final AsyncValue<List<LedgerMember>> membersAsync;
+  final String? currentUserId;
+  final Widget Function(BuildContext, List<LedgerMember>, String?) buildMembersInfo;
+
+  // 이미 동기화 처리된 ledger ID 추적 (위젯 재생성 시에도 유지)
+  static final Set<String> _syncedLedgerIds = {};
+  static final Set<String> _refreshTriedLedgerIds = {};
+
+  const _MemberInfoWidget({
+    required this.ledger,
+    required this.membersAsync,
+    required this.currentUserId,
+    required this.buildMembersInfo,
+  });
+
+  @override
+  ConsumerState<_MemberInfoWidget> createState() => _MemberInfoWidgetState();
+}
+
+class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
+  @override
+  Widget build(BuildContext context) {
+    return widget.membersAsync.when(
+      data: (members) {
+        // 멤버 수에 따라 공유 상태 자동 동기화 (ledger당 한 번만 실행)
+        final needsSync = widget.ledger.isShared && members.length < 2;
+        final alreadySynced = _MemberInfoWidget._syncedLedgerIds.contains(widget.ledger.id);
+
+        if (needsSync && !alreadySynced) {
+          _MemberInfoWidget._syncedLedgerIds.add(widget.ledger.id);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(ledgerNotifierProvider.notifier).syncShareStatus(
+              ledgerId: widget.ledger.id,
+              memberCount: members.length,
+              currentIsShared: widget.ledger.isShared,
+            );
+          });
+        }
+
+        // 동기화 완료 후 (isShared가 false가 되면) 추적에서 제거
+        if (!widget.ledger.isShared) {
+          _MemberInfoWidget._syncedLedgerIds.remove(widget.ledger.id);
+          _MemberInfoWidget._refreshTriedLedgerIds.remove(widget.ledger.id);
+        }
+
+        return widget.buildMembersInfo(context, members, widget.currentUserId);
+      },
+      loading: () => Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '멤버 정보 로딩 중...',
+              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+      error: (error, stack) {
+        // 에러 발생 시 빈 위젯 반환 (공유 해제된 가계부일 가능성)
+        // 가계부 목록이 Realtime으로 자동 업데이트되므로 별도 새로고침 불필요
+        return const SizedBox.shrink();
+      },
+    );
   }
 }

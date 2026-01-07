@@ -42,21 +42,30 @@ class TransactionList extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline, size: 48),
-            const SizedBox(height: 16),
-            Text('오류가 발생했습니다: $e'),
-            const SizedBox(height: 16),
-            FilledButton.tonal(
+      loading: () => ListView(
+        children: const [
+          SizedBox(height: 200),
+          Center(child: CircularProgressIndicator()),
+        ],
+      ),
+      error: (e, _) => ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const SizedBox(height: 100),
+          const Icon(Icons.error_outline, size: 48),
+          const SizedBox(height: 16),
+          Text(
+            '오류가 발생했습니다: $e',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          Center(
+            child: FilledButton.tonal(
               onPressed: () => ref.refresh(dailyTransactionsProvider),
               child: const Text('다시 시도'),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -72,31 +81,34 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     final dateFormat = DateFormat('M월 d일 (E)', 'ko_KR');
 
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.receipt_long_outlined,
-            size: 64,
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            dateFormat.format(date),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '기록된 내역이 없습니다',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-          const SizedBox(height: 24),
-          FilledButton.tonal(
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const SizedBox(height: 100),
+        Icon(
+          Icons.receipt_long_outlined,
+          size: 64,
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+        const SizedBox(height: 16),
+        Text(
+          dateFormat.format(date),
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          '기록된 내역이 없습니다',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+        const SizedBox(height: 24),
+        Center(
+          child: FilledButton.tonal(
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -107,8 +119,8 @@ class _EmptyState extends StatelessWidget {
             },
             child: const Text('새 거래'),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -291,6 +291,7 @@ class CalendarTabView extends StatelessWidget {
               focusedDate: focusedDate,
               onDateSelected: onDateSelected,
               onPageChanged: onPageChanged,
+              onRefresh: onRefresh,
             ),
             const Divider(height: 1),
             // 선택된 날짜의 거래 목록

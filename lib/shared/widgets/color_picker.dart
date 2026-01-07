@@ -11,21 +11,24 @@ class ColorPicker extends StatelessWidget {
     required this.onColorSelected,
   });
 
-  // PRD에 정의된 색상 팔레트
+  // PRD에 정의된 색상 팔레트 (5x2 레이아웃)
   static const List<String> colors = [
     '#A8D8EA', // 파스텔 블루 (기본값)
     '#FFB6A3', // 코랄 오렌지
     '#B8E6C9', // 민트 그린
     '#D4A5D4', // 라벤더
     '#FFCBA4', // 피치
-    '#FFD6A5', // 복숭아
+    '#F8B4D9', // 핑크
     '#C9A9DC', // 연보라
-    '#A8E6CF', // 민트
+    '#B4D4FF', // 스카이 블루
+    '#FFE5B4', // 크림
+    '#D4F4DD', // 라임
   ];
 
   @override
   Widget build(BuildContext context) {
     return Wrap(
+      alignment: WrapAlignment.center,
       spacing: 12,
       runSpacing: 12,
       children: colors.map((color) {

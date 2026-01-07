@@ -96,7 +96,7 @@ class LedgerRepository {
         .from('ledger_members')
         .select('*, profiles(display_name, email, avatar_url)')
         .eq('ledger_id', ledgerId)
-        .order('joined_at');
+        .order('created_at');
 
     return (response as List)
         .map((json) => LedgerMemberModel.fromJson(json))
@@ -132,7 +132,7 @@ class LedgerRepository {
     await _client.from('ledger_members').delete().eq('id', memberId);
   }
 
-  // 실시간 구독
+  // 실시간 구독 - ledgers 테이블
   RealtimeChannel subscribeLedgers(void Function(List<LedgerModel>) onData) {
     return _client
         .channel('ledgers_changes')
@@ -143,6 +143,21 @@ class LedgerRepository {
           callback: (payload) async {
             final ledgers = await getLedgers();
             onData(ledgers);
+          },
+        )
+        .subscribe();
+  }
+
+  // 실시간 구독 - ledger_members 테이블 (멤버 변경 감지)
+  RealtimeChannel subscribeLedgerMembers(void Function() onMemberChanged) {
+    return _client
+        .channel('ledger_members_changes')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'ledger_members',
+          callback: (payload) {
+            onMemberChanged();
           },
         )
         .subscribe();

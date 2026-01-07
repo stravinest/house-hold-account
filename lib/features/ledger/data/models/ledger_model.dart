@@ -75,7 +75,7 @@ class LedgerMemberModel extends LedgerMember {
       ledgerId: json['ledger_id'] as String,
       userId: json['user_id'] as String,
       role: json['role'] as String,
-      joinedAt: DateTime.parse(json['joined_at'] as String),
+      joinedAt: DateTime.parse(json['created_at'] as String),
       displayName: profile?['display_name'] as String?,
       email: profile?['email'] as String?,
       avatarUrl: profile?['avatar_url'] as String?,

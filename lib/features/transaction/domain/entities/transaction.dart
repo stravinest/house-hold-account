@@ -22,6 +22,7 @@ class Transaction extends Equatable {
   final String? categoryIcon;
   final String? categoryColor;
   final String? userName;
+  final String? userColor;
   final String? paymentMethodName;
 
   const Transaction({
@@ -44,6 +45,7 @@ class Transaction extends Equatable {
     this.categoryIcon,
     this.categoryColor,
     this.userName,
+    this.userColor,
     this.paymentMethodName,
   });
 
@@ -105,6 +107,7 @@ class Transaction extends Equatable {
     String? categoryIcon,
     String? categoryColor,
     String? userName,
+    String? userColor,
     String? paymentMethodName,
   }) {
     return Transaction(
@@ -127,6 +130,7 @@ class Transaction extends Equatable {
       categoryIcon: categoryIcon ?? this.categoryIcon,
       categoryColor: categoryColor ?? this.categoryColor,
       userName: userName ?? this.userName,
+      userColor: userColor ?? this.userColor,
       paymentMethodName: paymentMethodName ?? this.paymentMethodName,
     );
   }

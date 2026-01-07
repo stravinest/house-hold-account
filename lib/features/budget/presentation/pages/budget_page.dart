@@ -365,14 +365,14 @@ class _BudgetList extends StatelessWidget {
               ),
               child: Center(
                 child: Text(
-                  budget.categoryIcon ?? '',
+                  budget.categoryIcon ?? '📦',
                   style: const TextStyle(fontSize: 20),
                 ),
               ),
             ),
             title: Row(
               children: [
-                Expanded(child: Text(budget.categoryName ?? '')),
+                Expanded(child: Text(budget.categoryName ?? '미분류')),
                 if (isOverBudget)
                   Icon(Icons.warning_amber_rounded,
                       size: 16, color: Colors.red.shade400),

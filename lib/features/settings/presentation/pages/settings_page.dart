@@ -144,6 +144,8 @@ class SettingsPage extends ConsumerWidget {
                           final authService = ref.read(authServiceProvider);
                           try {
                             await authService.updateProfile(color: color);
+                            // 프로파일 프로바이더를 새로고침하여 UI 즉시 업데이트
+                            ref.invalidate(userProfileProvider);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(content: Text('색상이 변경되었습니다')),

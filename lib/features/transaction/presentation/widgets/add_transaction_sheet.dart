@@ -46,16 +46,28 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     if (widget.initialType != null) {
       _type = widget.initialType!;
     }
+    // 초기 금액을 '0'으로 설정
+    _amountController.text = '0';
     // 금액 필드 포커스 시 전체 선택
     _amountFocusNode.addListener(_onAmountFocusChange);
   }
 
   void _onAmountFocusChange() {
-    if (_amountFocusNode.hasFocus && _amountController.text.isNotEmpty) {
-      _amountController.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: _amountController.text.length,
-      );
+    if (_amountFocusNode.hasFocus) {
+      // 포커스를 얻었을 때
+      if (_amountController.text == '0') {
+        _amountController.clear();
+      } else {
+        _amountController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _amountController.text.length,
+        );
+      }
+    } else {
+      // 포커스를 잃었을 때
+      if (_amountController.text.isEmpty) {
+        _amountController.text = '0';
+      }
     }
   }
 
@@ -250,26 +262,18 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                             FilteringTextInputFormatter.digitsOnly,
                             _AmountInputFormatter(),
                           ],
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: _type == 'expense'
-                                ? Colors.red
-                                : Colors.blue,
                           ),
                           textAlign: TextAlign.center,
-                          decoration: InputDecoration(
-                            hintText: '0',
-                            hintStyle: TextStyle(
-                              fontSize: 24,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                          decoration: const InputDecoration(
                             suffixText: '원',
-                            suffixStyle: const TextStyle(fontSize: 18),
+                            suffixStyle: TextStyle(fontSize: 18),
                             border: InputBorder.none,
                           ),
                           validator: (value) {
-                            if (value == null || value.isEmpty) {
+                            if (value == null || value.isEmpty || value == '0') {
                               return '금액을 입력해주세요';
                             }
                             return null;

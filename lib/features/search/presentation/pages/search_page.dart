@@ -151,7 +151,7 @@ class _SearchResultItem extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            transaction.categoryIcon ?? '',
+            transaction.categoryIcon ?? '📦',
             style: const TextStyle(fontSize: 20),
           ),
         ),
