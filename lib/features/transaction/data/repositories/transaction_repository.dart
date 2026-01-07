@@ -67,7 +67,7 @@ class TransactionRepository {
   // 거래 생성
   Future<TransactionModel> createTransaction({
     required String ledgerId,
-    required String categoryId,
+    String? categoryId,
     String? paymentMethodId,
     required int amount,
     required String type,
@@ -151,64 +151,145 @@ class TransactionRepository {
     await _client.from('transactions').delete().eq('id', id);
   }
 
-  // 월별 합계 조회
-  Future<Map<String, int>> getMonthlyTotal({
+  // 월별 합계 조회 (사용자별 데이터 포함)
+  Future<Map<String, dynamic>> getMonthlyTotal({
     required String ledgerId,
     required int year,
     required int month,
   }) async {
-    final transactions = await getTransactionsByMonth(
-      ledgerId: ledgerId,
-      year: year,
-      month: month,
-    );
+    try {
+      final startDate = DateTime(year, month, 1);
+      final endDate = DateTime(year, month + 1, 0);
+      final startStr = startDate.toIso8601String().split('T').first;
+      final endStr = endDate.toIso8601String().split('T').first;
 
-    int income = 0;
-    int expense = 0;
+      // transactions와 profiles를 조인하여 user_id, display_name, color 조회
+      final response = await _client
+          .from('transactions')
+          .select('*, profiles!user_id(display_name, color)')
+          .eq('ledger_id', ledgerId)
+          .gte('date', startStr)
+          .lte('date', endStr)
+          .order('date', ascending: true);
 
-    for (final t in transactions) {
-      if (t.isIncome) {
-        income += t.amount;
-      } else {
-        expense += t.amount;
+      int totalIncome = 0;
+      int totalExpense = 0;
+      final userTotals = <String, Map<String, dynamic>>{};
+
+      for (final transaction in response as List) {
+        final userId = transaction['user_id'] as String;
+        final amount = transaction['amount'] as int;
+        final type = transaction['type'] as String;
+
+        // profile에서 display_name과 color 가져오기
+        final profileData = transaction['profiles'];
+        final displayName = (profileData != null && profileData['display_name'] != null)
+            ? profileData['display_name'] as String
+            : '사용자';
+        final userColor = (profileData != null && profileData['color'] != null)
+            ? profileData['color'] as String
+            : '#A8D8EA';
+
+        // 사용자별 데이터 초기화
+        userTotals.putIfAbsent(userId, () => {
+          'displayName': displayName,
+          'income': 0,
+          'expense': 0,
+          'color': userColor,
+        });
+
+        // 금액 누적
+        if (type == 'income') {
+          userTotals[userId]!['income'] = (userTotals[userId]!['income'] as int) + amount;
+          totalIncome += amount;
+        } else {
+          userTotals[userId]!['expense'] = (userTotals[userId]!['expense'] as int) + amount;
+          totalExpense += amount;
+        }
       }
-    }
 
-    return {
-      'income': income,
-      'expense': expense,
-      'balance': income - expense,
-    };
+      return {
+        'income': totalIncome,
+        'expense': totalExpense,
+        'balance': totalIncome - totalExpense,
+        'users': userTotals,
+      };
+    } catch (e) {
+      // 에러 처리 원칙에 따라 에러를 전파
+      rethrow;
+    }
   }
 
-  // 일별 합계 조회
-  Future<Map<DateTime, Map<String, int>>> getDailyTotals({
+  // 일별 합계 조회 (사용자별 데이터 포함)
+  Future<Map<DateTime, Map<String, dynamic>>> getDailyTotals({
     required String ledgerId,
     required int year,
     required int month,
   }) async {
-    final transactions = await getTransactionsByMonth(
-      ledgerId: ledgerId,
-      year: year,
-      month: month,
-    );
+    try {
+      final startDate = DateTime(year, month, 1);
+      final endDate = DateTime(year, month + 1, 0);
+      final startStr = startDate.toIso8601String().split('T').first;
+      final endStr = endDate.toIso8601String().split('T').first;
 
-    final dailyTotals = <DateTime, Map<String, int>>{};
+      // transactions와 profiles를 조인하여 user_id와 color 조회
+      final response = await _client
+          .from('transactions')
+          .select('*, profiles!user_id(color)')
+          .eq('ledger_id', ledgerId)
+          .gte('date', startStr)
+          .lte('date', endStr)
+          .order('date', ascending: true);
 
-    for (final t in transactions) {
-      final date = DateTime(t.date.year, t.date.month, t.date.day);
-      dailyTotals[date] ??= {'income': 0, 'expense': 0};
+      final dailyTotals = <DateTime, Map<String, dynamic>>{};
 
-      if (t.isIncome) {
-        dailyTotals[date]!['income'] =
-            (dailyTotals[date]!['income'] ?? 0) + t.amount;
-      } else {
-        dailyTotals[date]!['expense'] =
-            (dailyTotals[date]!['expense'] ?? 0) + t.amount;
+      for (final transaction in response as List) {
+        final dateStr = transaction['date'] as String;
+        final date = DateTime.parse(dateStr);
+        final dateKey = DateTime(date.year, date.month, date.day);
+
+        final userId = transaction['user_id'] as String;
+        final amount = transaction['amount'] as int;
+        final type = transaction['type'] as String;
+
+        // profile에서 color 가져오기, null이면 기본값 사용
+        final profileData = transaction['profiles'];
+        final userColor = (profileData != null && profileData['color'] != null)
+            ? profileData['color'] as String
+            : '#A8D8EA';
+
+        // 날짜별 데이터 초기화
+        dailyTotals.putIfAbsent(dateKey, () => {
+          'users': <String, Map<String, dynamic>>{},
+          'totalIncome': 0,
+          'totalExpense': 0,
+        });
+
+        final dayData = dailyTotals[dateKey]!;
+        final users = dayData['users'] as Map<String, Map<String, dynamic>>;
+
+        // 사용자별 데이터 초기화
+        users.putIfAbsent(userId, () => {
+          'income': 0,
+          'expense': 0,
+          'color': userColor,
+        });
+
+        // 금액 누적
+        if (type == 'income') {
+          users[userId]!['income'] = (users[userId]!['income'] as int) + amount;
+          dayData['totalIncome'] = (dayData['totalIncome'] as int) + amount;
+        } else {
+          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
+        }
       }
-    }
 
-    return dailyTotals;
+      return dailyTotals;
+    } catch (e) {
+      // 에러 처리 원칙에 따라 에러를 전파
+      rethrow;
+    }
   }
 
   // 실시간 구독

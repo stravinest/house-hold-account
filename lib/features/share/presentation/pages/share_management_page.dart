@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../config/router.dart';
 import '../../../../config/supabase_config.dart';
 import '../../../ledger/domain/entities/ledger.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
@@ -63,15 +65,38 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage>
   void _showInviteDialog(BuildContext context) {
     final ledgerId = ref.read(selectedLedgerIdProvider);
     if (ledgerId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('가계부를 먼저 선택해주세요')),
-      );
+      _showNoLedgerDialog(context);
       return;
     }
 
     showDialog(
       context: context,
       builder: (context) => _InviteDialog(ledgerId: ledgerId),
+    );
+  }
+
+  void _showNoLedgerDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('가계부가 필요합니다'),
+        content: const Text(
+          '초대를 보내려면 먼저 가계부를 생성해주세요.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push(Routes.ledgerManage);
+            },
+            child: const Text('가계부 생성하기'),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -34,8 +34,9 @@ final expenseCategoriesProvider = FutureProvider<List<Category>>((ref) async {
 class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
   final CategoryRepository _repository;
   final String? _ledgerId;
+  final Ref _ref;
 
-  CategoryNotifier(this._repository, this._ledgerId)
+  CategoryNotifier(this._repository, this._ledgerId, this._ref)
       : super(const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadCategories();
@@ -56,6 +57,7 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
       state = AsyncValue.data(categories);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 
@@ -67,16 +69,22 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
   }) async {
     if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
 
-    final category = await _repository.createCategory(
-      ledgerId: _ledgerId,
-      name: name,
-      icon: icon,
-      color: color,
-      type: type,
-    );
+    try {
+      final category = await _repository.createCategory(
+        ledgerId: _ledgerId,
+        name: name,
+        icon: icon,
+        color: color,
+        type: type,
+      );
 
-    await loadCategories();
-    return category;
+      _ref.invalidate(categoriesProvider);
+      await loadCategories();
+      return category;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
   }
 
   Future<void> updateCategory({
@@ -85,18 +93,31 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
     String? icon,
     String? color,
   }) async {
-    await _repository.updateCategory(
-      id: id,
-      name: name,
-      icon: icon,
-      color: color,
-    );
-    await loadCategories();
+    try {
+      await _repository.updateCategory(
+        id: id,
+        name: name,
+        icon: icon,
+        color: color,
+      );
+
+      _ref.invalidate(categoriesProvider);
+      await loadCategories();
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
   }
 
   Future<void> deleteCategory(String id) async {
-    await _repository.deleteCategory(id);
-    await loadCategories();
+    try {
+      await _repository.deleteCategory(id);
+      _ref.invalidate(categoriesProvider);
+      await loadCategories();
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
   }
 }
 
@@ -104,5 +125,5 @@ final categoryNotifierProvider =
     StateNotifierProvider<CategoryNotifier, AsyncValue<List<Category>>>((ref) {
   final repository = ref.watch(categoryRepositoryProvider);
   final ledgerId = ref.watch(selectedLedgerIdProvider);
-  return CategoryNotifier(repository, ledgerId);
+  return CategoryNotifier(repository, ledgerId, ref);
 });

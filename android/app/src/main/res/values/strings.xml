@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">공유 가계부</string>
+
+    <!-- Widget Names -->
+    <string name="widget_quick_add_name">빠른 추가</string>
+    <string name="widget_quick_add_description">지출/수입을 빠르게 추가합니다</string>
+
+    <string name="widget_monthly_summary_name">이번 달 요약</string>
+    <string name="widget_monthly_summary_description">이번 달 지출/수입 현황을 표시합니다</string>
+</resources>

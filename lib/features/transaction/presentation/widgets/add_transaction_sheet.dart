@@ -11,10 +11,14 @@ import '../providers/transaction_provider.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
   final DateTime? initialDate;
+  /// 위젯 딥링크에서 전달받는 초기 거래 타입
+  /// 'expense' 또는 'income'
+  final String? initialType;
 
   const AddTransactionSheet({
     super.key,
     this.initialDate,
+    this.initialType,
   });
 
   @override
@@ -38,6 +42,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   void initState() {
     super.initState();
     _selectedDate = widget.initialDate ?? DateTime.now();
+    // 초기 거래 타입 설정 (위젯 딥링크에서 전달받은 경우)
+    if (widget.initialType != null) {
+      _type = widget.initialType!;
+    }
     // 금액 필드 포커스 시 전체 선택
     _amountFocusNode.addListener(_onAmountFocusChange);
   }
@@ -76,12 +84,6 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('카테고리를 선택해주세요')),
-      );
-      return;
-    }
 
     setState(() => _isLoading = true);
 
@@ -90,7 +92,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           int.parse(_amountController.text.replaceAll(RegExp(r'[^\d]'), ''));
 
       await ref.read(transactionNotifierProvider.notifier).createTransaction(
-            categoryId: _selectedCategory!.id,
+            categoryId: _selectedCategory?.id,
             paymentMethodId: _selectedPaymentMethod?.id,
             amount: amount,
             type: _type,
@@ -217,6 +219,28 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
                         const SizedBox(height: 24),
 
+                        // 지출명/내용 입력
+                        TextFormField(
+                          controller: _memoController,
+                          maxLines: 1,
+                          keyboardType: TextInputType.text,
+                          textInputAction: TextInputAction.next,
+                          decoration: InputDecoration(
+                            labelText: _type == 'expense' ? '지출명' : '수입명',
+                            hintText: _type == 'expense' ? '예: 점심식사, 커피' : '예: 월급, 용돈',
+                            prefixIcon: const Icon(Icons.edit),
+                            border: const OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.trim().isEmpty) {
+                              return _type == 'expense' ? '지출명을 입력해주세요' : '수입명을 입력해주세요';
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 16),
+
                         // 금액 입력
                         TextFormField(
                           controller: _amountController,
@@ -227,7 +251,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                             _AmountInputFormatter(),
                           ],
                           style: TextStyle(
-                            fontSize: 32,
+                            fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: _type == 'expense'
                                 ? Colors.red
@@ -237,11 +261,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                           decoration: InputDecoration(
                             hintText: '0',
                             hintStyle: TextStyle(
-                              fontSize: 32,
+                              fontSize: 24,
                               color: colorScheme.onSurfaceVariant,
                             ),
                             suffixText: '원',
-                            suffixStyle: const TextStyle(fontSize: 20),
+                            suffixStyle: const TextStyle(fontSize: 18),
                             border: InputBorder.none,
                           ),
                           validator: (value) {
@@ -307,25 +331,6 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                           const Divider(),
                         ],
 
-                        // 지출명/내용 입력 (필수)
-                        TextFormField(
-                          controller: _memoController,
-                          maxLines: 1,
-                          keyboardType: TextInputType.text,
-                          textInputAction: TextInputAction.done,
-                          decoration: InputDecoration(
-                            labelText: _type == 'expense' ? '지출명' : '수입명',
-                            hintText: _type == 'expense' ? '예: 점심식사, 커피' : '예: 월급, 용돈',
-                            prefixIcon: const Icon(Icons.edit),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return _type == 'expense' ? '지출명을 입력해주세요' : '수입명을 입력해주세요';
-                            }
-                            return null;
-                          },
-                        ),
-
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -344,6 +349,14 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       spacing: 8,
       runSpacing: 8,
       children: [
+        // 선택 안함 옵션
+        FilterChip(
+          selected: _selectedCategory == null,
+          label: const Text('선택 안함'),
+          onSelected: (_) {
+            setState(() => _selectedCategory = null);
+          },
+        ),
         ...categories.map((category) {
           final isSelected = _selectedCategory?.id == category.id;
           return FilterChip(
@@ -359,6 +372,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             onSelected: (_) {
               setState(() => _selectedCategory = category);
             },
+            onDeleted: () => _deleteCategory(category),
+            deleteIcon: const Icon(Icons.close, size: 18),
           );
         }),
         // 카테고리 추가 버튼
@@ -520,17 +535,53 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
   }
 
-  Widget _buildPaymentMethodChips(List<PaymentMethod> paymentMethods) {
-    if (paymentMethods.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          '등록된 결제수단이 없습니다. 설정에서 추가하세요.',
-          style: TextStyle(color: Colors.grey[600]),
-        ),
-      );
-    }
+  Future<void> _deleteCategory(Category category) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('카테고리 삭제'),
+        content: Text('\'${category.name}\' 카테고리를 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
 
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(categoryNotifierProvider.notifier).deleteCategory(category.id);
+
+      if (_selectedCategory?.id == category.id) {
+        setState(() => _selectedCategory = null);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('카테고리가 삭제되었습니다')),
+        );
+      }
+
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(incomeCategoriesProvider);
+      ref.invalidate(expenseCategoriesProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildPaymentMethodChips(List<PaymentMethod> paymentMethods) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -558,10 +609,204 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             onSelected: (_) {
               setState(() => _selectedPaymentMethod = method);
             },
+            onDeleted: () => _deletePaymentMethod(method),
+            deleteIcon: const Icon(Icons.close, size: 18),
           );
         }),
+        // 결제수단 추가 버튼
+        ActionChip(
+          avatar: const Icon(Icons.add, size: 18),
+          label: const Text('추가'),
+          onPressed: () => _showAddPaymentMethodDialog(),
+        ),
       ],
     );
+  }
+
+  void _showAddPaymentMethodDialog() {
+    final nameController = TextEditingController();
+    String selectedIcon = '💳';
+    String selectedColor = '#6750A4';
+
+    final icons = ['💳', '💰', '🏦', '📱', '🪙', '💵', '💴', '💶'];
+    final colors = ['#6750A4', '#2196F3', '#4CAF50', '#FF9800', '#E91E63', '#00BCD4', '#9C27B0', '#795548'];
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('결제수단 추가'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: '결제수단 이름',
+                    hintText: '예: 신용카드, 현금, 체크카드',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text('아이콘'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: icons.map((icon) {
+                    final isSelected = icon == selectedIcon;
+                    return GestureDetector(
+                      onTap: () => setDialogState(() => selectedIcon = icon),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Theme.of(context).colorScheme.primaryContainer
+                              : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                          border: isSelected
+                              ? Border.all(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 2,
+                                )
+                              : null,
+                        ),
+                        child: Center(
+                          child: Text(icon, style: const TextStyle(fontSize: 20)),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 16),
+                const Text('색상'),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: colors.map((color) {
+                    final isSelected = color == selectedColor;
+                    return GestureDetector(
+                      onTap: () => setDialogState(() => selectedColor = color),
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Color(
+                              int.parse(color.substring(1), radix: 16) + 0xFF000000),
+                          borderRadius: BorderRadius.circular(8),
+                          border: isSelected
+                              ? Border.all(color: Colors.black, width: 3)
+                              : null,
+                        ),
+                        child: isSelected
+                            ? const Icon(Icons.check, color: Colors.white)
+                            : null,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('취소'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                if (nameController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('결제수단 이름을 입력해주세요')),
+                  );
+                  return;
+                }
+
+                try {
+                  final newPaymentMethod = await ref
+                      .read(paymentMethodNotifierProvider.notifier)
+                      .createPaymentMethod(
+                        name: nameController.text.trim(),
+                        icon: selectedIcon,
+                        color: selectedColor,
+                      );
+
+                  if (dialogContext.mounted) {
+                    Navigator.pop(dialogContext);
+                  }
+
+                  setState(() => _selectedPaymentMethod = newPaymentMethod);
+
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('결제수단이 추가되었습니다')),
+                    );
+                  }
+
+                  // 결제수단 목록 새로고침
+                  ref.invalidate(paymentMethodsProvider);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('오류: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('추가'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deletePaymentMethod(PaymentMethod method) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('결제수단 삭제'),
+        content: Text('\'${method.name}\' 결제수단을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref.read(paymentMethodNotifierProvider.notifier).deletePaymentMethod(method.id);
+
+      if (_selectedPaymentMethod?.id == method.id) {
+        setState(() => _selectedPaymentMethod = null);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('결제수단이 삭제되었습니다')),
+        );
+      }
+
+      ref.invalidate(paymentMethodsProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류: $e')),
+        );
+      }
+    }
   }
 
   Color _parseColor(String colorString) {

@@ -40,10 +40,10 @@ final monthlyTransactionsProvider =
   );
 });
 
-// 현재 월 합계
-final monthlyTotalProvider = FutureProvider<Map<String, int>>((ref) async {
+// 현재 월 합계 (사용자별 데이터 포함)
+final monthlyTotalProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
-  if (ledgerId == null) return {'income': 0, 'expense': 0, 'balance': 0};
+  if (ledgerId == null) return {'income': 0, 'expense': 0, 'balance': 0, 'users': {}};
 
   final date = ref.watch(selectedDateProvider);
   final repository = ref.watch(transactionRepositoryProvider);
@@ -55,9 +55,9 @@ final monthlyTotalProvider = FutureProvider<Map<String, int>>((ref) async {
   );
 });
 
-// 일별 합계 (캘린더용)
+// 일별 합계 (캘린더용, 사용자별 데이터 포함)
 final dailyTotalsProvider =
-    FutureProvider<Map<DateTime, Map<String, int>>>((ref) async {
+    FutureProvider<Map<DateTime, Map<String, dynamic>>>((ref) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return {};
 
@@ -106,7 +106,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
   }
 
   Future<Transaction> createTransaction({
-    required String categoryId,
+    String? categoryId,
     String? paymentMethodId,
     required int amount,
     required String type,

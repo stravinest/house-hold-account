@@ -5,6 +5,11 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/ledger.dart';
 import '../providers/ledger_provider.dart';
 
+// 최소 가계부 개수 상수
+class _LedgerConstants {
+  static const int minLedgerCount = 1;
+}
+
 class LedgerManagementPage extends ConsumerWidget {
   const LedgerManagementPage({super.key});
 
@@ -58,6 +63,7 @@ class LedgerManagementPage extends ConsumerWidget {
                 onSelect: () {
                   ref.read(ledgerNotifierProvider.notifier).selectLedger(ledger.id);
                 },
+                ledgersCount: ledgers.length,
               );
             },
           );
@@ -84,17 +90,20 @@ class _LedgerCard extends ConsumerWidget {
   final Ledger ledger;
   final bool isSelected;
   final VoidCallback onSelect;
+  final int ledgersCount;
 
   const _LedgerCard({
     required this.ledger,
     required this.isSelected,
     required this.onSelect,
+    required this.ledgersCount,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUserId = ref.watch(currentUserProvider)?.id;
     final isOwner = ledger.ownerId == currentUserId;
+    final membersAsync = ref.watch(ledgerMembersProvider(ledger.id));
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -169,6 +178,35 @@ class _LedgerCard extends ConsumerWidget {
                             color: Colors.grey[600],
                           ),
                         ),
+                        if (ledger.isShared)
+                          membersAsync.when(
+                            data: (members) =>
+                                _buildMembersInfo(context, members, currentUserId),
+                            loading: () => Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Row(
+                                children: [
+                                  SizedBox(
+                                    width: 12,
+                                    height: 12,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '멤버 정보 로딩 중...',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            error: (error, stack) => Padding(
+                              padding: const EdgeInsets.only(top: 4),
+                              child: Text(
+                                '멤버 정보를 불러올 수 없습니다',
+                                style: TextStyle(fontSize: 12, color: Colors.red[600]),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -246,6 +284,70 @@ class _LedgerCard extends ConsumerWidget {
     );
   }
 
+  Widget _buildMembersInfo(
+    BuildContext context,
+    List<LedgerMember> members,
+    String? currentUserId,
+  ) {
+    // currentUserId가 null이면 표시하지 않음
+    if (currentUserId == null) {
+      return const SizedBox.shrink();
+    }
+
+    // 본인 제외한 멤버 목록
+    final otherMembers = members
+        .where((m) => m.userId != currentUserId)
+        .toList();
+
+    if (otherMembers.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    // 이름 추출 헬퍼 함수
+    String getName(LedgerMember member) {
+      return member.displayName ??
+          member.email?.split('@')[0] ??
+          '사용자';
+    }
+
+    // 멤버 수에 따라 텍스트 생성
+    String memberText;
+    if (otherMembers.length == 1) {
+      memberText = '${getName(otherMembers[0])}님과 공유 중';
+    } else if (otherMembers.length == 2) {
+      memberText =
+          '${getName(otherMembers[0])}, ${getName(otherMembers[1])}님과 공유 중';
+    } else {
+      final remainingCount = otherMembers.length - 2;
+      memberText =
+          '${getName(otherMembers[0])}, ${getName(otherMembers[1])} 외 $remainingCount명과 공유 중';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          Icon(
+            Icons.people_outline,
+            size: 14,
+            color: Colors.grey[600],
+          ),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              memberText,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showEditDialog(BuildContext context, WidgetRef ref, Ledger ledger) {
     showDialog(
       context: context,
@@ -254,12 +356,38 @@ class _LedgerCard extends ConsumerWidget {
   }
 
   void _showDeleteConfirm(BuildContext context, WidgetRef ref, Ledger ledger) {
+    // 가계부가 1개뿐이면 삭제 불가 경고
+    if (ledgersCount <= _LedgerConstants.minLedgerCount) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('삭제 불가'),
+          content: const Text(
+            '최소 1개의 가계부가 필요합니다.\n다른 가계부를 먼저 생성해주세요.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('확인'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    // 현재 선택된 가계부인지 확인
+    final selectedId = ref.read(selectedLedgerIdProvider);
+    final isCurrentlySelected = ledger.id == selectedId;
+
+    // 기존 삭제 확인 다이얼로그
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('가계부 삭제'),
         content: Text(
           '\'${ledger.name}\' 가계부를 삭제하시겠습니까?\n\n'
+          '${isCurrentlySelected ? '현재 사용 중인 가계부입니다.\n삭제 후 다른 가계부로 자동 전환됩니다.\n\n' : ''}'
           '이 가계부에 기록된 모든 거래, 카테고리, 예산이 함께 삭제됩니다.\n'
           '이 작업은 되돌릴 수 없습니다.',
         ),
@@ -275,6 +403,7 @@ class _LedgerCard extends ConsumerWidget {
                 await ref
                     .read(ledgerNotifierProvider.notifier)
                     .deleteLedger(ledger.id);
+
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('가계부가 삭제되었습니다')),
@@ -283,7 +412,11 @@ class _LedgerCard extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('삭제 실패: $e')),
+                    SnackBar(
+                      content: Text('삭제 실패: $e'),
+                      backgroundColor: Colors.red,
+                      duration: const Duration(seconds: 3),
+                    ),
                   );
                 }
               }

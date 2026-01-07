@@ -94,7 +94,7 @@ class LedgerRepository {
   Future<List<LedgerMemberModel>> getMembers(String ledgerId) async {
     final response = await _client
         .from('ledger_members')
-        .select('*, profiles(display_name, avatar_url)')
+        .select('*, profiles(display_name, email, avatar_url)')
         .eq('ledger_id', ledgerId)
         .order('joined_at');
 

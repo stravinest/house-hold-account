@@ -4,7 +4,7 @@ class TransactionModel extends Transaction {
   const TransactionModel({
     required super.id,
     required super.ledgerId,
-    required super.categoryId,
+    super.categoryId,
     required super.userId,
     super.paymentMethodId,
     required super.amount,
@@ -32,7 +32,7 @@ class TransactionModel extends Transaction {
     return TransactionModel(
       id: json['id'] as String,
       ledgerId: json['ledger_id'] as String,
-      categoryId: json['category_id'] as String,
+      categoryId: json['category_id'] as String?,
       userId: json['user_id'] as String,
       paymentMethodId: json['payment_method_id'] as String?,
       amount: json['amount'] as int,
@@ -77,7 +77,7 @@ class TransactionModel extends Transaction {
 
   static Map<String, dynamic> toCreateJson({
     required String ledgerId,
-    required String categoryId,
+    String? categoryId,
     required String userId,
     String? paymentMethodId,
     required int amount,

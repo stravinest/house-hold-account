@@ -1,11 +1,19 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'config/firebase_config.dart';
 import 'config/router.dart';
 import 'config/supabase_config.dart';
+import 'features/widget/data/services/widget_data_service.dart';
 import 'shared/themes/app_theme.dart';
+import 'shared/themes/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,26 +28,122 @@ void main() async {
     debugPrint('Supabase 초기화 실패: $e');
   }
 
+  // Firebase 초기화 (환경변수에 설정되어 있을 경우에만)
+  try {
+    final firebaseOptions = FirebaseConfig.options;
+    if (firebaseOptions != null) {
+      await Firebase.initializeApp(options: firebaseOptions);
+      debugPrint('Firebase 초기화 완료');
+    } else {
+      debugPrint('Firebase 설정이 없습니다. 푸시 알림 기능은 비활성화됩니다.');
+    }
+  } catch (e) {
+    debugPrint('Firebase 초기화 실패: $e');
+    debugPrint('푸시 알림 기능은 비활성화됩니다. Firebase 설정을 확인하세요.');
+  }
+
+  // 홈 위젯 서비스 초기화
+  try {
+    await WidgetDataService.initialize();
+    debugPrint('홈 위젯 서비스 초기화 완료');
+  } catch (e) {
+    debugPrint('홈 위젯 서비스 초기화 실패: $e');
+  }
+
+  // SharedPreferences 초기화
+  final sharedPreferences = await SharedPreferences.getInstance();
+
   runApp(
-    const ProviderScope(
-      child: SharedHouseholdAccountApp(),
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const SharedHouseholdAccountApp(),
     ),
   );
 }
 
-class SharedHouseholdAccountApp extends ConsumerWidget {
+class SharedHouseholdAccountApp extends ConsumerStatefulWidget {
   const SharedHouseholdAccountApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SharedHouseholdAccountApp> createState() => _SharedHouseholdAccountAppState();
+}
+
+class _SharedHouseholdAccountAppState extends ConsumerState<SharedHouseholdAccountApp> {
+  late AppLinks _appLinks;
+  StreamSubscription<Uri>? _linkSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initDeepLinks() async {
+    _appLinks = AppLinks();
+
+    // 앱이 종료된 상태에서 딥링크로 실행된 경우 처리
+    try {
+      final uri = await _appLinks.getInitialLink();
+      if (uri != null) {
+        _handleDeepLink(uri);
+      }
+    } catch (e) {
+      debugPrint('초기 딥링크 처리 실패: $e');
+    }
+
+    // 앱이 실행 중일 때 딥링크 처리
+    _linkSubscription = _appLinks.uriLinkStream.listen(
+      (uri) {
+        _handleDeepLink(uri);
+      },
+      onError: (err) {
+        debugPrint('딥링크 스트림 에러: $err');
+      },
+    );
+  }
+
+  void _handleDeepLink(Uri uri) {
+    debugPrint('딥링크 수신: $uri');
+
+    // scheme이 sharedhousehold인 경우에만 처리
+    if (uri.scheme != 'sharedhousehold') {
+      debugPrint('지원하지 않는 스킴: ${uri.scheme}');
+      return;
+    }
+
+    // URI의 host가 라우트 경로가 됨
+    // 예: sharedhousehold://add-expense -> /add-expense
+    final path = uri.host.isEmpty ? '/' : '/${uri.host}';
+
+    // 라우터로 이동
+    final router = ref.read(routerProvider);
+
+    // 딥링크 처리를 약간 지연시켜 앱이 완전히 초기화되도록 함
+    Future.delayed(const Duration(milliseconds: 500), () {
+      router.go(path);
+      debugPrint('딥링크 라우팅: $path');
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
+    final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       title: '공유 가계부',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       routerConfig: router,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,

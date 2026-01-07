@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 class Transaction extends Equatable {
   final String id;
   final String ledgerId;
-  final String categoryId;
+  final String? categoryId;
   final String userId;
   final String? paymentMethodId;
   final int amount;
@@ -27,7 +27,7 @@ class Transaction extends Equatable {
   const Transaction({
     required this.id,
     required this.ledgerId,
-    required this.categoryId,
+    this.categoryId,
     required this.userId,
     this.paymentMethodId,
     required this.amount,
@@ -54,7 +54,7 @@ class Transaction extends Equatable {
     return Transaction(
       id: json['id'] as String,
       ledgerId: json['ledger_id'] as String,
-      categoryId: json['category_id'] as String,
+      categoryId: json['category_id'] as String?,
       userId: json['user_id'] as String,
       paymentMethodId: json['payment_method_id'] as String?,
       amount: json['amount'] as int,
@@ -79,6 +79,12 @@ class Transaction extends Equatable {
   bool get isIncome => type == 'income';
   bool get isExpense => type == 'expense';
 
+  // 주의: 현재 copyWith에서는 categoryId나 paymentMethodId를 null로 설정할 수 없습니다.
+  // null을 전달해도 기존 값이 유지됩니다.
+  // 향후 거래 수정 기능 구현 시, null로 설정이 필요하다면 다음 중 하나를 선택하세요:
+  // 1. clearCategory(), clearPaymentMethod() 메서드 추가
+  // 2. Optional wrapper 클래스 사용 (freezed 패턴)
+  // 3. updateWith() 메서드를 별도로 구현하여 명시적으로 null 처리
   Transaction copyWith({
     String? id,
     String? ledgerId,

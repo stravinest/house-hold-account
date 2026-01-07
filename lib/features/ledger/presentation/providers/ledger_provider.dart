@@ -108,11 +108,24 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
 
     // 삭제한 가계부가 현재 선택된 가계부면 선택 해제
     final selectedId = _ref.read(selectedLedgerIdProvider);
-    if (selectedId == id) {
+    final wasSelected = selectedId == id;
+
+    if (wasSelected) {
       _ref.read(selectedLedgerIdProvider.notifier).state = null;
     }
 
     await loadLedgers();
+
+    // 삭제 후 남은 가계부가 있고, 삭제된 가계부가 선택되어 있었다면 첫 번째 가계부 자동 선택
+    if (wasSelected) {
+      final currentState = state;
+      if (currentState is AsyncData<List<Ledger>>) {
+        final ledgers = currentState.value;
+        if (ledgers.isNotEmpty) {
+          _ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
+        }
+      }
+    }
   }
 
   void selectLedger(String id) {

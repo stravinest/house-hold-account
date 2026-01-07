@@ -8,12 +8,17 @@ import '../../../budget/presentation/pages/budget_page.dart';
 import '../../../statistics/presentation/pages/statistics_page.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../../transaction/presentation/widgets/add_transaction_sheet.dart';
+import '../../../widget/presentation/providers/widget_provider.dart';
 import '../providers/ledger_provider.dart';
 import '../widgets/calendar_view.dart';
 import '../widgets/transaction_list.dart';
 
 class HomePage extends ConsumerStatefulWidget {
-  const HomePage({super.key});
+  /// 위젯 딥링크에서 전달받는 초기 거래 타입
+  /// 'expense' 또는 'income'
+  final String? initialTransactionType;
+
+  const HomePage({super.key, this.initialTransactionType});
 
   @override
   ConsumerState<HomePage> createState() => _HomePageState();
@@ -28,7 +33,24 @@ class _HomePageState extends ConsumerState<HomePage> {
     // 앱 시작 시 가계부 목록 로드 및 첫 번째 가계부 자동 생성
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeLedger();
+      // 위젯 딥링크에서 호출된 경우 거래 추가 시트 열기
+      _handleInitialTransactionType();
     });
+  }
+
+  void _handleInitialTransactionType() {
+    if (widget.initialTransactionType != null) {
+      // 다른 초기화 작업이 완료된 후 시트를 열도록 딜레이 추가
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (!mounted) return;
+        final date = ref.read(selectedDateProvider);
+        _showAddTransactionSheet(
+          context,
+          date,
+          initialType: widget.initialTransactionType,
+        );
+      });
+    }
   }
 
   Future<void> _initializeLedger() async {
@@ -46,11 +68,33 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
+  Future<void> _refreshCalendarData() async {
+    ref.invalidate(dailyTransactionsProvider);
+    ref.invalidate(monthlyTransactionsProvider);
+    ref.invalidate(monthlyTotalProvider);
+    ref.invalidate(dailyTotalsProvider);
+
+    // 실제 데이터 로딩 완료를 기다림
+    try {
+      await ref.read(dailyTransactionsProvider.future);
+      await ref.read(monthlyTransactionsProvider.future);
+      await ref.read(monthlyTotalProvider.future);
+      await ref.read(dailyTotalsProvider.future);
+    } catch (e) {
+      // 에러를 상위로 전파하여 RefreshIndicator가 에러 상태를 표시할 수 있도록 함
+      debugPrint('캘린더 새로고침 오류: $e');
+      rethrow;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final selectedDate = ref.watch(selectedDateProvider);
     final ledgersAsync = ref.watch(ledgersProvider);
     final currentLedgerAsync = ref.watch(currentLedgerProvider);
+
+    // 위젯 데이터 자동 업데이트 (월별 합계 변경 시)
+    ref.watch(widgetDataUpdaterProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -70,6 +114,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           error: (e, st) => null,
         ),
         actions: [
+          if (_selectedIndex == 0)
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _refreshCalendarData,
+            ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
@@ -102,6 +151,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ref.read(selectedDateProvider.notifier).state = focusedDate;
               }
             },
+            onRefresh: _refreshCalendarData,
           ),
           // 통계 탭
           const StatisticsTabView(),
@@ -119,9 +169,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
+          // 다른 탭에서 캘린더 탭으로 돌아올 때만 새로고침
+          final shouldRefresh = index == 0 && _selectedIndex != 0;
+
           setState(() {
             _selectedIndex = index;
           });
+
+          if (shouldRefresh) {
+            _refreshCalendarData();
+          }
         },
         destinations: const [
           NavigationDestination(
@@ -149,12 +206,19 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  void _showAddTransactionSheet(BuildContext context, DateTime date) {
+  void _showAddTransactionSheet(
+    BuildContext context,
+    DateTime date, {
+    String? initialType,
+  }) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => AddTransactionSheet(initialDate: date),
+      builder: (context) => AddTransactionSheet(
+        initialDate: date,
+        initialType: initialType,
+      ),
     );
   }
 
@@ -202,6 +266,7 @@ class CalendarTabView extends StatelessWidget {
   final DateTime focusedDate;
   final ValueChanged<DateTime> onDateSelected;
   final ValueChanged<DateTime> onPageChanged;
+  final Future<void> Function() onRefresh;
 
   const CalendarTabView({
     super.key,
@@ -209,25 +274,33 @@ class CalendarTabView extends StatelessWidget {
     required this.focusedDate,
     required this.onDateSelected,
     required this.onPageChanged,
+    required this.onRefresh,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        // 캘린더
-        CalendarView(
-          selectedDate: selectedDate,
-          focusedDate: focusedDate,
-          onDateSelected: onDateSelected,
-          onPageChanged: onPageChanged,
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            // 캘린더
+            CalendarView(
+              selectedDate: selectedDate,
+              focusedDate: focusedDate,
+              onDateSelected: onDateSelected,
+              onPageChanged: onPageChanged,
+            ),
+            const Divider(height: 1),
+            // 선택된 날짜의 거래 목록
+            SizedBox(
+              height: MediaQuery.of(context).size.height - 500,
+              child: TransactionList(date: selectedDate),
+            ),
+          ],
         ),
-        const Divider(height: 1),
-        // 선택된 날짜의 거래 목록
-        Expanded(
-          child: TransactionList(date: selectedDate),
-        ),
-      ],
+      ),
     );
   }
 }

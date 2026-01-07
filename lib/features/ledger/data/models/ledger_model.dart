@@ -63,6 +63,7 @@ class LedgerMemberModel extends LedgerMember {
     required super.role,
     required super.joinedAt,
     super.displayName,
+    super.email,
     super.avatarUrl,
   });
 
@@ -76,6 +77,7 @@ class LedgerMemberModel extends LedgerMember {
       role: json['role'] as String,
       joinedAt: DateTime.parse(json['joined_at'] as String),
       displayName: profile?['display_name'] as String?,
+      email: profile?['email'] as String?,
       avatarUrl: profile?['avatar_url'] as String?,
     );
   }

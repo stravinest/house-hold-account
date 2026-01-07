@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/router.dart';
+import '../../../../shared/themes/theme_provider.dart';
+import '../../../../shared/widgets/color_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-
-// 테마 모드 프로바이더
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
+import '../../../notification/presentation/pages/notification_settings_page.dart';
 
 // 알림 설정 프로바이더
 final notificationEnabledProvider = StateProvider<bool>((ref) => true);
@@ -43,6 +43,20 @@ class SettingsPage extends ConsumerWidget {
               ref.read(notificationEnabledProvider.notifier).state = value;
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.notifications_active),
+            title: const Text('알림 설정'),
+            subtitle: const Text('알림 유형별 설정'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationSettingsPage(),
+                ),
+              );
+            },
+          ),
 
           const Divider(),
 
@@ -67,14 +81,91 @@ class SettingsPage extends ConsumerWidget {
 
           // 계정 섹션
           _SectionHeader(title: '계정'),
-          ListTile(
-            leading: const Icon(Icons.person_outline),
-            title: const Text('프로필 편집'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO: 프로필 편집 페이지로 이동
-            },
+
+          // 프로필 편집 섹션
+          Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '프로필',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  // 표시 이름
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final profile = ref.watch(userProfileProvider).valueOrNull;
+                      final displayName = profile?['display_name'] ?? '';
+
+                      return TextFormField(
+                        initialValue: displayName,
+                        decoration: const InputDecoration(
+                          labelText: '표시 이름',
+                          border: OutlineInputBorder(),
+                        ),
+                        onFieldSubmitted: (value) async {
+                          final authService = ref.read(authServiceProvider);
+                          try {
+                            await authService.updateProfile(displayName: value);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('표시 이름이 변경되었습니다')),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('표시 이름 변경 실패: $e')),
+                              );
+                            }
+                          }
+                        },
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  // 색상 선택
+                  Text(
+                    '내 색상',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 12),
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final currentColor = ref.watch(userColorProvider);
+
+                      return ColorPicker(
+                        selectedColor: currentColor,
+                        onColorSelected: (color) async {
+                          final authService = ref.read(authServiceProvider);
+                          try {
+                            await authService.updateProfile(color: color);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('색상이 변경되었습니다')),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('색상 변경 실패: $e')),
+                              );
+                            }
+                          }
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
           ),
+
+          const SizedBox(height: 8),
           ListTile(
             leading: const Icon(Icons.lock_outline),
             title: const Text('비밀번호 변경'),
@@ -164,9 +255,20 @@ class SettingsPage extends ConsumerWidget {
               color: current == ThemeMode.system ? Theme.of(context).colorScheme.primary : Colors.transparent,
             ),
             title: const Text('시스템 설정'),
-            onTap: () {
-              ref.read(themeModeProvider.notifier).state = ThemeMode.system;
-              Navigator.pop(context);
+            onTap: () async {
+              try {
+                await ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.system);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('테마 저장 실패: $e')),
+                  );
+                }
+              }
             },
           ),
           ListTile(
@@ -175,9 +277,20 @@ class SettingsPage extends ConsumerWidget {
               color: current == ThemeMode.light ? Theme.of(context).colorScheme.primary : Colors.transparent,
             ),
             title: const Text('라이트 모드'),
-            onTap: () {
-              ref.read(themeModeProvider.notifier).state = ThemeMode.light;
-              Navigator.pop(context);
+            onTap: () async {
+              try {
+                await ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.light);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('테마 저장 실패: $e')),
+                  );
+                }
+              }
             },
           ),
           ListTile(
@@ -186,9 +299,20 @@ class SettingsPage extends ConsumerWidget {
               color: current == ThemeMode.dark ? Theme.of(context).colorScheme.primary : Colors.transparent,
             ),
             title: const Text('다크 모드'),
-            onTap: () {
-              ref.read(themeModeProvider.notifier).state = ThemeMode.dark;
-              Navigator.pop(context);
+            onTap: () async {
+              try {
+                await ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.dark);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('테마 저장 실패: $e')),
+                  );
+                }
+              }
             },
           ),
           const SizedBox(height: 16),

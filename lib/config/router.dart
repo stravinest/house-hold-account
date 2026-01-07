@@ -34,23 +34,47 @@ class Routes {
   static const String category = '/category';
   static const String paymentMethod = '/payment-method';
   static const String ledgerManage = '/ledger-manage';
+  // 위젯 딥링크
+  static const String addExpense = '/add-expense';
+  static const String addIncome = '/add-income';
 }
+
+// 인증 상태 변경을 감지하는 Notifier
+class AuthChangeNotifier extends ChangeNotifier {
+  AuthChangeNotifier(this._ref) {
+    _ref.listen(authStateProvider, (previous, next) {
+      notifyListeners();
+    });
+  }
+
+  final Ref _ref;
+}
+
+final authChangeNotifierProvider = Provider<AuthChangeNotifier>(
+  (ref) => AuthChangeNotifier(ref),
+);
 
 // 라우터 프로바이더
 final routerProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-
   return GoRouter(
     initialLocation: Routes.splash,
     debugLogDiagnostics: true,
     redirect: (context, state) {
+      final authState = ref.read(authStateProvider);
       final isLoggedIn = authState.valueOrNull != null;
       final isAuthRoute = state.matchedLocation == Routes.login ||
           state.matchedLocation == Routes.signup;
       final isSplash = state.matchedLocation == Routes.splash;
+      final isDeepLinkRoute = state.matchedLocation == Routes.addExpense ||
+          state.matchedLocation == Routes.addIncome;
 
       // 스플래시 화면에서는 리다이렉트하지 않음
       if (isSplash) return null;
+
+      // 딥링크 라우트는 리다이렉트하지 않음 (이미 로그인된 상태에서만 접근 가능)
+      if (isDeepLinkRoute && isLoggedIn) {
+        return null;
+      }
 
       // 로그인하지 않은 상태에서 인증 페이지가 아닌 곳으로 가려고 하면 로그인으로
       if (!isLoggedIn && !isAuthRoute) {
@@ -84,7 +108,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 메인
       GoRoute(
         path: Routes.home,
-        builder: (context, state) => const HomePage(),
+        builder: (context, state) => HomePage(
+          key: ValueKey(state.matchedLocation),
+        ),
       ),
 
       // 통계
@@ -133,6 +159,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.ledgerManage,
         builder: (context, state) => const LedgerManagementPage(),
+      ),
+
+      // 위젯 딥링크 - 지출 추가
+      GoRoute(
+        path: Routes.addExpense,
+        builder: (context, state) => HomePage(
+          key: ValueKey(state.matchedLocation),
+          initialTransactionType: 'expense',
+        ),
+      ),
+
+      // 위젯 딥링크 - 수입 추가
+      GoRoute(
+        path: Routes.addIncome,
+        builder: (context, state) => HomePage(
+          key: ValueKey(state.matchedLocation),
+          initialTransactionType: 'income',
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
