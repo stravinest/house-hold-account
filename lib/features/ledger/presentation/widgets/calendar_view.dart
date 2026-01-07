@@ -246,10 +246,10 @@ class CalendarView extends ConsumerWidget {
               colorScheme: colorScheme,
             ),
           ),
-          // 오른쪽 하단: 사용자별 금액
+          // 왼쪽 하단: 사용자별 금액
           if (hasData && totals?['users'] != null)
             Positioned(
-              right: _CalendarConstants.cellPadding,
+              left: _CalendarConstants.cellPadding,
               bottom: _CalendarConstants.cellPadding,
               child: _buildUserAmountList(
                 totals: totals!,
@@ -380,26 +380,44 @@ class CalendarView extends ConsumerWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final showAmount = screenWidth > _CalendarConstants.smallScreenThreshold;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: (totals['users'] as Map<String, dynamic>)
-          .entries
-          .take(_CalendarConstants.maxVisibleUsers)
-          .map((entry) {
-        final userData = entry.value as Map<String, dynamic>;
-        final colorHex = userData['color'] as String? ?? '#A8D8EA';
-        final color = ColorUtils.parseHexColor(colorHex);
-        final expense = userData['expense'] as int? ?? 0;
+    final List<Widget> rows = [];
 
-        return _buildUserAmountRow(
+    for (final entry in (totals['users'] as Map<String, dynamic>).entries) {
+      final userData = entry.value as Map<String, dynamic>;
+      final colorHex = userData['color'] as String? ?? '#A8D8EA';
+      final color = ColorUtils.parseHexColor(colorHex);
+      final income = userData['income'] as int? ?? 0;
+      final expense = userData['expense'] as int? ?? 0;
+
+      // 수입이 있으면 채워진 동그라미로 표시
+      if (income > 0) {
+        rows.add(_buildUserAmountRow(
+          color: color,
+          amount: income,
+          isSelected: isSelected,
+          colorScheme: colorScheme,
+          showAmount: showAmount,
+          isFilled: true,
+        ));
+      }
+
+      // 지출이 있으면 빈 동그라미로 표시
+      if (expense > 0) {
+        rows.add(_buildUserAmountRow(
           color: color,
           amount: expense,
           isSelected: isSelected,
           colorScheme: colorScheme,
           showAmount: showAmount,
-        );
-      }).toList(),
+          isFilled: false,
+        ));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: rows,
     );
   }
 
@@ -409,6 +427,7 @@ class CalendarView extends ConsumerWidget {
     required bool isSelected,
     required ColorScheme colorScheme,
     required bool showAmount,
+    required bool isFilled,
   }) {
     return Padding(
       padding: const EdgeInsets.only(top: 2),
@@ -419,7 +438,15 @@ class CalendarView extends ConsumerWidget {
             width: _CalendarConstants.dotSize,
             height: _CalendarConstants.dotSize,
             decoration: BoxDecoration(
-              color: isSelected ? colorScheme.onPrimary : color,
+              color: isFilled
+                  ? (isSelected ? colorScheme.onPrimary : color)
+                  : Colors.transparent,
+              border: isFilled
+                  ? null
+                  : Border.all(
+                      color: isSelected ? colorScheme.onPrimary : color,
+                      width: 1.5,
+                    ),
               shape: BoxShape.circle,
             ),
           ),
