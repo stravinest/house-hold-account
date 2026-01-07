@@ -526,10 +526,11 @@ class _DailyUserSummary extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  '${isIncome ? '수입' : '지출'} ${formatter.format(tx.amount)}원',
+                  '${isIncome ? '' : '-'}${formatter.format(tx.amount)}원',
                   style: TextStyle(
                     fontSize: 11,
                     color: isIncome ? Colors.blue.shade700 : Colors.red.shade700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
