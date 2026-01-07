@@ -232,10 +232,10 @@ class TransactionRepository {
       final startStr = startDate.toIso8601String().split('T').first;
       final endStr = endDate.toIso8601String().split('T').first;
 
-      // transactions와 profiles를 조인하여 user_id와 color 조회
+      // transactions와 profiles를 조인하여 user_id, display_name, color 조회
       final response = await _client
           .from('transactions')
-          .select('*, profiles!user_id(color)')
+          .select('*, profiles!user_id(display_name, color)')
           .eq('ledger_id', ledgerId)
           .gte('date', startStr)
           .lte('date', endStr)
@@ -252,8 +252,11 @@ class TransactionRepository {
         final amount = transaction['amount'] as int;
         final type = transaction['type'] as String;
 
-        // profile에서 color 가져오기, null이면 기본값 사용
+        // profile에서 display_name과 color 가져오기
         final profileData = transaction['profiles'];
+        final displayName = (profileData != null && profileData['display_name'] != null)
+            ? profileData['display_name'] as String
+            : '사용자';
         final userColor = (profileData != null && profileData['color'] != null)
             ? profileData['color'] as String
             : '#A8D8EA';
@@ -270,6 +273,7 @@ class TransactionRepository {
 
         // 사용자별 데이터 초기화
         users.putIfAbsent(userId, () => {
+          'displayName': displayName,
           'income': 0,
           'expense': 0,
           'color': userColor,

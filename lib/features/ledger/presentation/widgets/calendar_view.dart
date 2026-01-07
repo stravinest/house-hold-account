@@ -117,6 +117,14 @@ class CalendarView extends ConsumerWidget {
           ),
           calendarBuilders: CalendarBuilders(
             defaultBuilder: (context, day, focusedDay) {
+              // 현재 월의 날짜가 아니면 빈 셀 반환
+              if (day.month != focusedDay.month) {
+                return _buildEmptyCell(
+                  day: day,
+                  focusedDay: focusedDay,
+                  colorScheme: colorScheme,
+                );
+              }
               return _buildDayCell(
                 context: context,
                 day: day,
@@ -128,6 +136,14 @@ class CalendarView extends ConsumerWidget {
               );
             },
             selectedBuilder: (context, day, focusedDay) {
+              // 현재 월의 날짜가 아니면 빈 셀 반환
+              if (day.month != focusedDay.month) {
+                return _buildEmptyCell(
+                  day: day,
+                  focusedDay: focusedDay,
+                  colorScheme: colorScheme,
+                );
+              }
               return _buildDayCell(
                 context: context,
                 day: day,
@@ -139,6 +155,14 @@ class CalendarView extends ConsumerWidget {
               );
             },
             todayBuilder: (context, day, focusedDay) {
+              // 현재 월의 날짜가 아니면 빈 셀 반환
+              if (day.month != focusedDay.month) {
+                return _buildEmptyCell(
+                  day: day,
+                  focusedDay: focusedDay,
+                  colorScheme: colorScheme,
+                );
+              }
               return _buildDayCell(
                 context: context,
                 day: day,
@@ -152,6 +176,7 @@ class CalendarView extends ConsumerWidget {
             outsideBuilder: (context, day, focusedDay) {
               return _buildEmptyCell(
                 day: day,
+                focusedDay: focusedDay,
                 colorScheme: colorScheme,
               );
             },
@@ -283,10 +308,11 @@ class CalendarView extends ConsumerWidget {
 
   Widget _buildEmptyCell({
     required DateTime day,
+    required DateTime focusedDay,
     required ColorScheme colorScheme,
   }) {
     final dayOfWeek = day.weekday % 7;
-    final firstDayOfMonth = DateTime(day.year, day.month, 1);
+    final firstDayOfMonth = DateTime(focusedDay.year, focusedDay.month, 1);
     final weekOfMonth = ((day.day + firstDayOfMonth.weekday - 1) / 7).floor();
     final isFirstColumn = dayOfWeek == 0;
     final isFirstRow = weekOfMonth == 0;

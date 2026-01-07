@@ -286,7 +286,8 @@ class _HomePageState extends ConsumerState<HomePage>
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddTransactionSheet(context, selectedDate),
-        child: const Icon(Icons.add),
+        mini: true,
+        child: const Icon(Icons.add, size: 20),
       ),
       floatingActionButtonLocation: _selectedIndex == 0
           ? const _CalendarBottomRightFabLocation()
@@ -573,8 +574,8 @@ class _DailyUserSummary extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: users.entries.take(3).map((entry) {
-          final userName = entry.key;
           final userData = entry.value as Map<String, dynamic>;
+          final userName = userData['displayName'] as String? ?? '사용자';
           final colorHex = userData['color'] as String? ?? '#A8D8EA';
           final userColor = _parseColor(colorHex);
           final income = userData['income'] as int? ?? 0;
@@ -894,7 +895,7 @@ class _CalendarBottomRightFabLocation extends FloatingActionButtonLocation {
     const int lastRowIndex = 5;
 
     final calendarTop = monthSummaryHeight + customHeaderHeight + daysOfWeekHeight;
-    // 달력 마지막 행 아래 한 칸 더 내려서 배치
+    // 달력 마지막 행 아래 한 칸의 중앙에 배치
     final lastRowCenter = calendarTop + (rowHeight * (lastRowIndex + 1)) + (rowHeight / 2);
     final fabHeight = scaffoldGeometry.floatingActionButtonSize.height;
 
