@@ -406,6 +406,14 @@ class MoreTabView extends ConsumerWidget {
           },
         ),
         ListTile(
+          leading: const Icon(Icons.credit_card_outlined),
+          title: const Text('결제수단 관리'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            context.push(Routes.paymentMethod);
+          },
+        ),
+        ListTile(
           leading: const Icon(Icons.book_outlined),
           title: const Text('가계부 관리'),
           trailing: const Icon(Icons.chevron_right),

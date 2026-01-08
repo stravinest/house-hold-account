@@ -60,25 +60,6 @@ class SettingsPage extends ConsumerWidget {
 
           const Divider(),
 
-          // 가계부 관리 섹션
-          _SectionHeader(title: '가계부 관리'),
-          ListTile(
-            leading: const Icon(Icons.category_outlined),
-            title: const Text('카테고리 관리'),
-            subtitle: const Text('수입/지출 카테고리 설정'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(Routes.category),
-          ),
-          ListTile(
-            leading: const Icon(Icons.credit_card_outlined),
-            title: const Text('결제수단 관리'),
-            subtitle: const Text('결제수단 추가/수정/삭제'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(Routes.paymentMethod),
-          ),
-
-          const Divider(),
-
           // 계정 섹션
           _SectionHeader(title: '계정'),
 

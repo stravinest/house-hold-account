@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,9 +14,7 @@ class PaymentMethodManagementPage extends ConsumerWidget {
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('결제수단 관리'),
-      ),
+      appBar: AppBar(title: const Text('결제수단 관리')),
       body: paymentMethodsAsync.when(
         data: (paymentMethods) {
           if (paymentMethods.isEmpty) {
@@ -43,12 +43,9 @@ class PaymentMethodManagementPage extends ConsumerWidget {
             );
           }
 
-          return ReorderableListView.builder(
+          return ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: paymentMethods.length,
-            onReorder: (oldIndex, newIndex) {
-              // TODO: 순서 변경 구현
-            },
             itemBuilder: (context, index) {
               final paymentMethod = paymentMethods[index];
               return _PaymentMethodTile(
@@ -86,15 +83,6 @@ class _PaymentMethodTile extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _parseColor(paymentMethod.color),
-          child: paymentMethod.icon.isNotEmpty
-              ? Text(
-                  paymentMethod.icon,
-                  style: const TextStyle(fontSize: 20),
-                )
-              : const Icon(Icons.credit_card, color: Colors.white),
-        ),
         title: Text(paymentMethod.name),
         subtitle: paymentMethod.isDefault ? const Text('기본 결제수단') : null,
         trailing: Row(
@@ -104,27 +92,14 @@ class _PaymentMethodTile extends ConsumerWidget {
               icon: const Icon(Icons.edit),
               onPressed: () => _showEditDialog(context, paymentMethod),
             ),
-            if (!paymentMethod.isDefault)
-              IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () => _showDeleteConfirm(context, ref, paymentMethod),
-              ),
-            const Icon(Icons.drag_handle),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _showDeleteConfirm(context, ref, paymentMethod),
+            ),
           ],
         ),
       ),
     );
-  }
-
-  Color _parseColor(String colorString) {
-    try {
-      if (colorString.startsWith('#')) {
-        return Color(int.parse(colorString.substring(1), radix: 16) + 0xFF000000);
-      }
-      return Color(int.parse(colorString));
-    } catch (e) {
-      return Colors.grey;
-    }
   }
 
   void _showEditDialog(BuildContext context, PaymentMethod paymentMethod) {
@@ -135,13 +110,18 @@ class _PaymentMethodTile extends ConsumerWidget {
   }
 
   void _showDeleteConfirm(
-      BuildContext context, WidgetRef ref, PaymentMethod paymentMethod) {
+    BuildContext context,
+    WidgetRef ref,
+    PaymentMethod paymentMethod,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('결제수단 삭제'),
-        content: Text('\'${paymentMethod.name}\' 결제수단을 삭제하시겠습니까?\n\n'
-            '이 결제수단으로 기록된 거래의 결제수단 정보가 삭제됩니다.'),
+        content: Text(
+          '\'${paymentMethod.name}\' 결제수단을 삭제하시겠습니까?\n\n'
+          '이 결제수단으로 기록된 거래의 결제수단 정보가 삭제됩니다.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -161,9 +141,9 @@ class _PaymentMethodTile extends ConsumerWidget {
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('삭제 실패: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
                 }
               }
             },
@@ -188,25 +168,36 @@ class _PaymentMethodDialog extends ConsumerStatefulWidget {
 class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  String _selectedIcon = '';
-  String _selectedColor = '#4CAF50';
 
-  final List<String> _icons = [
-    '', '', '', '', '', '', '', '',
+  static const List<String> _colorPalette = [
+    '#FF6B6B',
+    '#4ECDC4',
+    '#FFE66D',
+    '#95E1D3',
+    '#A8DADC',
+    '#F4A261',
+    '#E76F51',
+    '#2A9D8F',
+    '#4CAF50',
+    '#2196F3',
+    '#9C27B0',
+    '#00BCD4',
+    '#E91E63',
+    '#795548',
+    '#607D8B',
+    '#8BC34A',
   ];
 
-  final List<String> _colors = [
-    '#4CAF50', '#2196F3', '#F44336', '#FF9800',
-    '#9C27B0', '#00BCD4', '#E91E63', '#795548',
-  ];
+  String _generateRandomColor() {
+    return _colorPalette[Random().nextInt(_colorPalette.length)];
+  }
 
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.paymentMethod?.name ?? '');
-    _selectedIcon = widget.paymentMethod?.icon ?? '';
-    _selectedColor = widget.paymentMethod?.color ?? _colors.first;
+    _nameController = TextEditingController(
+      text: widget.paymentMethod?.name ?? '',
+    );
   }
 
   @override
@@ -223,90 +214,19 @@ class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
       title: Text(isEdit ? '결제수단 수정' : '결제수단 추가'),
       content: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: '결제수단 이름',
-                  hintText: '예: 우리카드, 신한카드, 현금',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '결제수단 이름을 입력하세요';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text('아이콘 (선택)'),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _icons.map((icon) {
-                  final isSelected = icon == _selectedIcon;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedIcon = icon),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                        border: isSelected
-                            ? Border.all(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 2,
-                              )
-                            : null,
-                      ),
-                      child: Center(
-                        child: icon.isEmpty
-                            ? const Icon(Icons.credit_card, size: 20)
-                            : Text(icon, style: const TextStyle(fontSize: 20)),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-              const Text('색상'),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _colors.map((color) {
-                  final isSelected = color == _selectedColor;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedColor = color),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Color(
-                            int.parse(color.substring(1), radix: 16) +
-                                0xFF000000),
-                        borderRadius: BorderRadius.circular(8),
-                        border: isSelected
-                            ? Border.all(color: Colors.black, width: 3)
-                            : null,
-                      ),
-                      child: isSelected
-                          ? const Icon(Icons.check, color: Colors.white)
-                          : null,
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+        child: TextFormField(
+          controller: _nameController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: '결제수단 이름',
+            border: OutlineInputBorder(),
           ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return '결제수단 이름을 입력하세요';
+            }
+            return null;
+          },
         ),
       ),
       actions: [
@@ -314,10 +234,7 @@ class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('취소'),
         ),
-        TextButton(
-          onPressed: _submit,
-          child: Text(isEdit ? '수정' : '추가'),
-        ),
+        TextButton(onPressed: _submit, child: Text(isEdit ? '수정' : '추가')),
       ],
     );
   }
@@ -327,17 +244,19 @@ class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
 
     try {
       if (widget.paymentMethod != null) {
-        await ref.read(paymentMethodNotifierProvider.notifier).updatePaymentMethod(
+        await ref
+            .read(paymentMethodNotifierProvider.notifier)
+            .updatePaymentMethod(
               id: widget.paymentMethod!.id,
               name: _nameController.text,
-              icon: _selectedIcon,
-              color: _selectedColor,
             );
       } else {
-        await ref.read(paymentMethodNotifierProvider.notifier).createPaymentMethod(
+        await ref
+            .read(paymentMethodNotifierProvider.notifier)
+            .createPaymentMethod(
               name: _nameController.text,
-              icon: _selectedIcon,
-              color: _selectedColor,
+              icon: '',
+              color: _generateRandomColor(),
             );
       }
 
@@ -345,17 +264,17 @@ class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.paymentMethod != null
-                ? '결제수단이 수정되었습니다'
-                : '결제수단이 추가되었습니다'),
+            content: Text(
+              widget.paymentMethod != null ? '결제수단이 수정되었습니다' : '결제수단이 추가되었습니다',
+            ),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('오류: $e')));
       }
     }
   }
