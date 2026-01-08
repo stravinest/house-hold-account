@@ -67,16 +67,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       final ledgers = await ref.read(ledgersProvider.future);
       if (ledgers.isEmpty) {
         // 가계부가 없으면 기본 가계부 생성
-        await ref.read(ledgerNotifierProvider.notifier).createLedger(
-              name: '내 가계부',
-              currency: 'KRW',
-            );
+        await ref
+            .read(ledgerNotifierProvider.notifier)
+            .createLedger(name: '내 가계부', currency: 'KRW');
       }
 
       // 오늘 날짜가 선택되어 있으면 자동으로 유저별 요약 표시
       final today = DateTime.now();
       final selectedDate = ref.read(selectedDateProvider);
-      final isToday = selectedDate.year == today.year &&
+      final isToday =
+          selectedDate.year == today.year &&
           selectedDate.month == today.month &&
           selectedDate.day == today.day;
 
@@ -182,6 +182,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               }
             },
             onRefresh: _refreshCalendarData,
+            onAddPressed: () => _showAddTransactionSheet(context, selectedDate),
           ),
           // 통계 탭
           const StatisticsTabView(),
@@ -191,14 +192,14 @@ class _HomePageState extends ConsumerState<HomePage> {
           const MoreTabView(),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddTransactionSheet(context, selectedDate),
-        mini: true,
-        child: const Icon(Icons.add, size: 20),
-      ),
-      floatingActionButtonLocation: _selectedIndex == 0
-          ? const _CalendarBottomRightFabLocation()
-          : FloatingActionButtonLocation.endFloat,
+      floatingActionButton: _selectedIndex != 0
+          ? FloatingActionButton(
+              onPressed: () => _showAddTransactionSheet(context, selectedDate),
+              mini: true,
+              child: const Icon(Icons.add, size: 20),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
@@ -252,10 +253,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => AddTransactionSheet(
-        initialDate: date,
-        initialType: initialType,
-      ),
+      builder: (context) =>
+          AddTransactionSheet(initialDate: date, initialType: initialType),
     );
   }
 
@@ -284,7 +283,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               subtitle: Text(ledger.isShared ? '공유 가계부' : '개인 가계부'),
               trailing: isSelected ? const Icon(Icons.check) : null,
               onTap: () {
-                ref.read(ledgerNotifierProvider.notifier).selectLedger(ledger.id);
+                ref
+                    .read(ledgerNotifierProvider.notifier)
+                    .selectLedger(ledger.id);
                 Navigator.pop(context);
               },
             );
@@ -305,6 +306,7 @@ class CalendarTabView extends StatelessWidget {
   final ValueChanged<DateTime> onDateSelected;
   final ValueChanged<DateTime> onPageChanged;
   final Future<void> Function() onRefresh;
+  final VoidCallback onAddPressed;
 
   const CalendarTabView({
     super.key,
@@ -314,6 +316,7 @@ class CalendarTabView extends StatelessWidget {
     required this.onDateSelected,
     required this.onPageChanged,
     required this.onRefresh,
+    required this.onAddPressed,
   });
 
   @override
@@ -331,10 +334,31 @@ class CalendarTabView extends StatelessWidget {
               onPageChanged: onPageChanged,
               onRefresh: onRefresh,
             ),
-            if (showUserSummary) ...[
-              const Divider(height: 1),
-              _DailyUserSummary(date: selectedDate),
-            ],
+            // 일일 요약과 FAB를 Stack으로 배치 (FAB가 위에 떠있음)
+            Stack(
+              children: [
+                // 일일 요약 (아래)
+                Column(
+                  children: [
+                    if (showUserSummary) ...[
+                      const Divider(height: 1),
+                      _DailyUserSummary(date: selectedDate),
+                    ] else
+                      const SizedBox(height: 56),
+                  ],
+                ),
+                // FAB (위에 떠있음)
+                Positioned(
+                  top: 6,
+                  right: 5,
+                  child: FloatingActionButton(
+                    onPressed: onAddPressed,
+                    mini: true,
+                    child: const Icon(Icons.add, size: 20),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -509,18 +533,18 @@ class _DailyUserSummary extends ConsumerWidget {
                 Text(
                   userName,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
                     description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 11,
-                          color: colorScheme.onSurfaceVariant,
-                        ),
+                      fontSize: 11,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -529,7 +553,9 @@ class _DailyUserSummary extends ConsumerWidget {
                   '${isIncome ? '' : '-'}${formatter.format(tx.amount)}원',
                   style: TextStyle(
                     fontSize: 11,
-                    color: isIncome ? Colors.blue.shade700 : Colors.red.shade700,
+                    color: isIncome
+                        ? Colors.blue.shade700
+                        : Colors.red.shade700,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -558,41 +584,5 @@ class _DailyUserSummary extends ConsumerWidget {
     } catch (_) {
       return const Color(0xFFA8D8EA);
     }
-  }
-}
-
-// 달력 맨 아래 맨 오른쪽 칸에 FAB 배치
-class _CalendarBottomRightFabLocation extends FloatingActionButtonLocation {
-  const _CalendarBottomRightFabLocation();
-
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    final double fabX = _getCalendarRightColumnCenter(scaffoldGeometry);
-    final double fabY = _getCalendarBottomRowCenter(scaffoldGeometry);
-
-    return Offset(fabX, fabY);
-  }
-
-  double _getCalendarRightColumnCenter(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    final screenWidth = scaffoldGeometry.scaffoldSize.width;
-    final columnWidth = screenWidth / 7;
-    final rightColumnCenter = columnWidth * 6.5;
-    final fabWidth = scaffoldGeometry.floatingActionButtonSize.width;
-    return rightColumnCenter - (fabWidth / 2);
-  }
-
-  double _getCalendarBottomRowCenter(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    const double monthSummaryHeight = 80.0;
-    const double customHeaderHeight = 64.0;
-    const double daysOfWeekHeight = 40.0;
-    const double rowHeight = 70.0;
-    const int lastRowIndex = 5;
-
-    final calendarTop = monthSummaryHeight + customHeaderHeight + daysOfWeekHeight;
-    // 달력 마지막 행 아래 한 칸의 중앙에 배치
-    final lastRowCenter = calendarTop + (rowHeight * (lastRowIndex + 1)) + (rowHeight / 2);
-    final fabHeight = scaffoldGeometry.floatingActionButtonSize.height;
-
-    return lastRowCenter - (fabHeight / 2);
   }
 }
