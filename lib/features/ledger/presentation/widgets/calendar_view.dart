@@ -488,77 +488,176 @@ class _MonthSummary extends StatelessWidget {
     final income = monthlyTotalAsync.valueOrNull?['income'] ?? 0;
     final expense = monthlyTotalAsync.valueOrNull?['expense'] ?? 0;
     final balance = income - expense;
+    final users =
+        monthlyTotalAsync.valueOrNull?['users'] as Map<String, dynamic>? ?? {};
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: _SummaryItem(
-              label: '수입',
-              amount: income,
-              color: Colors.blue,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _SummaryColumn(
+                label: '수입',
+                totalAmount: income,
+                color: Colors.blue.shade700,
+                users: users,
+                type: _SummaryType.income,
+              ),
             ),
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: colorScheme.outlineVariant,
-          ),
-          Expanded(
-            child: _SummaryItem(
-              label: '지출',
-              amount: expense,
-              color: Colors.red,
+            Container(
+              width: 1,
+              color: colorScheme.outlineVariant,
             ),
-          ),
-          Container(
-            width: 1,
-            height: 40,
-            color: colorScheme.outlineVariant,
-          ),
-          Expanded(
-            child: _SummaryItem(
-              label: '합계',
-              amount: balance,
-              color: balance >= 0 ? Colors.green : Colors.red,
+            Expanded(
+              child: _SummaryColumn(
+                label: '지출',
+                totalAmount: expense,
+                color: Colors.red.shade700,
+                users: users,
+                type: _SummaryType.expense,
+              ),
             ),
-          ),
-        ],
+            Container(
+              width: 1,
+              color: colorScheme.outlineVariant,
+            ),
+            Expanded(
+              child: _SummaryColumn(
+                label: '합계',
+                totalAmount: balance,
+                color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                users: users,
+                type: _SummaryType.balance,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _SummaryItem extends StatelessWidget {
-  final String label;
-  final int amount;
-  final Color color;
+enum _SummaryType { income, expense, balance }
 
-  const _SummaryItem({
+// 수입/지출 열 위젯
+class _SummaryColumn extends StatelessWidget {
+  final String label;
+  final int totalAmount;
+  final Color color;
+  final Map<String, dynamic> users;
+  final _SummaryType type;
+
+  const _SummaryColumn({
     required this.label,
-    required this.amount,
+    required this.totalAmount,
     required this.color,
+    required this.users,
+    required this.type,
   });
 
   @override
   Widget build(BuildContext context) {
     final formatter = NumberFormat('#,###', 'ko_KR');
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // 유저별 금액 계산
+    final userAmounts = <MapEntry<Color, int>>[];
+    for (final entry in users.entries) {
+      final userData = entry.value as Map<String, dynamic>;
+      final income = userData['income'] as int? ?? 0;
+      final expense = userData['expense'] as int? ?? 0;
+
+      int amount;
+      switch (type) {
+        case _SummaryType.income:
+          amount = income;
+          break;
+        case _SummaryType.expense:
+          amount = expense;
+          break;
+        case _SummaryType.balance:
+          amount = income - expense;
+          break;
+      }
+
+      // 합계의 경우 0이 아닌 경우만, 수입/지출은 0보다 큰 경우만
+      final shouldShow =
+          type == _SummaryType.balance ? amount != 0 : amount > 0;
+      if (shouldShow) {
+        final colorHex = userData['color'] as String? ?? '#A8D8EA';
+        userAmounts.add(MapEntry(ColorUtils.parseHexColor(colorHex), amount));
+      }
+    }
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
+        // 라벨
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                color: colorScheme.onSurfaceVariant,
               ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
+        // 총액
         Text(
-          '${amount < 0 ? '-' : ''}${formatter.format(amount.abs())}원',
+          '${totalAmount < 0 ? '-' : ''}${formatter.format(totalAmount.abs())}',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: color,
                 fontWeight: FontWeight.bold,
+              ),
+        ),
+        // 유저별 표시 (세로 배치)
+        if (userAmounts.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          ...userAmounts.map((entry) => Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: _UserAmountIndicator(
+                  color: entry.key,
+                  amount: entry.value,
+                ),
+              )),
+        ],
+      ],
+    );
+  }
+}
+
+// 유저별 금액 인디케이터
+class _UserAmountIndicator extends StatelessWidget {
+  final Color color;
+  final int amount;
+
+  const _UserAmountIndicator({
+    required this.color,
+    required this.amount,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final formatter = NumberFormat('#,###', 'ko_KR');
+    final isNegative = amount < 0;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          '${isNegative ? '-' : ''}${formatter.format(amount.abs())}',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: 10,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         ),
       ],

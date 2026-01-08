@@ -28,7 +28,7 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   int _selectedIndex = 0;
-  bool _showUserSummary = false;
+  bool _showUserSummary = true;
 
   @override
   void initState() {
@@ -72,18 +72,9 @@ class _HomePageState extends ConsumerState<HomePage> {
             .createLedger(name: '내 가계부', currency: 'KRW');
       }
 
-      // 오늘 날짜가 선택되어 있으면 자동으로 유저별 요약 표시
-      final today = DateTime.now();
-      final selectedDate = ref.read(selectedDateProvider);
-      final isToday =
-          selectedDate.year == today.year &&
-          selectedDate.month == today.month &&
-          selectedDate.day == today.day;
-
-      if (isToday && mounted) {
-        setState(() {
-          _showUserSummary = true;
-        });
+      // 가계부 초기화 후 데이터 새로고침
+      if (mounted) {
+        await _refreshCalendarData();
       }
     } catch (e) {
       debugPrint('가계부 초기화 오류: $e');
@@ -206,11 +197,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           final shouldRefresh = index == 0 && _selectedIndex != 0;
 
           setState(() {
-            _selectedIndex = index;
-            // 다른 탭으로 이동하면 사용자 요약 숨김
-            if (index != 0) {
-              _showUserSummary = false;
+            // 캘린더 탭으로 돌아올 때 사용자 요약 표시
+            if (index == 0 && _selectedIndex != 0) {
+              _showUserSummary = true;
             }
+            _selectedIndex = index;
           });
 
           if (shouldRefresh) {
@@ -474,92 +465,95 @@ class _DailyUserSummary extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final formatter = NumberFormat('#,###', 'ko_KR');
 
-    final transactions = dailyTransactionsAsync.valueOrNull ?? [];
+    return dailyTransactionsAsync.when(
+      data: (transactions) {
+        if (transactions.isEmpty) {
+          return const SizedBox.shrink();
+        }
 
-    if (transactions.isEmpty) {
-      return const SizedBox.shrink();
-    }
+        // 사용자별로 거래 그룹화
+        final Map<String, List<Transaction>> transactionsByUser = {};
+        for (final tx in transactions) {
+          transactionsByUser.putIfAbsent(tx.userId, () => []).add(tx);
+        }
 
-    // 사용자별로 거래 그룹화
-    final Map<String, List<Transaction>> transactionsByUser = {};
-    for (final tx in transactions) {
-      transactionsByUser.putIfAbsent(tx.userId, () => []).add(tx);
-    }
+        // 모든 거래 행 생성
+        final List<Widget> transactionRows = [];
 
-    // 모든 거래 행 생성
-    final List<Widget> transactionRows = [];
+        for (final entry in transactionsByUser.entries) {
+          final userTransactions = entry.value;
 
-    for (final entry in transactionsByUser.entries) {
-      final userId = entry.key;
-      final userTransactions = entry.value;
+          // 금액 순으로 정렬
+          userTransactions.sort((a, b) => b.amount.compareTo(a.amount));
 
-      // 금액 순으로 정렬
-      userTransactions.sort((a, b) => b.amount.compareTo(a.amount));
+          for (final tx in userTransactions) {
+            final userName = tx.userName ?? '사용자';
+            final colorHex = tx.userColor ?? '#A8D8EA';
+            final userColor = _parseColor(colorHex);
+            final description = tx.memo ?? tx.categoryName ?? '내역 없음';
+            final isIncome = tx.type == 'income';
 
-      for (final tx in userTransactions) {
-        final userName = tx.userName ?? '사용자';
-        final colorHex = tx.userColor ?? '#A8D8EA';
-        final userColor = _parseColor(colorHex);
-        final description = tx.memo ?? tx.categoryName ?? '내역 없음';
-        final isIncome = tx.type == 'income';
-
-        transactionRows.add(
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: userColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  userName,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    description,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontSize: 11,
-                      color: colorScheme.onSurfaceVariant,
+            transactionRows.add(
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: userColor,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    const SizedBox(width: 6),
+                    Text(
+                      userName,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        description,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${isIncome ? '' : '-'}${formatter.format(tx.amount)}원',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isIncome
+                            ? Colors.blue.shade700
+                            : Colors.red.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  '${isIncome ? '' : '-'}${formatter.format(tx.amount)}원',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isIncome
-                        ? Colors.blue.shade700
-                        : Colors.red.shade700,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            );
+          }
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: transactionRows,
           ),
         );
-      }
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: transactionRows,
-      ),
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (e, st) => const SizedBox.shrink(),
     );
   }
 
