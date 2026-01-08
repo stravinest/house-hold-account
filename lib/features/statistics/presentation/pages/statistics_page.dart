@@ -308,10 +308,18 @@ class _CategoryList extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Center(
-                    child: Text(
-                      stat.categoryIcon,
-                      style: const TextStyle(fontSize: 20),
-                    ),
+                    child: stat.categoryIcon.isEmpty
+                        ? Text(
+                            '-',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          )
+                        : Text(
+                            stat.categoryIcon,
+                            style: const TextStyle(fontSize: 20),
+                          ),
                   ),
                 ),
                 title: Text(stat.categoryName),

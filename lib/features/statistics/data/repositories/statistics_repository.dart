@@ -25,20 +25,35 @@ class StatisticsRepository {
     final Map<String, CategoryStatistics> grouped = {};
 
     for (final row in response as List) {
-      final categoryId = row['category_id'] as String;
-      final amount = row['amount'] as int;
-      final category = row['categories'] as Map<String, dynamic>?;
+      final rowMap = row as Map<String, dynamic>;
+      final categoryId = rowMap['category_id']?.toString();
+      final amount = (rowMap['amount'] as num?)?.toInt() ?? 0;
+      final category = rowMap['categories'] as Map<String, dynamic>?;
 
-      if (grouped.containsKey(categoryId)) {
-        grouped[categoryId] = grouped[categoryId]!.copyWith(
-          amount: grouped[categoryId]!.amount + amount,
+      // null인 경우 특수 키 사용
+      final groupKey = categoryId ?? '_uncategorized_';
+
+      // 카테고리 정보 추출 (null 안전 처리)
+      String categoryName = '-';
+      String categoryIcon = '';
+      String categoryColor = '#9E9E9E';
+
+      if (category != null) {
+        categoryName = category['name']?.toString() ?? '-';
+        categoryIcon = category['icon']?.toString() ?? '';
+        categoryColor = category['color']?.toString() ?? '#9E9E9E';
+      }
+
+      if (grouped.containsKey(groupKey)) {
+        grouped[groupKey] = grouped[groupKey]!.copyWith(
+          amount: grouped[groupKey]!.amount + amount,
         );
       } else {
-        grouped[categoryId] = CategoryStatistics(
-          categoryId: categoryId,
-          categoryName: category?['name'] as String? ?? '미분류',
-          categoryIcon: category?['icon'] as String? ?? '📦',
-          categoryColor: category?['color'] as String? ?? '#6750A4',
+        grouped[groupKey] = CategoryStatistics(
+          categoryId: groupKey,
+          categoryName: categoryName,
+          categoryIcon: categoryIcon,
+          categoryColor: categoryColor,
           amount: amount,
         );
       }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -97,12 +99,9 @@ class _CategoryListView extends ConsumerWidget {
           );
         }
 
-        return ReorderableListView.builder(
+        return ListView.builder(
           padding: const EdgeInsets.all(16),
           itemCount: filtered.length,
-          onReorder: (oldIndex, newIndex) {
-            // TODO: 순서 변경 구현
-          },
           itemBuilder: (context, index) {
             final category = filtered[index];
             return _CategoryTile(
@@ -130,27 +129,19 @@ class _CategoryTile extends ConsumerWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: _parseColor(category.color),
-          child: Text(
-            category.icon,
-            style: const TextStyle(fontSize: 20),
-          ),
         ),
         title: Text(category.name),
-        subtitle: category.isDefault ? const Text('기본 카테고리') : null,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!category.isDefault)
-              IconButton(
-                icon: const Icon(Icons.edit),
-                onPressed: () => _showEditDialog(context, category),
-              ),
-            if (!category.isDefault)
-              IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () => _showDeleteConfirm(context, ref, category),
-              ),
-            const Icon(Icons.drag_handle),
+            IconButton(
+              icon: const Icon(Icons.edit),
+              onPressed: () => _showEditDialog(context, category),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete),
+              onPressed: () => _showDeleteConfirm(context, ref, category),
+            ),
           ],
         ),
       ),
@@ -235,25 +226,22 @@ class _CategoryDialog extends ConsumerStatefulWidget {
 class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  String _selectedIcon = '';
-  String _selectedColor = '#4CAF50';
 
-  final List<String> _icons = [
-    '', '', '', '', '', '', '', '',
-    '', '', '', '', '', '', '', '',
+  static const List<String> _colorPalette = [
+    '#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3',
+    '#A8DADC', '#F4A261', '#E76F51', '#2A9D8F',
+    '#4CAF50', '#2196F3', '#9C27B0', '#00BCD4',
+    '#E91E63', '#795548', '#607D8B', '#8BC34A',
   ];
 
-  final List<String> _colors = [
-    '#4CAF50', '#2196F3', '#F44336', '#FF9800',
-    '#9C27B0', '#00BCD4', '#E91E63', '#795548',
-  ];
+  String _generateRandomColor() {
+    return _colorPalette[Random().nextInt(_colorPalette.length)];
+  }
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
-    _selectedIcon = widget.category?.icon ?? _icons.first;
-    _selectedColor = widget.category?.color ?? _colors.first;
   }
 
   @override
@@ -270,86 +258,19 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
       title: Text(isEdit ? '카테고리 수정' : '카테고리 추가'),
       content: Form(
         key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: '카테고리 이름',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return '카테고리 이름을 입력하세요';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text('아이콘'),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _icons.map((icon) {
-                  final isSelected = icon == _selectedIcon;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedIcon = icon),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Theme.of(context).colorScheme.primaryContainer
-                            : Colors.grey[200],
-                        borderRadius: BorderRadius.circular(8),
-                        border: isSelected
-                            ? Border.all(
-                                color: Theme.of(context).colorScheme.primary,
-                                width: 2,
-                              )
-                            : null,
-                      ),
-                      child: Center(
-                        child: Text(icon, style: const TextStyle(fontSize: 20)),
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 16),
-              const Text('색상'),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: _colors.map((color) {
-                  final isSelected = color == _selectedColor;
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedColor = color),
-                    child: Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Color(
-                            int.parse(color.substring(1), radix: 16) + 0xFF000000),
-                        borderRadius: BorderRadius.circular(8),
-                        border: isSelected
-                            ? Border.all(color: Colors.black, width: 3)
-                            : null,
-                      ),
-                      child: isSelected
-                          ? const Icon(Icons.check, color: Colors.white)
-                          : null,
-                    ),
-                  );
-                }).toList(),
-              ),
-            ],
+        child: TextFormField(
+          controller: _nameController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: '카테고리 이름',
+            border: OutlineInputBorder(),
           ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return '카테고리 이름을 입력하세요';
+            }
+            return null;
+          },
         ),
       ),
       actions: [
@@ -373,14 +294,12 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
         await ref.read(categoryNotifierProvider.notifier).updateCategory(
               id: widget.category!.id,
               name: _nameController.text,
-              icon: _selectedIcon,
-              color: _selectedColor,
             );
       } else {
         await ref.read(categoryNotifierProvider.notifier).createCategory(
               name: _nameController.text,
-              icon: _selectedIcon,
-              color: _selectedColor,
+              icon: '',
+              color: _generateRandomColor(),
               type: widget.type,
             );
       }

@@ -182,7 +182,6 @@ class _HomePageState extends ConsumerState<HomePage> {
               }
             },
             onRefresh: _refreshCalendarData,
-            onAddPressed: () => _showAddTransactionSheet(context, selectedDate),
           ),
           // 통계 탭
           const StatisticsTabView(),
@@ -192,13 +191,13 @@ class _HomePageState extends ConsumerState<HomePage> {
           const MoreTabView(),
         ],
       ),
-      floatingActionButton: _selectedIndex != 0
-          ? FloatingActionButton(
+      floatingActionButton: _selectedIndex == 1
+          ? null
+          : FloatingActionButton(
               onPressed: () => _showAddTransactionSheet(context, selectedDate),
-              mini: true,
-              child: const Icon(Icons.add, size: 20),
-            )
-          : null,
+              elevation: 6,
+              child: const Icon(Icons.add, size: 28),
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
@@ -306,7 +305,6 @@ class CalendarTabView extends StatelessWidget {
   final ValueChanged<DateTime> onDateSelected;
   final ValueChanged<DateTime> onPageChanged;
   final Future<void> Function() onRefresh;
-  final VoidCallback onAddPressed;
 
   const CalendarTabView({
     super.key,
@@ -316,7 +314,6 @@ class CalendarTabView extends StatelessWidget {
     required this.onDateSelected,
     required this.onPageChanged,
     required this.onRefresh,
-    required this.onAddPressed,
   });
 
   @override
@@ -334,31 +331,13 @@ class CalendarTabView extends StatelessWidget {
               onPageChanged: onPageChanged,
               onRefresh: onRefresh,
             ),
-            // 일일 요약과 FAB를 Stack으로 배치 (FAB가 위에 떠있음)
-            Stack(
-              children: [
-                // 일일 요약 (아래)
-                Column(
-                  children: [
-                    if (showUserSummary) ...[
-                      const Divider(height: 1),
-                      _DailyUserSummary(date: selectedDate),
-                    ] else
-                      const SizedBox(height: 56),
-                  ],
-                ),
-                // FAB (위에 떠있음)
-                Positioned(
-                  top: 6,
-                  right: 5,
-                  child: FloatingActionButton(
-                    onPressed: onAddPressed,
-                    mini: true,
-                    child: const Icon(Icons.add, size: 20),
-                  ),
-                ),
-              ],
-            ),
+            // 일일 요약
+            if (showUserSummary) ...[
+              const Divider(height: 1),
+              _DailyUserSummary(date: selectedDate),
+            ],
+            // FAB가 겹치지 않도록 하단 여백 추가
+            const SizedBox(height: 80),
           ],
         ),
       ),
