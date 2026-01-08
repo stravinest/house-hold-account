@@ -72,6 +72,7 @@ class TransactionRepository {
     required int amount,
     required String type,
     required DateTime date,
+    String? title,
     String? memo,
     String? imageUrl,
     bool isRecurring = false,
@@ -89,6 +90,7 @@ class TransactionRepository {
       amount: amount,
       type: type,
       date: date,
+      title: title,
       memo: memo,
       imageUrl: imageUrl,
       isRecurring: isRecurring,
@@ -113,6 +115,7 @@ class TransactionRepository {
     int? amount,
     String? type,
     DateTime? date,
+    String? title,
     String? memo,
     String? imageUrl,
     bool? isRecurring,
@@ -127,6 +130,7 @@ class TransactionRepository {
     if (amount != null) updates['amount'] = amount;
     if (type != null) updates['type'] = type;
     if (date != null) updates['date'] = date.toIso8601String().split('T').first;
+    if (title != null) updates['title'] = title;
     if (memo != null) updates['memo'] = memo;
     if (imageUrl != null) updates['image_url'] = imageUrl;
     if (isRecurring != null) updates['is_recurring'] = isRecurring;

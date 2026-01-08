@@ -160,9 +160,9 @@ class _SearchResultItem extends StatelessWidget {
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (transaction.memo != null && transaction.memo!.isNotEmpty)
+          if (transaction.title != null && transaction.title!.isNotEmpty)
             Text(
-              transaction.memo!,
+              transaction.title!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

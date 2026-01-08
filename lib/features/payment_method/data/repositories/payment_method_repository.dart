@@ -78,10 +78,15 @@ class PaymentMethodRepository {
 
   // 결제수단 삭제
   Future<void> deletePaymentMethod(String id) async {
-    await _client
+    final response = await _client
         .from('payment_methods')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .select();
+
+    if ((response as List).isEmpty) {
+      throw Exception('결제수단 삭제에 실패했습니다. 권한이 없거나 존재하지 않는 결제수단입니다.');
+    }
   }
 
   // 결제수단 순서 변경

@@ -9,6 +9,7 @@ class Transaction extends Equatable {
   final int amount;
   final String type; // income, expense
   final DateTime date;
+  final String? title;
   final String? memo;
   final String? imageUrl;
   final bool isRecurring;
@@ -34,6 +35,7 @@ class Transaction extends Equatable {
     required this.amount,
     required this.type,
     required this.date,
+    this.title,
     this.memo,
     this.imageUrl,
     required this.isRecurring,
@@ -62,6 +64,7 @@ class Transaction extends Equatable {
       amount: json['amount'] as int,
       type: json['type'] as String,
       date: DateTime.parse(json['date'] as String),
+      title: json['title'] as String?,
       memo: json['memo'] as String?,
       imageUrl: json['image_url'] as String?,
       isRecurring: json['is_recurring'] as bool? ?? false,
@@ -96,6 +99,7 @@ class Transaction extends Equatable {
     int? amount,
     String? type,
     DateTime? date,
+    String? title,
     String? memo,
     String? imageUrl,
     bool? isRecurring,
@@ -119,6 +123,7 @@ class Transaction extends Equatable {
       amount: amount ?? this.amount,
       type: type ?? this.type,
       date: date ?? this.date,
+      title: title ?? this.title,
       memo: memo ?? this.memo,
       imageUrl: imageUrl ?? this.imageUrl,
       isRecurring: isRecurring ?? this.isRecurring,
@@ -145,6 +150,7 @@ class Transaction extends Equatable {
         amount,
         type,
         date,
+        title,
         memo,
         imageUrl,
         isRecurring,

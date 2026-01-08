@@ -82,53 +82,29 @@ class TransactionDetailSheet extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // 카테고리 아이콘 + 메모
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color:
-                          _parseColor(transaction.categoryColor) ??
-                          colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Center(
-                      child: Text(
-                        transaction.categoryIcon ?? '',
-                        style: const TextStyle(fontSize: 32),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // 메모
-                  Text(
-                    transaction.memo?.isNotEmpty == true
-                        ? transaction.memo!
-                        : '메모 없음',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: transaction.memo?.isNotEmpty == true
-                          ? null
-                          : colorScheme.onSurfaceVariant,
-                    ),
-                    textAlign: TextAlign.center,
+                  // 제목
+                  _buildDetailRow(
+                    context,
+                    icon: Icons.title,
+                    label: '제목',
+                    value: transaction.title?.isNotEmpty == true
+                        ? transaction.title!
+                        : '제목 없음',
+                    valueColor: transaction.title?.isNotEmpty == true
+                        ? null
+                        : colorScheme.onSurfaceVariant,
                   ),
 
-                  // 카테고리명
-                  if (transaction.categoryName != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      transaction.categoryName!,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                  // 메모 (있을 경우)
+                  if (transaction.memo?.isNotEmpty == true)
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.note,
+                      label: '메모',
+                      value: transaction.memo!,
                     ),
-                  ],
 
-                  const SizedBox(height: 24),
-
-                  // 상세 정보 목록
+                  // 금액
                   _buildDetailRow(
                     context,
                     icon: Icons.attach_money,
@@ -138,6 +114,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                     valueColor: amountColor,
                   ),
 
+                  // 날짜
                   _buildDetailRow(
                     context,
                     icon: Icons.calendar_today,
@@ -145,6 +122,16 @@ class TransactionDetailSheet extends ConsumerWidget {
                     value: dateFormat.format(transaction.date),
                   ),
 
+                  // 카테고리
+                  if (transaction.categoryName != null)
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.category,
+                      label: '카테고리',
+                      value: transaction.categoryName!,
+                    ),
+
+                  // 결제수단
                   if (transaction.paymentMethodName != null)
                     _buildDetailRow(
                       context,
@@ -153,6 +140,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                       value: transaction.paymentMethodName!,
                     ),
 
+                  // 작성자
                   if (transaction.userName != null)
                     _buildDetailRow(
                       context,
@@ -258,16 +246,6 @@ class TransactionDetailSheet extends ConsumerWidget {
           ).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
         }
       }
-    }
-  }
-
-  Color? _parseColor(String? colorStr) {
-    if (colorStr == null) return null;
-    try {
-      final hex = colorStr.replaceFirst('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (_) {
-      return null;
     }
   }
 }

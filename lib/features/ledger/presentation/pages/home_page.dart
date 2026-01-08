@@ -491,7 +491,7 @@ class _DailyUserSummary extends ConsumerWidget {
             final userName = tx.userName ?? '사용자';
             final colorHex = tx.userColor ?? '#A8D8EA';
             final userColor = _parseColor(colorHex);
-            final description = tx.memo ?? tx.categoryName ?? '내역 없음';
+            final description = tx.title ?? tx.categoryName ?? '내역 없음';
             final isIncome = tx.type == 'income';
 
             transactionRows.add(

@@ -27,6 +27,7 @@ class EditTransactionSheet extends ConsumerStatefulWidget {
 class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
+  final _titleController = TextEditingController();
   final _memoController = TextEditingController();
   final _amountFocusNode = FocusNode();
 
@@ -45,6 +46,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     _selectedDate = widget.transaction.date;
     _amountController.text =
         NumberFormat('#,###').format(widget.transaction.amount);
+    _titleController.text = widget.transaction.title ?? '';
     _memoController.text = widget.transaction.memo ?? '';
 
     // 금액 필드 포커스 시 전체 선택
@@ -65,6 +67,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     _amountFocusNode.removeListener(_onAmountFocusChange);
     _amountFocusNode.dispose();
     _amountController.dispose();
+    _titleController.dispose();
     _memoController.dispose();
     super.dispose();
   }
@@ -135,6 +138,8 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
             amount: amount,
             type: _type,
             date: _selectedDate,
+            title:
+                _titleController.text.isNotEmpty ? _titleController.text : null,
             memo:
                 _memoController.text.isNotEmpty ? _memoController.text : null,
           );
@@ -263,25 +268,21 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
                         const SizedBox(height: 24),
 
-                        // 지출명/내용 입력
+                        // 제목 입력
                         TextFormField(
-                          controller: _memoController,
+                          controller: _titleController,
                           maxLines: 1,
                           keyboardType: TextInputType.text,
                           textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            labelText: _type == 'expense' ? '지출명' : '수입명',
-                            hintText: _type == 'expense'
-                                ? '예: 점심식사, 커피'
-                                : '예: 월급, 용돈',
-                            prefixIcon: const Icon(Icons.edit),
-                            border: const OutlineInputBorder(),
+                          decoration: const InputDecoration(
+                            labelText: '제목',
+                            hintText: '예: 점심식사, 월급',
+                            prefixIcon: Icon(Icons.edit),
+                            border: OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return _type == 'expense'
-                                  ? '지출명을 입력해주세요'
-                                  : '수입명을 입력해주세요';
+                              return '제목을 입력해주세요';
                             }
                             return null;
                           },
@@ -372,6 +373,24 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                           const Divider(),
                         ],
 
+                        // 메모 입력 (선택)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            '메모 (선택)',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        TextFormField(
+                          controller: _memoController,
+                          maxLines: 3,
+                          keyboardType: TextInputType.text,
+                          decoration: const InputDecoration(
+                            hintText: '추가 메모를 입력하세요',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+
                         const SizedBox(height: 100),
                       ],
                     ),
@@ -393,6 +412,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         // 선택 안함 옵션
         FilterChip(
           selected: _selectedCategory == null,
+          showCheckmark: false,
           label: const Text('선택 안함'),
           onSelected: (_) {
             setState(() => _selectedCategory = null);
@@ -402,11 +422,14 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
           final isSelected = _selectedCategory?.id == category.id;
           return FilterChip(
             selected: isSelected,
+            showCheckmark: false,
             label: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(category.icon),
-                const SizedBox(width: 4),
+                if (category.icon.isNotEmpty) ...[
+                  Text(category.icon),
+                  const SizedBox(width: 4),
+                ],
                 Text(category.name),
               ],
             ),
@@ -427,6 +450,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         // 선택 해제 옵션
         FilterChip(
           selected: _selectedPaymentMethod == null,
+          showCheckmark: false,
           label: const Text('선택 안함'),
           onSelected: (_) {
             setState(() => _selectedPaymentMethod = null);
@@ -436,14 +460,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
           final isSelected = _selectedPaymentMethod?.id == method.id;
           return FilterChip(
             selected: isSelected,
-            avatar: method.icon.isNotEmpty
-                ? Text(method.icon)
-                : CircleAvatar(
-                    backgroundColor: _parseColor(method.color),
-                    radius: 10,
-                    child:
-                        const Icon(Icons.credit_card, size: 12, color: Colors.white),
-                  ),
+            showCheckmark: false,
             label: Text(method.name),
             onSelected: (_) {
               setState(() => _selectedPaymentMethod = method);
@@ -452,18 +469,6 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         }),
       ],
     );
-  }
-
-  Color _parseColor(String colorString) {
-    try {
-      if (colorString.startsWith('#')) {
-        return Color(
-            int.parse(colorString.substring(1), radix: 16) + 0xFF000000);
-      }
-      return Color(int.parse(colorString));
-    } catch (e) {
-      return Colors.grey;
-    }
   }
 }
 

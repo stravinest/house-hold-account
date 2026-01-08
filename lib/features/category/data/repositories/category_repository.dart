@@ -98,11 +98,16 @@ class CategoryRepository {
 
   // 카테고리 삭제 (기본 카테고리는 삭제 불가)
   Future<void> deleteCategory(String id) async {
-    await _client
+    final response = await _client
         .from('categories')
         .delete()
         .eq('id', id)
-        .eq('is_default', false);
+        .eq('is_default', false)
+        .select();
+
+    if ((response as List).isEmpty) {
+      throw Exception('카테고리 삭제에 실패했습니다. 기본 카테고리이거나 권한이 없습니다.');
+    }
   }
 
   // 카테고리 순서 변경

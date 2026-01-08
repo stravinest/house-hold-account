@@ -234,10 +234,10 @@ class _TransactionCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (transaction.memo != null &&
-                          transaction.memo!.isNotEmpty) ...[
+                      if (transaction.title != null &&
+                          transaction.title!.isNotEmpty) ...[
                         Text(
-                          transaction.memo!,
+                          transaction.title!,
                           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -246,7 +246,7 @@ class _TransactionCard extends StatelessWidget {
                         ),
                       ] else ...[
                         Text(
-                          '메모 없음',
+                          '제목 없음',
                           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: colorScheme.onSurfaceVariant,

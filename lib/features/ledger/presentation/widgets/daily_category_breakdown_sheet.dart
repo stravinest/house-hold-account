@@ -290,7 +290,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
               ],
               Expanded(
                 child: Text(
-                  transaction.memo ?? '메모 없음',
+                  transaction.title ?? '제목 없음',
                   style: const TextStyle(fontSize: 13),
                   overflow: TextOverflow.ellipsis,
                 ),
