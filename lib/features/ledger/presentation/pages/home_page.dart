@@ -10,6 +10,7 @@ import '../../../statistics/presentation/pages/statistics_page.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../../transaction/presentation/widgets/add_transaction_sheet.dart';
+import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart';
 import '../../../widget/presentation/providers/widget_provider.dart';
 import '../providers/ledger_provider.dart';
 import '../widgets/calendar_view.dart';
@@ -494,49 +495,61 @@ class _DailyUserSummary extends ConsumerWidget {
             final isIncome = tx.type == 'income';
 
             transactionRows.add(
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: userColor,
-                        shape: BoxShape.circle,
-                      ),
+              GestureDetector(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    builder: (context) => TransactionDetailSheet(
+                      transaction: tx,
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      userName,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Flexible(
-                      child: Text(
-                        description,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: 11,
-                          color: colorScheme.onSurfaceVariant,
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: userColor,
+                          shape: BoxShape.circle,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${isIncome ? '' : '-'}${formatter.format(tx.amount)}원',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isIncome
-                            ? Colors.blue.shade700
-                            : Colors.red.shade700,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(width: 6),
+                      Text(
+                        userName,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          description,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontSize: 11,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${isIncome ? '' : '-'}${formatter.format(tx.amount)}원',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isIncome
+                              ? Colors.blue.shade700
+                              : Colors.red.shade700,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );

@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../../transaction/presentation/widgets/add_transaction_sheet.dart';
+import '../../../transaction/presentation/widgets/edit_transaction_sheet.dart';
+import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart';
 
 class TransactionList extends ConsumerWidget {
   final DateTime date;
@@ -147,7 +149,14 @@ class _TransactionCard extends StatelessWidget {
         children: [
           SlidableAction(
             onPressed: (_) {
-              // TODO: 수정 기능
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                useSafeArea: true,
+                builder: (context) => EditTransactionSheet(
+                  transaction: transaction,
+                ),
+              );
             },
             backgroundColor: colorScheme.primary,
             foregroundColor: colorScheme.onPrimary,
@@ -188,7 +197,14 @@ class _TransactionCard extends StatelessWidget {
       child: Card(
         child: InkWell(
           onTap: () {
-            // TODO: 거래 상세 페이지로 이동
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              useSafeArea: true,
+              builder: (context) => TransactionDetailSheet(
+                transaction: transaction,
+              ),
+            );
           },
           borderRadius: BorderRadius.circular(12),
           child: Padding(

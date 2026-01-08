@@ -11,15 +11,12 @@ import '../providers/transaction_provider.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
   final DateTime? initialDate;
+
   /// 위젯 딥링크에서 전달받는 초기 거래 타입
   /// 'expense' 또는 'income'
   final String? initialType;
 
-  const AddTransactionSheet({
-    super.key,
-    this.initialDate,
-    this.initialType,
-  });
+  const AddTransactionSheet({super.key, this.initialDate, this.initialType});
 
   @override
   ConsumerState<AddTransactionSheet> createState() =>
@@ -100,10 +97,13 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     setState(() => _isLoading = true);
 
     try {
-      final amount =
-          int.parse(_amountController.text.replaceAll(RegExp(r'[^\d]'), ''));
+      final amount = int.parse(
+        _amountController.text.replaceAll(RegExp(r'[^\d]'), ''),
+      );
 
-      await ref.read(transactionNotifierProvider.notifier).createTransaction(
+      await ref
+          .read(transactionNotifierProvider.notifier)
+          .createTransaction(
             categoryId: _selectedCategory?.id,
             paymentMethodId: _selectedPaymentMethod?.id,
             amount: amount,
@@ -114,15 +114,15 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('거래가 추가되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('거래가 추가되었습니다')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('오류: $e')));
       }
     } finally {
       if (mounted) {
@@ -175,21 +175,15 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                         onPressed: () => Navigator.pop(context),
                         child: const Text('취소'),
                       ),
-                      const Text(
-                        '거래 추가',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                       TextButton(
                         onPressed: _isLoading ? null : _submit,
                         child: _isLoading
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('저장'),
                       ),
@@ -239,13 +233,17 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                           textInputAction: TextInputAction.next,
                           decoration: InputDecoration(
                             labelText: _type == 'expense' ? '지출명' : '수입명',
-                            hintText: _type == 'expense' ? '예: 점심식사, 커피' : '예: 월급, 용돈',
+                            hintText: _type == 'expense'
+                                ? '예: 점심식사, 커피'
+                                : '예: 월급, 용돈',
                             prefixIcon: const Icon(Icons.edit),
                             border: const OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return _type == 'expense' ? '지출명을 입력해주세요' : '수입명을 입력해주세요';
+                              return _type == 'expense'
+                                  ? '지출명을 입력해주세요'
+                                  : '수입명을 입력해주세요';
                             }
                             return null;
                           },
@@ -273,7 +271,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                             border: InputBorder.none,
                           ),
                           validator: (value) {
-                            if (value == null || value.isEmpty || value == '0') {
+                            if (value == null ||
+                                value.isEmpty ||
+                                value == '0') {
                               return '금액을 입력해주세요';
                             }
                             return null;
@@ -287,8 +287,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                         ListTile(
                           leading: const Icon(Icons.calendar_today),
                           title: Text(
-                            DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
-                                .format(_selectedDate),
+                            DateFormat(
+                              'yyyy년 M월 d일 (E)',
+                              'ko_KR',
+                            ).format(_selectedDate),
                           ),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: _selectDate,
@@ -328,7 +330,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                             data: (paymentMethods) =>
                                 _buildPaymentMethodChips(paymentMethods),
                             loading: () => const Center(
-                                child: CircularProgressIndicator()),
+                              child: CircularProgressIndicator(),
+                            ),
                             error: (e, _) => Text('오류: $e'),
                           ),
                           const SizedBox(height: 16),
@@ -396,7 +399,16 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     String selectedColor = '#4CAF50';
 
     final icons = ['', '', '', '', '', '', '', ''];
-    final colors = ['#4CAF50', '#2196F3', '#F44336', '#FF9800', '#9C27B0', '#00BCD4', '#E91E63', '#795548'];
+    final colors = [
+      '#4CAF50',
+      '#2196F3',
+      '#F44336',
+      '#FF9800',
+      '#9C27B0',
+      '#00BCD4',
+      '#E91E63',
+      '#795548',
+    ];
 
     showDialog(
       context: context,
@@ -442,7 +454,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                               : null,
                         ),
                         child: Center(
-                          child: Text(icon, style: const TextStyle(fontSize: 20)),
+                          child: Text(
+                            icon,
+                            style: const TextStyle(fontSize: 20),
+                          ),
                         ),
                       ),
                     );
@@ -463,7 +478,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Color(
-                              int.parse(color.substring(1), radix: 16) + 0xFF000000),
+                            int.parse(color.substring(1), radix: 16) +
+                                0xFF000000,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                           border: isSelected
                               ? Border.all(color: Colors.black, width: 3)
@@ -493,9 +510,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                   return;
                 }
                 if (selectedIcon.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('아이콘을 선택해주세요')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(const SnackBar(content: Text('아이콘을 선택해주세요')));
                   return;
                 }
 
@@ -525,9 +542,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                   ref.invalidate(expenseCategoriesProvider);
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('오류: $e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('오류: $e')));
                   }
                 }
               },
@@ -561,16 +578,18 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     if (confirmed != true) return;
 
     try {
-      await ref.read(categoryNotifierProvider.notifier).deleteCategory(category.id);
+      await ref
+          .read(categoryNotifierProvider.notifier)
+          .deleteCategory(category.id);
 
       if (_selectedCategory?.id == category.id) {
         setState(() => _selectedCategory = null);
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('카테고리가 삭제되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('카테고리가 삭제되었습니다')));
       }
 
       ref.invalidate(categoriesProvider);
@@ -578,9 +597,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       ref.invalidate(expenseCategoriesProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('오류: $e')));
       }
     }
   }
@@ -607,7 +626,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 : CircleAvatar(
                     backgroundColor: _parseColor(method.color),
                     radius: 10,
-                    child: const Icon(Icons.credit_card, size: 12, color: Colors.white),
+                    child: const Icon(
+                      Icons.credit_card,
+                      size: 12,
+                      color: Colors.white,
+                    ),
                   ),
             label: Text(method.name),
             onSelected: (_) {
@@ -633,7 +656,16 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     String selectedColor = '#6750A4';
 
     final icons = ['💳', '💰', '🏦', '📱', '🪙', '💵', '💴', '💶'];
-    final colors = ['#6750A4', '#2196F3', '#4CAF50', '#FF9800', '#E91E63', '#00BCD4', '#9C27B0', '#795548'];
+    final colors = [
+      '#6750A4',
+      '#2196F3',
+      '#4CAF50',
+      '#FF9800',
+      '#E91E63',
+      '#00BCD4',
+      '#9C27B0',
+      '#795548',
+    ];
 
     showDialog(
       context: context,
@@ -679,7 +711,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                               : null,
                         ),
                         child: Center(
-                          child: Text(icon, style: const TextStyle(fontSize: 20)),
+                          child: Text(
+                            icon,
+                            style: const TextStyle(fontSize: 20),
+                          ),
                         ),
                       ),
                     );
@@ -700,7 +735,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                         height: 40,
                         decoration: BoxDecoration(
                           color: Color(
-                              int.parse(color.substring(1), radix: 16) + 0xFF000000),
+                            int.parse(color.substring(1), radix: 16) +
+                                0xFF000000,
+                          ),
                           borderRadius: BorderRadius.circular(8),
                           border: isSelected
                               ? Border.all(color: Colors.black, width: 3)
@@ -755,9 +792,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                   ref.invalidate(paymentMethodsProvider);
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('오류: $e')),
-                    );
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('오류: $e')));
                   }
                 }
               },
@@ -791,24 +828,26 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     if (confirmed != true) return;
 
     try {
-      await ref.read(paymentMethodNotifierProvider.notifier).deletePaymentMethod(method.id);
+      await ref
+          .read(paymentMethodNotifierProvider.notifier)
+          .deletePaymentMethod(method.id);
 
       if (_selectedPaymentMethod?.id == method.id) {
         setState(() => _selectedPaymentMethod = null);
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('결제수단이 삭제되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('결제수단이 삭제되었습니다')));
       }
 
       ref.invalidate(paymentMethodsProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('오류: $e')));
       }
     }
   }
@@ -816,7 +855,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   Color _parseColor(String colorString) {
     try {
       if (colorString.startsWith('#')) {
-        return Color(int.parse(colorString.substring(1), radix: 16) + 0xFF000000);
+        return Color(
+          int.parse(colorString.substring(1), radix: 16) + 0xFF000000,
+        );
       }
       return Color(int.parse(colorString));
     } catch (e) {
