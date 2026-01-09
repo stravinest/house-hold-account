@@ -202,6 +202,27 @@ class AuthService {
     );
   }
 
+  // 현재 비밀번호 검증 후 새 비밀번호로 변경
+  Future<void> verifyAndUpdatePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    final email = currentUser?.email;
+    if (email == null) {
+      throw Exception('로그인 상태가 아닙니다');
+    }
+
+    // 현재 비밀번호로 재인증
+    try {
+      await _auth.signInWithPassword(email: email, password: currentPassword);
+    } catch (e) {
+      throw Exception('현재 비밀번호가 올바르지 않습니다');
+    }
+
+    // 새 비밀번호로 변경
+    await _auth.updateUser(UserAttributes(password: newPassword));
+  }
+
   // HEX 색상 코드 검증
   void _validateHexColor(String color) {
     if (!RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(color)) {

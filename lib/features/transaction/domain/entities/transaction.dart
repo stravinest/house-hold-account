@@ -13,7 +13,7 @@ class Transaction extends Equatable {
   final String? memo;
   final String? imageUrl;
   final bool isRecurring;
-  final String? recurringType; // daily, weekly, monthly
+  final String? recurringType; // daily, monthly, yearly
   final DateTime? recurringEndDate;
   final DateTime createdAt;
   final DateTime updatedAt;

@@ -78,11 +78,25 @@ class _PaymentMethodTile extends ConsumerWidget {
 
   const _PaymentMethodTile({super.key, required this.paymentMethod});
 
+  Color _parseColor(String colorString) {
+    try {
+      if (colorString.startsWith('#')) {
+        return Color(int.parse(colorString.substring(1), radix: 16) + 0xFF000000);
+      }
+      return Color(int.parse(colorString));
+    } catch (e) {
+      return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: _parseColor(paymentMethod.color),
+        ),
         title: Text(paymentMethod.name),
         subtitle: paymentMethod.isDefault ? const Text('기본 결제수단') : null,
         trailing: Row(

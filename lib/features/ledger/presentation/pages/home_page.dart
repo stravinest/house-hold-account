@@ -361,23 +361,38 @@ class BudgetTabView extends StatelessWidget {
 class MoreTabView extends ConsumerWidget {
   const MoreTabView({super.key});
 
+  Color _parseColor(String? colorStr) {
+    if (colorStr == null) return const Color(0xFFA8D8EA);
+    try {
+      final hex = colorStr.replaceFirst('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    } catch (_) {
+      return const Color(0xFFA8D8EA);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final profile = ref.watch(userProfileProvider).valueOrNull;
+    final userColor = profile?['color'] as String?;
+    final displayName = profile?['display_name'] as String?;
 
     return ListView(
       children: [
         // 프로필 섹션
         ListTile(
           leading: CircleAvatar(
-            child: Text(user?.email?.substring(0, 1).toUpperCase() ?? 'U'),
+            backgroundColor: _parseColor(userColor),
+            child: Text(
+              user?.email?.substring(0, 1).toUpperCase() ?? 'U',
+              style: const TextStyle(color: Colors.white),
+            ),
           ),
           title: Text(user?.email ?? '사용자'),
-          subtitle: const Text('프로필 수정'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            // TODO: 프로필 페이지로 이동
-          },
+          subtitle: displayName != null && displayName.isNotEmpty
+              ? Text(displayName)
+              : null,
         ),
         const Divider(),
         // 메뉴 아이템들

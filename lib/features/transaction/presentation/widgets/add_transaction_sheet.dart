@@ -8,6 +8,8 @@ import '../../../category/presentation/providers/category_provider.dart';
 import '../../../payment_method/domain/entities/payment_method.dart';
 import '../../../payment_method/presentation/providers/payment_method_provider.dart';
 import '../providers/transaction_provider.dart';
+import 'installment_input_widget.dart';
+import 'recurring_settings_widget.dart';
 
 class AddTransactionSheet extends ConsumerStatefulWidget {
   final DateTime? initialDate;
@@ -35,6 +37,15 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   PaymentMethod? _selectedPaymentMethod;
   late DateTime _selectedDate;
   bool _isLoading = false;
+
+  // 반복 주기 설정
+  RecurringSettings _recurringSettings = const RecurringSettings(
+    type: RecurringType.none,
+  );
+
+  // 할부 설정
+  InstallmentResult? _installmentResult;
+  bool _isInstallmentMode = false;
 
   @override
   void initState() {
@@ -93,33 +104,51 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     }
   }
 
+  bool _validateForm() {
+    if (!_formKey.currentState!.validate()) return false;
+
+    // 할부 모드가 아닐 때 반복 주기 유효성 검사
+    if (!_isInstallmentMode && _recurringSettings.isRecurring) {
+      if (_recurringSettings.endDate == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('반복 종료 기간을 선택해주세요')),
+        );
+        return false;
+      }
+    }
+
+    // 할부 모드일 때 할부 결과 유효성 검사
+    if (_isInstallmentMode && _installmentResult == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('할부 정보를 입력해주세요')),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_validateForm()) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final amount = int.parse(
-        _amountController.text.replaceAll(RegExp(r'[^\d]'), ''),
-      );
+      final notifier = ref.read(transactionNotifierProvider.notifier);
 
-      await ref
-          .read(transactionNotifierProvider.notifier)
-          .createTransaction(
-            categoryId: _selectedCategory?.id,
-            paymentMethodId: _selectedPaymentMethod?.id,
-            amount: amount,
-            type: _type,
-            date: _selectedDate,
-            title: _titleController.text.isNotEmpty ? _titleController.text : null,
-            memo: _memoController.text.isNotEmpty ? _memoController.text : null,
-          );
+      if (_isInstallmentMode && _installmentResult != null) {
+        // 할부 거래 생성
+        await _createInstallmentTransactions(notifier);
+      } else if (_recurringSettings.isRecurring && _recurringSettings.endDate != null) {
+        // 반복 거래 생성
+        await _createRecurringTransactions(notifier);
+      } else {
+        // 단일 거래 생성
+        await _createSingleTransaction(notifier);
+      }
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('거래가 추가되었습니다')));
       }
     } catch (e) {
       if (mounted) {
@@ -132,6 +161,160 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _createSingleTransaction(TransactionNotifier notifier) async {
+    final amount = int.parse(
+      _amountController.text.replaceAll(RegExp(r'[^\d]'), ''),
+    );
+
+    await notifier.createTransaction(
+      categoryId: _selectedCategory?.id,
+      paymentMethodId: _selectedPaymentMethod?.id,
+      amount: amount,
+      type: _type,
+      date: _selectedDate,
+      title: _titleController.text.isNotEmpty ? _titleController.text : null,
+      memo: _memoController.text.isNotEmpty ? _memoController.text : null,
+    );
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('거래가 추가되었습니다')),
+      );
+    }
+  }
+
+  Future<void> _createRecurringTransactions(TransactionNotifier notifier) async {
+    final amount = int.parse(
+      _amountController.text.replaceAll(RegExp(r'[^\d]'), ''),
+    );
+
+    final dates = _calculateRecurringDates(
+      startDate: _selectedDate,
+      endDate: _recurringSettings.endDate!,
+      type: _recurringSettings.type,
+    );
+
+    // 경고: 너무 많은 거래 생성 시 확인
+    if (dates.length > 100) {
+      final confirmed = await _showLargeTransactionWarning(dates.length);
+      if (!confirmed) return;
+    }
+
+    for (final date in dates) {
+      await notifier.createTransaction(
+        categoryId: _selectedCategory?.id,
+        paymentMethodId: _selectedPaymentMethod?.id,
+        amount: amount,
+        type: _type,
+        date: date,
+        title: _titleController.text.isNotEmpty ? _titleController.text : null,
+        memo: _memoController.text.isNotEmpty ? _memoController.text : null,
+        isRecurring: true,
+        recurringType: _recurringSettings.recurringTypeString,
+        recurringEndDate: _recurringSettings.endDate,
+      );
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${dates.length}건의 거래가 추가되었습니다')),
+      );
+    }
+  }
+
+  Future<void> _createInstallmentTransactions(TransactionNotifier notifier) async {
+    final result = _installmentResult!;
+
+    final dates = _calculateRecurringDates(
+      startDate: _selectedDate,
+      endDate: result.endDate,
+      type: RecurringType.monthly,
+    );
+
+    for (int i = 0; i < dates.length && i < result.monthlyAmounts.length; i++) {
+      await notifier.createTransaction(
+        categoryId: _selectedCategory?.id,
+        paymentMethodId: _selectedPaymentMethod?.id,
+        amount: result.monthlyAmounts[i],
+        type: _type,
+        date: dates[i],
+        title: _titleController.text.isNotEmpty
+            ? '${_titleController.text} (${i + 1}/${result.months})'
+            : '할부 ${i + 1}/${result.months}',
+        memo: _memoController.text.isNotEmpty ? _memoController.text : null,
+        isRecurring: true,
+        recurringType: 'monthly',
+        recurringEndDate: result.endDate,
+      );
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${result.months}건의 할부 거래가 추가되었습니다')),
+      );
+    }
+  }
+
+  List<DateTime> _calculateRecurringDates({
+    required DateTime startDate,
+    required DateTime endDate,
+    required RecurringType type,
+  }) {
+    final dates = <DateTime>[];
+    // 시간 정보 제거하여 날짜만 비교 (종료일 포함 보장)
+    var current = DateTime(startDate.year, startDate.month, startDate.day);
+    final endDateNormalized = DateTime(endDate.year, endDate.month, endDate.day);
+
+    while (!current.isAfter(endDateNormalized)) {
+      dates.add(current);
+      switch (type) {
+        case RecurringType.daily:
+          current = current.add(const Duration(days: 1));
+          break;
+        case RecurringType.monthly:
+          // 월 증가 시 일자 조정 (예: 1/31 -> 2/28)
+          final nextMonth = current.month + 1;
+          final nextYear = nextMonth > 12 ? current.year + 1 : current.year;
+          final adjustedMonth = nextMonth > 12 ? 1 : nextMonth;
+          final lastDayOfMonth = DateTime(nextYear, adjustedMonth + 1, 0).day;
+          final day = current.day > lastDayOfMonth ? lastDayOfMonth : current.day;
+          current = DateTime(nextYear, adjustedMonth, day);
+          break;
+        case RecurringType.yearly:
+          // 년 증가 시 윤년 처리 (예: 2/29 -> 2/28)
+          final nextYear = current.year + 1;
+          final lastDayOfMonth = DateTime(nextYear, current.month + 1, 0).day;
+          final day = current.day > lastDayOfMonth ? lastDayOfMonth : current.day;
+          current = DateTime(nextYear, current.month, day);
+          break;
+        case RecurringType.none:
+          break;
+      }
+    }
+    return dates;
+  }
+
+  Future<bool> _showLargeTransactionWarning(int count) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('경고'),
+        content: Text('$count건의 거래가 생성됩니다. 계속하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('계속'),
+          ),
+        ],
+      ),
+    );
+    return result ?? false;
   }
 
   @override
@@ -222,6 +405,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                             setState(() {
                               _type = selected.first;
                               _selectedCategory = null;
+                              // 수입으로 변경 시 할부 모드 해제
+                              if (_type == 'income') {
+                                _isInstallmentMode = false;
+                                _installmentResult = null;
+                              }
                             });
                           },
                         ),
@@ -250,36 +438,72 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
                         const SizedBox(height: 16),
 
-                        // 금액 입력
-                        TextFormField(
-                          controller: _amountController,
-                          focusNode: _amountFocusNode,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            _AmountInputFormatter(),
-                          ],
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        // 금액 입력 (할부가 적용되지 않았을 때만)
+                        if (_installmentResult == null) ...[
+                          TextFormField(
+                            controller: _amountController,
+                            focusNode: _amountFocusNode,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              _AmountInputFormatter(),
+                            ],
+                            style: const TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                            decoration: const InputDecoration(
+                              suffixText: '원',
+                              suffixStyle: TextStyle(fontSize: 18),
+                              border: InputBorder.none,
+                            ),
+                            validator: (value) {
+                              if (_isInstallmentMode) return null;
+                              if (value == null ||
+                                  value.isEmpty ||
+                                  value == '0') {
+                                return '금액을 입력해주세요';
+                              }
+                              return null;
+                            },
                           ),
-                          textAlign: TextAlign.center,
-                          decoration: const InputDecoration(
-                            suffixText: '원',
-                            suffixStyle: TextStyle(fontSize: 18),
-                            border: InputBorder.none,
-                          ),
-                          validator: (value) {
-                            if (value == null ||
-                                value.isEmpty ||
-                                value == '0') {
-                              return '금액을 입력해주세요';
-                            }
-                            return null;
-                          },
-                        ),
+                          const Divider(),
+                        ],
 
-                        const Divider(),
+                        // 할부 입력 (지출일 때만)
+                        if (_type == 'expense') ...[
+                          const SizedBox(height: 16),
+                          InstallmentInputWidget(
+                            startDate: _selectedDate,
+                            enabled: !_isLoading,
+                            onModeChanged: (isOn) {
+                              setState(() {
+                                _isInstallmentMode = isOn;
+                                if (!isOn) {
+                                  _installmentResult = null;
+                                }
+                                // 할부 모드일 때 반복 주기 비활성화
+                                if (_isInstallmentMode) {
+                                  _recurringSettings = const RecurringSettings(
+                                    type: RecurringType.none,
+                                  );
+                                }
+                              });
+                            },
+                            onApplied: (result) {
+                              setState(() {
+                                _installmentResult = result;
+                                // 할부 적용 시 반복 주기를 월로 설정
+                                _recurringSettings = const RecurringSettings(
+                                  type: RecurringType.none,
+                                );
+                              });
+                            },
+                          ),
+                          const Divider(),
+                        ],
+
                         const SizedBox(height: 16),
 
                         // 날짜 선택
@@ -296,6 +520,21 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                         ),
 
                         const Divider(),
+
+                        // 반복 주기 설정 (할부 모드가 아닐 때만)
+                        if (!_isInstallmentMode) ...[
+                          RecurringSettingsWidget(
+                            startDate: _selectedDate,
+                            initialSettings: _recurringSettings,
+                            enabled: !_isLoading,
+                            onChanged: (settings) {
+                              setState(() {
+                                _recurringSettings = settings;
+                              });
+                            },
+                          ),
+                          const Divider(),
+                        ],
 
                         // 카테고리 선택
                         Padding(
