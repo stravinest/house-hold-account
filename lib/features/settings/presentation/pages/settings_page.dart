@@ -20,9 +20,7 @@ class SettingsPage extends ConsumerWidget {
     final notificationEnabled = ref.watch(notificationEnabledProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('설정'),
-      ),
+      appBar: AppBar(title: const Text('설정')),
       body: ListView(
         children: [
           // 앱 설정 섹션
@@ -71,19 +69,13 @@ class SettingsPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '프로필',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
+                  Text('프로필', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 16),
                   // 표시 이름
                   const _DisplayNameEditor(),
                   const SizedBox(height: 24),
                   // 색상 선택
-                  Text(
-                    '내 색상',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
+                  Text('내 색상', style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 12),
                   Consumer(
                     builder: (context, ref, child) {
@@ -196,7 +188,11 @@ class SettingsPage extends ConsumerWidget {
     }
   }
 
-  void _showThemeSelector(BuildContext context, WidgetRef ref, ThemeMode current) {
+  void _showThemeSelector(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeMode current,
+  ) {
     showModalBottomSheet(
       context: context,
       builder: (context) => Column(
@@ -205,21 +201,25 @@ class SettingsPage extends ConsumerWidget {
           ListTile(
             leading: Icon(
               Icons.check,
-              color: current == ThemeMode.system ? Theme.of(context).colorScheme.primary : Colors.transparent,
+              color: current == ThemeMode.system
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
             ),
             title: const Text('시스템 설정'),
             onTap: () async {
               try {
-                await ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.system);
+                await ref
+                    .read(themeModeProvider.notifier)
+                    .setThemeMode(ThemeMode.system);
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('테마 저장 실패: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('테마 저장 실패: $e')));
                 }
               }
             },
@@ -227,21 +227,25 @@ class SettingsPage extends ConsumerWidget {
           ListTile(
             leading: Icon(
               Icons.check,
-              color: current == ThemeMode.light ? Theme.of(context).colorScheme.primary : Colors.transparent,
+              color: current == ThemeMode.light
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
             ),
             title: const Text('라이트 모드'),
             onTap: () async {
               try {
-                await ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.light);
+                await ref
+                    .read(themeModeProvider.notifier)
+                    .setThemeMode(ThemeMode.light);
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('테마 저장 실패: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('테마 저장 실패: $e')));
                 }
               }
             },
@@ -249,21 +253,25 @@ class SettingsPage extends ConsumerWidget {
           ListTile(
             leading: Icon(
               Icons.check,
-              color: current == ThemeMode.dark ? Theme.of(context).colorScheme.primary : Colors.transparent,
+              color: current == ThemeMode.dark
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
             ),
             title: const Text('다크 모드'),
             onTap: () async {
               try {
-                await ref.read(themeModeProvider.notifier).setThemeMode(ThemeMode.dark);
+                await ref
+                    .read(themeModeProvider.notifier)
+                    .setThemeMode(ThemeMode.dark);
                 if (context.mounted) {
                   Navigator.pop(context);
                 }
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('테마 저장 실패: $e')),
-                  );
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('테마 저장 실패: $e')));
                 }
               }
             },
@@ -283,9 +291,9 @@ class SettingsPage extends ConsumerWidget {
 
   void _exportData(BuildContext context) {
     // TODO: 데이터 내보내기 구현
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('준비 중인 기능입니다')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('준비 중인 기능입니다')));
   }
 
   void _showAboutDialog(BuildContext context) {
@@ -355,9 +363,9 @@ class SettingsPage extends ConsumerWidget {
 
     if (confirmed == true && context.mounted) {
       // TODO: 회원 탈퇴 처리
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('준비 중인 기능입니다')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('준비 중인 기능입니다')));
     }
   }
 }
@@ -374,9 +382,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -429,20 +437,21 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
     try {
       final authService = ref.read(authServiceProvider);
       await authService.updateProfile(displayName: _controller.text);
+      ref.invalidate(userProfileProvider);
       _originalValue = _controller.text;
       setState(() {
         _isChanged = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('표시 이름이 변경되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('표시 이름이 변경되었습니다')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('표시 이름 변경 실패: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('표시 이름 변경 실패: $e')));
       }
     } finally {
       if (mounted) {
@@ -462,7 +471,9 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
     if (_originalValue.isEmpty && displayName.isNotEmpty) {
       _originalValue = displayName;
       _controller.text = displayName;
-    } else if (_originalValue.isEmpty && _controller.text.isEmpty && profile != null) {
+    } else if (_originalValue.isEmpty &&
+        _controller.text.isEmpty &&
+        profile != null) {
       // 프로필은 로드됐지만 display_name이 비어있는 경우
       _originalValue = '';
     }
@@ -480,10 +491,16 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
           ),
         ),
         const SizedBox(width: 8),
+        // 수정 버튼 - 텍스트가 가로로 표시되도록 충분한 너비 확보
         SizedBox(
+          width: 80,
           height: 56,
           child: FilledButton(
             onPressed: _isChanged && !_isLoading ? _saveDisplayName : null,
+            // 버튼 내부 패딩을 줄여서 텍스트가 가로로 표시되도록 함
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
             child: _isLoading
                 ? const SizedBox(
                     width: 20,
@@ -545,15 +562,15 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('비밀번호가 변경되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('비밀번호가 변경되었습니다')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     } finally {
       if (mounted) {
