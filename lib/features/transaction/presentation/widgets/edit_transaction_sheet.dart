@@ -79,7 +79,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     // 카테고리 Provider에서 현재 카테고리 찾기
     final categoriesAsync = _type == 'expense'
         ? ref.read(expenseCategoriesProvider)
-        : ref.read(incomeCategoriesProvider);
+        : _type == 'income'
+            ? ref.read(incomeCategoriesProvider)
+            : ref.read(savingCategoriesProvider);
 
     categoriesAsync.whenData((categories) {
       if (widget.transaction.categoryId != null) {
@@ -168,7 +170,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     final colorScheme = Theme.of(context).colorScheme;
     final categoriesAsync = _type == 'expense'
         ? ref.watch(expenseCategoriesProvider)
-        : ref.watch(incomeCategoriesProvider);
+        : _type == 'income'
+            ? ref.watch(incomeCategoriesProvider)
+            : ref.watch(savingCategoriesProvider);
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
 
     // 카테고리/결제수단 초기값 설정
@@ -243,7 +247,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // 수입/지출 선택
+                        // 수입/지출/저축 선택
                         SegmentedButton<String>(
                           segments: const [
                             ButtonSegment(
@@ -256,12 +260,20 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                               label: Text('수입'),
                               icon: Icon(Icons.add_circle_outline),
                             ),
+                            ButtonSegment(
+                              value: 'saving',
+                              label: Text('저축'),
+                              icon: Icon(Icons.savings_outlined),
+                            ),
                           ],
                           selected: {_type},
                           onSelectionChanged: (selected) {
                             setState(() {
                               _type = selected.first;
                               _selectedCategory = null;
+                              if (_type == 'income' || _type == 'saving') {
+                                _selectedPaymentMethod = null;
+                              }
                             });
                           },
                         ),

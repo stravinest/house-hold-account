@@ -14,7 +14,6 @@ import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart'
 import '../../../widget/presentation/providers/widget_provider.dart';
 import '../providers/ledger_provider.dart';
 import '../widgets/calendar_view.dart';
-import '../widgets/transaction_list.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   /// 위젯 딥링크에서 전달받는 초기 거래 타입
@@ -119,34 +118,38 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: currentLedgerAsync.when(
-          data: (ledger) => Text(ledger?.name ?? '공유 가계부'),
-          loading: () => const Text('공유 가계부'),
-          error: (e, st) => const Text('공유 가계부'),
-        ),
-        leading: ledgersAsync.when(
-          data: (ledgers) => ledgers.length > 1
-              ? IconButton(
-                  icon: const Icon(Icons.book),
-                  onPressed: () => _showLedgerSelector(context),
-                )
-              : null,
-          loading: () => null,
-          error: (e, st) => null,
-        ),
+        automaticallyImplyLeading: false,
         actions: [
+          const Spacer(),
+          ledgersAsync.when(
+            data: (ledgers) => ledgers.length > 1
+                ? IconButton(
+                    icon: const Icon(Icons.book),
+                    onPressed: () => _showLedgerSelector(context),
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  )
+                : const SizedBox.shrink(),
+            loading: () => const SizedBox.shrink(),
+            error: (e, st) => const SizedBox.shrink(),
+          ),
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
               context.push(Routes.search);
             },
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
           ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
               context.push(Routes.settings);
             },
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: IndexedStack(
@@ -192,6 +195,8 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
+        height: 56, // 라벨 제거로 높이 축소
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           // 다른 탭에서 캘린더 탭으로 돌아올 때만 새로고침
@@ -213,22 +218,22 @@ class _HomePageState extends ConsumerState<HomePage> {
           NavigationDestination(
             icon: Icon(Icons.calendar_today_outlined),
             selectedIcon: Icon(Icons.calendar_today),
-            label: '캘린더',
+            label: '', // 라벨 숨김
           ),
           NavigationDestination(
             icon: Icon(Icons.pie_chart_outline),
             selectedIcon: Icon(Icons.pie_chart),
-            label: '통계',
+            label: '', // 라벨 숨김
           ),
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet),
-            label: '예산',
+            label: '', // 라벨 숨김
           ),
           NavigationDestination(
             icon: Icon(Icons.more_horiz),
             selectedIcon: Icon(Icons.more_horiz),
-            label: '더보기',
+            label: '', // 라벨 숨김
           ),
         ],
       ),
@@ -508,6 +513,21 @@ class _DailyUserSummary extends ConsumerWidget {
             final userColor = _parseColor(colorHex);
             final description = tx.title ?? tx.categoryName ?? '내역 없음';
             final isIncome = tx.type == 'income';
+            final isSaving = tx.type == 'saving';
+
+            // 금액 색상 결정: 수입=파란색, 저축=녹색, 지출=빨간색
+            Color amountColor;
+            String amountPrefix;
+            if (isIncome) {
+              amountColor = Colors.blue.shade700;
+              amountPrefix = '';
+            } else if (isSaving) {
+              amountColor = Colors.green.shade600;
+              amountPrefix = ''; // 저축은 - 없이 표시
+            } else {
+              amountColor = Colors.red.shade700;
+              amountPrefix = '-';
+            }
 
             transactionRows.add(
               GestureDetector(
@@ -516,9 +536,8 @@ class _DailyUserSummary extends ConsumerWidget {
                     context: context,
                     isScrollControlled: true,
                     useSafeArea: true,
-                    builder: (context) => TransactionDetailSheet(
-                      transaction: tx,
-                    ),
+                    builder: (context) =>
+                        TransactionDetailSheet(transaction: tx),
                   );
                 },
                 child: Padding(
@@ -545,21 +564,20 @@ class _DailyUserSummary extends ConsumerWidget {
                       Flexible(
                         child: Text(
                           description,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontSize: 11,
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontSize: 11,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '${isIncome ? '' : '-'}${formatter.format(tx.amount)}원',
+                        '$amountPrefix${formatter.format(tx.amount)}원',
                         style: TextStyle(
                           fontSize: 11,
-                          color: isIncome
-                              ? Colors.blue.shade700
-                              : Colors.red.shade700,
+                          color: amountColor,
                           fontWeight: FontWeight.w600,
                         ),
                       ),

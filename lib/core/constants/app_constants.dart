@@ -18,6 +18,9 @@ class AppConstants {
   static const String roleEditor = 'editor';
   static const String roleViewer = 'viewer';
 
+  // 공유 가계부
+  static const int maxMembersPerLedger = 2;
+
   // 반복 타입
   static const String recurringDaily = 'daily';
   static const String recurringWeekly = 'weekly';

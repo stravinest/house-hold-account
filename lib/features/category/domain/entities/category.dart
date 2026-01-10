@@ -25,6 +25,7 @@ class Category extends Equatable {
 
   bool get isIncome => type == 'income';
   bool get isExpense => type == 'expense';
+  bool get isSaving => type == 'saving';
 
   Category copyWith({
     String? id,

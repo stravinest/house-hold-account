@@ -22,7 +22,7 @@ final searchResultsProvider = FutureProvider<List<Transaction>>((ref) async {
       .from('transactions')
       .select('*, categories(name, icon, color)')
       .eq('ledger_id', ledgerId)
-      .or('memo.ilike.%$query%')
+      .or('title.ilike.%$query%,memo.ilike.%$query%')
       .order('date', ascending: false)
       .limit(50);
 
@@ -63,7 +63,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           controller: _searchController,
           focusNode: _focusNode,
           decoration: const InputDecoration(
-            hintText: '메모로 검색...',
+            hintText: '제목/메모로 검색...',
             border: InputBorder.none,
           ),
           onChanged: (value) {
@@ -91,7 +91,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   Icon(Icons.search, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
                   Text(
-                    '메모로 거래 내역을 검색하세요',
+                    '제목/메모로 거래 내역을 검색하세요',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
@@ -139,7 +139,16 @@ class _SearchResultItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final numberFormat = NumberFormat('#,###');
     final dateFormat = DateFormat('yyyy.MM.dd');
-    final isExpense = transaction.type == 'expense';
+    final amountColor = transaction.isIncome
+        ? Colors.blue
+        : transaction.isSaving
+            ? Colors.green
+            : Colors.red;
+    final amountPrefix = transaction.isIncome
+        ? '+'
+        : transaction.isSaving
+            ? ''
+            : '-';
 
     return ListTile(
       leading: Container(
@@ -175,10 +184,10 @@ class _SearchResultItem extends StatelessWidget {
         ],
       ),
       trailing: Text(
-        '${isExpense ? '-' : '+'}${numberFormat.format(transaction.amount)}원',
+        '$amountPrefix${numberFormat.format(transaction.amount)}원',
         style: TextStyle(
           fontWeight: FontWeight.bold,
-          color: isExpense ? Colors.red : Colors.blue,
+          color: amountColor,
         ),
       ),
     );

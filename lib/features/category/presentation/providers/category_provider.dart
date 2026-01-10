@@ -30,6 +30,12 @@ final expenseCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   return categories.where((c) => c.isExpense).toList();
 });
 
+// 저축 카테고리 목록
+final savingCategoriesProvider = FutureProvider<List<Category>>((ref) async {
+  final categories = await ref.watch(categoriesProvider.future);
+  return categories.where((c) => c.isSaving).toList();
+});
+
 // 카테고리 관리 노티파이어
 class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
   final CategoryRepository _repository;
@@ -37,7 +43,7 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
   final Ref _ref;
 
   CategoryNotifier(this._repository, this._ledgerId, this._ref)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadCategories();
     } else {
@@ -114,8 +120,9 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
       await _repository.deleteCategory(id);
       _ref.invalidate(categoriesProvider);
       await loadCategories();
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      // 에러 발생 시에도 데이터를 다시 로드하여 상태 복구
+      await loadCategories();
       rethrow;
     }
   }
@@ -123,7 +130,7 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
 
 final categoryNotifierProvider =
     StateNotifierProvider<CategoryNotifier, AsyncValue<List<Category>>>((ref) {
-  final repository = ref.watch(categoryRepositoryProvider);
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  return CategoryNotifier(repository, ledgerId, ref);
-});
+      final repository = ref.watch(categoryRepositoryProvider);
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      return CategoryNotifier(repository, ledgerId, ref);
+    });

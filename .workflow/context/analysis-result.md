@@ -1,126 +1,73 @@
 # 현황 분석 결과
 
-## 수정 대상: 설정 및 프로필 관련 UI/기능 개선
+## 수정 대상: 공유 가계부 멤버 수 제한 (최대 2명)
 
 ### 관련 파일
-- `lib/features/settings/presentation/pages/settings_page.dart` - 설정 화면
-- `lib/features/ledger/presentation/pages/home_page.dart` - 더보기 탭 (MoreTabView)
-- `lib/features/payment_method/presentation/pages/payment_method_management_page.dart` - 결제수단 관리
-- `lib/shared/widgets/color_picker.dart` - 색상 선택 위젯
-- `lib/features/auth/presentation/providers/auth_provider.dart` - 인증 서비스
 
----
+| 파일 | 역할 | 수정 필요 |
+|------|------|----------|
+| `lib/core/constants/app_constants.dart` | 앱 상수 정의 | O (상수 추가) |
+| `lib/features/share/data/repositories/share_repository.dart` | 비즈니스 로직 | O (검증 로직 추가) |
+| `lib/features/share/presentation/providers/share_provider.dart` | 상태 관리 | X |
+| `lib/features/share/presentation/pages/share_management_page.dart` | UI | O (멤버 수 표시, 제한 안내) |
+| `supabase/migrations/001_initial_schema.sql` | DB 스키마 | 선택 (DB 레벨 제약) |
 
-## 1. 설정 화면 - 프로필 표시이름 변경 기능
+### 현재 검증 항목 (createInvite)
 
-### 현재 상태
-- TextFormField의 `onFieldSubmitted`로 엔터 키 누르면 바로 저장됨
-- 수정 버튼이 별도로 없음
+1. 자기 자신에게 초대 방지
+2. 가입된 사용자인지 확인
+3. 이미 멤버인지 확인
+4. 대기 중인 초대가 있는지 확인
+5. **멤버 수 제한 - 없음** (추가 필요)
 
-### 개선점
-- 수정 버튼 추가 필요
-- 값이 변경된 경우에만 버튼 활성화
-- 변경되지 않은 경우 버튼 비활성화
+### 현재 UI/UX 상태
 
----
+#### 강점
+- 탭 기반 구조 (멤버/받은 초대/보낸 초대)
+- 역할 표시 (소유자/관리자/멤버)
+- 에러 메시지 자동 표시
 
-## 2. 더보기 - 프로필 수정 칸 변경
+#### 개선점
+- 현재 멤버 수 표시 없음
+- 멤버 제한 도달 시 안내 없음
+- 초대 버튼 비활성화 처리 없음
 
-### 현재 상태 (MoreTabView, 369-381줄)
-```dart
-ListTile(
-  leading: CircleAvatar(
-    child: Text(user?.email?.substring(0, 1).toUpperCase() ?? 'U'),
-  ),
-  title: Text(user?.email ?? '사용자'),
-  subtitle: const Text('프로필 수정'),
-  trailing: const Icon(Icons.chevron_right),
-  onTap: () {
-    // TODO: 프로필 페이지로 이동
-  },
-),
+### 식별된 엣지 케이스
+
+| 번호 | 엣지 케이스 | 처리 방안 |
+|------|------------|----------|
+| 1 | 초대 생성 시 멤버가 이미 2명인 경우 | 에러 메시지 표시, 초대 생성 불가 |
+| 2 | 초대 수락 시 동시에 여러 명이 수락 (동시성) | acceptInvite에서도 멤버 수 재확인 |
+| 3 | 대기 중인 초대가 있는데 멤버가 가득 찬 경우 | 수락 시 에러 처리, 초대 자동 만료 고려 |
+| 4 | 소유자 1명 + 멤버 1명 = 2명일 때 추가 초대 | 2명 제한이면 추가 초대 불가 |
+| 5 | FAB 버튼 클릭 전 멤버 수 확인 | 사전 확인 후 안내 다이얼로그 표시 |
+
+### 의존성
+
+```
+AppConstants.maxMembersPerLedger (새로 추가)
+        ↓
+ShareRepository.createInvite() (검증 추가)
+ShareRepository.acceptInvite() (검증 추가)
+        ↓
+ShareNotifier (변경 불필요 - 에러 자동 전파)
+        ↓
+ShareManagementPage (멤버 수 표시 UI 추가)
 ```
 
-### 개선점
-- leading: 사용자 설정 색상으로 CircleAvatar 배경색 표시
-- title: 사용자 이메일(아이디) 표시
-- subtitle: 사용자 표시이름 표시
-- trailing: chevron_right 아이콘 제거
-- onTap: 동작 없음 (정보 표시 용도만)
+### 수정 지점 요약
 
----
+1. **AppConstants** (Line 10 이후)
+   - `maxMembersPerLedger = 2` 상수 추가
 
-## 3. 결제수단 관리 - 랜덤 색상 지정
+2. **ShareRepository.createInvite()** (Line 89-90 사이)
+   - 현재 멤버 수 확인 로직 추가
+   - 2명 이상이면 Exception throw
 
-### 현재 상태
-- `_PaymentMethodDialogState`에 이미 `_generateRandomColor()` 메서드 존재
-- 생성 시 `color: _generateRandomColor()` 사용 중
-- 이미 랜덤 색상 지정이 구현되어 있음
+3. **ShareRepository.acceptInvite()** (Line 155-157 사이)
+   - 초대 수락 전 멤버 수 재확인
+   - 동시성 문제 방지
 
-### 확인 결과
-- 기능이 이미 구현되어 있으므로 추가 작업 불필요
-
----
-
-## 4. 설정 화면 - 색상 선택 레이아웃 수정
-
-### 현재 상태 (color_picker.dart)
-- 10개 색상
-- Wrap 위젯 사용, spacing: 12, runSpacing: 12
-- 원형 크기: 50x50
-- 왼쪽 여백이 좁고 오른쪽 여백이 넓음
-
-### 개선점
-- 색상 12개로 확장 (2개 추가)
-- 원형 크기 축소 (정확한 크기는 화면에 맞춰 조정)
-- 6개씩 2줄로 정렬 (Row + MainAxisAlignment.spaceEvenly 또는 GridView)
-- 좌우 여백 동일하게 조정
-
----
-
-## 5. 비밀번호 변경 방식 변경
-
-### 현재 상태 (_showPasswordChangeDialog)
-- 이메일로 비밀번호 재설정 링크 발송하는 방식
-- 앱 내에서 직접 변경 불가
-
-### 개선점
-- 다이얼로그를 별도 페이지 또는 모달로 변경
-- 현재 비밀번호 입력 필드
-- 새 비밀번호 입력 필드
-- 새 비밀번호 확인 입력 필드
-- 현재 비밀번호 검증 후 변경 허용
-
-### 기술적 고려사항
-- Supabase에서 비밀번호 변경 시 현재 비밀번호 검증 필요
-- 재인증 방식: `signInWithPassword`로 현재 비밀번호 확인 후 `updateUser`로 변경
-- AuthService에 `verifyAndUpdatePassword` 메서드 추가 필요
-
----
-
-## 의존성
-
-### Provider
-- `userProfileProvider`: 사용자 프로필 정보
-- `userColorProvider`: 사용자 색상
-- `authServiceProvider`: 인증 서비스
-
-### Repository
-- `AuthService.updatePassword()`: 비밀번호 변경
-
----
-
-## 엣지 케이스
-
-1. **표시이름 변경**
-   - 빈 문자열 입력 시 처리
-   - 네트워크 오류 시 에러 표시
-
-2. **비밀번호 변경**
-   - 현재 비밀번호 틀린 경우 에러 메시지
-   - 새 비밀번호와 확인이 일치하지 않는 경우
-   - 새 비밀번호가 최소 요구사항을 충족하지 않는 경우
-
-3. **색상 선택**
-   - 선택된 색상 표시 확인
-   - 다크모드에서 색상 가시성
+4. **ShareManagementPage** (선택적)
+   - 멤버 탭에 현재 인원 표시 (예: "멤버 2/2명")
+   - FAB 버튼 클릭 시 제한 도달 안내

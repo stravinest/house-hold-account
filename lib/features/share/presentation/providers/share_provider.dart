@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../../../ledger/domain/entities/ledger.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/share_repository.dart';
@@ -43,6 +44,18 @@ final currentLedgerMembersProvider = FutureProvider<List<LedgerMember>>((ref) as
 
   final repository = ref.watch(shareRepositoryProvider);
   return repository.getMembers(ledgerId);
+});
+
+// 현재 가계부의 멤버 수
+final currentLedgerMemberCountProvider = Provider<int>((ref) {
+  final membersAsync = ref.watch(currentLedgerMembersProvider);
+  return membersAsync.valueOrNull?.length ?? 0;
+});
+
+// 멤버 추가 가능 여부
+final canAddMemberProvider = Provider<bool>((ref) {
+  final memberCount = ref.watch(currentLedgerMemberCountProvider);
+  return memberCount < AppConstants.maxMembersPerLedger;
 });
 
 // 공유 관리 노티파이어

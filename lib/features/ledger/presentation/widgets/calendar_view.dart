@@ -8,17 +8,22 @@ import '../providers/ledger_provider.dart';
 import '../../domain/entities/ledger.dart';
 import '../../../../core/utils/color_utils.dart';
 
+// 달력 셀 상수
+class _CalendarCellConfig {
+  static const int maxVisibleItems = 2; // 캘린더 셀에 최대 표시할 항목 수 (날짜 아래 공간 제약)
+}
+
 class _CalendarConstants {
-  static const double cellPadding = 4.0;
-  static const double dateBubbleSize = 24.0;
-  static const double dateFontSize = 13.0;
-  static const double amountFontSize = 9.0;
-  static const double dotSize = 6.0;
-  static const double dotSpacing = 3.0;
-  static const int maxVisibleUsers = 3;
-  static const double rowHeight = 70.0;
+  static const double cellPadding = 2.0;
+  static const double dateBubbleSize = 20.0;
+  static const double dateFontSize = 11.0;
+  static const double amountFontSize = 10.0; // 8 -> 10 (최대 크기)
+  static const double amountRowHeight = 15.0; // 각 행 높이 제한
+  static const double dotSize = 6.0; // 5 -> 6
+  static const double dotSpacing = 2.0;
+  static const double rowHeight = 76.0;
   static const double smallScreenThreshold = 360.0;
-  static const double daysOfWeekHeight = 40.0;
+  static const double daysOfWeekHeight = 28.0;
 }
 
 class CalendarView extends ConsumerWidget {
@@ -204,7 +209,16 @@ class CalendarView extends ConsumerWidget {
 
     final income = totals?['totalIncome'] ?? 0;
     final expense = totals?['totalExpense'] ?? 0;
-    final hasData = income > 0 || expense > 0;
+    // 안전한 타입 변환으로 hasSaving 계산
+    final rawUsers = totals?['users'];
+    final usersForSaving = rawUsers is Map
+        ? Map<String, dynamic>.from(rawUsers)
+        : <String, dynamic>{};
+    final hasSaving = usersForSaving.values.any((u) {
+      final userData = u is Map ? Map<String, dynamic>.from(u) : <String, dynamic>{};
+      return (userData['saving'] as int? ?? 0) > 0;
+    });
+    final hasData = income > 0 || expense > 0 || hasSaving;
 
     final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
 
@@ -246,10 +260,14 @@ class CalendarView extends ConsumerWidget {
               colorScheme: colorScheme,
             ),
           ),
-          // 왼쪽 하단: 사용자별 금액
+          // 날짜 아래: 사용자별 금액 (날짜를 가리지 않도록 날짜 버블 아래 배치)
           if (hasData && totals?['users'] != null)
             Positioned(
+              top: _CalendarConstants.cellPadding +
+                  _CalendarConstants.dateBubbleSize +
+                  2, // 날짜 버블 아래에 배치
               left: _CalendarConstants.cellPadding,
+              right: _CalendarConstants.cellPadding,
               bottom: _CalendarConstants.cellPadding,
               child: _buildUserAmountList(
                 totals: totals!,
@@ -290,13 +308,13 @@ class CalendarView extends ConsumerWidget {
                 ),
               ),
               alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 4), // 8 -> 4
               child: Text(
                 days[index],
                 style: TextStyle(
                   color: isWeekend ? colorScheme.error : colorScheme.onSurface,
                   fontWeight: FontWeight.w500,
-                  fontSize: 14,
+                  fontSize: 12, // 14 -> 12
                 ),
               ),
             ),
@@ -380,38 +398,66 @@ class CalendarView extends ConsumerWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final showAmount = screenWidth > _CalendarConstants.smallScreenThreshold;
 
-    final List<Widget> rows = [];
+    // 모든 항목을 수집 (색상, 금액)
+    final List<_AmountItem> allItems = [];
 
-    for (final entry in (totals['users'] as Map<String, dynamic>).entries) {
-      final userData = entry.value as Map<String, dynamic>;
+    // 안전한 타입 변환
+    final rawUsers = totals['users'];
+    final usersMap = rawUsers is Map
+        ? Map<String, dynamic>.from(rawUsers)
+        : <String, dynamic>{};
+
+    for (final entry in usersMap.entries) {
+      final userData = entry.value is Map
+          ? Map<String, dynamic>.from(entry.value as Map)
+          : <String, dynamic>{};
       final colorHex = userData['color'] as String? ?? '#A8D8EA';
       final color = ColorUtils.parseHexColor(colorHex);
       final income = userData['income'] as int? ?? 0;
       final expense = userData['expense'] as int? ?? 0;
+      final saving = userData['saving'] as int? ?? 0;
 
-      // 수입이 있으면 채워진 동그라미로 표시
+      // 수입이 있으면 추가
       if (income > 0) {
-        rows.add(_buildUserAmountRow(
-          color: color,
-          amount: income,
-          isSelected: isSelected,
-          colorScheme: colorScheme,
-          showAmount: showAmount,
-          isFilled: true,
-        ));
+        allItems.add(_AmountItem(color: color, amount: income));
       }
 
-      // 지출이 있으면 빈 동그라미로 표시
+      // 지출이 있으면 추가
       if (expense > 0) {
-        rows.add(_buildUserAmountRow(
-          color: color,
-          amount: expense,
-          isSelected: isSelected,
-          colorScheme: colorScheme,
-          showAmount: showAmount,
-          isFilled: false,
-        ));
+        allItems.add(_AmountItem(color: color, amount: expense));
       }
+
+      // 저축이 있으면 추가
+      if (saving > 0) {
+        allItems.add(_AmountItem(color: color, amount: saving));
+      }
+    }
+
+    // 최대 표시 개수 제한
+    final maxItems = _CalendarCellConfig.maxVisibleItems;
+    final hasMore = allItems.length > maxItems;
+    final visibleItems = hasMore ? allItems.take(maxItems).toList() : allItems;
+    final remainingCount = allItems.length - maxItems;
+
+    final List<Widget> rows = [];
+
+    for (final item in visibleItems) {
+      rows.add(_buildUserAmountRow(
+        color: item.color,
+        amount: item.amount,
+        isSelected: isSelected,
+        colorScheme: colorScheme,
+        showAmount: showAmount,
+      ));
+    }
+
+    // 더 많은 항목이 있으면 "+n" 표시
+    if (hasMore) {
+      rows.add(_buildMoreIndicator(
+        count: remainingCount,
+        isSelected: isSelected,
+        colorScheme: colorScheme,
+      ));
     }
 
     return Column(
@@ -421,54 +467,84 @@ class CalendarView extends ConsumerWidget {
     );
   }
 
+  Widget _buildMoreIndicator({
+    required int count,
+    required bool isSelected,
+    required ColorScheme colorScheme,
+  }) {
+    return SizedBox(
+      height: _CalendarConstants.amountRowHeight,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          '+$count',
+          style: TextStyle(
+            fontSize: _CalendarConstants.amountFontSize,
+            color: isSelected
+                ? colorScheme.onPrimary.withAlpha(179)
+                : colorScheme.onSurface.withAlpha(128),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildUserAmountRow({
     required Color color,
     required int amount,
     required bool isSelected,
     required ColorScheme colorScheme,
     required bool showAmount,
-    required bool isFilled,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 2),
+    final displayColor = isSelected ? colorScheme.onPrimary : color;
+
+    // 모든 인디케이터를 채워진 동그라미로 통일
+    final indicator = Container(
+      width: _CalendarConstants.dotSize,
+      height: _CalendarConstants.dotSize,
+      decoration: BoxDecoration(
+        color: displayColor,
+        shape: BoxShape.circle,
+      ),
+    );
+
+    return SizedBox(
+      height: _CalendarConstants.amountRowHeight,
       child: Row(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: _CalendarConstants.dotSize,
-            height: _CalendarConstants.dotSize,
-            decoration: BoxDecoration(
-              color: isFilled
-                  ? (isSelected ? colorScheme.onPrimary : color)
-                  : Colors.transparent,
-              border: isFilled
-                  ? null
-                  : Border.all(
-                      color: isSelected ? colorScheme.onPrimary : color,
-                      width: 1.5,
-                    ),
-              shape: BoxShape.circle,
-            ),
-          ),
+          indicator,
           if (showAmount) ...[
             SizedBox(width: _CalendarConstants.dotSpacing),
-            Text(
-              NumberFormat('#,###').format(amount),
-              style: TextStyle(
-                fontSize: _CalendarConstants.amountFontSize,
-                color: isSelected
-                    ? colorScheme.onPrimary.withAlpha(204)
-                    : colorScheme.onSurface.withAlpha(179),
-                fontWeight: FontWeight.w500,
+            Flexible(
+              child: Text(
+                NumberFormat('#,###').format(amount),
+                style: TextStyle(
+                  fontSize: _CalendarConstants.amountFontSize,
+                  color: isSelected
+                      ? colorScheme.onPrimary.withAlpha(204)
+                      : colorScheme.onSurface.withAlpha(179),
+                  fontWeight: FontWeight.w500,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
             ),
           ],
         ],
       ),
     );
   }
+}
+
+// 금액 항목 데이터 클래스
+class _AmountItem {
+  final Color color;
+  final int amount;
+
+  const _AmountItem({required this.color, required this.amount});
 }
 
 // 월별 수입/지출 요약 위젯
@@ -488,11 +564,14 @@ class _MonthSummary extends StatelessWidget {
     final income = monthlyTotalAsync.valueOrNull?['income'] ?? 0;
     final expense = monthlyTotalAsync.valueOrNull?['expense'] ?? 0;
     final balance = income - expense;
-    final users =
-        monthlyTotalAsync.valueOrNull?['users'] as Map<String, dynamic>? ?? {};
+    // 안전한 타입 변환 - Map<dynamic, dynamic>을 Map<String, dynamic>으로 변환
+    final rawUsers = monthlyTotalAsync.valueOrNull?['users'];
+    final users = rawUsers != null
+        ? Map<String, dynamic>.from(rawUsers as Map)
+        : <String, dynamic>{};
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2), // vertical 8 -> 2
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -527,7 +606,7 @@ class _MonthSummary extends StatelessWidget {
               child: _SummaryColumn(
                 label: '합계',
                 totalAmount: balance,
-                color: balance >= 0 ? Colors.green.shade700 : Colors.red.shade700,
+                color: colorScheme.onSurface, // 검은색으로 변경
                 users: users,
                 type: _SummaryType.balance,
               ),
@@ -565,7 +644,10 @@ class _SummaryColumn extends StatelessWidget {
     // 유저별 금액 계산
     final userAmounts = <MapEntry<Color, int>>[];
     for (final entry in users.entries) {
-      final userData = entry.value as Map<String, dynamic>;
+      // 안전한 타입 변환
+      final userData = entry.value is Map
+          ? Map<String, dynamic>.from(entry.value as Map)
+          : <String, dynamic>{};
       final income = userData['income'] as int? ?? 0;
       final expense = userData['expense'] as int? ?? 0;
 
@@ -599,22 +681,23 @@ class _SummaryColumn extends StatelessWidget {
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
+                fontSize: 11, // 더 작게
               ),
         ),
-        const SizedBox(height: 2),
         // 총액
         Text(
           '${totalAmount < 0 ? '-' : ''}${formatter.format(totalAmount.abs())}',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 color: color,
                 fontWeight: FontWeight.bold,
+                fontSize: 14, // 더 작게
               ),
         ),
         // 유저별 표시 (세로 배치)
         if (userAmounts.isNotEmpty) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: 2), // 6 -> 2
           ...userAmounts.map((entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 2),
+                padding: const EdgeInsets.only(bottom: 1), // 2 -> 1
                 child: _UserAmountIndicator(
                   color: entry.key,
                   amount: entry.value,
@@ -645,18 +728,18 @@ class _UserAmountIndicator extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 8,
-          height: 8,
+          width: 6, // 8 -> 6
+          height: 6, // 8 -> 6
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
           ),
         ),
-        const SizedBox(width: 3),
+        const SizedBox(width: 2), // 3 -> 2
         Text(
           '${isNegative ? '-' : ''}${formatter.format(amount.abs())}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: 10,
+                fontSize: 9, // 10 -> 9
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
         ),
@@ -689,7 +772,7 @@ class _CustomCalendarHeader extends StatelessWidget {
     final isToday = isSameDay(selectedDate, now);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // vertical 12 -> 4
       child: Row(
         children: [
           // 오늘 버튼

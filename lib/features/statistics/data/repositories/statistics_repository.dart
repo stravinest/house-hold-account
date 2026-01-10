@@ -88,6 +88,7 @@ class StatisticsRepository {
 
       int income = 0;
       int expense = 0;
+      int saving = 0;
 
       for (final row in response as List) {
         final amount = row['amount'] as int;
@@ -95,6 +96,8 @@ class StatisticsRepository {
 
         if (type == 'income') {
           income += amount;
+        } else if (type == 'saving') {
+          saving += amount;
         } else {
           expense += amount;
         }
@@ -105,6 +108,7 @@ class StatisticsRepository {
         month: targetDate.month,
         income: income,
         expense: expense,
+        saving: saving,
       ));
     }
 
@@ -149,6 +153,10 @@ class StatisticsRepository {
       if (type == 'income') {
         grouped[day] = grouped[day]!.copyWith(
           income: grouped[day]!.income + amount,
+        );
+      } else if (type == 'saving') {
+        grouped[day] = grouped[day]!.copyWith(
+          saving: grouped[day]!.saving + amount,
         );
       } else {
         grouped[day] = grouped[day]!.copyWith(
@@ -200,12 +208,14 @@ class MonthlyStatistics {
   final int month;
   final int income;
   final int expense;
+  final int saving;
 
   const MonthlyStatistics({
     required this.year,
     required this.month,
     required this.income,
     required this.expense,
+    this.saving = 0,
   });
 
   int get balance => income - expense;
@@ -218,22 +228,26 @@ class DailyStatistics {
   final int day;
   final int income;
   final int expense;
+  final int saving;
 
   const DailyStatistics({
     required this.day,
     required this.income,
     required this.expense,
+    this.saving = 0,
   });
 
   DailyStatistics copyWith({
     int? day,
     int? income,
     int? expense,
+    int? saving,
   }) {
     return DailyStatistics(
       day: day ?? this.day,
       income: income ?? this.income,
       expense: expense ?? this.expense,
+      saving: saving ?? this.saving,
     );
   }
 }

@@ -83,6 +83,7 @@ class Transaction extends Equatable {
 
   bool get isIncome => type == 'income';
   bool get isExpense => type == 'expense';
+  bool get isSaving => type == 'saving';
 
   // 주의: 현재 copyWith에서는 categoryId나 paymentMethodId를 null로 설정할 수 없습니다.
   // null을 전달해도 기존 값이 유지됩니다.

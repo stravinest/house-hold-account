@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/router.dart';
 import '../../../../config/supabase_config.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../ledger/domain/entities/ledger.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../domain/entities/ledger_invite.dart';
@@ -39,10 +40,17 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage>
         title: const Text('공유 관리'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: '멤버'),
-            Tab(text: '받은 초대'),
-            Tab(text: '보낸 초대'),
+          tabs: [
+            Consumer(
+              builder: (context, ref, _) {
+                final memberCount = ref.watch(currentLedgerMemberCountProvider);
+                return Tab(
+                  text: '멤버 ($memberCount/${AppConstants.maxMembersPerLedger})',
+                );
+              },
+            ),
+            const Tab(text: '받은 초대'),
+            const Tab(text: '보낸 초대'),
           ],
         ),
       ),
@@ -54,10 +62,29 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage>
           const _SentInvitesTab(),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showInviteDialog(context),
-        icon: const Icon(Icons.person_add),
-        label: const Text('초대하기'),
+      floatingActionButton: Consumer(
+        builder: (context, ref, _) {
+          final canAddMember = ref.watch(canAddMemberProvider);
+          return FloatingActionButton.extended(
+            onPressed: () {
+              if (canAddMember) {
+                _showInviteDialog(context);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      '멤버 수가 최대 인원에 도달했습니다. (${AppConstants.maxMembersPerLedger}명)',
+                    ),
+                    duration: const Duration(seconds: 2),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.person_add),
+            label: Text(canAddMember ? '초대하기' : '멤버 가득 참'),
+            backgroundColor: canAddMember ? null : Colors.grey.shade400,
+          );
+        },
       ),
     );
   }
@@ -118,7 +145,50 @@ class _MembersTab extends ConsumerWidget {
           );
         }
 
-        return ListView.builder(
+        final isFull = members.length >= AppConstants.maxMembersPerLedger;
+
+        return Column(
+          children: [
+            // 멤버 수 정보 배너
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              color: isFull
+                  ? Colors.orange.shade50
+                  : Colors.blue.shade50,
+              child: Row(
+                children: [
+                  Icon(
+                    isFull ? Icons.warning_amber : Icons.group,
+                    color: isFull ? Colors.orange : Colors.blue,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    '멤버 ${members.length}/${AppConstants.maxMembersPerLedger}명',
+                    style: TextStyle(
+                      color: isFull
+                          ? Colors.orange.shade700
+                          : Colors.blue.shade700,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (isFull) ...[
+                    const SizedBox(width: 8),
+                    Text(
+                      '(최대 인원)',
+                      style: TextStyle(
+                        color: Colors.orange.shade700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            // 멤버 목록
+            Expanded(
+              child: ListView.builder(
           itemCount: members.length,
           itemBuilder: (context, index) {
             final member = members[index];
@@ -169,6 +239,9 @@ class _MembersTab extends ConsumerWidget {
               ),
             );
           },
+              ),
+            ),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),

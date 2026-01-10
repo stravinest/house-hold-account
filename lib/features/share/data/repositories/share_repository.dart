@@ -1,4 +1,5 @@
 import '../../../../config/supabase_config.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../ledger/domain/entities/ledger.dart';
 import '../../domain/entities/ledger_invite.dart';
 
@@ -55,6 +56,21 @@ class ShareRepository {
     return invite != null;
   }
 
+  // 현재 멤버 수 확인
+  Future<int> getMemberCount(String ledgerId) async {
+    final response = await _client
+        .from('ledger_members')
+        .select('id')
+        .eq('ledger_id', ledgerId);
+    return (response as List).length;
+  }
+
+  // 멤버 수 제한 확인
+  Future<bool> isMemberLimitReached(String ledgerId) async {
+    final memberCount = await getMemberCount(ledgerId);
+    return memberCount >= AppConstants.maxMembersPerLedger;
+  }
+
   // 초대 생성
   Future<LedgerInvite> createInvite({
     required String ledgerId,
@@ -86,6 +102,12 @@ class ShareRepository {
     // 4. 이미 대기 중인 초대가 있는지 확인
     if (await hasPendingInvite(ledgerId: ledgerId, email: normalizedEmail)) {
       throw Exception('이미 초대를 보냈습니다. 상대방의 수락을 기다려주세요.');
+    }
+
+    // 5. 멤버 수 제한 확인
+    if (await isMemberLimitReached(ledgerId)) {
+      throw Exception(
+          '가계부 멤버는 최대 ${AppConstants.maxMembersPerLedger}명까지만 가능합니다.');
     }
 
     // 만료일: 7일 후
@@ -152,6 +174,12 @@ class ShareRepository {
 
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
+
+    // 동시성 문제 방지: 멤버 수 재확인
+    final ledgerId = invite['ledger_id'] as String;
+    if (await isMemberLimitReached(ledgerId)) {
+      throw Exception('이 가계부는 이미 멤버가 가득 찼습니다.');
+    }
 
     // 중요: 멤버로 먼저 추가 (RLS 정책이 pending 상태 초대를 확인하므로)
     await _client.from('ledger_members').insert({

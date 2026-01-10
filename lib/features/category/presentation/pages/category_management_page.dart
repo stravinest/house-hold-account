@@ -22,7 +22,7 @@ class _CategoryManagementPageState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -41,6 +41,7 @@ class _CategoryManagementPageState
           tabs: const [
             Tab(text: '지출'),
             Tab(text: '수입'),
+            Tab(text: '저축'),
           ],
         ),
       ),
@@ -49,6 +50,7 @@ class _CategoryManagementPageState
         children: const [
           _CategoryListView(type: 'expense'),
           _CategoryListView(type: 'income'),
+          _CategoryListView(type: 'saving'),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -59,7 +61,8 @@ class _CategoryManagementPageState
   }
 
   void _showAddCategoryDialog(BuildContext context) {
-    final type = _tabController.index == 0 ? 'expense' : 'income';
+    final types = ['expense', 'income', 'saving'];
+    final type = types[_tabController.index];
     showDialog(
       context: context,
       builder: (context) => _CategoryDialog(type: type),
@@ -91,7 +94,7 @@ class _CategoryListView extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '등록된 ${type == 'expense' ? '지출' : '수입'} 카테고리가 없습니다',
+                  '등록된 ${type == 'expense' ? '지출' : type == 'income' ? '수입' : '저축'} 카테고리가 없습니다',
                   style: TextStyle(color: Colors.grey[600]),
                 ),
               ],

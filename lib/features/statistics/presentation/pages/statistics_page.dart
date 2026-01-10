@@ -181,6 +181,11 @@ class _TypeSelector extends ConsumerWidget {
           label: Text('수입'),
           icon: Icon(Icons.arrow_upward),
         ),
+        ButtonSegment(
+          value: 'saving',
+          label: Text('저축'),
+          icon: Icon(Icons.savings_outlined),
+        ),
       ],
       selected: {selectedType},
       onSelectionChanged: (selected) {
@@ -524,7 +529,11 @@ class _DailyTrendChart extends ConsumerWidget {
         }
 
         final values = trend
-            .map((e) => selectedType == 'income' ? e.income : e.expense)
+            .map((e) => selectedType == 'income'
+                ? e.income
+                : selectedType == 'saving'
+                    ? e.saving
+                    : e.expense)
             .toList();
         final maxY = values.reduce((a, b) => a > b ? a : b).toDouble();
 
@@ -587,17 +596,27 @@ class _DailyTrendChart extends ConsumerWidget {
                       spots: trend.map((stat) {
                         final value = selectedType == 'income'
                             ? stat.income
-                            : stat.expense;
+                            : selectedType == 'saving'
+                                ? stat.saving
+                                : stat.expense;
                         return FlSpot(stat.day.toDouble(), value.toDouble());
                       }).toList(),
                       isCurved: true,
-                      color: selectedType == 'income' ? Colors.blue : Colors.red,
+                      color: selectedType == 'income'
+                          ? Colors.blue
+                          : selectedType == 'saving'
+                              ? Colors.green
+                              : Colors.red,
                       barWidth: 2,
                       isStrokeCapRound: true,
                       dotData: const FlDotData(show: false),
                       belowBarData: BarAreaData(
                         show: true,
-                        color: (selectedType == 'income' ? Colors.blue : Colors.red)
+                        color: (selectedType == 'income'
+                                ? Colors.blue
+                                : selectedType == 'saving'
+                                    ? Colors.green
+                                    : Colors.red)
                             .withAlpha(26),
                       ),
                     ),

@@ -49,6 +49,23 @@ final categoryIncomeStatisticsProvider =
   );
 });
 
+// 카테고리별 저축 통계
+final categorySavingStatisticsProvider =
+    FutureProvider<List<CategoryStatistics>>((ref) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) return [];
+
+  final date = ref.watch(selectedDateProvider);
+  final repository = ref.watch(statisticsRepositoryProvider);
+
+  return repository.getCategoryStatistics(
+    ledgerId: ledgerId,
+    year: date.year,
+    month: date.month,
+    type: 'saving',
+  );
+});
+
 // 현재 선택된 타입의 카테고리 통계
 final categoryStatisticsProvider =
     FutureProvider<List<CategoryStatistics>>((ref) async {
@@ -56,6 +73,8 @@ final categoryStatisticsProvider =
 
   if (type == 'income') {
     return ref.watch(categoryIncomeStatisticsProvider.future);
+  } else if (type == 'saving') {
+    return ref.watch(categorySavingStatisticsProvider.future);
   } else {
     return ref.watch(categoryExpenseStatisticsProvider.future);
   }

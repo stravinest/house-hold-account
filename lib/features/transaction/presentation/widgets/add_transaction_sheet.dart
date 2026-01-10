@@ -110,18 +110,18 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     // 할부 모드가 아닐 때 반복 주기 유효성 검사
     if (!_isInstallmentMode && _recurringSettings.isRecurring) {
       if (_recurringSettings.endDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('반복 종료 기간을 선택해주세요')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('반복 종료 기간을 선택해주세요')));
         return false;
       }
     }
 
     // 할부 모드일 때 할부 결과 유효성 검사
     if (_isInstallmentMode && _installmentResult == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('할부 정보를 입력해주세요')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('할부 정보를 입력해주세요')));
       return false;
     }
 
@@ -136,19 +136,40 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     try {
       final notifier = ref.read(transactionNotifierProvider.notifier);
 
+      // 성공 메시지를 저장할 변수
+      String? successMessage;
+
       if (_isInstallmentMode && _installmentResult != null) {
         // 할부 거래 생성
-        await _createInstallmentTransactions(notifier);
-      } else if (_recurringSettings.isRecurring && _recurringSettings.endDate != null) {
+        successMessage = await _createInstallmentTransactions(notifier);
+      } else if (_recurringSettings.isRecurring &&
+          _recurringSettings.endDate != null) {
         // 반복 거래 생성
-        await _createRecurringTransactions(notifier);
+        successMessage = await _createRecurringTransactions(notifier);
+        // 사용자가 취소한 경우 화면을 닫지 않음
+        if (successMessage == null) {
+          return;
+        }
       } else {
         // 단일 거래 생성
-        await _createSingleTransaction(notifier);
+        successMessage = await _createSingleTransaction(notifier);
       }
 
       if (mounted) {
-        Navigator.pop(context);
+        // Navigator와 ScaffoldMessenger 참조를 미리 저장
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        final navigator = Navigator.of(context);
+
+        // Navigator.pop을 다음 프레임에서 실행하여 locked 상태 문제 방지
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          navigator.pop();
+          // SnackBar는 pop 후에 표시
+          if (successMessage != null) {
+            scaffoldMessenger.showSnackBar(
+              SnackBar(content: Text(successMessage)),
+            );
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -163,7 +184,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     }
   }
 
-  Future<void> _createSingleTransaction(TransactionNotifier notifier) async {
+  /// 단일 거래 생성 후 성공 메시지 반환
+  Future<String> _createSingleTransaction(TransactionNotifier notifier) async {
     final amount = int.parse(
       _amountController.text.replaceAll(RegExp(r'[^\d]'), ''),
     );
@@ -178,14 +200,13 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       memo: _memoController.text.isNotEmpty ? _memoController.text : null,
     );
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('거래가 추가되었습니다')),
-      );
-    }
+    return '거래가 추가되었습니다';
   }
 
-  Future<void> _createRecurringTransactions(TransactionNotifier notifier) async {
+  /// 반복 거래 생성 후 성공 메시지 반환 (취소 시 null 반환)
+  Future<String?> _createRecurringTransactions(
+    TransactionNotifier notifier,
+  ) async {
     final amount = int.parse(
       _amountController.text.replaceAll(RegExp(r'[^\d]'), ''),
     );
@@ -199,7 +220,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     // 경고: 너무 많은 거래 생성 시 확인
     if (dates.length > 100) {
       final confirmed = await _showLargeTransactionWarning(dates.length);
-      if (!confirmed) return;
+      if (!confirmed) return null;
     }
 
     for (final date in dates) {
@@ -217,14 +238,13 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       );
     }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${dates.length}건의 거래가 추가되었습니다')),
-      );
-    }
+    return '${dates.length}건의 거래가 추가되었습니다';
   }
 
-  Future<void> _createInstallmentTransactions(TransactionNotifier notifier) async {
+  /// 할부 거래 생성 후 성공 메시지 반환
+  Future<String> _createInstallmentTransactions(
+    TransactionNotifier notifier,
+  ) async {
     final result = _installmentResult!;
 
     final dates = _calculateRecurringDates(
@@ -250,11 +270,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       );
     }
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${result.months}건의 할부 거래가 추가되었습니다')),
-      );
-    }
+    return '${result.months}건의 할부 거래가 추가되었습니다';
   }
 
   List<DateTime> _calculateRecurringDates({
@@ -265,7 +281,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     final dates = <DateTime>[];
     // 시간 정보 제거하여 날짜만 비교 (종료일 포함 보장)
     var current = DateTime(startDate.year, startDate.month, startDate.day);
-    final endDateNormalized = DateTime(endDate.year, endDate.month, endDate.day);
+    final endDateNormalized = DateTime(
+      endDate.year,
+      endDate.month,
+      endDate.day,
+    );
 
     while (!current.isAfter(endDateNormalized)) {
       dates.add(current);
@@ -279,14 +299,18 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           final nextYear = nextMonth > 12 ? current.year + 1 : current.year;
           final adjustedMonth = nextMonth > 12 ? 1 : nextMonth;
           final lastDayOfMonth = DateTime(nextYear, adjustedMonth + 1, 0).day;
-          final day = current.day > lastDayOfMonth ? lastDayOfMonth : current.day;
+          final day = current.day > lastDayOfMonth
+              ? lastDayOfMonth
+              : current.day;
           current = DateTime(nextYear, adjustedMonth, day);
           break;
         case RecurringType.yearly:
           // 년 증가 시 윤년 처리 (예: 2/29 -> 2/28)
           final nextYear = current.year + 1;
           final lastDayOfMonth = DateTime(nextYear, current.month + 1, 0).day;
-          final day = current.day > lastDayOfMonth ? lastDayOfMonth : current.day;
+          final day = current.day > lastDayOfMonth
+              ? lastDayOfMonth
+              : current.day;
           current = DateTime(nextYear, current.month, day);
           break;
         case RecurringType.none:
@@ -322,7 +346,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     final colorScheme = Theme.of(context).colorScheme;
     final categoriesAsync = _type == 'expense'
         ? ref.watch(expenseCategoriesProvider)
-        : ref.watch(incomeCategoriesProvider);
+        : _type == 'income'
+        ? ref.watch(incomeCategoriesProvider)
+        : ref.watch(savingCategoriesProvider);
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
 
     return DraggableScrollableSheet(
@@ -386,7 +412,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // 수입/지출 선택
+                        // 수입/지출/저축 선택
                         SegmentedButton<String>(
                           segments: const [
                             ButtonSegment(
@@ -399,16 +425,22 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                               label: Text('수입'),
                               icon: Icon(Icons.add_circle_outline),
                             ),
+                            ButtonSegment(
+                              value: 'saving',
+                              label: Text('저축'),
+                              icon: Icon(Icons.savings_outlined),
+                            ),
                           ],
                           selected: {_type},
                           onSelectionChanged: (selected) {
                             setState(() {
                               _type = selected.first;
                               _selectedCategory = null;
-                              // 수입으로 변경 시 할부 모드 해제
-                              if (_type == 'income') {
+                              // 수입/저축으로 변경 시 할부 모드 해제
+                              if (_type == 'income' || _type == 'saving') {
                                 _isInstallmentMode = false;
                                 _installmentResult = null;
+                                _selectedPaymentMethod = null;
                               }
                             });
                           },
@@ -692,6 +724,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       ref.invalidate(categoriesProvider);
       ref.invalidate(incomeCategoriesProvider);
       ref.invalidate(expenseCategoriesProvider);
+      ref.invalidate(savingCategoriesProvider);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
@@ -787,9 +820,18 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   // 랜덤 색상 생성
   String _generateRandomColor() {
     final colors = [
-      '#4CAF50', '#2196F3', '#F44336', '#FF9800',
-      '#9C27B0', '#00BCD4', '#E91E63', '#795548',
-      '#607D8B', '#3F51B5', '#009688', '#CDDC39',
+      '#4CAF50',
+      '#2196F3',
+      '#F44336',
+      '#FF9800',
+      '#9C27B0',
+      '#00BCD4',
+      '#E91E63',
+      '#795548',
+      '#607D8B',
+      '#3F51B5',
+      '#009688',
+      '#CDDC39',
     ];
     return colors[(DateTime.now().millisecondsSinceEpoch % colors.length)];
   }
@@ -801,7 +843,13 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('${_type == 'expense' ? '지출' : '수입'} 카테고리 추가'),
+        title: Text(
+          '${_type == 'expense'
+              ? '지출'
+              : _type == 'income'
+              ? '수입'
+              : '저축'} 카테고리 추가',
+        ),
         content: TextField(
           controller: nameController,
           autofocus: true,
@@ -831,9 +879,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     TextEditingController nameController,
   ) async {
     if (nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('카테고리 이름을 입력해주세요')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('카테고리 이름을 입력해주세요')));
       return;
     }
 
@@ -851,19 +899,20 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('카테고리가 추가되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('카테고리가 추가되었습니다')));
       }
 
       ref.invalidate(categoriesProvider);
       ref.invalidate(incomeCategoriesProvider);
       ref.invalidate(expenseCategoriesProvider);
+      ref.invalidate(savingCategoriesProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('오류: $e')));
       }
     }
   }
@@ -884,7 +933,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             hintText: '예: 신용카드, 현금',
             border: OutlineInputBorder(),
           ),
-          onSubmitted: (_) => _submitPaymentMethod(dialogContext, nameController),
+          onSubmitted: (_) =>
+              _submitPaymentMethod(dialogContext, nameController),
         ),
         actions: [
           TextButton(
@@ -892,7 +942,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             child: const Text('취소'),
           ),
           FilledButton(
-            onPressed: () => _submitPaymentMethod(dialogContext, nameController),
+            onPressed: () =>
+                _submitPaymentMethod(dialogContext, nameController),
             child: const Text('추가'),
           ),
         ],
@@ -905,9 +956,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     TextEditingController nameController,
   ) async {
     if (nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('결제수단 이름을 입력해주세요')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('결제수단 이름을 입력해주세요')));
       return;
     }
 
@@ -924,17 +975,17 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('결제수단이 추가되었습니다')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('결제수단이 추가되었습니다')));
       }
 
       ref.invalidate(paymentMethodsProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('오류: $e')));
       }
     }
   }

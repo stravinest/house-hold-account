@@ -5,7 +5,9 @@ import '../../data/repositories/payment_method_repository.dart';
 import '../../domain/entities/payment_method.dart';
 
 // Repository 프로바이더
-final paymentMethodRepositoryProvider = Provider<PaymentMethodRepository>((ref) {
+final paymentMethodRepositoryProvider = Provider<PaymentMethodRepository>((
+  ref,
+) {
   return PaymentMethodRepository();
 });
 
@@ -19,13 +21,14 @@ final paymentMethodsProvider = FutureProvider<List<PaymentMethod>>((ref) async {
 });
 
 // 결제수단 관리 노티파이어
-class PaymentMethodNotifier extends StateNotifier<AsyncValue<List<PaymentMethod>>> {
+class PaymentMethodNotifier
+    extends StateNotifier<AsyncValue<List<PaymentMethod>>> {
   final PaymentMethodRepository _repository;
   final String? _ledgerId;
   final Ref _ref;
 
   PaymentMethodNotifier(this._repository, this._ledgerId, this._ref)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadPaymentMethods();
     } else {
@@ -100,16 +103,20 @@ class PaymentMethodNotifier extends StateNotifier<AsyncValue<List<PaymentMethod>
       await _repository.deletePaymentMethod(id);
       _ref.invalidate(paymentMethodsProvider);
       await loadPaymentMethods();
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (e) {
+      // 에러 발생 시에도 데이터를 다시 로드하여 상태 복구
+      await loadPaymentMethods();
       rethrow;
     }
   }
 }
 
 final paymentMethodNotifierProvider =
-    StateNotifierProvider<PaymentMethodNotifier, AsyncValue<List<PaymentMethod>>>((ref) {
-  final repository = ref.watch(paymentMethodRepositoryProvider);
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  return PaymentMethodNotifier(repository, ledgerId, ref);
-});
+    StateNotifierProvider<
+      PaymentMethodNotifier,
+      AsyncValue<List<PaymentMethod>>
+    >((ref) {
+      final repository = ref.watch(paymentMethodRepositoryProvider);
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      return PaymentMethodNotifier(repository, ledgerId, ref);
+    });

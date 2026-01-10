@@ -141,7 +141,11 @@ class _TransactionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final formatter = NumberFormat('#,###', 'ko_KR');
-    final amountColor = transaction.isIncome ? Colors.blue : Colors.red;
+    final amountColor = transaction.isIncome
+        ? Colors.blue
+        : transaction.isSaving
+            ? Colors.green
+            : Colors.red;
 
     return Slidable(
       endActionPane: ActionPane(
@@ -269,7 +273,7 @@ class _TransactionCard extends StatelessWidget {
 
                 // 금액
                 Text(
-                  '${transaction.isIncome ? '+' : '-'}${formatter.format(transaction.amount)}원',
+                  '${transaction.isIncome ? '+' : transaction.isSaving ? '' : '-'}${formatter.format(transaction.amount)}원',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: amountColor,
                         fontWeight: FontWeight.bold,
