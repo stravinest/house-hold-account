@@ -65,6 +65,7 @@ class LedgerMember extends Equatable {
   final String? displayName;
   final String? email;
   final String? avatarUrl;
+  final String? color;
 
   const LedgerMember({
     required this.id,
@@ -75,6 +76,7 @@ class LedgerMember extends Equatable {
     this.displayName,
     this.email,
     this.avatarUrl,
+    this.color,
   });
 
   factory LedgerMember.fromJson(Map<String, dynamic> json) {
@@ -89,6 +91,7 @@ class LedgerMember extends Equatable {
       displayName: profile?['display_name'] as String?,
       email: profile?['email'] as String?,
       avatarUrl: profile?['avatar_url'] as String?,
+      color: profile?['color'] as String?,
     );
   }
 
@@ -107,5 +110,6 @@ class LedgerMember extends Equatable {
         displayName,
         email,
         avatarUrl,
+        color,
       ];
 }

@@ -218,7 +218,7 @@ class ShareRepository {
   Future<List<LedgerMember>> getMembers(String ledgerId) async {
     final response = await _client
         .from('ledger_members')
-        .select('*, profiles(email, display_name, avatar_url)')
+        .select('*, profiles(email, display_name, avatar_url, color)')
         .eq('ledger_id', ledgerId)
         .order('created_at');
 

@@ -1,73 +1,53 @@
 # 현황 분석 결과
 
-## 수정 대상: 공유 가계부 멤버 수 제한 (최대 2명)
+## 수정 대상: 상단 수입/지출 합계 영역 높이 고정
+
+### 문제 상황
+- 공유 가계부에서 두 명의 멤버가 모두 거래를 입력하면 각 멤버별 금액이 표시됨
+- 멤버 중 한 명 또는 둘 다 거래가 없으면 해당 행이 표시되지 않음
+- 이로 인해 상단 요약 영역의 높이가 동적으로 변경됨
+- 결과적으로 캘린더 전체의 위치가 변동되어 UX가 일관되지 않음
 
 ### 관련 파일
+- `lib/features/ledger/presentation/widgets/calendar_view.dart` (핵심)
+  - `_MonthSummary` 위젯 (라인 551-619)
+  - `_SummaryColumn` 위젯 (라인 624-710)
+  - `_UserAmountIndicator` 위젯 (라인 713-748)
 
-| 파일 | 역할 | 수정 필요 |
-|------|------|----------|
-| `lib/core/constants/app_constants.dart` | 앱 상수 정의 | O (상수 추가) |
-| `lib/features/share/data/repositories/share_repository.dart` | 비즈니스 로직 | O (검증 로직 추가) |
-| `lib/features/share/presentation/providers/share_provider.dart` | 상태 관리 | X |
-| `lib/features/share/presentation/pages/share_management_page.dart` | UI | O (멤버 수 표시, 제한 안내) |
-| `supabase/migrations/001_initial_schema.sql` | DB 스키마 | 선택 (DB 레벨 제약) |
+### 현재 코드 분석
 
-### 현재 검증 항목 (createInvite)
+#### _SummaryColumn 위젯 (문제 부분)
+```dart
+// 유저별 표시 (세로 배치)
+if (userAmounts.isNotEmpty) ...[
+  const SizedBox(height: 2),
+  ...userAmounts.map((entry) => Padding(
+        padding: const EdgeInsets.only(bottom: 1),
+        child: _UserAmountIndicator(
+          color: entry.key,
+          amount: entry.value,
+        ),
+      )),
+],
+```
 
-1. 자기 자신에게 초대 방지
-2. 가입된 사용자인지 확인
-3. 이미 멤버인지 확인
-4. 대기 중인 초대가 있는지 확인
-5. **멤버 수 제한 - 없음** (추가 필요)
-
-### 현재 UI/UX 상태
-
-#### 강점
-- 탭 기반 구조 (멤버/받은 초대/보낸 초대)
-- 역할 표시 (소유자/관리자/멤버)
-- 에러 메시지 자동 표시
-
-#### 개선점
-- 현재 멤버 수 표시 없음
-- 멤버 제한 도달 시 안내 없음
-- 초대 버튼 비활성화 처리 없음
+위 코드에서 `userAmounts`가 비어있으면 아무것도 렌더링하지 않아 높이가 줄어듭니다.
 
 ### 식별된 엣지 케이스
+1. 공유 멤버 0명 (개인 가계부) - 사용자별 표시 불필요
+2. 공유 멤버 1명 - 1줄만 표시하면 됨
+3. 공유 멤버 2명 (최대) - 항상 2줄 높이 유지 필요
+4. 멤버 A만 거래 있음 - A의 금액만 표시, B는 빈 줄
+5. 멤버 B만 거래 있음 - B의 금액만 표시, A는 빈 줄
+6. 둘 다 거래 없음 - 빈 2줄 높이 유지
+7. 둘 다 거래 있음 - 정상 표시
 
-| 번호 | 엣지 케이스 | 처리 방안 |
-|------|------------|----------|
-| 1 | 초대 생성 시 멤버가 이미 2명인 경우 | 에러 메시지 표시, 초대 생성 불가 |
-| 2 | 초대 수락 시 동시에 여러 명이 수락 (동시성) | acceptInvite에서도 멤버 수 재확인 |
-| 3 | 대기 중인 초대가 있는데 멤버가 가득 찬 경우 | 수락 시 에러 처리, 초대 자동 만료 고려 |
-| 4 | 소유자 1명 + 멤버 1명 = 2명일 때 추가 초대 | 2명 제한이면 추가 초대 불가 |
-| 5 | FAB 버튼 클릭 전 멤버 수 확인 | 사전 확인 후 안내 다이얼로그 표시 |
+### 해결 방향
+1. 공유 가계부 여부와 멤버 수 정보 필요
+2. 멤버 수에 따라 고정 높이 공간 확보
+3. 거래 데이터 유무와 관계없이 일정한 높이 유지
+4. _UserAmountIndicator의 높이를 상수로 정의하여 관리
 
 ### 의존성
-
-```
-AppConstants.maxMembersPerLedger (새로 추가)
-        ↓
-ShareRepository.createInvite() (검증 추가)
-ShareRepository.acceptInvite() (검증 추가)
-        ↓
-ShareNotifier (변경 불필요 - 에러 자동 전파)
-        ↓
-ShareManagementPage (멤버 수 표시 UI 추가)
-```
-
-### 수정 지점 요약
-
-1. **AppConstants** (Line 10 이후)
-   - `maxMembersPerLedger = 2` 상수 추가
-
-2. **ShareRepository.createInvite()** (Line 89-90 사이)
-   - 현재 멤버 수 확인 로직 추가
-   - 2명 이상이면 Exception throw
-
-3. **ShareRepository.acceptInvite()** (Line 155-157 사이)
-   - 초대 수락 전 멤버 수 재확인
-   - 동시성 문제 방지
-
-4. **ShareManagementPage** (선택적)
-   - 멤버 탭에 현재 인원 표시 (예: "멤버 2/2명")
-   - FAB 버튼 클릭 시 제한 도달 안내
+- `currentLedgerProvider`: 현재 선택된 가계부 정보 (공유 여부, 멤버 수)
+- `monthlyTotalProvider`: 월별 합계 및 사용자별 데이터

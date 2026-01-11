@@ -3,17 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../data/repositories/statistics_repository.dart';
+import '../../domain/entities/statistics_entities.dart';
 
-// Repository 프로바이더
+// Repository Provider
 final statisticsRepositoryProvider = Provider<StatisticsRepository>((ref) {
   return StatisticsRepository();
 });
 
-// 통계 기간 타입
-enum StatisticsPeriod { weekly, monthly, yearly }
+// 탭 인덱스 관리
+final statisticsTabIndexProvider = StateProvider<int>((ref) => 0);
 
-// 선택된 통계 타입 (지출/수입)
+// 선택된 통계 타입 (지출/수입/저축)
 final selectedStatisticsTypeProvider = StateProvider<String>((ref) => 'expense');
+
+// 추이 탭 기간 필터 (월별/연별)
+final trendPeriodProvider = StateProvider<TrendPeriod>((ref) => TrendPeriod.monthly);
 
 // 카테고리별 지출 통계
 final categoryExpenseStatisticsProvider =
@@ -80,35 +84,6 @@ final categoryStatisticsProvider =
   }
 });
 
-// 월별 추세 (최근 6개월)
-final monthlyTrendProvider =
-    FutureProvider<List<MonthlyStatistics>>((ref) async {
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  if (ledgerId == null) return [];
-
-  final repository = ref.watch(statisticsRepositoryProvider);
-
-  return repository.getMonthlyTrend(
-    ledgerId: ledgerId,
-    months: 6,
-  );
-});
-
-// 일별 추세 (현재 월)
-final dailyTrendProvider = FutureProvider<List<DailyStatistics>>((ref) async {
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  if (ledgerId == null) return [];
-
-  final date = ref.watch(selectedDateProvider);
-  final repository = ref.watch(statisticsRepositoryProvider);
-
-  return repository.getDailyTrend(
-    ledgerId: ledgerId,
-    year: date.year,
-    month: date.month,
-  );
-});
-
 // 총 지출/수입 계산
 final totalStatisticsProvider = Provider<Map<String, int>>((ref) {
   final expenseAsync = ref.watch(categoryExpenseStatisticsProvider);
@@ -130,4 +105,91 @@ final totalStatisticsProvider = Provider<Map<String, int>>((ref) {
     'income': totalIncome,
     'balance': totalIncome - totalExpense,
   };
+});
+
+// 월 비교 데이터 (전월 대비)
+final monthComparisonProvider =
+    FutureProvider<MonthComparisonData>((ref) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) return MonthComparisonData.empty();
+
+  final date = ref.watch(selectedDateProvider);
+  final type = ref.watch(selectedStatisticsTypeProvider);
+  final repository = ref.watch(statisticsRepositoryProvider);
+
+  return repository.getMonthComparison(
+    ledgerId: ledgerId,
+    year: date.year,
+    month: date.month,
+    type: type,
+  );
+});
+
+// 결제수단별 통계
+final paymentMethodStatisticsProvider =
+    FutureProvider<List<PaymentMethodStatistics>>((ref) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) return [];
+
+  final date = ref.watch(selectedDateProvider);
+  final repository = ref.watch(statisticsRepositoryProvider);
+
+  // 결제수단 탭에서는 항상 지출만 표시
+  return repository.getPaymentMethodStatistics(
+    ledgerId: ledgerId,
+    year: date.year,
+    month: date.month,
+    type: 'expense',
+  );
+});
+
+// 월별 추이 (평균값 포함)
+final monthlyTrendWithAverageProvider =
+    FutureProvider<TrendStatisticsData>((ref) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) {
+    return const TrendStatisticsData(
+      data: [],
+      averageIncome: 0,
+      averageExpense: 0,
+      averageSaving: 0,
+    );
+  }
+
+  final date = ref.watch(selectedDateProvider);
+  final repository = ref.watch(statisticsRepositoryProvider);
+
+  return repository.getMonthlyTrendWithAverage(
+    ledgerId: ledgerId,
+    baseDate: date,
+    months: 6,
+  );
+});
+
+// 연별 추이
+final yearlyTrendProvider =
+    FutureProvider<List<YearlyStatistics>>((ref) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) return [];
+
+  final repository = ref.watch(statisticsRepositoryProvider);
+
+  return repository.getYearlyTrend(
+    ledgerId: ledgerId,
+    years: 3,
+  );
+});
+
+// 기존 월별 추이 (하위 호환성 유지)
+final monthlyTrendProvider =
+    FutureProvider<List<MonthlyStatistics>>((ref) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) return [];
+
+  final repository = ref.watch(statisticsRepositoryProvider);
+
+  return repository.getMonthlyTrend(
+    ledgerId: ledgerId,
+    months: 6,
+  );
 });

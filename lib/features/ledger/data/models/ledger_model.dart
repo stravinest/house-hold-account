@@ -65,6 +65,7 @@ class LedgerMemberModel extends LedgerMember {
     super.displayName,
     super.email,
     super.avatarUrl,
+    super.color,
   });
 
   factory LedgerMemberModel.fromJson(Map<String, dynamic> json) {
@@ -79,6 +80,7 @@ class LedgerMemberModel extends LedgerMember {
       displayName: profile?['display_name'] as String?,
       email: profile?['email'] as String?,
       avatarUrl: profile?['avatar_url'] as String?,
+      color: profile?['color'] as String?,
     );
   }
 }

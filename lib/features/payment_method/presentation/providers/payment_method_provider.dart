@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/payment_method_repository.dart';
@@ -26,14 +28,51 @@ class PaymentMethodNotifier
   final PaymentMethodRepository _repository;
   final String? _ledgerId;
   final Ref _ref;
+  RealtimeChannel? _paymentMethodsChannel;
 
   PaymentMethodNotifier(this._repository, this._ledgerId, this._ref)
     : super(const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadPaymentMethods();
+      _subscribeToChanges();
     } else {
       state = const AsyncValue.data([]);
     }
+  }
+
+  void _subscribeToChanges() {
+    if (_ledgerId == null) return;
+
+    try {
+      _paymentMethodsChannel = _repository.subscribePaymentMethods(
+        ledgerId: _ledgerId!,
+        onPaymentMethodChanged: () {
+          _refreshPaymentMethodsQuietly();
+        },
+      );
+    } catch (e) {
+      debugPrint('PaymentMethod Realtime subscribe fail: $e');
+    }
+  }
+
+  Future<void> _refreshPaymentMethodsQuietly() async {
+    if (_ledgerId == null) return;
+
+    try {
+      final paymentMethods = await _repository.getPaymentMethods(_ledgerId!);
+      if (mounted) {
+        state = AsyncValue.data(paymentMethods);
+        _ref.invalidate(paymentMethodsProvider);
+      }
+    } catch (e) {
+      debugPrint('PaymentMethod refresh fail: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _paymentMethodsChannel?.unsubscribe();
+    super.dispose();
   }
 
   Future<void> loadPaymentMethods() async {

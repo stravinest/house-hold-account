@@ -6,11 +6,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/payment_method.dart';
 import '../providers/payment_method_provider.dart';
 
-class PaymentMethodManagementPage extends ConsumerWidget {
+class PaymentMethodManagementPage extends ConsumerStatefulWidget {
   const PaymentMethodManagementPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<PaymentMethodManagementPage> createState() =>
+      _PaymentMethodManagementPageState();
+}
+
+class _PaymentMethodManagementPageState
+    extends ConsumerState<PaymentMethodManagementPage> {
+  @override
+  void initState() {
+    super.initState();
+    // 화면 진입 시 결제수단 데이터 새로 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(paymentMethodNotifierProvider.notifier).loadPaymentMethods();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
 
     return Scaffold(
@@ -150,14 +166,20 @@ class _PaymentMethodTile extends ConsumerWidget {
                     .deletePaymentMethod(paymentMethod.id);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('결제수단이 삭제되었습니다')),
+                    const SnackBar(
+                      content: Text('결제수단이 삭제되었습니다'),
+                      duration: Duration(seconds: 1),
+                    ),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('삭제 실패: $e'),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
                 }
               }
             },
@@ -281,14 +303,18 @@ class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
             content: Text(
               widget.paymentMethod != null ? '결제수단이 수정되었습니다' : '결제수단이 추가되었습니다',
             ),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     }
   }

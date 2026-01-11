@@ -3,319 +3,294 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/router.dart';
-import '../../../../config/supabase_config.dart';
-import '../../../../core/constants/app_constants.dart';
-import '../../../ledger/domain/entities/ledger.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../domain/entities/ledger_invite.dart';
 import '../providers/share_provider.dart';
+import '../widgets/invited_ledger_card.dart';
+import '../widgets/owned_ledger_card.dart';
 
-class ShareManagementPage extends ConsumerStatefulWidget {
+class ShareManagementPage extends ConsumerWidget {
   const ShareManagementPage({super.key});
 
   @override
-  ConsumerState<ShareManagementPage> createState() => _ShareManagementPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ownedLedgersAsync = ref.watch(myOwnedLedgersWithInvitesProvider);
+    final receivedInvitesAsync = ref.watch(receivedInvitesProvider);
+    final selectedLedgerId = ref.watch(selectedLedgerIdProvider);
 
-class _ShareManagementPageState extends ConsumerState<ShareManagementPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('공유 관리'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: [
-            Consumer(
-              builder: (context, ref, _) {
-                final memberCount = ref.watch(currentLedgerMemberCountProvider);
-                return Tab(
-                  text: '멤버 ($memberCount/${AppConstants.maxMembersPerLedger})',
-                );
-              },
-            ),
-            const Tab(text: '받은 초대'),
-            const Tab(text: '보낸 초대'),
-          ],
-        ),
+        title: const Text('가계부 및 공유 관리'),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          const _MembersTab(),
-          const _ReceivedInvitesTab(),
-          const _SentInvitesTab(),
-        ],
-      ),
-      floatingActionButton: Consumer(
-        builder: (context, ref, _) {
-          final canAddMember = ref.watch(canAddMemberProvider);
-          return FloatingActionButton.extended(
-            onPressed: () {
-              if (canAddMember) {
-                _showInviteDialog(context);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      '멤버 수가 최대 인원에 도달했습니다. (${AppConstants.maxMembersPerLedger}명)',
-                    ),
-                    duration: const Duration(seconds: 2),
-                  ),
-                );
-              }
-            },
-            icon: const Icon(Icons.person_add),
-            label: Text(canAddMember ? '초대하기' : '멤버 가득 참'),
-            backgroundColor: canAddMember ? null : Colors.grey.shade400,
-          );
+      body: RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(myOwnedLedgersWithInvitesProvider);
+          ref.invalidate(receivedInvitesProvider);
         },
+        child: _buildBody(context, ref, ownedLedgersAsync, receivedInvitesAsync, selectedLedgerId),
       ),
     );
   }
 
-  void _showInviteDialog(BuildContext context) {
-    final ledgerId = ref.read(selectedLedgerIdProvider);
-    if (ledgerId == null) {
-      _showNoLedgerDialog(context);
-      return;
+  Widget _buildBody(
+    BuildContext context,
+    WidgetRef ref,
+    AsyncValue<List<LedgerWithInviteInfo>> ownedLedgersAsync,
+    AsyncValue<List<LedgerInvite>> receivedInvitesAsync,
+    String? selectedLedgerId,
+  ) {
+    // 로딩 상태
+    if (ownedLedgersAsync.isLoading || receivedInvitesAsync.isLoading) {
+      return _buildScrollableCenter(
+        child: const CircularProgressIndicator(),
+      );
     }
 
+    // 에러 상태
+    if (ownedLedgersAsync.hasError) {
+      return _buildErrorWidget(
+        context,
+        ref,
+        ownedLedgersAsync.error.toString(),
+      );
+    }
+
+    if (receivedInvitesAsync.hasError) {
+      return _buildErrorWidget(
+        context,
+        ref,
+        receivedInvitesAsync.error.toString(),
+      );
+    }
+
+    final ownedLedgers = ownedLedgersAsync.valueOrNull ?? [];
+    final receivedInvites = receivedInvitesAsync.valueOrNull ?? [];
+
+    // 둘 다 비어있는 경우
+    if (ownedLedgers.isEmpty && receivedInvites.isEmpty) {
+      return _buildEmptyState(context);
+    }
+
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      children: [
+        // 내 가계부 섹션
+        if (ownedLedgers.isNotEmpty) ...[
+          _buildSectionHeader(context, '내 가계부', Icons.account_balance_wallet),
+          ...ownedLedgers.map((ledgerInfo) => OwnedLedgerCard(
+                ledgerInfo: ledgerInfo,
+                onInviteTap: ledgerInfo.canInvite
+                    ? () => _showInviteDialog(context, ref, ledgerInfo.ledger.id)
+                    : null,
+                onCancelInvite: ledgerInfo.hasPendingInvite
+                    ? () => _showCancelInviteDialog(context, ref, ledgerInfo)
+                    : null,
+                onSelectLedger: !ledgerInfo.isCurrentLedger
+                    ? () => _showSelectLedgerDialog(context, ref, ledgerInfo.ledger.id, ledgerInfo.ledger.name)
+                    : null,
+              )),
+        ],
+
+        // 초대받은 가계부 섹션
+        if (receivedInvites.isNotEmpty) ...[
+          if (ownedLedgers.isNotEmpty) const SizedBox(height: 24),
+          _buildSectionHeader(context, '초대받은 가계부', Icons.mail_outline),
+          ...receivedInvites.map((invite) => InvitedLedgerCard(
+                invite: invite,
+                isCurrentLedger: invite.ledgerId == selectedLedgerId,
+                onAccept: invite.isPending
+                    ? () => _acceptInvite(context, ref, invite)
+                    : null,
+                onReject: invite.isPending
+                    ? () => _showRejectConfirmDialog(context, ref, invite)
+                    : null,
+                onLeave: invite.isAccepted
+                    ? () => _showLeaveConfirmDialog(context, ref, invite)
+                    : null,
+                onSelectLedger: invite.isAccepted && invite.ledgerId != selectedLedgerId
+                    ? () => _showSelectLedgerDialog(context, ref, invite.ledgerId, invite.ledgerName ?? '가계부')
+                    : null,
+              )),
+        ],
+
+        // 하단 여백
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+
+  // RefreshIndicator 호환을 위한 스크롤 가능한 Center 위젯
+  Widget _buildScrollableCenter({required Widget child}) {
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Center(child: child),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    return _buildScrollableCenter(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.account_balance_wallet_outlined,
+            size: 64,
+            color: Colors.grey[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '가계부가 없습니다',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '가계부를 생성하여 시작하세요',
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.grey[500],
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => context.push(Routes.ledgerManage),
+            icon: const Icon(Icons.add),
+            label: const Text('가계부 생성하기'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget(BuildContext context, WidgetRef ref, String error) {
+    return _buildScrollableCenter(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64,
+            color: Colors.red[400],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            '오류가 발생했습니다',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              error,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () {
+              ref.invalidate(myOwnedLedgersWithInvitesProvider);
+              ref.invalidate(receivedInvitesProvider);
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('다시 시도'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showInviteDialog(BuildContext context, WidgetRef ref, String ledgerId) {
     showDialog(
       context: context,
       builder: (context) => _InviteDialog(ledgerId: ledgerId),
     );
   }
 
-  void _showNoLedgerDialog(BuildContext context) {
-    showDialog(
+  Future<void> _showSelectLedgerDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String ledgerId,
+    String ledgerName,
+  ) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('가계부가 필요합니다'),
-        content: const Text(
-          '초대를 보내려면 먼저 가계부를 생성해주세요.',
+        title: const Text('가계부 변경'),
+        content: Text(
+          '\'$ledgerName\' 가계부를 사용하시겠습니까?',
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('취소'),
           ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(context);
-              context.push(Routes.ledgerManage);
-            },
-            child: const Text('가계부 생성하기'),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('사용'),
           ),
         ],
       ),
     );
-  }
-}
 
-// 멤버 목록 탭
-class _MembersTab extends ConsumerWidget {
-  const _MembersTab();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final membersAsync = ref.watch(currentLedgerMembersProvider);
-    final currentUserId = SupabaseConfig.auth.currentUser?.id;
-
-    return membersAsync.when(
-      data: (members) {
-        if (members.isEmpty) {
-          return const Center(
-            child: Text('멤버가 없습니다'),
-          );
-        }
-
-        final isFull = members.length >= AppConstants.maxMembersPerLedger;
-
-        return Column(
-          children: [
-            // 멤버 수 정보 배너
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              color: isFull
-                  ? Colors.orange.shade50
-                  : Colors.blue.shade50,
-              child: Row(
-                children: [
-                  Icon(
-                    isFull ? Icons.warning_amber : Icons.group,
-                    color: isFull ? Colors.orange : Colors.blue,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '멤버 ${members.length}/${AppConstants.maxMembersPerLedger}명',
-                    style: TextStyle(
-                      color: isFull
-                          ? Colors.orange.shade700
-                          : Colors.blue.shade700,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  if (isFull) ...[
-                    const SizedBox(width: 8),
-                    Text(
-                      '(최대 인원)',
-                      style: TextStyle(
-                        color: Colors.orange.shade700,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            // 멤버 목록
-            Expanded(
-              child: ListView.builder(
-          itemCount: members.length,
-          itemBuilder: (context, index) {
-            final member = members[index];
-            final isCurrentUser = member.userId == currentUserId;
-            final isOwner = member.role == 'owner';
-
-            return ListTile(
-              leading: CircleAvatar(
-                backgroundImage: member.avatarUrl != null
-                    ? NetworkImage(member.avatarUrl!)
-                    : null,
-                child: member.avatarUrl == null
-                    ? Text(
-                        (member.displayName ?? member.email ?? 'U')
-                            .substring(0, 1)
-                            .toUpperCase(),
-                      )
-                    : null,
-              ),
-              title: Row(
-                children: [
-                  Text(member.displayName ?? member.email ?? '알 수 없음'),
-                  if (isCurrentUser)
-                    Container(
-                      margin: const EdgeInsets.only(left: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        '나',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                ],
-              ),
-              subtitle: Text(_getRoleLabel(member.role)),
-              trailing: _buildTrailingWidget(
-                context,
-                ref,
-                member,
-                isCurrentUser,
-                isOwner,
-              ),
-            );
-          },
-              ),
-            ),
-          ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('오류: $e')),
-    );
-  }
-
-  String _getRoleLabel(String role) {
-    switch (role) {
-      case 'owner':
-        return '소유자';
-      case 'admin':
-        return '관리자';
-      default:
-        return '멤버';
-    }
-  }
-
-  Widget? _buildTrailingWidget(
-    BuildContext context,
-    WidgetRef ref,
-    LedgerMember member,
-    bool isCurrentUser,
-    bool isOwner,
-  ) {
-    // 소유자는 아무 액션 없음
-    if (isOwner) return null;
-
-    // 본인인 경우 나가기 버튼
-    if (isCurrentUser) {
-      return IconButton(
-        icon: const Icon(Icons.exit_to_app, color: Colors.red),
-        tooltip: '가계부 나가기',
-        onPressed: () => _leaveLedger(context, ref),
+    if (confirmed == true && context.mounted) {
+      ref.read(ledgerNotifierProvider.notifier).selectLedger(ledgerId);
+      ref.invalidate(myOwnedLedgersWithInvitesProvider);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('\'$ledgerName\' 가계부로 변경했습니다'),
+          duration: const Duration(seconds: 1),
+        ),
       );
     }
-
-    // 다른 멤버의 경우 관리 메뉴
-    return PopupMenuButton(
-      itemBuilder: (context) => [
-        PopupMenuItem(
-          value: 'change_role',
-          child: Text(
-            member.role == 'admin' ? '멤버로 변경' : '관리자로 변경',
-          ),
-        ),
-        const PopupMenuItem(
-          value: 'remove',
-          child: Text(
-            '내보내기',
-            style: TextStyle(color: Colors.red),
-          ),
-        ),
-      ],
-      onSelected: (value) {
-        if (value == 'change_role') {
-          _changeRole(context, ref, member);
-        } else if (value == 'remove') {
-          _removeMember(context, ref, member);
-        }
-      },
-    );
   }
 
-  Future<void> _leaveLedger(BuildContext context, WidgetRef ref) async {
-    final ledgerId = ref.read(selectedLedgerIdProvider);
-    if (ledgerId == null) return;
-
+  Future<void> _showLeaveConfirmDialog(
+    BuildContext context,
+    WidgetRef ref,
+    LedgerInvite invite,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('가계부 나가기'),
-        content: const Text(
-          '이 가계부에서 나가시겠습니까?\n나가면 더 이상 이 가계부의 내역을 볼 수 없습니다.',
+        title: const Text('가계부 탈퇴'),
+        content: Text(
+          '\'${invite.ledgerName ?? '가계부'}\'에서 탈퇴하시겠습니까?\n'
+          '탈퇴하면 해당 가계부의 데이터에 더 이상 접근할 수 없습니다.',
         ),
         actions: [
           TextButton(
@@ -325,408 +300,61 @@ class _MembersTab extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('나가기'),
+            child: const Text('탈퇴'),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
-      try {
-        await ref.read(shareNotifierProvider.notifier).leaveLedger(ledgerId);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('가계부에서 나갔습니다')),
-          );
-          Navigator.pop(context); // 공유 관리 페이지 닫기
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('오류: $e')),
-          );
-        }
-      }
+    if (confirmed == true && context.mounted) {
+      await _leaveLedger(context, ref, invite);
     }
   }
 
-  Future<void> _changeRole(
-      BuildContext context, WidgetRef ref, LedgerMember member) async {
-    final ledgerId = ref.read(selectedLedgerIdProvider);
-    if (ledgerId == null) return;
-
-    final newRole = member.role == 'admin' ? 'member' : 'admin';
-
-    try {
-      await ref.read(shareNotifierProvider.notifier).updateMemberRole(
-            ledgerId: ledgerId,
-            userId: member.userId,
-            role: newRole,
-          );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('역할이 변경되었습니다')),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _removeMember(
-      BuildContext context, WidgetRef ref, LedgerMember member) async {
-    final ledgerId = ref.read(selectedLedgerIdProvider);
-    if (ledgerId == null) return;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('멤버 내보내기'),
-        content: Text('${member.displayName ?? member.email}님을 내보내시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('내보내기'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await ref.read(shareNotifierProvider.notifier).removeMember(
-              ledgerId: ledgerId,
-              userId: member.userId,
-            );
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('멤버가 내보내졌습니다')),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('오류: $e')),
-          );
-        }
-      }
-    }
-  }
-}
-
-// 받은 초대 목록 탭
-class _ReceivedInvitesTab extends ConsumerWidget {
-  const _ReceivedInvitesTab();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final invitesAsync = ref.watch(receivedInvitesProvider);
-
-    return invitesAsync.when(
-      data: (invites) {
-        if (invites.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.mail_outline,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '받은 초대가 없습니다',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        // 여러 초대가 있을 수 있으므로 스크롤 가능한 목록으로 표시
-        return SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: invites.map((invite) {
-              return _buildInviteCard(context, ref, invite);
-            }).toList(),
-          ),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('오류: $e')),
-    );
-  }
-
-  Widget _buildInviteCard(BuildContext context, WidgetRef ref, LedgerInvite invite) {
-    // 상태에 따른 색상 및 스타일 결정
-    Color borderColor;
-    Color iconBackgroundColor;
-    Color iconColor;
-    IconData iconData;
-
-    if (invite.isAccepted) {
-      borderColor = Colors.blue.shade100;
-      iconBackgroundColor = Colors.blue.shade50;
-      iconColor = Colors.blue.shade600;
-      iconData = Icons.check_circle_outline;
-    } else if (invite.isRejected) {
-      borderColor = Colors.grey.shade200;
-      iconBackgroundColor = Colors.grey.shade100;
-      iconColor = Colors.grey.shade500;
-      iconData = Icons.cancel_outlined;
-    } else {
-      borderColor = Colors.green.shade100;
-      iconBackgroundColor = Colors.green.shade50;
-      iconColor = Colors.green.shade600;
-      iconData = Icons.mail_outline;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor, width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 상태 배지
-          if (invite.isAccepted || invite.isRejected)
-            Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: invite.isAccepted ? Colors.blue.shade50 : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                invite.isAccepted ? '수락됨' : '거절됨',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: invite.isAccepted ? Colors.blue.shade700 : Colors.grey.shade600,
-                ),
-              ),
-            ),
-          // 아이콘
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: iconBackgroundColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              iconData,
-              size: 28,
-              color: iconColor,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // 가계부 이름
-          Text(
-            invite.ledgerName ?? '가계부',
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          // 초대자 정보
-          Text(
-            '${invite.inviterEmail ?? '알 수 없음'}님이',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          Text(
-            '가계부에 초대했습니다',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-          // 버튼들 (pending 상태일 때만 표시)
-          if (invite.isPending) ...[
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _acceptInvite(context, ref, invite),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text(
-                  '수락',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              width: double.infinity,
-              child: TextButton(
-                onPressed: () => _rejectInvite(context, ref, invite),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.grey[600],
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: const Text(
-                  '거절',
-                  style: TextStyle(fontSize: 14),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  Future<void> _acceptInvite(
-      BuildContext context, WidgetRef ref, LedgerInvite invite) async {
-    try {
-      await ref.read(shareNotifierProvider.notifier).acceptInvite(invite.id);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('초대를 수락했습니다')),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _rejectInvite(
-      BuildContext context, WidgetRef ref, LedgerInvite invite) async {
-    try {
-      await ref.read(shareNotifierProvider.notifier).rejectInvite(invite.id);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('초대를 거절했습니다')),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
-        );
-      }
-    }
-  }
-}
-
-// 보낸 초대 목록 탭
-class _SentInvitesTab extends ConsumerWidget {
-  const _SentInvitesTab();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ledgerId = ref.watch(selectedLedgerIdProvider);
-
-    if (ledgerId == null) {
-      return const Center(
-        child: Text('가계부를 선택해주세요'),
-      );
-    }
-
-    final invitesAsync = ref.watch(sentInvitesProvider(ledgerId));
-
-    return invitesAsync.when(
-      data: (invites) {
-        if (invites.isEmpty) {
-          return const Center(
-            child: Text('보낸 초대가 없습니다'),
-          );
-        }
-
-        return ListView.builder(
-          itemCount: invites.length,
-          itemBuilder: (context, index) {
-            final invite = invites[index];
-
-            return ListTile(
-              leading: CircleAvatar(
-                child: Text(invite.inviteeEmail.substring(0, 1).toUpperCase()),
-              ),
-              title: Text(invite.inviteeEmail),
-              subtitle: Text(_getStatusLabel(invite)),
-              trailing: invite.isPending
-                  ? IconButton(
-                      icon: const Icon(Icons.cancel),
-                      onPressed: () =>
-                          _cancelInvite(context, ref, invite, ledgerId),
-                    )
-                  : null,
-            );
-          },
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text('오류: $e')),
-    );
-  }
-
-  String _getStatusLabel(LedgerInvite invite) {
-    if (invite.isExpired) return '만료됨';
-    switch (invite.status) {
-      case 'pending':
-        return '대기 중';
-      case 'accepted':
-        return '수락됨';
-      case 'rejected':
-        return '거절됨';
-      default:
-        return invite.status;
-    }
-  }
-
-  Future<void> _cancelInvite(
+  Future<void> _leaveLedger(
     BuildContext context,
     WidgetRef ref,
     LedgerInvite invite,
-    String ledgerId,
   ) async {
+    try {
+      await ref.read(shareNotifierProvider.notifier).leaveLedger(invite.ledgerId);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('가계부에서 탈퇴했습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+        ref.invalidate(receivedInvitesProvider);
+        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showCancelInviteDialog(
+    BuildContext context,
+    WidgetRef ref,
+    LedgerWithInviteInfo ledgerInfo,
+  ) async {
+    final invite = ledgerInfo.sentInvite;
+    if (invite == null) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('초대 취소'),
-        content: Text('${invite.inviteeEmail}님에게 보낸 초대를 취소하시겠습니까?'),
+        content: Text(
+          '\'${invite.inviteeEmail}\'님에게 보낸 초대를 취소하시겠습니까?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -734,29 +362,133 @@ class _SentInvitesTab extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('예'),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('초대취소'),
           ),
         ],
       ),
     );
 
-    if (confirmed == true) {
-      try {
-        await ref.read(shareNotifierProvider.notifier).cancelInvite(
-              inviteId: invite.id,
-              ledgerId: ledgerId,
-            );
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('초대가 취소되었습니다')),
+    if (confirmed == true && context.mounted) {
+      await _cancelInvite(context, ref, invite.id, ledgerInfo.ledger.id);
+    }
+  }
+
+  Future<void> _cancelInvite(
+    BuildContext context,
+    WidgetRef ref,
+    String inviteId,
+    String ledgerId,
+  ) async {
+    try {
+      await ref.read(shareNotifierProvider.notifier).cancelInvite(
+            inviteId: inviteId,
+            ledgerId: ledgerId,
           );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('오류: $e')),
-          );
-        }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('초대를 취소했습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _acceptInvite(
+    BuildContext context,
+    WidgetRef ref,
+    LedgerInvite invite,
+  ) async {
+    try {
+      await ref.read(shareNotifierProvider.notifier).acceptInvite(invite.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('초대를 수락했습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showRejectConfirmDialog(
+    BuildContext context,
+    WidgetRef ref,
+    LedgerInvite invite,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('초대 거부'),
+        content: Text(
+          '\'${invite.ledgerName ?? '가계부'}\' 초대를 거부하시겠습니까?\n'
+          '거부하면 목록에서 사라집니다.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('거부'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await _rejectInvite(context, ref, invite);
+    }
+  }
+
+  Future<void> _rejectInvite(
+    BuildContext context,
+    WidgetRef ref,
+    LedgerInvite invite,
+  ) async {
+    try {
+      await ref.read(shareNotifierProvider.notifier).rejectInvite(invite.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('초대를 거부했습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     }
   }
@@ -813,7 +545,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              initialValue: _selectedRole,
+              value: _selectedRole,
               decoration: const InputDecoration(
                 labelText: '역할',
                 border: OutlineInputBorder(),
@@ -889,13 +621,20 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('초대를 보냈습니다')),
+          const SnackBar(
+            content: Text('초대를 보냈습니다'),
+            duration: Duration(seconds: 1),
+          ),
         );
+        ref.invalidate(myOwnedLedgersWithInvitesProvider);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     } finally {

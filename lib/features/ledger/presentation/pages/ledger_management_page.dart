@@ -384,7 +384,10 @@ class _LedgerCard extends ConsumerWidget {
 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('가계부가 삭제되었습니다')),
+                    const SnackBar(
+                      content: Text('가계부가 삭제되었습니다'),
+                      duration: Duration(seconds: 1),
+                    ),
                   );
                 }
               } catch (e) {
@@ -393,7 +396,7 @@ class _LedgerCard extends ConsumerWidget {
                     SnackBar(
                       content: Text('삭제 실패: $e'),
                       backgroundColor: Colors.red,
-                      duration: const Duration(seconds: 3),
+                      duration: const Duration(seconds: 1),
                     ),
                   );
                 }
@@ -538,13 +541,17 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
             content: Text(widget.ledger != null
                 ? '가계부가 수정되었습니다'
                 : '가계부가 생성되었습니다'),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     }

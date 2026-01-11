@@ -91,13 +91,19 @@ class SettingsPage extends ConsumerWidget {
                             ref.invalidate(userProfileProvider);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('색상이 변경되었습니다')),
+                                const SnackBar(
+                                  content: Text('색상이 변경되었습니다'),
+                                  duration: Duration(seconds: 1),
+                                ),
                               );
                             }
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('색상 변경 실패: $e')),
+                                SnackBar(
+                                  content: Text('색상 변경 실패: $e'),
+                                  duration: const Duration(seconds: 1),
+                                ),
                               );
                             }
                           }
@@ -217,9 +223,12 @@ class SettingsPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('테마 저장 실패: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('테마 저장 실패: $e'),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
                 }
               }
             },
@@ -243,9 +252,12 @@ class SettingsPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('테마 저장 실패: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('테마 저장 실패: $e'),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
                 }
               }
             },
@@ -269,9 +281,12 @@ class SettingsPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text('테마 저장 실패: $e')));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('테마 저장 실패: $e'),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
                 }
               }
             },
@@ -291,9 +306,12 @@ class SettingsPage extends ConsumerWidget {
 
   void _exportData(BuildContext context) {
     // TODO: 데이터 내보내기 구현
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('준비 중인 기능입니다')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('준비 중인 기능입니다'),
+        duration: Duration(seconds: 1),
+      ),
+    );
   }
 
   void _showAboutDialog(BuildContext context) {
@@ -363,9 +381,12 @@ class SettingsPage extends ConsumerWidget {
 
     if (confirmed == true && context.mounted) {
       // TODO: 회원 탈퇴 처리
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('준비 중인 기능입니다')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('준비 중인 기능입니다'),
+          duration: Duration(seconds: 1),
+        ),
+      );
     }
   }
 }
@@ -443,15 +464,21 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
         _isChanged = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('표시 이름이 변경되었습니다')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('표시 이름이 변경되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('표시 이름 변경 실패: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('표시 이름 변경 실패: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -562,15 +589,21 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('비밀번호가 변경되었습니다')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('비밀번호가 변경되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('$e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     } finally {
       if (mounted) {

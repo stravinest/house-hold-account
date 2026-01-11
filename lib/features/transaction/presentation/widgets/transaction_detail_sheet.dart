@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_provider.dart';
 import 'edit_transaction_sheet.dart';
@@ -22,6 +23,10 @@ class TransactionDetailSheet extends ConsumerWidget {
         : transaction.isSaving
             ? Colors.green
             : Colors.red;
+
+    // 현재 사용자 확인
+    final currentUser = ref.watch(currentUserProvider);
+    final isOwner = currentUser?.id == transaction.userId;
 
     return Container(
       constraints: BoxConstraints(
@@ -45,38 +50,37 @@ class TransactionDetailSheet extends ConsumerWidget {
             ),
           ),
 
-          // 헤더 (제목 + 수정/삭제 버튼)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                //오른쪽으로 정렬
-                Row(
-                  children: [
-                    //
-                    TextButton.icon(
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('수정'),
-                      onPressed: () => _openEditSheet(context),
-                    ),
-                    TextButton.icon(
-                      icon: Icon(
-                        Icons.delete,
-                        size: 18,
-                        color: colorScheme.error,
+          // 헤더 (수정/삭제 버튼 - 본인 거래만 표시)
+          if (isOwner)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Row(
+                    children: [
+                      TextButton.icon(
+                        icon: const Icon(Icons.edit, size: 18),
+                        label: const Text('수정'),
+                        onPressed: () => _openEditSheet(context),
                       ),
-                      label: Text(
-                        '삭제',
-                        style: TextStyle(color: colorScheme.error),
+                      TextButton.icon(
+                        icon: Icon(
+                          Icons.delete,
+                          size: 18,
+                          color: colorScheme.error,
+                        ),
+                        label: Text(
+                          '삭제',
+                          style: TextStyle(color: colorScheme.error),
+                        ),
+                        onPressed: () => _showDeleteConfirmDialog(context, ref),
                       ),
-                      onPressed: () => _showDeleteConfirmDialog(context, ref),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
 
           const Divider(),
 
@@ -239,15 +243,21 @@ class TransactionDetailSheet extends ConsumerWidget {
             .deleteTransaction(transaction.id);
         if (context.mounted) {
           Navigator.pop(context); // 상세 시트 닫기
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('거래가 삭제되었습니다')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('거래가 삭제되었습니다'),
+              duration: Duration(seconds: 1),
+            ),
+          );
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('삭제 실패: $e'),
+              duration: const Duration(seconds: 1),
+            ),
+          );
         }
       }
     }

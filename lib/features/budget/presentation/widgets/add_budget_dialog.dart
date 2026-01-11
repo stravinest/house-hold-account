@@ -200,13 +200,17 @@ class _AddBudgetDialogState extends ConsumerState<AddBudgetDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(isEditing ? '예산이 수정되었습니다' : '예산이 추가되었습니다'),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     } finally {

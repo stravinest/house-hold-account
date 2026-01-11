@@ -60,6 +60,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('회원가입 성공! 이메일을 확인해주세요.'),
+            duration: Duration(seconds: 1),
           ),
         );
         context.go(Routes.login);
@@ -72,6 +73,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
           SnackBar(
             content: Text('회원가입 실패: ${e.toString()}'),
             backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 1),
           ),
         );
       }

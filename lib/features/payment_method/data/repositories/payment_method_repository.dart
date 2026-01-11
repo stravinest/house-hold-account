@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../config/supabase_config.dart';
 import '../models/payment_method_model.dart';
 
@@ -97,5 +99,28 @@ class PaymentMethodRepository {
           .update({'sort_order': i})
           .eq('id', paymentMethodIds[i]);
     }
+  }
+
+  // 실시간 구독 - payment_methods 테이블
+  RealtimeChannel subscribePaymentMethods({
+    required String ledgerId,
+    required void Function() onPaymentMethodChanged,
+  }) {
+    return _client
+        .channel('payment_methods_changes_$ledgerId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'payment_methods',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'ledger_id',
+            value: ledgerId,
+          ),
+          callback: (payload) {
+            onPaymentMethodChanged();
+          },
+        )
+        .subscribe();
   }
 }

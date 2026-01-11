@@ -23,6 +23,10 @@ class _CategoryManagementPageState
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    // 화면 진입 시 카테고리 데이터 새로 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(categoryNotifierProvider.notifier).loadCategories();
+    });
   }
 
   @override
@@ -194,13 +198,19 @@ class _CategoryTile extends ConsumerWidget {
                     .deleteCategory(category.id);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('카테고리가 삭제되었습니다')),
+                    const SnackBar(
+                      content: Text('카테고리가 삭제되었습니다'),
+                      duration: Duration(seconds: 1),
+                    ),
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('삭제 실패: $e')),
+                    SnackBar(
+                      content: Text('삭제 실패: $e'),
+                      duration: const Duration(seconds: 1),
+                    ),
                   );
                 }
               }
@@ -314,13 +324,17 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
             content: Text(widget.category != null
                 ? '카테고리가 수정되었습니다'
                 : '카테고리가 추가되었습니다'),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     }

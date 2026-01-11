@@ -134,6 +134,7 @@ class NotificationSettingsPage extends ConsumerWidget {
               SnackBar(
                 content: Text('설정 저장 실패: $e'),
                 backgroundColor: Theme.of(context).colorScheme.error,
+                duration: const Duration(seconds: 1),
               ),
             );
           }

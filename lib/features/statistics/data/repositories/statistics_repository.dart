@@ -1,4 +1,5 @@
 import '../../../../config/supabase_config.dart';
+import '../../domain/entities/statistics_entities.dart';
 
 class StatisticsRepository {
   final _client = SupabaseConfig.client;
@@ -115,57 +116,241 @@ class StatisticsRepository {
     return results;
   }
 
-  // 일별 지출 추세 (현재 월)
-  Future<List<DailyStatistics>> getDailyTrend({
+  // 월 비교 데이터 (현재 월 vs 지난 월)
+  Future<MonthComparisonData> getMonthComparison({
     required String ledgerId,
     required int year,
     required int month,
+    required String type,
+  }) async {
+    // 현재 월
+    final currentStartDate = DateTime(year, month, 1);
+    final currentEndDate = DateTime(year, month + 1, 0);
+
+    // 지난 월
+    final previousDate = DateTime(year, month - 1, 1);
+    final previousStartDate = DateTime(previousDate.year, previousDate.month, 1);
+    final previousEndDate = DateTime(previousDate.year, previousDate.month + 1, 0);
+
+    // 현재 월 데이터 조회
+    final currentResponse = await _client
+        .from('transactions')
+        .select('amount')
+        .eq('ledger_id', ledgerId)
+        .eq('type', type)
+        .gte('date', currentStartDate.toIso8601String().split('T').first)
+        .lte('date', currentEndDate.toIso8601String().split('T').first);
+
+    // 지난 월 데이터 조회
+    final previousResponse = await _client
+        .from('transactions')
+        .select('amount')
+        .eq('ledger_id', ledgerId)
+        .eq('type', type)
+        .gte('date', previousStartDate.toIso8601String().split('T').first)
+        .lte('date', previousEndDate.toIso8601String().split('T').first);
+
+    int currentTotal = 0;
+    int previousTotal = 0;
+
+    for (final row in currentResponse as List) {
+      currentTotal += (row['amount'] as num).toInt();
+    }
+
+    for (final row in previousResponse as List) {
+      previousTotal += (row['amount'] as num).toInt();
+    }
+
+    final difference = currentTotal - previousTotal;
+    final percentageChange = previousTotal > 0
+        ? ((difference / previousTotal) * 100)
+        : (currentTotal > 0 ? 100.0 : 0.0);
+
+    return MonthComparisonData(
+      currentTotal: currentTotal,
+      previousTotal: previousTotal,
+      difference: difference,
+      percentageChange: percentageChange,
+    );
+  }
+
+  // 결제수단별 통계
+  Future<List<PaymentMethodStatistics>> getPaymentMethodStatistics({
+    required String ledgerId,
+    required int year,
+    required int month,
+    required String type,
   }) async {
     final startDate = DateTime(year, month, 1);
     final endDate = DateTime(year, month + 1, 0);
 
     final response = await _client
         .from('transactions')
-        .select('amount, type, date')
+        .select('amount, payment_method_id, payment_methods(name, icon, color)')
         .eq('ledger_id', ledgerId)
+        .eq('type', type)
         .gte('date', startDate.toIso8601String().split('T').first)
-        .lte('date', endDate.toIso8601String().split('T').first)
-        .order('date');
+        .lte('date', endDate.toIso8601String().split('T').first);
 
-    final Map<int, DailyStatistics> grouped = {};
-
-    // 모든 날짜 초기화
-    for (int day = 1; day <= endDate.day; day++) {
-      grouped[day] = DailyStatistics(
-        day: day,
-        income: 0,
-        expense: 0,
-      );
-    }
+    // 결제수단별로 그룹화
+    final Map<String, PaymentMethodStatistics> grouped = {};
+    int totalAmount = 0;
 
     for (final row in response as List) {
-      final dateStr = row['date'] as String;
-      final date = DateTime.parse(dateStr);
-      final day = date.day;
-      final amount = row['amount'] as int;
-      final type = row['type'] as String;
+      final rowMap = row as Map<String, dynamic>;
+      final paymentMethodId = rowMap['payment_method_id']?.toString();
+      final amount = (rowMap['amount'] as num?)?.toInt() ?? 0;
+      final paymentMethod = rowMap['payment_methods'] as Map<String, dynamic>?;
 
-      if (type == 'income') {
-        grouped[day] = grouped[day]!.copyWith(
-          income: grouped[day]!.income + amount,
-        );
-      } else if (type == 'saving') {
-        grouped[day] = grouped[day]!.copyWith(
-          saving: grouped[day]!.saving + amount,
+      totalAmount += amount;
+
+      // null인 경우 특수 키 사용
+      final groupKey = paymentMethodId ?? '_no_payment_method_';
+
+      // 결제수단 정보 추출
+      String pmName = '미지정';
+      String pmIcon = '';
+      String pmColor = '#9E9E9E';
+
+      if (paymentMethod != null) {
+        pmName = paymentMethod['name']?.toString() ?? '미지정';
+        pmIcon = paymentMethod['icon']?.toString() ?? '';
+        pmColor = paymentMethod['color']?.toString() ?? '#9E9E9E';
+      }
+
+      if (grouped.containsKey(groupKey)) {
+        grouped[groupKey] = grouped[groupKey]!.copyWith(
+          amount: grouped[groupKey]!.amount + amount,
         );
       } else {
-        grouped[day] = grouped[day]!.copyWith(
-          expense: grouped[day]!.expense + amount,
+        grouped[groupKey] = PaymentMethodStatistics(
+          paymentMethodId: groupKey,
+          paymentMethodName: pmName,
+          paymentMethodIcon: pmIcon,
+          paymentMethodColor: pmColor,
+          amount: amount,
+          percentage: 0,
         );
       }
     }
 
-    return grouped.values.toList();
+    // 비율 계산 및 정렬
+    final result = grouped.values.map((item) {
+      final percentage = totalAmount > 0 ? (item.amount / totalAmount) * 100 : 0.0;
+      return item.copyWith(percentage: percentage);
+    }).toList()
+      ..sort((a, b) => b.amount.compareTo(a.amount));
+
+    return result;
+  }
+
+  // 연별 추이 (최근 N년)
+  Future<List<YearlyStatistics>> getYearlyTrend({
+    required String ledgerId,
+    int years = 3,
+  }) async {
+    final now = DateTime.now();
+    final results = <YearlyStatistics>[];
+
+    for (int i = years - 1; i >= 0; i--) {
+      final targetYear = now.year - i;
+      final startDate = DateTime(targetYear, 1, 1);
+      final endDate = DateTime(targetYear, 12, 31);
+
+      final response = await _client
+          .from('transactions')
+          .select('amount, type')
+          .eq('ledger_id', ledgerId)
+          .gte('date', startDate.toIso8601String().split('T').first)
+          .lte('date', endDate.toIso8601String().split('T').first);
+
+      int income = 0;
+      int expense = 0;
+      int saving = 0;
+
+      for (final row in response as List) {
+        final amount = (row['amount'] as num).toInt();
+        final type = row['type'] as String;
+
+        if (type == 'income') {
+          income += amount;
+        } else if (type == 'saving') {
+          saving += amount;
+        } else {
+          expense += amount;
+        }
+      }
+
+      results.add(YearlyStatistics(
+        year: targetYear,
+        income: income,
+        expense: expense,
+        saving: saving,
+      ));
+    }
+
+    return results;
+  }
+
+  // 월별 추이 (선택된 날짜 기준, 평균값 포함)
+  Future<TrendStatisticsData> getMonthlyTrendWithAverage({
+    required String ledgerId,
+    required DateTime baseDate,
+    int months = 6,
+  }) async {
+    final results = <MonthlyStatistics>[];
+    int totalIncome = 0;
+    int totalExpense = 0;
+    int totalSaving = 0;
+
+    for (int i = months - 1; i >= 0; i--) {
+      final targetDate = DateTime(baseDate.year, baseDate.month - i, 1);
+      final startDate = DateTime(targetDate.year, targetDate.month, 1);
+      final endDate = DateTime(targetDate.year, targetDate.month + 1, 0);
+
+      final response = await _client
+          .from('transactions')
+          .select('amount, type')
+          .eq('ledger_id', ledgerId)
+          .gte('date', startDate.toIso8601String().split('T').first)
+          .lte('date', endDate.toIso8601String().split('T').first);
+
+      int income = 0;
+      int expense = 0;
+      int saving = 0;
+
+      for (final row in response as List) {
+        final amount = (row['amount'] as num).toInt();
+        final type = row['type'] as String;
+
+        if (type == 'income') {
+          income += amount;
+        } else if (type == 'saving') {
+          saving += amount;
+        } else {
+          expense += amount;
+        }
+      }
+
+      totalIncome += income;
+      totalExpense += expense;
+      totalSaving += saving;
+
+      results.add(MonthlyStatistics(
+        year: targetDate.year,
+        month: targetDate.month,
+        income: income,
+        expense: expense,
+        saving: saving,
+      ));
+    }
+
+    return TrendStatisticsData(
+      data: results,
+      averageIncome: months > 0 ? (totalIncome / months).round() : 0,
+      averageExpense: months > 0 ? (totalExpense / months).round() : 0,
+      averageSaving: months > 0 ? (totalSaving / months).round() : 0,
+    );
   }
 }
 
@@ -221,33 +406,4 @@ class MonthlyStatistics {
   int get balance => income - expense;
 
   String get monthLabel => '$month월';
-}
-
-// 일별 통계 모델
-class DailyStatistics {
-  final int day;
-  final int income;
-  final int expense;
-  final int saving;
-
-  const DailyStatistics({
-    required this.day,
-    required this.income,
-    required this.expense,
-    this.saving = 0,
-  });
-
-  DailyStatistics copyWith({
-    int? day,
-    int? income,
-    int? expense,
-    int? saving,
-  }) {
-    return DailyStatistics(
-      day: day ?? this.day,
-      income: income ?? this.income,
-      expense: expense ?? this.expense,
-      saving: saving ?? this.saving,
-    );
-  }
 }

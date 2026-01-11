@@ -1,0 +1,157 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+
+import '../../../data/repositories/statistics_repository.dart';
+import '../../providers/statistics_provider.dart';
+
+class CategoryRankingList extends ConsumerWidget {
+  const CategoryRankingList({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final statisticsAsync = ref.watch(categoryStatisticsProvider);
+    final numberFormat = NumberFormat('#,###');
+
+    return statisticsAsync.when(
+      data: (statistics) {
+        if (statistics.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final totalAmount = statistics.fold(0, (sum, item) => sum + item.amount);
+
+        return ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: statistics.length,
+          separatorBuilder: (context, index) => const Divider(height: 1),
+          itemBuilder: (context, index) {
+            final item = statistics[index];
+            final percentage = totalAmount > 0 ? (item.amount / totalAmount) * 100 : 0.0;
+
+            return _CategoryRankingItem(
+              rank: index + 1,
+              category: item,
+              percentage: percentage,
+              totalAmount: totalAmount,
+              numberFormat: numberFormat,
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(child: Text('오류: $error')),
+    );
+  }
+}
+
+class _CategoryRankingItem extends StatelessWidget {
+  final int rank;
+  final CategoryStatistics category;
+  final double percentage;
+  final int totalAmount;
+  final NumberFormat numberFormat;
+
+  const _CategoryRankingItem({
+    required this.rank,
+    required this.category,
+    required this.percentage,
+    required this.totalAmount,
+    required this.numberFormat,
+  });
+
+  Color _parseColor(String colorString) {
+    try {
+      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
+      return Color(colorValue);
+    } catch (e) {
+      return Colors.grey;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = _parseColor(category.categoryColor);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // 순위
+              SizedBox(
+                width: 24,
+                child: Text(
+                  '$rank',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: rank <= 3 ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // 카테고리 색상 및 아이콘
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: category.categoryIcon.isNotEmpty
+                      ? Text(
+                          category.categoryIcon,
+                          style: const TextStyle(fontSize: 18),
+                        )
+                      : Icon(
+                          Icons.category_outlined,
+                          size: 18,
+                          color: color,
+                        ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              // 카테고리명
+              Expanded(
+                child: Text(
+                  category.categoryName,
+                  style: theme.textTheme.bodyLarge,
+                ),
+              ),
+              // 비율
+              Text(
+                '${percentage.toStringAsFixed(1)}%',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 12),
+              // 금액
+              Text(
+                '${numberFormat.format(category.amount)}원',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 진행 바
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: percentage / 100,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

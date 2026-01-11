@@ -4,6 +4,7 @@ import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
 import '../../../transaction/presentation/providers/transaction_provider.dart';
+import '../../../share/presentation/providers/share_provider.dart';
 import '../providers/ledger_provider.dart';
 import '../../domain/entities/ledger.dart';
 import '../../../../core/utils/color_utils.dart';
@@ -50,11 +51,20 @@ class CalendarView extends ConsumerWidget {
     final currentLedgerAsync = ref.watch(currentLedgerProvider);
     final currentLedger = currentLedgerAsync.valueOrNull;
 
+    // 공유 가계부 여부에 따른 멤버 수 결정
+    // 현재 공유 가계부는 최대 2명으로 제한됨 (AppConstants.maxMembersPerLedger)
+    // isShared가 true면 2명, 아니면 1명 (개인 가계부)
+    final memberCount = currentLedger?.isShared == true ? 2 : 1;
+
     return Column(
       children: [
         // 월별 요약
         RepaintBoundary(
-          child: _MonthSummary(focusedDate: focusedDate, ref: ref),
+          child: _MonthSummary(
+            focusedDate: focusedDate,
+            ref: ref,
+            memberCount: memberCount,
+          ),
         ),
 
         // 커스텀 헤더
@@ -67,7 +77,10 @@ class CalendarView extends ConsumerWidget {
             onPageChanged(today);
           },
           onPreviousMonth: () {
-            final previousMonth = DateTime(focusedDate.year, focusedDate.month - 1);
+            final previousMonth = DateTime(
+              focusedDate.year,
+              focusedDate.month - 1,
+            );
             onPageChanged(previousMonth);
           },
           onNextMonth: () {
@@ -113,12 +126,8 @@ class CalendarView extends ConsumerWidget {
               color: colorScheme.onPrimary,
               fontWeight: FontWeight.bold,
             ),
-            weekendTextStyle: TextStyle(
-              color: colorScheme.error,
-            ),
-            defaultTextStyle: TextStyle(
-              color: colorScheme.onSurface,
-            ),
+            weekendTextStyle: TextStyle(color: colorScheme.error),
+            defaultTextStyle: TextStyle(color: colorScheme.onSurface),
           ),
           calendarBuilders: CalendarBuilders(
             defaultBuilder: (context, day, focusedDay) {
@@ -215,12 +224,15 @@ class CalendarView extends ConsumerWidget {
         ? Map<String, dynamic>.from(rawUsers)
         : <String, dynamic>{};
     final hasSaving = usersForSaving.values.any((u) {
-      final userData = u is Map ? Map<String, dynamic>.from(u) : <String, dynamic>{};
+      final userData = u is Map
+          ? Map<String, dynamic>.from(u)
+          : <String, dynamic>{};
       return (userData['saving'] as int? ?? 0) > 0;
     });
     final hasData = income > 0 || expense > 0 || hasSaving;
 
-    final isWeekend = day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
+    final isWeekend =
+        day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
 
     // 그리드 선을 위한 요일/주차 계산
     final dayOfWeek = day.weekday % 7;
@@ -263,7 +275,8 @@ class CalendarView extends ConsumerWidget {
           // 날짜 아래: 사용자별 금액 (날짜를 가리지 않도록 날짜 버블 아래 배치)
           if (hasData && totals?['users'] != null)
             Positioned(
-              top: _CalendarConstants.cellPadding +
+              top:
+                  _CalendarConstants.cellPadding +
                   _CalendarConstants.dateBubbleSize +
                   2, // 날짜 버블 아래에 배치
               left: _CalendarConstants.cellPadding,
@@ -302,9 +315,13 @@ class CalendarView extends ConsumerWidget {
               decoration: BoxDecoration(
                 border: Border(
                   left: isFirstColumn
-                      ? BorderSide(color: colorScheme.outlineVariant.withAlpha(77))
+                      ? BorderSide(
+                          color: colorScheme.outlineVariant.withAlpha(77),
+                        )
                       : BorderSide.none,
-                  right: BorderSide(color: colorScheme.outlineVariant.withAlpha(77)),
+                  right: BorderSide(
+                    color: colorScheme.outlineVariant.withAlpha(77),
+                  ),
                 ),
               ),
               alignment: Alignment.center,
@@ -346,11 +363,7 @@ class CalendarView extends ConsumerWidget {
       bottom: BorderSide(color: colorScheme.outlineVariant.withAlpha(77)),
     );
 
-    return Container(
-      decoration: BoxDecoration(
-        border: border,
-      ),
-    );
+    return Container(decoration: BoxDecoration(border: border));
   }
 
   Widget _buildDateBubble({
@@ -367,8 +380,8 @@ class CalendarView extends ConsumerWidget {
         color: isSelected
             ? colorScheme.primary
             : isToday
-                ? colorScheme.primaryContainer
-                : Colors.transparent,
+            ? colorScheme.primaryContainer
+            : Colors.transparent,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
@@ -378,11 +391,13 @@ class CalendarView extends ConsumerWidget {
           color: isSelected
               ? colorScheme.onPrimary
               : isToday
-                  ? colorScheme.onPrimaryContainer
-                  : isWeekend
-                      ? colorScheme.error
-                      : colorScheme.onSurface,
-          fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+              ? colorScheme.onPrimaryContainer
+              : isWeekend
+              ? colorScheme.error
+              : colorScheme.onSurface,
+          fontWeight: isSelected || isToday
+              ? FontWeight.bold
+              : FontWeight.normal,
           fontSize: _CalendarConstants.dateFontSize,
         ),
       ),
@@ -442,22 +457,26 @@ class CalendarView extends ConsumerWidget {
     final List<Widget> rows = [];
 
     for (final item in visibleItems) {
-      rows.add(_buildUserAmountRow(
-        color: item.color,
-        amount: item.amount,
-        isSelected: isSelected,
-        colorScheme: colorScheme,
-        showAmount: showAmount,
-      ));
+      rows.add(
+        _buildUserAmountRow(
+          color: item.color,
+          amount: item.amount,
+          isSelected: isSelected,
+          colorScheme: colorScheme,
+          showAmount: showAmount,
+        ),
+      );
     }
 
     // 더 많은 항목이 있으면 "+n" 표시
     if (hasMore) {
-      rows.add(_buildMoreIndicator(
-        count: remainingCount,
-        isSelected: isSelected,
-        colorScheme: colorScheme,
-      ));
+      rows.add(
+        _buildMoreIndicator(
+          count: remainingCount,
+          isSelected: isSelected,
+          colorScheme: colorScheme,
+        ),
+      );
     }
 
     return Column(
@@ -503,10 +522,7 @@ class CalendarView extends ConsumerWidget {
     final indicator = Container(
       width: _CalendarConstants.dotSize,
       height: _CalendarConstants.dotSize,
-      decoration: BoxDecoration(
-        color: displayColor,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: displayColor, shape: BoxShape.circle),
     );
 
     return SizedBox(
@@ -551,8 +567,13 @@ class _AmountItem {
 class _MonthSummary extends StatelessWidget {
   final DateTime focusedDate;
   final WidgetRef ref;
+  final int memberCount;
 
-  const _MonthSummary({required this.focusedDate, required this.ref});
+  const _MonthSummary({
+    required this.focusedDate,
+    required this.ref,
+    required this.memberCount,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -570,8 +591,31 @@ class _MonthSummary extends StatelessWidget {
         ? Map<String, dynamic>.from(rawUsers as Map)
         : <String, dynamic>{};
 
+    // 공유 가계부일 때 모든 멤버 데이터 보강 (거래 없는 멤버도 표시)
+    final membersAsync = ref.watch(currentLedgerMembersProvider);
+    final members = membersAsync.valueOrNull ?? [];
+    final enrichedUsers = Map<String, dynamic>.from(users);
+
+    if (memberCount >= 2) {
+      for (final member in members) {
+        if (!enrichedUsers.containsKey(member.userId)) {
+          // 거래가 없는 멤버 기본값 추가
+          enrichedUsers[member.userId] = {
+            'displayName': member.displayName ?? '사용자',
+            'income': 0,
+            'expense': 0,
+            'saving': 0,
+            'color': member.color ?? '#A8D8EA',
+          };
+        }
+      }
+    }
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2), // vertical 8 -> 2
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 2,
+      ), // vertical 8 -> 2
       child: IntrinsicHeight(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -581,34 +625,31 @@ class _MonthSummary extends StatelessWidget {
                 label: '수입',
                 totalAmount: income,
                 color: Colors.blue.shade700,
-                users: users,
+                users: enrichedUsers,
                 type: _SummaryType.income,
+                memberCount: memberCount,
               ),
             ),
-            Container(
-              width: 1,
-              color: colorScheme.outlineVariant,
-            ),
+            Container(width: 1, color: colorScheme.outlineVariant),
             Expanded(
               child: _SummaryColumn(
                 label: '지출',
                 totalAmount: expense,
                 color: Colors.red.shade700,
-                users: users,
+                users: enrichedUsers,
                 type: _SummaryType.expense,
+                memberCount: memberCount,
               ),
             ),
-            Container(
-              width: 1,
-              color: colorScheme.outlineVariant,
-            ),
+            Container(width: 1, color: colorScheme.outlineVariant),
             Expanded(
               child: _SummaryColumn(
                 label: '합계',
                 totalAmount: balance,
-                color: colorScheme.onSurface, // 검은색으로 변경
-                users: users,
+                color: colorScheme.onSurface,
+                users: enrichedUsers,
                 type: _SummaryType.balance,
+                memberCount: memberCount,
               ),
             ),
           ],
@@ -620,6 +661,12 @@ class _MonthSummary extends StatelessWidget {
 
 enum _SummaryType { income, expense, balance }
 
+// 상단 요약 영역 상수
+class _SummaryConstants {
+  // 사용자별 금액 표시 행 높이 (UserAmountIndicator 높이 + padding)
+  static const double userIndicatorRowHeight = 14.0;
+}
+
 // 수입/지출 열 위젯
 class _SummaryColumn extends StatelessWidget {
   final String label;
@@ -627,6 +674,7 @@ class _SummaryColumn extends StatelessWidget {
   final Color color;
   final Map<String, dynamic> users;
   final _SummaryType type;
+  final int memberCount;
 
   const _SummaryColumn({
     required this.label,
@@ -634,6 +682,7 @@ class _SummaryColumn extends StatelessWidget {
     required this.color,
     required this.users,
     required this.type,
+    required this.memberCount,
   });
 
   @override
@@ -664,9 +713,11 @@ class _SummaryColumn extends StatelessWidget {
           break;
       }
 
-      // 합계의 경우 0이 아닌 경우만, 수입/지출은 0보다 큰 경우만
-      final shouldShow =
-          type == _SummaryType.balance ? amount != 0 : amount > 0;
+      // 공유 가계부(2명)일 때는 0이어도 항상 표시
+      // 개인 가계부일 때는 기존 로직: 합계는 0이 아닌 경우, 수입/지출은 0보다 큰 경우만
+      final shouldShow = memberCount >= 2
+          ? true
+          : (type == _SummaryType.balance ? amount != 0 : amount > 0);
       if (shouldShow) {
         final colorHex = userData['color'] as String? ?? '#A8D8EA';
         userAmounts.add(MapEntry(ColorUtils.parseHexColor(colorHex), amount));
@@ -680,29 +731,45 @@ class _SummaryColumn extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                fontSize: 11, // 더 작게
-              ),
+            color: colorScheme.onSurfaceVariant,
+            fontSize: 11, // 더 작게
+          ),
         ),
         // 총액
         Text(
           '${totalAmount < 0 ? '-' : ''}${formatter.format(totalAmount.abs())}',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-                fontSize: 14, // 더 작게
-              ),
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 14, // 더 작게
+          ),
         ),
         // 유저별 표시 (세로 배치)
-        if (userAmounts.isNotEmpty) ...[
-          const SizedBox(height: 2), // 6 -> 2
-          ...userAmounts.map((entry) => Padding(
-                padding: const EdgeInsets.only(bottom: 1), // 2 -> 1
-                child: _UserAmountIndicator(
-                  color: entry.key,
-                  amount: entry.value,
-                ),
-              )),
+        // 공유 가계부(2명)일 때는 항상 2줄 높이를 고정하여 레이아웃 변동 방지
+        if (memberCount >= 2) ...[
+          const SizedBox(height: 2),
+          // 고정 높이: userIndicatorRowHeight(14.0) * 2명 = 28.0
+          SizedBox(
+            height: 2 * _SummaryConstants.userIndicatorRowHeight,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: userAmounts.isEmpty
+                  ? []
+                  : userAmounts
+                        .map(
+                          (entry) => Padding(
+                            padding: const EdgeInsets.only(bottom: 1),
+                            child: _UserAmountIndicator(
+                              color: entry.key,
+                              amount: entry.value,
+                            ),
+                          ),
+                        )
+                        .toList(),
+            ),
+          ),
+          // 개인 가계부(memberCount < 2)일 때는 사용자별 금액 표시 불필요
         ],
       ],
     );
@@ -714,10 +781,7 @@ class _UserAmountIndicator extends StatelessWidget {
   final Color color;
   final int amount;
 
-  const _UserAmountIndicator({
-    required this.color,
-    required this.amount,
-  });
+  const _UserAmountIndicator({required this.color, required this.amount});
 
   @override
   Widget build(BuildContext context) {
@@ -730,18 +794,15 @@ class _UserAmountIndicator extends StatelessWidget {
         Container(
           width: 6, // 8 -> 6
           height: 6, // 8 -> 6
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 2), // 3 -> 2
         Text(
           '${isNegative ? '-' : ''}${formatter.format(amount.abs())}',
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: 9, // 10 -> 9
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            fontSize: 9, // 10 -> 9
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );
@@ -772,7 +833,10 @@ class _CustomCalendarHeader extends StatelessWidget {
     final isToday = isSameDay(selectedDate, now);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), // vertical 12 -> 4
+      padding: const EdgeInsets.symmetric(
+        horizontal: 8,
+        vertical: 4,
+      ), // vertical 12 -> 4
       child: Row(
         children: [
           // 오늘 버튼
@@ -781,7 +845,12 @@ class _CustomCalendarHeader extends StatelessWidget {
             icon: const Icon(Icons.today, size: 18),
             label: const Text('오늘'),
             style: TextButton.styleFrom(
-              padding: const EdgeInsets.only(left: 8, top: 4, bottom: 4, right: 0),
+              padding: const EdgeInsets.only(
+                left: 8,
+                top: 4,
+                bottom: 4,
+                right: 0,
+              ),
             ),
           ),
           // 새로고침 버튼
@@ -789,10 +858,7 @@ class _CustomCalendarHeader extends StatelessWidget {
             icon: const Icon(Icons.refresh, size: 16),
             onPressed: onRefresh,
             padding: const EdgeInsets.all(4),
-            constraints: const BoxConstraints(
-              minWidth: 28,
-              minHeight: 28,
-            ),
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
           ),
           const Spacer(),
           // 이전 월 버튼
@@ -803,9 +869,9 @@ class _CustomCalendarHeader extends StatelessWidget {
           // 월 타이틀
           Text(
             DateFormat('yyyy년 M월', 'ko_KR').format(focusedDate),
-            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
           ),
           // 다음 월 버튼
           IconButton(

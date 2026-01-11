@@ -59,6 +59,11 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     _amountController.text = '0';
     // 금액 필드 포커스 시 전체 선택
     _amountFocusNode.addListener(_onAmountFocusChange);
+    // 화면 진입 시 카테고리/결제수단 데이터 새로 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(categoryNotifierProvider.notifier).loadCategories();
+      ref.read(paymentMethodNotifierProvider.notifier).loadPaymentMethods();
+    });
   }
 
   void _onAmountFocusChange() {
@@ -110,18 +115,24 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     // 할부 모드가 아닐 때 반복 주기 유효성 검사
     if (!_isInstallmentMode && _recurringSettings.isRecurring) {
       if (_recurringSettings.endDate == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('반복 종료 기간을 선택해주세요')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('반복 종료 기간을 선택해주세요'),
+            duration: Duration(seconds: 1),
+          ),
+        );
         return false;
       }
     }
 
     // 할부 모드일 때 할부 결과 유효성 검사
     if (_isInstallmentMode && _installmentResult == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('할부 정보를 입력해주세요')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('할부 정보를 입력해주세요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
       return false;
     }
 
@@ -166,16 +177,22 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           // SnackBar는 pop 후에 표시
           if (successMessage != null) {
             scaffoldMessenger.showSnackBar(
-              SnackBar(content: Text(successMessage)),
+              SnackBar(
+                content: Text(successMessage),
+                duration: const Duration(seconds: 1),
+              ),
             );
           }
         });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     } finally {
       if (mounted) {
@@ -716,9 +733,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('카테고리가 삭제되었습니다')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('카테고리가 삭제되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
       }
 
       ref.invalidate(categoriesProvider);
@@ -727,9 +747,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       ref.invalidate(savingCategoriesProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     }
   }
@@ -802,17 +825,23 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('결제수단이 삭제되었습니다')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('결제수단이 삭제되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
       }
 
       ref.invalidate(paymentMethodsProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     }
   }
@@ -879,9 +908,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     TextEditingController nameController,
   ) async {
     if (nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('카테고리 이름을 입력해주세요')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('카테고리 이름을 입력해주세요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
       return;
     }
 
@@ -899,9 +931,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('카테고리가 추가되었습니다')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('카테고리가 추가되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
       }
 
       ref.invalidate(categoriesProvider);
@@ -910,9 +945,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       ref.invalidate(savingCategoriesProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     }
   }
@@ -956,9 +994,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     TextEditingController nameController,
   ) async {
     if (nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('결제수단 이름을 입력해주세요')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('결제수단 이름을 입력해주세요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
       return;
     }
 
@@ -975,17 +1016,23 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('결제수단이 추가되었습니다')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('결제수단이 추가되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
       }
 
       ref.invalidate(paymentMethodsProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     }
   }

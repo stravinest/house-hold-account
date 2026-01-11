@@ -55,6 +55,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           SnackBar(
             content: const Text('로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.'),
             backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -64,6 +65,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           SnackBar(
             content: Text('로그인 실패: ${e.toString()}'),
             backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -85,6 +87,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           SnackBar(
             content: Text('Google 로그인 실패: ${e.toString()}'),
             backgroundColor: Theme.of(context).colorScheme.error,
+            duration: const Duration(seconds: 1),
           ),
         );
       }

@@ -403,7 +403,7 @@ class MoreTabView extends ConsumerWidget {
         // 메뉴 아이템들
         ListTile(
           leading: const Icon(Icons.people_outline),
-          title: const Text('공유 관리'),
+          title: const Text('가계부 및 공유 관리'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             context.push(Routes.share);
@@ -423,14 +423,6 @@ class MoreTabView extends ConsumerWidget {
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             context.push(Routes.paymentMethod);
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.book_outlined),
-          title: const Text('가계부 관리'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            context.push(Routes.ledgerManage);
           },
         ),
         const Divider(),

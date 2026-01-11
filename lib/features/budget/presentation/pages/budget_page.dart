@@ -188,13 +188,19 @@ class BudgetPage extends ConsumerWidget {
         await ref.read(budgetNotifierProvider.notifier).copyFromPreviousMonth();
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('이전 달 예산이 복사되었습니다')),
+            const SnackBar(
+              content: Text('이전 달 예산이 복사되었습니다'),
+              duration: Duration(seconds: 1),
+            ),
           );
         }
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('오류: $e')),
+            SnackBar(
+              content: Text('오류: $e'),
+              duration: const Duration(seconds: 1),
+            ),
           );
         }
       }

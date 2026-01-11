@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../config/supabase_config.dart';
 import '../models/category_model.dart';
 
@@ -118,5 +120,28 @@ class CategoryRepository {
           .update({'sort_order': i})
           .eq('id', categoryIds[i]);
     }
+  }
+
+  // 실시간 구독 - categories 테이블
+  RealtimeChannel subscribeCategories({
+    required String ledgerId,
+    required void Function() onCategoryChanged,
+  }) {
+    return _client
+        .channel('categories_changes_$ledgerId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'categories',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'ledger_id',
+            value: ledgerId,
+          ),
+          callback: (payload) {
+            onCategoryChanged();
+          },
+        )
+        .subscribe();
   }
 }

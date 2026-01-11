@@ -149,13 +149,19 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('거래가 수정되었습니다')),
+          const SnackBar(
+            content: Text('거래가 수정되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('오류: $e')),
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     } finally {
@@ -215,13 +221,6 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: const Text('취소'),
-                      ),
-                      const Text(
-                        '거래 수정',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
                       ),
                       TextButton(
                         onPressed: _isLoading ? null : _submit,
@@ -370,7 +369,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
-                              '결제수단 (선택)',
+                              '결제수단',
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ),
@@ -448,10 +447,182 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
             onSelected: (_) {
               setState(() => _selectedCategory = category);
             },
+            onDeleted: () => _deleteCategory(category),
+            deleteIcon: const Icon(Icons.close, size: 18),
           );
         }),
+        // 카테고리 추가 버튼
+        ActionChip(
+          avatar: const Icon(Icons.add, size: 18),
+          label: const Text('추가'),
+          onPressed: () => _showAddCategoryDialog(),
+        ),
       ],
     );
+  }
+
+  Future<void> _deleteCategory(Category category) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('카테고리 삭제'),
+        content: Text('\'${category.name}\' 카테고리를 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(categoryNotifierProvider.notifier)
+          .deleteCategory(category.id);
+
+      if (_selectedCategory?.id == category.id) {
+        setState(() => _selectedCategory = null);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('카테고리가 삭제되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(incomeCategoriesProvider);
+      ref.invalidate(expenseCategoriesProvider);
+      ref.invalidate(savingCategoriesProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+  }
+
+  // 랜덤 색상 생성
+  String _generateRandomColor() {
+    final colors = [
+      '#4CAF50',
+      '#2196F3',
+      '#F44336',
+      '#FF9800',
+      '#9C27B0',
+      '#00BCD4',
+      '#E91E63',
+      '#795548',
+      '#607D8B',
+      '#3F51B5',
+      '#009688',
+      '#CDDC39',
+    ];
+    return colors[(DateTime.now().millisecondsSinceEpoch % colors.length)];
+  }
+
+  // 카테고리 추가 다이얼로그
+  void _showAddCategoryDialog() {
+    final nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          '${_type == 'expense'
+              ? '지출'
+              : _type == 'income'
+              ? '수입'
+              : '저축'} 카테고리 추가',
+        ),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: '카테고리 이름',
+            hintText: '예: 식비, 교통비',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (_) => _submitCategory(dialogContext, nameController),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => _submitCategory(dialogContext, nameController),
+            child: const Text('추가'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitCategory(
+    BuildContext dialogContext,
+    TextEditingController nameController,
+  ) async {
+    if (nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('카테고리 이름을 입력해주세요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final newCategory = await ref
+          .read(categoryNotifierProvider.notifier)
+          .createCategory(
+            name: nameController.text.trim(),
+            icon: '',
+            color: _generateRandomColor(),
+            type: _type,
+          );
+
+      setState(() => _selectedCategory = newCategory);
+
+      if (dialogContext.mounted) {
+        Navigator.pop(dialogContext);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('카테고리가 추가되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      ref.invalidate(categoriesProvider);
+      ref.invalidate(incomeCategoriesProvider);
+      ref.invalidate(expenseCategoriesProvider);
+      ref.invalidate(savingCategoriesProvider);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildPaymentMethodChips(List<PaymentMethod> paymentMethods) {
@@ -477,10 +648,152 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
             onSelected: (_) {
               setState(() => _selectedPaymentMethod = method);
             },
+            onDeleted: () => _deletePaymentMethod(method),
+            deleteIcon: const Icon(Icons.close, size: 18),
           );
         }),
+        // 결제수단 추가 버튼
+        ActionChip(
+          avatar: const Icon(Icons.add, size: 18),
+          label: const Text('추가'),
+          onPressed: () => _showAddPaymentMethodDialog(),
+        ),
       ],
     );
+  }
+
+  Future<void> _deletePaymentMethod(PaymentMethod method) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('결제수단 삭제'),
+        content: Text('\'${method.name}\' 결제수단을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(paymentMethodNotifierProvider.notifier)
+          .deletePaymentMethod(method.id);
+
+      if (_selectedPaymentMethod?.id == method.id) {
+        setState(() => _selectedPaymentMethod = null);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('결제수단이 삭제되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      ref.invalidate(paymentMethodsProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+  }
+
+  // 결제수단 추가 다이얼로그
+  void _showAddPaymentMethodDialog() {
+    final nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('결제수단 추가'),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: '결제수단 이름',
+            hintText: '예: 신용카드, 현금',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (_) =>
+              _submitPaymentMethod(dialogContext, nameController),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () =>
+                _submitPaymentMethod(dialogContext, nameController),
+            child: const Text('추가'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitPaymentMethod(
+    BuildContext dialogContext,
+    TextEditingController nameController,
+  ) async {
+    if (nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('결제수단 이름을 입력해주세요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final newPaymentMethod = await ref
+          .read(paymentMethodNotifierProvider.notifier)
+          .createPaymentMethod(
+            name: nameController.text.trim(),
+            icon: '',
+            color: _generateRandomColor(),
+          );
+
+      setState(() => _selectedPaymentMethod = newPaymentMethod);
+
+      if (dialogContext.mounted) {
+        Navigator.pop(dialogContext);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('결제수단이 추가되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      ref.invalidate(paymentMethodsProvider);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
   }
 }
 

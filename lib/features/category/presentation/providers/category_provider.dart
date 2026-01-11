@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/category_repository.dart';
@@ -41,14 +43,51 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
   final CategoryRepository _repository;
   final String? _ledgerId;
   final Ref _ref;
+  RealtimeChannel? _categoriesChannel;
 
   CategoryNotifier(this._repository, this._ledgerId, this._ref)
     : super(const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadCategories();
+      _subscribeToChanges();
     } else {
       state = const AsyncValue.data([]);
     }
+  }
+
+  void _subscribeToChanges() {
+    if (_ledgerId == null) return;
+
+    try {
+      _categoriesChannel = _repository.subscribeCategories(
+        ledgerId: _ledgerId!,
+        onCategoryChanged: () {
+          _refreshCategoriesQuietly();
+        },
+      );
+    } catch (e) {
+      debugPrint('Category Realtime subscribe fail: $e');
+    }
+  }
+
+  Future<void> _refreshCategoriesQuietly() async {
+    if (_ledgerId == null) return;
+
+    try {
+      final categories = await _repository.getCategories(_ledgerId!);
+      if (mounted) {
+        state = AsyncValue.data(categories);
+        _ref.invalidate(categoriesProvider);
+      }
+    } catch (e) {
+      debugPrint('Category refresh fail: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _categoriesChannel?.unsubscribe();
+    super.dispose();
   }
 
   Future<void> loadCategories() async {
