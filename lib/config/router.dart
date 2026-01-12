@@ -6,6 +6,7 @@ import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/category/presentation/pages/category_management_page.dart';
+import '../features/fixed_expense/presentation/pages/fixed_expense_management_page.dart';
 import '../features/ledger/presentation/pages/home_page.dart';
 import '../features/ledger/presentation/pages/ledger_management_page.dart';
 import '../features/payment_method/presentation/pages/payment_method_management_page.dart';
@@ -34,6 +35,7 @@ class Routes {
   static const String category = '/category';
   static const String paymentMethod = '/payment-method';
   static const String ledgerManage = '/ledger-manage';
+  static const String fixedExpense = '/fixed-expense';
   // 위젯 딥링크
   static const String addExpense = '/add-expense';
   static const String addIncome = '/add-income';
@@ -159,6 +161,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.ledgerManage,
         builder: (context, state) => const LedgerManagementPage(),
+      ),
+
+      // 고정비 관리
+      GoRoute(
+        path: Routes.fixedExpense,
+        builder: (context, state) => const FixedExpenseManagementPage(),
       ),
 
       // 위젯 딥링크 - 지출 추가

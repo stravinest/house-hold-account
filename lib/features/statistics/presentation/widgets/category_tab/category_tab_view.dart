@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../providers/statistics_provider.dart';
+import '../common/expense_type_filter.dart';
 import '../common/statistics_type_filter.dart';
 import 'category_donut_chart.dart';
 import 'category_ranking_list.dart';
 import 'category_summary_card.dart';
 
-class CategoryTabView extends StatelessWidget {
+class CategoryTabView extends ConsumerWidget {
   const CategoryTabView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedType = ref.watch(selectedStatisticsTypeProvider);
+    final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -17,6 +23,19 @@ class CategoryTabView extends StatelessWidget {
         children: [
           // 타입 필터 (수입/지출/저축)
           const Center(child: StatisticsTypeFilter()),
+
+          // 고정비/변동비 필터 (지출 선택 시에만 표시)
+          if (selectedType == 'expense') ...[
+            const SizedBox(height: 12),
+            Center(
+              child: ExpenseTypeFilterWidget(
+                selectedFilter: expenseTypeFilter,
+                onChanged: (filter) {
+                  ref.read(selectedExpenseTypeFilterProvider.notifier).state = filter;
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
 
           // 요약 카드 (전월 대비 포함)

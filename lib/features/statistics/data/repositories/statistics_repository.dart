@@ -1,5 +1,6 @@
 import '../../../../config/supabase_config.dart';
 import '../../domain/entities/statistics_entities.dart';
+import '../../presentation/widgets/common/expense_type_filter.dart';
 
 class StatisticsRepository {
   final _client = SupabaseConfig.client;
@@ -10,17 +11,35 @@ class StatisticsRepository {
     required int year,
     required int month,
     required String type, // 'income' or 'expense'
+    ExpenseTypeFilter? expenseTypeFilter,
   }) async {
     final startDate = DateTime(year, month, 1);
     final endDate = DateTime(year, month + 1, 0);
 
-    final response = await _client
+    var query = _client
         .from('transactions')
-        .select('amount, category_id, categories(name, icon, color)')
+        .select('amount, category_id, is_fixed_expense, categories(name, icon, color)')
         .eq('ledger_id', ledgerId)
         .eq('type', type)
         .gte('date', startDate.toIso8601String().split('T').first)
         .lte('date', endDate.toIso8601String().split('T').first);
+
+    // 지출일 경우에만 고정비/변동비 필터 적용
+    if (type == 'expense' && expenseTypeFilter != null) {
+      switch (expenseTypeFilter) {
+        case ExpenseTypeFilter.fixed:
+          query = query.eq('is_fixed_expense', true);
+          break;
+        case ExpenseTypeFilter.variable:
+          query = query.eq('is_fixed_expense', false);
+          break;
+        case ExpenseTypeFilter.all:
+          // 필터 없음
+          break;
+      }
+    }
+
+    final response = await query;
 
     // 카테고리별로 그룹화
     final Map<String, CategoryStatistics> grouped = {};

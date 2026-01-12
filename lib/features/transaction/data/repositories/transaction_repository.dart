@@ -15,7 +15,7 @@ class TransactionRepository {
 
     final response = await _client
         .from('transactions')
-        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name)')
+        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)')
         .eq('ledger_id', ledgerId)
         .eq('date', dateStr)
         .order('created_at', ascending: false);
@@ -36,7 +36,7 @@ class TransactionRepository {
 
     final response = await _client
         .from('transactions')
-        .select('*, categories(name, icon, color), profiles(display_name), payment_methods(name)')
+        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)')
         .eq('ledger_id', ledgerId)
         .gte('date', startStr)
         .lte('date', endStr)
@@ -78,6 +78,8 @@ class TransactionRepository {
     bool isRecurring = false,
     String? recurringType,
     DateTime? recurringEndDate,
+    bool isFixedExpense = false,
+    String? fixedExpenseCategoryId,
   }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
@@ -96,12 +98,14 @@ class TransactionRepository {
       isRecurring: isRecurring,
       recurringType: recurringType,
       recurringEndDate: recurringEndDate,
+      isFixedExpense: isFixedExpense,
+      fixedExpenseCategoryId: fixedExpenseCategoryId,
     );
 
     final response = await _client
         .from('transactions')
         .insert(data)
-        .select('*, categories(name, icon, color), profiles(display_name), payment_methods(name)')
+        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)')
         .single();
 
     return TransactionModel.fromJson(response);
@@ -121,6 +125,8 @@ class TransactionRepository {
     bool? isRecurring,
     String? recurringType,
     DateTime? recurringEndDate,
+    bool? isFixedExpense,
+    String? fixedExpenseCategoryId,
   }) async {
     final updates = <String, dynamic>{
       'updated_at': DateTime.now().toIso8601String(),
@@ -139,12 +145,16 @@ class TransactionRepository {
       updates['recurring_end_date'] =
           recurringEndDate.toIso8601String().split('T').first;
     }
+    if (isFixedExpense != null) updates['is_fixed_expense'] = isFixedExpense;
+    if (fixedExpenseCategoryId != null) {
+      updates['fixed_expense_category_id'] = fixedExpenseCategoryId;
+    }
 
     final response = await _client
         .from('transactions')
         .update(updates)
         .eq('id', id)
-        .select('*, categories(name, icon, color), profiles(display_name), payment_methods(name)')
+        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)')
         .single();
 
     return TransactionModel.fromJson(response);
@@ -325,5 +335,80 @@ class TransactionRepository {
           callback: (payload) => onUpdate(),
         )
         .subscribe();
+  }
+
+  // 반복 거래 템플릿 생성
+  Future<Map<String, dynamic>> createRecurringTemplate({
+    required String ledgerId,
+    String? categoryId,
+    String? paymentMethodId,
+    required int amount,
+    required String type,
+    required DateTime startDate,
+    DateTime? endDate,
+    required String recurringType,
+    String? title,
+    String? memo,
+    bool isFixedExpense = false,
+    String? fixedExpenseCategoryId,
+  }) async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw Exception('로그인이 필요합니다');
+
+    // 반복 실행일 계산 (매월/매년 반복 시)
+    final recurringDay = startDate.day;
+
+    final data = {
+      'ledger_id': ledgerId,
+      'user_id': userId,
+      'category_id': categoryId,
+      'payment_method_id': paymentMethodId,
+      'amount': amount,
+      'type': type,
+      'start_date': startDate.toIso8601String().split('T').first,
+      'end_date': endDate?.toIso8601String().split('T').first,
+      'recurring_type': recurringType,
+      'recurring_day': recurringDay,
+      'title': title,
+      'memo': memo,
+      'is_fixed_expense': isFixedExpense,
+      'fixed_expense_category_id': fixedExpenseCategoryId,
+      'is_active': true,
+    };
+
+    final response = await _client
+        .from('recurring_templates')
+        .insert(data)
+        .select()
+        .single();
+
+    return response;
+  }
+
+  // 반복 거래 자동 생성 함수 호출 (템플릿 등록 직후 실행)
+  Future<void> generateRecurringTransactions() async {
+    await _client.rpc('generate_recurring_transactions');
+  }
+
+  // 반복 거래 템플릿 목록 조회
+  Future<List<Map<String, dynamic>>> getRecurringTemplates({
+    required String ledgerId,
+  }) async {
+    final response = await _client
+        .from('recurring_templates')
+        .select('*, categories(name, icon, color), payment_methods(name), fixed_expense_categories(name, color)')
+        .eq('ledger_id', ledgerId)
+        .eq('is_active', true)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  // 반복 거래 템플릿 삭제 (비활성화)
+  Future<void> deleteRecurringTemplate(String templateId) async {
+    await _client
+        .from('recurring_templates')
+        .update({'is_active': false, 'updated_at': DateTime.now().toIso8601String()})
+        .eq('id', templateId);
   }
 }

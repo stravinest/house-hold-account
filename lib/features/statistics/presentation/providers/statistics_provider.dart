@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/statistics_repository.dart';
 import '../../domain/entities/statistics_entities.dart';
+import '../widgets/common/expense_type_filter.dart';
 
 // Repository Provider
 final statisticsRepositoryProvider = Provider<StatisticsRepository>((ref) {
@@ -18,6 +19,9 @@ final statisticsSelectedDateProvider = StateProvider<DateTime>((ref) => DateTime
 // 선택된 통계 타입 (지출/수입/저축)
 final selectedStatisticsTypeProvider = StateProvider<String>((ref) => 'expense');
 
+// 지출 타입 필터 (전체/고정비/변동비) - 지출 선택 시에만 활성화
+final selectedExpenseTypeFilterProvider = StateProvider<ExpenseTypeFilter>((ref) => ExpenseTypeFilter.all);
+
 // 추이 탭 기간 필터 (월별/연별)
 final trendPeriodProvider = StateProvider<TrendPeriod>((ref) => TrendPeriod.monthly);
 
@@ -29,12 +33,14 @@ final categoryExpenseStatisticsProvider =
 
   final date = ref.watch(statisticsSelectedDateProvider);
   final repository = ref.watch(statisticsRepositoryProvider);
+  final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
 
   return repository.getCategoryStatistics(
     ledgerId: ledgerId,
     year: date.year,
     month: date.month,
     type: 'expense',
+    expenseTypeFilter: expenseTypeFilter,
   );
 });
 

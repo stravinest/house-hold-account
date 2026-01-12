@@ -117,6 +117,8 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     bool isRecurring = false,
     String? recurringType,
     DateTime? recurringEndDate,
+    bool isFixedExpense = false,
+    String? fixedExpenseCategoryId,
   }) async {
     if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
 
@@ -133,6 +135,8 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
       isRecurring: isRecurring,
       recurringType: recurringType,
       recurringEndDate: recurringEndDate,
+      isFixedExpense: isFixedExpense,
+      fixedExpenseCategoryId: fixedExpenseCategoryId,
     );
 
     // 데이터 갱신
@@ -157,6 +161,8 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     bool? isRecurring,
     String? recurringType,
     DateTime? recurringEndDate,
+    bool? isFixedExpense,
+    String? fixedExpenseCategoryId,
   }) async {
     await _repository.updateTransaction(
       id: id,
@@ -171,6 +177,8 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
       isRecurring: isRecurring,
       recurringType: recurringType,
       recurringEndDate: recurringEndDate,
+      isFixedExpense: isFixedExpense,
+      fixedExpenseCategoryId: fixedExpenseCategoryId,
     );
 
     // 데이터 갱신
@@ -182,6 +190,48 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
 
   Future<void> deleteTransaction(String id) async {
     await _repository.deleteTransaction(id);
+
+    // 데이터 갱신
+    _ref.invalidate(dailyTransactionsProvider);
+    _ref.invalidate(monthlyTransactionsProvider);
+    _ref.invalidate(monthlyTotalProvider);
+    _ref.invalidate(dailyTotalsProvider);
+  }
+
+  // 반복 거래 템플릿 생성 및 오늘까지 거래 자동 생성
+  Future<void> createRecurringTemplate({
+    String? categoryId,
+    String? paymentMethodId,
+    required int amount,
+    required String type,
+    required DateTime startDate,
+    DateTime? endDate,
+    required String recurringType,
+    String? title,
+    String? memo,
+    bool isFixedExpense = false,
+    String? fixedExpenseCategoryId,
+  }) async {
+    if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
+
+    // 1. 템플릿 생성
+    await _repository.createRecurringTemplate(
+      ledgerId: _ledgerId,
+      categoryId: categoryId,
+      paymentMethodId: paymentMethodId,
+      amount: amount,
+      type: type,
+      startDate: startDate,
+      endDate: endDate,
+      recurringType: recurringType,
+      title: title,
+      memo: memo,
+      isFixedExpense: isFixedExpense,
+      fixedExpenseCategoryId: fixedExpenseCategoryId,
+    );
+
+    // 2. 오늘까지의 거래 자동 생성 (DB 함수 호출)
+    await _repository.generateRecurringTransactions();
 
     // 데이터 갱신
     _ref.invalidate(dailyTransactionsProvider);

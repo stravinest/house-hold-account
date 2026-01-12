@@ -15,6 +15,8 @@ class Transaction extends Equatable {
   final bool isRecurring;
   final String? recurringType; // daily, monthly, yearly
   final DateTime? recurringEndDate;
+  final bool isFixedExpense;
+  final String? fixedExpenseCategoryId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -25,6 +27,8 @@ class Transaction extends Equatable {
   final String? userName;
   final String? userColor;
   final String? paymentMethodName;
+  final String? fixedExpenseCategoryName;
+  final String? fixedExpenseCategoryColor;
 
   const Transaction({
     required this.id,
@@ -41,6 +45,8 @@ class Transaction extends Equatable {
     required this.isRecurring,
     this.recurringType,
     this.recurringEndDate,
+    this.isFixedExpense = false,
+    this.fixedExpenseCategoryId,
     required this.createdAt,
     required this.updatedAt,
     this.categoryName,
@@ -49,11 +55,15 @@ class Transaction extends Equatable {
     this.userName,
     this.userColor,
     this.paymentMethodName,
+    this.fixedExpenseCategoryName,
+    this.fixedExpenseCategoryColor,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     final category = json['categories'] as Map<String, dynamic>?;
     final paymentMethod = json['payment_methods'] as Map<String, dynamic>?;
+    final fixedExpenseCategory =
+        json['fixed_expense_categories'] as Map<String, dynamic>?;
 
     return Transaction(
       id: json['id'] as String,
@@ -72,12 +82,16 @@ class Transaction extends Equatable {
       recurringEndDate: json['recurring_end_date'] != null
           ? DateTime.parse(json['recurring_end_date'] as String)
           : null,
+      isFixedExpense: json['is_fixed_expense'] as bool? ?? false,
+      fixedExpenseCategoryId: json['fixed_expense_category_id'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       categoryName: category?['name'] as String?,
       categoryIcon: category?['icon'] as String?,
       categoryColor: category?['color'] as String?,
       paymentMethodName: paymentMethod?['name'] as String?,
+      fixedExpenseCategoryName: fixedExpenseCategory?['name'] as String?,
+      fixedExpenseCategoryColor: fixedExpenseCategory?['color'] as String?,
     );
   }
 
@@ -106,6 +120,8 @@ class Transaction extends Equatable {
     bool? isRecurring,
     String? recurringType,
     DateTime? recurringEndDate,
+    bool? isFixedExpense,
+    String? fixedExpenseCategoryId,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? categoryName,
@@ -114,6 +130,8 @@ class Transaction extends Equatable {
     String? userName,
     String? userColor,
     String? paymentMethodName,
+    String? fixedExpenseCategoryName,
+    String? fixedExpenseCategoryColor,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -130,6 +148,9 @@ class Transaction extends Equatable {
       isRecurring: isRecurring ?? this.isRecurring,
       recurringType: recurringType ?? this.recurringType,
       recurringEndDate: recurringEndDate ?? this.recurringEndDate,
+      isFixedExpense: isFixedExpense ?? this.isFixedExpense,
+      fixedExpenseCategoryId:
+          fixedExpenseCategoryId ?? this.fixedExpenseCategoryId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       categoryName: categoryName ?? this.categoryName,
@@ -138,6 +159,10 @@ class Transaction extends Equatable {
       userName: userName ?? this.userName,
       userColor: userColor ?? this.userColor,
       paymentMethodName: paymentMethodName ?? this.paymentMethodName,
+      fixedExpenseCategoryName:
+          fixedExpenseCategoryName ?? this.fixedExpenseCategoryName,
+      fixedExpenseCategoryColor:
+          fixedExpenseCategoryColor ?? this.fixedExpenseCategoryColor,
     );
   }
 
@@ -157,6 +182,8 @@ class Transaction extends Equatable {
         isRecurring,
         recurringType,
         recurringEndDate,
+        isFixedExpense,
+        fixedExpenseCategoryId,
         createdAt,
         updatedAt,
       ];

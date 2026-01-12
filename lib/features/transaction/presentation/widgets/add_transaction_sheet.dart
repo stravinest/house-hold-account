@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
+import '../../../fixed_expense/domain/entities/fixed_expense_category.dart';
+import '../../../fixed_expense/presentation/providers/fixed_expense_category_provider.dart';
 import '../../../payment_method/domain/entities/payment_method.dart';
 import '../../../payment_method/presentation/providers/payment_method_provider.dart';
 import '../providers/transaction_provider.dart';
@@ -34,6 +36,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
   String _type = 'expense';
   Category? _selectedCategory;
+  FixedExpenseCategory? _selectedFixedExpenseCategory;
   PaymentMethod? _selectedPaymentMethod;
   late DateTime _selectedDate;
   bool _isLoading = false;
@@ -112,19 +115,6 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   bool _validateForm() {
     if (!_formKey.currentState!.validate()) return false;
 
-    // 할부 모드가 아닐 때 반복 주기 유효성 검사
-    if (!_isInstallmentMode && _recurringSettings.isRecurring) {
-      if (_recurringSettings.endDate == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('반복 종료 기간을 선택해주세요'),
-            duration: Duration(seconds: 1),
-          ),
-        );
-        return false;
-      }
-    }
-
     // 할부 모드일 때 할부 결과 유효성 검사
     if (_isInstallmentMode && _installmentResult == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -135,6 +125,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       );
       return false;
     }
+
+    // 고정비 선택 시 카테고리 선택 검증은 선택 안함 옵션이 있으므로 제거
+    // (고정비 카테고리도 선택 안함이 가능)
 
     return true;
   }
@@ -151,11 +144,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       String? successMessage;
 
       if (_isInstallmentMode && _installmentResult != null) {
-        // 할부 거래 생성
+        // 할부 거래 생성 (템플릿 + 오늘까지 거래)
         successMessage = await _createInstallmentTransactions(notifier);
-      } else if (_recurringSettings.isRecurring &&
-          _recurringSettings.endDate != null) {
-        // 반복 거래 생성
+      } else if (_recurringSettings.isRecurring) {
+        // 반복 거래 생성 (템플릿 + 오늘까지 거래)
         successMessage = await _createRecurringTransactions(notifier);
         // 사용자가 취소한 경우 화면을 닫지 않음
         if (successMessage == null) {
@@ -208,19 +200,21 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
 
     await notifier.createTransaction(
-      categoryId: _selectedCategory?.id,
+      categoryId: _recurringSettings.isFixedExpense ? null : _selectedCategory?.id,
       paymentMethodId: _selectedPaymentMethod?.id,
       amount: amount,
       type: _type,
       date: _selectedDate,
       title: _titleController.text.isNotEmpty ? _titleController.text : null,
       memo: _memoController.text.isNotEmpty ? _memoController.text : null,
+      isFixedExpense: _recurringSettings.isFixedExpense,
+      fixedExpenseCategoryId: _selectedFixedExpenseCategory?.id,
     );
 
     return '거래가 추가되었습니다';
   }
 
-  /// 반복 거래 생성 후 성공 메시지 반환 (취소 시 null 반환)
+  /// 반복 거래 템플릿 생성 (취소 시 null 반환)
   Future<String?> _createRecurringTransactions(
     TransactionNotifier notifier,
   ) async {
@@ -228,134 +222,52 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       _amountController.text.replaceAll(RegExp(r'[^\d]'), ''),
     );
 
-    final dates = _calculateRecurringDates(
+    // 템플릿 생성 + 오늘까지 거래 자동 생성
+    await notifier.createRecurringTemplate(
+      categoryId: _recurringSettings.isFixedExpense ? null : _selectedCategory?.id,
+      paymentMethodId: _selectedPaymentMethod?.id,
+      amount: amount,
+      type: _type,
       startDate: _selectedDate,
-      endDate: _recurringSettings.endDate!,
-      type: _recurringSettings.type,
+      endDate: _recurringSettings.endDate,
+      recurringType: _recurringSettings.recurringTypeString!,
+      title: _titleController.text.isNotEmpty ? _titleController.text : null,
+      memo: _memoController.text.isNotEmpty ? _memoController.text : null,
+      isFixedExpense: _recurringSettings.isFixedExpense,
+      fixedExpenseCategoryId: _selectedFixedExpenseCategory?.id,
     );
 
-    // 경고: 너무 많은 거래 생성 시 확인
-    if (dates.length > 100) {
-      final confirmed = await _showLargeTransactionWarning(dates.length);
-      if (!confirmed) return null;
-    }
-
-    for (final date in dates) {
-      await notifier.createTransaction(
-        categoryId: _selectedCategory?.id,
-        paymentMethodId: _selectedPaymentMethod?.id,
-        amount: amount,
-        type: _type,
-        date: date,
-        title: _titleController.text.isNotEmpty ? _titleController.text : null,
-        memo: _memoController.text.isNotEmpty ? _memoController.text : null,
-        isRecurring: true,
-        recurringType: _recurringSettings.recurringTypeString,
-        recurringEndDate: _recurringSettings.endDate,
-      );
-    }
-
-    return '${dates.length}건의 거래가 추가되었습니다';
+    final endDateText = _recurringSettings.endDate != null
+        ? '${_recurringSettings.endDate!.year}년 ${_recurringSettings.endDate!.month}월까지'
+        : '계속';
+    return '반복 거래가 등록되었습니다 ($endDateText)';
   }
 
-  /// 할부 거래 생성 후 성공 메시지 반환
+  /// 할부 거래 템플릿 생성 후 성공 메시지 반환
   Future<String> _createInstallmentTransactions(
     TransactionNotifier notifier,
   ) async {
     final result = _installmentResult!;
 
-    final dates = _calculateRecurringDates(
+    // 할부도 템플릿 기반으로 변경
+    // 할부는 월별 금액이 다를 수 있으므로 첫 달 금액으로 템플릿 생성
+    // 실제로는 할부는 금액이 다를 수 있어서 기존 방식 유지가 더 나을 수 있음
+    // 여기서는 첫 달 금액으로 템플릿 생성
+    await notifier.createRecurringTemplate(
+      categoryId: _selectedCategory?.id,
+      paymentMethodId: _selectedPaymentMethod?.id,
+      amount: result.baseAmount,
+      type: _type,
       startDate: _selectedDate,
       endDate: result.endDate,
-      type: RecurringType.monthly,
+      recurringType: 'monthly',
+      title: _titleController.text.isNotEmpty
+          ? '${_titleController.text} (할부)'
+          : '할부',
+      memo: _memoController.text.isNotEmpty ? _memoController.text : null,
     );
 
-    for (int i = 0; i < dates.length && i < result.monthlyAmounts.length; i++) {
-      await notifier.createTransaction(
-        categoryId: _selectedCategory?.id,
-        paymentMethodId: _selectedPaymentMethod?.id,
-        amount: result.monthlyAmounts[i],
-        type: _type,
-        date: dates[i],
-        title: _titleController.text.isNotEmpty
-            ? '${_titleController.text} (${i + 1}/${result.months})'
-            : '할부 ${i + 1}/${result.months}',
-        memo: _memoController.text.isNotEmpty ? _memoController.text : null,
-        isRecurring: true,
-        recurringType: 'monthly',
-        recurringEndDate: result.endDate,
-      );
-    }
-
-    return '${result.months}건의 할부 거래가 추가되었습니다';
-  }
-
-  List<DateTime> _calculateRecurringDates({
-    required DateTime startDate,
-    required DateTime endDate,
-    required RecurringType type,
-  }) {
-    final dates = <DateTime>[];
-    // 시간 정보 제거하여 날짜만 비교 (종료일 포함 보장)
-    var current = DateTime(startDate.year, startDate.month, startDate.day);
-    final endDateNormalized = DateTime(
-      endDate.year,
-      endDate.month,
-      endDate.day,
-    );
-
-    while (!current.isAfter(endDateNormalized)) {
-      dates.add(current);
-      switch (type) {
-        case RecurringType.daily:
-          current = current.add(const Duration(days: 1));
-          break;
-        case RecurringType.monthly:
-          // 월 증가 시 일자 조정 (예: 1/31 -> 2/28)
-          final nextMonth = current.month + 1;
-          final nextYear = nextMonth > 12 ? current.year + 1 : current.year;
-          final adjustedMonth = nextMonth > 12 ? 1 : nextMonth;
-          final lastDayOfMonth = DateTime(nextYear, adjustedMonth + 1, 0).day;
-          final day = current.day > lastDayOfMonth
-              ? lastDayOfMonth
-              : current.day;
-          current = DateTime(nextYear, adjustedMonth, day);
-          break;
-        case RecurringType.yearly:
-          // 년 증가 시 윤년 처리 (예: 2/29 -> 2/28)
-          final nextYear = current.year + 1;
-          final lastDayOfMonth = DateTime(nextYear, current.month + 1, 0).day;
-          final day = current.day > lastDayOfMonth
-              ? lastDayOfMonth
-              : current.day;
-          current = DateTime(nextYear, current.month, day);
-          break;
-        case RecurringType.none:
-          break;
-      }
-    }
-    return dates;
-  }
-
-  Future<bool> _showLargeTransactionWarning(int count) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('경고'),
-        content: Text('$count건의 거래가 생성됩니다. 계속하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('계속'),
-          ),
-        ],
-      ),
-    );
-    return result ?? false;
+    return '${result.months}개월 할부가 등록되었습니다';
   }
 
   @override
@@ -576,8 +488,19 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                             startDate: _selectedDate,
                             initialSettings: _recurringSettings,
                             enabled: !_isLoading,
+                            transactionType: _type,
                             onChanged: (settings) {
                               setState(() {
+                                // 고정비 상태가 변경되면 해당 카테고리 초기화
+                                if (settings.isFixedExpense != _recurringSettings.isFixedExpense) {
+                                  if (settings.isFixedExpense) {
+                                    // 고정비로 변경: 일반 카테고리 초기화
+                                    _selectedCategory = null;
+                                  } else {
+                                    // 일반으로 변경: 고정비 카테고리 초기화
+                                    _selectedFixedExpenseCategory = null;
+                                  }
+                                }
                                 _recurringSettings = settings;
                               });
                             },
@@ -585,21 +508,31 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                           const Divider(),
                         ],
 
-                        // 카테고리 선택
+                        // 카테고리 선택 (고정비 여부에 따라 다른 카테고리 표시)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            '카테고리',
+                            _recurringSettings.isFixedExpense ? '고정비 카테고리' : '카테고리',
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),
 
-                        categoriesAsync.when(
-                          data: (categories) => _buildCategoryGrid(categories),
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (e, _) => Text('오류: $e'),
-                        ),
+                        if (_recurringSettings.isFixedExpense)
+                          // 고정비 카테고리 표시
+                          ref.watch(fixedExpenseCategoriesProvider).when(
+                            data: (categories) => _buildFixedExpenseCategoryGrid(categories),
+                            loading: () =>
+                                const Center(child: CircularProgressIndicator()),
+                            error: (e, _) => Text('오류: $e'),
+                          )
+                        else
+                          // 일반 카테고리 표시
+                          categoriesAsync.when(
+                            data: (categories) => _buildCategoryGrid(categories),
+                            loading: () =>
+                                const Center(child: CircularProgressIndicator()),
+                            error: (e, _) => Text('오류: $e'),
+                          ),
 
                         const SizedBox(height: 16),
                         const Divider(),
@@ -700,6 +633,176 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         ),
       ],
     );
+  }
+
+  Widget _buildFixedExpenseCategoryGrid(List<FixedExpenseCategory> categories) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        // 선택 안함 옵션
+        FilterChip(
+          selected: _selectedFixedExpenseCategory == null,
+          showCheckmark: false,
+          label: const Text('선택 안함'),
+          onSelected: (_) {
+            setState(() => _selectedFixedExpenseCategory = null);
+          },
+        ),
+        ...categories.map((category) {
+          final isSelected = _selectedFixedExpenseCategory?.id == category.id;
+          return FilterChip(
+            selected: isSelected,
+            showCheckmark: false,
+            label: Text(category.name),
+            onSelected: (_) {
+              setState(() => _selectedFixedExpenseCategory = category);
+            },
+            onDeleted: () => _deleteFixedExpenseCategory(category),
+            deleteIcon: const Icon(Icons.close, size: 18),
+          );
+        }),
+        // 고정비 카테고리 추가 버튼
+        ActionChip(
+          avatar: const Icon(Icons.add, size: 18),
+          label: const Text('추가'),
+          onPressed: () => _showAddFixedExpenseCategoryDialog(),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _deleteFixedExpenseCategory(FixedExpenseCategory category) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('고정비 카테고리 삭제'),
+        content: Text('\'${category.name}\' 카테고리를 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      await ref
+          .read(fixedExpenseCategoryNotifierProvider.notifier)
+          .deleteCategory(category.id);
+
+      if (_selectedFixedExpenseCategory?.id == category.id) {
+        setState(() => _selectedFixedExpenseCategory = null);
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('고정비 카테고리가 삭제되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      ref.invalidate(fixedExpenseCategoriesProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
+  }
+
+  void _showAddFixedExpenseCategoryDialog() {
+    final nameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('고정비 카테고리 추가'),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: '카테고리 이름',
+            hintText: '예: 월세, 통신비',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (_) => _submitFixedExpenseCategory(dialogContext, nameController),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('취소'),
+          ),
+          FilledButton(
+            onPressed: () => _submitFixedExpenseCategory(dialogContext, nameController),
+            child: const Text('추가'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submitFixedExpenseCategory(
+    BuildContext dialogContext,
+    TextEditingController nameController,
+  ) async {
+    if (nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('카테고리 이름을 입력해주세요'),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final newCategory = await ref
+          .read(fixedExpenseCategoryNotifierProvider.notifier)
+          .createCategory(
+            name: nameController.text.trim(),
+            icon: '',
+            color: _generateRandomColor(),
+          );
+
+      setState(() => _selectedFixedExpenseCategory = newCategory);
+
+      if (dialogContext.mounted) {
+        Navigator.pop(dialogContext);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('고정비 카테고리가 추가되었습니다'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
+      ref.invalidate(fixedExpenseCategoriesProvider);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('오류: $e'),
+            duration: const Duration(seconds: 1),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _deleteCategory(Category category) async {

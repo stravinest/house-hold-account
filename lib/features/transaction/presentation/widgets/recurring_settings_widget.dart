@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 /// 반복 주기 타입
@@ -14,11 +15,13 @@ class RecurringSettings {
   final RecurringType type;
   final DateTime? endDate;
   final int transactionCount;
+  final bool isFixedExpense;
 
   const RecurringSettings({
     required this.type,
     this.endDate,
     this.transactionCount = 1,
+    this.isFixedExpense = false,
   });
 
   bool get isRecurring => type != RecurringType.none;
@@ -35,14 +38,29 @@ class RecurringSettings {
         return null;
     }
   }
+
+  RecurringSettings copyWith({
+    RecurringType? type,
+    DateTime? endDate,
+    int? transactionCount,
+    bool? isFixedExpense,
+  }) {
+    return RecurringSettings(
+      type: type ?? this.type,
+      endDate: endDate ?? this.endDate,
+      transactionCount: transactionCount ?? this.transactionCount,
+      isFixedExpense: isFixedExpense ?? this.isFixedExpense,
+    );
+  }
 }
 
 /// 반복 주기 설정 위젯
-class RecurringSettingsWidget extends StatefulWidget {
+class RecurringSettingsWidget extends ConsumerStatefulWidget {
   final DateTime startDate;
   final RecurringSettings? initialSettings;
   final ValueChanged<RecurringSettings> onChanged;
   final bool enabled;
+  final String transactionType; // 'income', 'expense', 'saving'
 
   const RecurringSettingsWidget({
     super.key,
@@ -50,21 +68,24 @@ class RecurringSettingsWidget extends StatefulWidget {
     this.initialSettings,
     required this.onChanged,
     this.enabled = true,
+    this.transactionType = 'expense',
   });
 
   @override
-  State<RecurringSettingsWidget> createState() => _RecurringSettingsWidgetState();
+  ConsumerState<RecurringSettingsWidget> createState() => _RecurringSettingsWidgetState();
 }
 
-class _RecurringSettingsWidgetState extends State<RecurringSettingsWidget> {
+class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidget> {
   late RecurringType _selectedType;
   DateTime? _endDate;
+  bool _isFixedExpense = false;
 
   @override
   void initState() {
     super.initState();
     _selectedType = widget.initialSettings?.type ?? RecurringType.none;
     _endDate = widget.initialSettings?.endDate;
+    _isFixedExpense = widget.initialSettings?.isFixedExpense ?? false;
   }
 
   @override
@@ -127,6 +148,7 @@ class _RecurringSettingsWidgetState extends State<RecurringSettingsWidget> {
       type: _selectedType,
       endDate: _endDate,
       transactionCount: count,
+      isFixedExpense: _isFixedExpense,
     ));
   }
 
@@ -209,7 +231,7 @@ class _RecurringSettingsWidgetState extends State<RecurringSettingsWidget> {
   }
 
   String _getEndDateDisplayText() {
-    if (_endDate == null) return '선택하세요';
+    if (_endDate == null) return '계속 반복';
 
     switch (_selectedType) {
       case RecurringType.daily:
@@ -294,47 +316,90 @@ class _RecurringSettingsWidgetState extends State<RecurringSettingsWidget> {
             subtitle: Text(
               _getEndDateDisplayText(),
               style: TextStyle(
-                color: _endDate == null
-                    ? colorScheme.error
-                    : colorScheme.onSurface,
+                color: colorScheme.onSurface,
               ),
             ),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_endDate != null)
+                  IconButton(
+                    icon: const Icon(Icons.clear, size: 20),
+                    onPressed: widget.enabled ? () {
+                      setState(() {
+                        _endDate = null;
+                      });
+                      _notifyChange();
+                    } : null,
+                    tooltip: '종료일 해제',
+                  ),
+                const Icon(Icons.chevron_right),
+              ],
+            ),
             onTap: widget.enabled ? _selectEndDate : null,
           ),
 
-          // 생성될 거래 수 미리보기
-          if (_endDate != null) ...[
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withAlpha(76),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 20,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '총 $transactionCount건의 거래가 생성됩니다',
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w500,
-                      ),
+          // 반복 정보 미리보기
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.primaryContainer.withAlpha(76),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 20,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _endDate != null
+                        ? '총 $transactionCount건의 거래가 생성됩니다'
+                        : '계속 반복 (매일 자동 생성)',
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
+
+          // 고정비 설정 (지출 타입이고 반복이 설정된 경우에만)
+          if (widget.transactionType == 'expense') ...[
+            const SizedBox(height: 16),
+            _buildFixedExpenseSection(colorScheme),
           ],
         ],
       ],
+    );
+  }
+
+  /// 고정비 설정 섹션 빌드 (체크박스만)
+  Widget _buildFixedExpenseSection(ColorScheme colorScheme) {
+    return CheckboxListTile(
+      contentPadding: EdgeInsets.zero,
+      title: const Text('고정비로 등록'),
+      subtitle: Text(
+        '월세, 보험료 등 정기적으로 지출되는 금액',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: colorScheme.onSurfaceVariant,
+        ),
+      ),
+      value: _isFixedExpense,
+      onChanged: widget.enabled
+          ? (value) {
+              setState(() {
+                _isFixedExpense = value ?? false;
+              });
+              _notifyChange();
+            }
+          : null,
     );
   }
 }

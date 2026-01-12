@@ -425,6 +425,14 @@ class MoreTabView extends ConsumerWidget {
             context.push(Routes.paymentMethod);
           },
         ),
+        ListTile(
+          leading: const Icon(Icons.repeat),
+          title: const Text('고정비 관리'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            context.push(Routes.fixedExpense);
+          },
+        ),
         const Divider(),
         ListTile(
           leading: const Icon(Icons.settings_outlined),
