@@ -78,30 +78,10 @@ class _PaymentMethodItem extends StatelessWidget {
                   '$rank',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: rank <= 3 ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                    color: rank <= 3
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // 결제수단 아이콘
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: item.paymentMethodIcon.isNotEmpty
-                      ? Text(
-                          item.paymentMethodIcon,
-                          style: const TextStyle(fontSize: 18),
-                        )
-                      : Icon(
-                          Icons.credit_card_outlined,
-                          size: 18,
-                          color: color,
-                        ),
                 ),
               ),
               const SizedBox(width: 12),

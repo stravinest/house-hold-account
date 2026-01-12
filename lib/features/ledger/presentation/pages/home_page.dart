@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../config/router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../budget/presentation/pages/budget_page.dart';
+import '../../../asset/presentation/pages/asset_page.dart';
 import '../../../statistics/presentation/pages/statistics_page.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
@@ -180,8 +180,8 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           // 통계 탭
           const StatisticsTabView(),
-          // 예산 탭
-          const BudgetTabView(),
+          // 자산 탭
+          const AssetTabView(),
           // 더보기 탭
           const MoreTabView(),
         ],
@@ -352,13 +352,13 @@ class StatisticsTabView extends StatelessWidget {
   }
 }
 
-// 예산 탭
-class BudgetTabView extends StatelessWidget {
-  const BudgetTabView({super.key});
+// 자산 탭
+class AssetTabView extends StatelessWidget {
+  const AssetTabView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const BudgetPage();
+    return const AssetPage();
   }
 }
 

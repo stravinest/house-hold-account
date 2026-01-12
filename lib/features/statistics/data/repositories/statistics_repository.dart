@@ -12,13 +12,22 @@ class StatisticsRepository {
     required int month,
     required String type, // 'income' or 'expense'
     ExpenseTypeFilter? expenseTypeFilter,
+    bool? includeFixedExpenseInExpense, // 고정비를 지출에 편입할지 여부
   }) async {
     final startDate = DateTime(year, month, 1);
     final endDate = DateTime(year, month + 1, 0);
 
+    // 고정비 필터일 경우 고정비 카테고리를 사용
+    final useFixedExpenseCategory =
+        type == 'expense' && expenseTypeFilter == ExpenseTypeFilter.fixed;
+
     var query = _client
         .from('transactions')
-        .select('amount, category_id, is_fixed_expense, categories(name, icon, color)')
+        .select(
+          useFixedExpenseCategory
+              ? 'amount, fixed_expense_category_id, is_fixed_expense, fixed_expense_categories(name, icon, color)'
+              : 'amount, category_id, is_fixed_expense, categories(name, icon, color)',
+        )
         .eq('ledger_id', ledgerId)
         .eq('type', type)
         .gte('date', startDate.toIso8601String().split('T').first)
@@ -46,22 +55,49 @@ class StatisticsRepository {
 
     for (final row in response as List) {
       final rowMap = row as Map<String, dynamic>;
-      final categoryId = rowMap['category_id']?.toString();
       final amount = (rowMap['amount'] as num?)?.toInt() ?? 0;
-      final category = rowMap['categories'] as Map<String, dynamic>?;
+      final isFixedExpense = rowMap['is_fixed_expense'] == true;
 
-      // null인 경우 특수 키 사용
-      final groupKey = categoryId ?? '_uncategorized_';
+      // 고정비 필터일 때는 fixed_expense_category_id 사용
+      final categoryId = useFixedExpenseCategory
+          ? rowMap['fixed_expense_category_id']?.toString()
+          : rowMap['category_id']?.toString();
 
-      // 카테고리 정보 추출 (null 안전 처리)
-      String categoryName = '미지정';
-      String categoryIcon = '';
-      String categoryColor = '#9E9E9E';
+      // 고정비 필터일 때는 fixed_expense_categories 사용
+      final category = useFixedExpenseCategory
+          ? rowMap['fixed_expense_categories'] as Map<String, dynamic>?
+          : rowMap['categories'] as Map<String, dynamic>?;
 
-      if (category != null) {
-        categoryName = category['name']?.toString() ?? '미지정';
-        categoryIcon = category['icon']?.toString() ?? '';
-        categoryColor = category['color']?.toString() ?? '#9E9E9E';
+      // 고정비 설정에 따라 그룹키 결정
+      String groupKey;
+      String categoryName;
+      String categoryIcon;
+      String categoryColor;
+
+      // 지출 타입이고, 고정비 편입 설정이 true이고, 실제로 고정비인 경우
+      // 단, ExpenseTypeFilter가 all일 때만 적용 (고정비/변동비 필터 시에는 원래 카테고리로 표시)
+      if (type == 'expense' &&
+          includeFixedExpenseInExpense == true &&
+          isFixedExpense &&
+          (expenseTypeFilter == null ||
+              expenseTypeFilter == ExpenseTypeFilter.all)) {
+        // 고정비를 별도 카테고리로 그룹화
+        groupKey = '_fixed_expense_';
+        categoryName = '고정비';
+        categoryIcon = '📌';
+        categoryColor = '#FF9800'; // 오렌지색
+      } else {
+        // 기존 로직: 원래 카테고리대로 그룹화
+        groupKey = categoryId ?? '_uncategorized_';
+        categoryName = '미지정';
+        categoryIcon = '';
+        categoryColor = '#9E9E9E';
+
+        if (category != null) {
+          categoryName = category['name']?.toString() ?? '미지정';
+          categoryIcon = category['icon']?.toString() ?? '';
+          categoryColor = category['color']?.toString() ?? '#9E9E9E';
+        }
       }
 
       if (grouped.containsKey(groupKey)) {
@@ -123,13 +159,15 @@ class StatisticsRepository {
         }
       }
 
-      results.add(MonthlyStatistics(
-        year: targetDate.year,
-        month: targetDate.month,
-        income: income,
-        expense: expense,
-        saving: saving,
-      ));
+      results.add(
+        MonthlyStatistics(
+          year: targetDate.year,
+          month: targetDate.month,
+          income: income,
+          expense: expense,
+          saving: saving,
+        ),
+      );
     }
 
     return results;
@@ -141,6 +179,7 @@ class StatisticsRepository {
     required int year,
     required int month,
     required String type,
+    ExpenseTypeFilter? expenseTypeFilter,
   }) async {
     // 현재 월
     final currentStartDate = DateTime(year, month, 1);
@@ -148,26 +187,67 @@ class StatisticsRepository {
 
     // 지난 월
     final previousDate = DateTime(year, month - 1, 1);
-    final previousStartDate = DateTime(previousDate.year, previousDate.month, 1);
-    final previousEndDate = DateTime(previousDate.year, previousDate.month + 1, 0);
+    final previousStartDate = DateTime(
+      previousDate.year,
+      previousDate.month,
+      1,
+    );
+    final previousEndDate = DateTime(
+      previousDate.year,
+      previousDate.month + 1,
+      0,
+    );
 
     // 현재 월 데이터 조회
-    final currentResponse = await _client
+    var currentQuery = _client
         .from('transactions')
-        .select('amount')
+        .select('amount, is_fixed_expense')
         .eq('ledger_id', ledgerId)
         .eq('type', type)
         .gte('date', currentStartDate.toIso8601String().split('T').first)
         .lte('date', currentEndDate.toIso8601String().split('T').first);
 
+    // 지출일 경우에만 고정비/변동비 필터 적용
+    if (type == 'expense' && expenseTypeFilter != null) {
+      switch (expenseTypeFilter) {
+        case ExpenseTypeFilter.fixed:
+          currentQuery = currentQuery.eq('is_fixed_expense', true);
+          break;
+        case ExpenseTypeFilter.variable:
+          currentQuery = currentQuery.eq('is_fixed_expense', false);
+          break;
+        case ExpenseTypeFilter.all:
+          // 필터 없음
+          break;
+      }
+    }
+
     // 지난 월 데이터 조회
-    final previousResponse = await _client
+    var previousQuery = _client
         .from('transactions')
-        .select('amount')
+        .select('amount, is_fixed_expense')
         .eq('ledger_id', ledgerId)
         .eq('type', type)
         .gte('date', previousStartDate.toIso8601String().split('T').first)
         .lte('date', previousEndDate.toIso8601String().split('T').first);
+
+    // 지출일 경우에만 고정비/변동비 필터 적용
+    if (type == 'expense' && expenseTypeFilter != null) {
+      switch (expenseTypeFilter) {
+        case ExpenseTypeFilter.fixed:
+          previousQuery = previousQuery.eq('is_fixed_expense', true);
+          break;
+        case ExpenseTypeFilter.variable:
+          previousQuery = previousQuery.eq('is_fixed_expense', false);
+          break;
+        case ExpenseTypeFilter.all:
+          // 필터 없음
+          break;
+      }
+    }
+
+    final currentResponse = await currentQuery;
+    final previousResponse = await previousQuery;
 
     int currentTotal = 0;
     int previousTotal = 0;
@@ -255,10 +335,11 @@ class StatisticsRepository {
 
     // 비율 계산 및 정렬
     final result = grouped.values.map((item) {
-      final percentage = totalAmount > 0 ? (item.amount / totalAmount) * 100 : 0.0;
+      final percentage = totalAmount > 0
+          ? (item.amount / totalAmount) * 100
+          : 0.0;
       return item.copyWith(percentage: percentage);
-    }).toList()
-      ..sort((a, b) => b.amount.compareTo(a.amount));
+    }).toList()..sort((a, b) => b.amount.compareTo(a.amount));
 
     return result;
   }
@@ -300,12 +381,14 @@ class StatisticsRepository {
         }
       }
 
-      results.add(YearlyStatistics(
-        year: targetYear,
-        income: income,
-        expense: expense,
-        saving: saving,
-      ));
+      results.add(
+        YearlyStatistics(
+          year: targetYear,
+          income: income,
+          expense: expense,
+          saving: saving,
+        ),
+      );
     }
 
     return results;
@@ -364,19 +447,23 @@ class StatisticsRepository {
       totalExpense += expense;
       totalSaving += saving;
 
-      results.add(MonthlyStatistics(
-        year: targetDate.year,
-        month: targetDate.month,
-        income: income,
-        expense: expense,
-        saving: saving,
-      ));
+      results.add(
+        MonthlyStatistics(
+          year: targetDate.year,
+          month: targetDate.month,
+          income: income,
+          expense: expense,
+          saving: saving,
+        ),
+      );
     }
 
     return TrendStatisticsData(
       data: results,
       averageIncome: incomeCount > 0 ? (totalIncome / incomeCount).round() : 0,
-      averageExpense: expenseCount > 0 ? (totalExpense / expenseCount).round() : 0,
+      averageExpense: expenseCount > 0
+          ? (totalExpense / expenseCount).round()
+          : 0,
       averageSaving: savingCount > 0 ? (totalSaving / savingCount).round() : 0,
     );
   }
@@ -434,18 +521,22 @@ class StatisticsRepository {
       totalExpense += expense;
       totalSaving += saving;
 
-      results.add(YearlyStatistics(
-        year: targetYear,
-        income: income,
-        expense: expense,
-        saving: saving,
-      ));
+      results.add(
+        YearlyStatistics(
+          year: targetYear,
+          income: income,
+          expense: expense,
+          saving: saving,
+        ),
+      );
     }
 
     return TrendStatisticsData(
       data: results,
       averageIncome: incomeCount > 0 ? (totalIncome / incomeCount).round() : 0,
-      averageExpense: expenseCount > 0 ? (totalExpense / expenseCount).round() : 0,
+      averageExpense: expenseCount > 0
+          ? (totalExpense / expenseCount).round()
+          : 0,
       averageSaving: savingCount > 0 ? (totalSaving / savingCount).round() : 0,
     );
   }

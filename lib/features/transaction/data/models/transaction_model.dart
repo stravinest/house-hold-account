@@ -18,6 +18,8 @@ class TransactionModel extends Transaction {
     super.recurringEndDate,
     super.isFixedExpense = false,
     super.fixedExpenseCategoryId,
+    super.isAsset = false,
+    super.maturityDate,
     required super.createdAt,
     required super.updatedAt,
     super.categoryName,
@@ -56,6 +58,10 @@ class TransactionModel extends Transaction {
           : null,
       isFixedExpense: json['is_fixed_expense'] as bool? ?? false,
       fixedExpenseCategoryId: json['fixed_expense_category_id'] as String?,
+      isAsset: json['is_asset'] as bool? ?? false,
+      maturityDate: json['maturity_date'] != null
+          ? DateTime.parse(json['maturity_date'] as String)
+          : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       categoryName: category?['name'] as String?,
@@ -84,9 +90,14 @@ class TransactionModel extends Transaction {
       'image_url': imageUrl,
       'is_recurring': isRecurring,
       'recurring_type': recurringType,
-      'recurring_end_date': recurringEndDate?.toIso8601String().split('T').first,
+      'recurring_end_date': recurringEndDate
+          ?.toIso8601String()
+          .split('T')
+          .first,
       'is_fixed_expense': isFixedExpense,
       'fixed_expense_category_id': fixedExpenseCategoryId,
+      'is_asset': isAsset,
+      'maturity_date': maturityDate?.toIso8601String().split('T').first,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -108,6 +119,8 @@ class TransactionModel extends Transaction {
     DateTime? recurringEndDate,
     bool isFixedExpense = false,
     String? fixedExpenseCategoryId,
+    bool isAsset = false,
+    DateTime? maturityDate,
   }) {
     return {
       'ledger_id': ledgerId,
@@ -122,9 +135,14 @@ class TransactionModel extends Transaction {
       'image_url': imageUrl,
       'is_recurring': isRecurring,
       'recurring_type': recurringType,
-      'recurring_end_date': recurringEndDate?.toIso8601String().split('T').first,
+      'recurring_end_date': recurringEndDate
+          ?.toIso8601String()
+          .split('T')
+          .first,
       'is_fixed_expense': isFixedExpense,
       'fixed_expense_category_id': fixedExpenseCategoryId,
+      'is_asset': isAsset,
+      'maturity_date': maturityDate?.toIso8601String().split('T').first,
     };
   }
 }

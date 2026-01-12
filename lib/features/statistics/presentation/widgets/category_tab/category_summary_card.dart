@@ -4,16 +4,25 @@ import 'package:intl/intl.dart';
 
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
+import '../common/expense_type_filter.dart';
 
 class CategorySummaryCard extends ConsumerWidget {
   const CategorySummaryCard({super.key});
 
-  String _getTypeLabel(String type) {
+  String _getTypeLabel(String type, ExpenseTypeFilter? expenseFilter) {
     switch (type) {
       case 'income':
         return '수입';
       case 'saving':
         return '저축';
+      case 'expense':
+        if (expenseFilter == ExpenseTypeFilter.fixed) {
+          return '고정비';
+        } else if (expenseFilter == ExpenseTypeFilter.variable) {
+          return '변동비';
+        } else {
+          return '지출';
+        }
       default:
         return '지출';
     }
@@ -34,6 +43,7 @@ class CategorySummaryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
+    final expenseFilter = ref.watch(selectedExpenseTypeFilterProvider);
     final comparisonAsync = ref.watch(monthComparisonProvider);
     final numberFormat = NumberFormat('#,###');
 
@@ -44,15 +54,12 @@ class CategorySummaryCard extends ConsumerWidget {
           data: (comparison) => _buildContent(
             context,
             selectedType,
+            expenseFilter,
             comparison,
             numberFormat,
           ),
-          loading: () => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          error: (error, _) => Center(
-            child: Text('오류: $error'),
-          ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Center(child: Text('오류: $error')),
         ),
       ),
     );
@@ -61,10 +68,11 @@ class CategorySummaryCard extends ConsumerWidget {
   Widget _buildContent(
     BuildContext context,
     String selectedType,
+    ExpenseTypeFilter expenseFilter,
     MonthComparisonData comparison,
     NumberFormat numberFormat,
   ) {
-    final typeLabel = _getTypeLabel(selectedType);
+    final typeLabel = _getTypeLabel(selectedType, expenseFilter);
     final typeColor = _getTypeColor(selectedType, context);
     final theme = Theme.of(context);
 
@@ -109,17 +117,17 @@ class CategorySummaryCard extends ConsumerWidget {
 
     final isIncrease = comparison.isIncrease;
     final isDecrease = comparison.isDecrease;
-    final arrow = isIncrease ? Icons.arrow_upward : (isDecrease ? Icons.arrow_downward : Icons.remove);
-    final arrowColor = isIncrease ? Colors.red : (isDecrease ? Colors.blue : Colors.grey);
+    final arrow = isIncrease
+        ? Icons.arrow_upward
+        : (isDecrease ? Icons.arrow_downward : Icons.remove);
+    final arrowColor = isIncrease
+        ? Colors.red
+        : (isDecrease ? Colors.blue : Colors.grey);
     final changeText = isIncrease ? '증가' : (isDecrease ? '감소' : '동일');
 
     return Row(
       children: [
-        Icon(
-          arrow,
-          size: 16,
-          color: arrowColor,
-        ),
+        Icon(arrow, size: 16, color: arrowColor),
         const SizedBox(width: 4),
         Text(
           '${numberFormat.format(comparison.difference.abs())}원',

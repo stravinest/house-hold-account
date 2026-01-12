@@ -19,7 +19,10 @@ class CategoryRankingList extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
-        final totalAmount = statistics.fold(0, (sum, item) => sum + item.amount);
+        final totalAmount = statistics.fold(
+          0,
+          (sum, item) => sum + item.amount,
+        );
 
         return ListView.separated(
           shrinkWrap: true,
@@ -28,7 +31,9 @@ class CategoryRankingList extends ConsumerWidget {
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final item = statistics[index];
-            final percentage = totalAmount > 0 ? (item.amount / totalAmount) * 100 : 0.0;
+            final percentage = totalAmount > 0
+                ? (item.amount / totalAmount) * 100
+                : 0.0;
 
             return _CategoryRankingItem(
               rank: index + 1,
@@ -88,30 +93,10 @@ class _CategoryRankingItem extends StatelessWidget {
                   '$rank',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: rank <= 3 ? theme.colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                    color: rank <= 3
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
                   ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              // 카테고리 색상 및 아이콘
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Center(
-                  child: category.categoryIcon.isNotEmpty
-                      ? Text(
-                          category.categoryIcon,
-                          style: const TextStyle(fontSize: 18),
-                        )
-                      : Icon(
-                          Icons.category_outlined,
-                          size: 18,
-                          color: color,
-                        ),
                 ),
               ),
               const SizedBox(width: 12),

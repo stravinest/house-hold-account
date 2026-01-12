@@ -15,7 +15,9 @@ class TransactionRepository {
 
     final response = await _client
         .from('transactions')
-        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)')
+        .select(
+          '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
+        )
         .eq('ledger_id', ledgerId)
         .eq('date', dateStr)
         .order('created_at', ascending: false);
@@ -36,7 +38,9 @@ class TransactionRepository {
 
     final response = await _client
         .from('transactions')
-        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)')
+        .select(
+          '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
+        )
         .eq('ledger_id', ledgerId)
         .gte('date', startStr)
         .lte('date', endStr)
@@ -80,6 +84,8 @@ class TransactionRepository {
     DateTime? recurringEndDate,
     bool isFixedExpense = false,
     String? fixedExpenseCategoryId,
+    bool isAsset = false,
+    DateTime? maturityDate,
   }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
@@ -100,12 +106,16 @@ class TransactionRepository {
       recurringEndDate: recurringEndDate,
       isFixedExpense: isFixedExpense,
       fixedExpenseCategoryId: fixedExpenseCategoryId,
+      isAsset: isAsset,
+      maturityDate: maturityDate,
     );
 
     final response = await _client
         .from('transactions')
         .insert(data)
-        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)')
+        .select(
+          '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
+        )
         .single();
 
     return TransactionModel.fromJson(response);
@@ -142,8 +152,10 @@ class TransactionRepository {
     if (isRecurring != null) updates['is_recurring'] = isRecurring;
     if (recurringType != null) updates['recurring_type'] = recurringType;
     if (recurringEndDate != null) {
-      updates['recurring_end_date'] =
-          recurringEndDate.toIso8601String().split('T').first;
+      updates['recurring_end_date'] = recurringEndDate
+          .toIso8601String()
+          .split('T')
+          .first;
     }
     if (isFixedExpense != null) updates['is_fixed_expense'] = isFixedExpense;
     if (fixedExpenseCategoryId != null) {
@@ -154,7 +166,9 @@ class TransactionRepository {
         .from('transactions')
         .update(updates)
         .eq('id', id)
-        .select('*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)')
+        .select(
+          '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
+        )
         .single();
 
     return TransactionModel.fromJson(response);
@@ -197,7 +211,8 @@ class TransactionRepository {
 
         // profile에서 display_name과 color 가져오기
         final profileData = transaction['profiles'];
-        final displayName = (profileData != null && profileData['display_name'] != null)
+        final displayName =
+            (profileData != null && profileData['display_name'] != null)
             ? profileData['display_name'] as String
             : '사용자';
         final userColor = (profileData != null && profileData['color'] != null)
@@ -205,22 +220,28 @@ class TransactionRepository {
             : '#A8D8EA';
 
         // 사용자별 데이터 초기화
-        userTotals.putIfAbsent(userId, () => {
-          'displayName': displayName,
-          'income': 0,
-          'expense': 0,
-          'saving': 0,
-          'color': userColor,
-        });
+        userTotals.putIfAbsent(
+          userId,
+          () => {
+            'displayName': displayName,
+            'income': 0,
+            'expense': 0,
+            'saving': 0,
+            'color': userColor,
+          },
+        );
 
         // 금액 누적
         if (type == 'income') {
-          userTotals[userId]!['income'] = (userTotals[userId]!['income'] as int) + amount;
+          userTotals[userId]!['income'] =
+              (userTotals[userId]!['income'] as int) + amount;
           totalIncome += amount;
         } else if (type == 'saving') {
-          userTotals[userId]!['saving'] = (userTotals[userId]!['saving'] as int) + amount;
+          userTotals[userId]!['saving'] =
+              (userTotals[userId]!['saving'] as int) + amount;
         } else {
-          userTotals[userId]!['expense'] = (userTotals[userId]!['expense'] as int) + amount;
+          userTotals[userId]!['expense'] =
+              (userTotals[userId]!['expense'] as int) + amount;
           totalExpense += amount;
         }
       }
@@ -271,7 +292,8 @@ class TransactionRepository {
 
         // profile에서 display_name과 color 가져오기
         final profileData = transaction['profiles'];
-        final displayName = (profileData != null && profileData['display_name'] != null)
+        final displayName =
+            (profileData != null && profileData['display_name'] != null)
             ? profileData['display_name'] as String
             : '사용자';
         final userColor = (profileData != null && profileData['color'] != null)
@@ -279,23 +301,29 @@ class TransactionRepository {
             : '#A8D8EA';
 
         // 날짜별 데이터 초기화
-        dailyTotals.putIfAbsent(dateKey, () => {
-          'users': <String, Map<String, dynamic>>{},
-          'totalIncome': 0,
-          'totalExpense': 0,
-        });
+        dailyTotals.putIfAbsent(
+          dateKey,
+          () => {
+            'users': <String, Map<String, dynamic>>{},
+            'totalIncome': 0,
+            'totalExpense': 0,
+          },
+        );
 
         final dayData = dailyTotals[dateKey]!;
         final users = dayData['users'] as Map<String, Map<String, dynamic>>;
 
         // 사용자별 데이터 초기화
-        users.putIfAbsent(userId, () => {
-          'displayName': displayName,
-          'income': 0,
-          'expense': 0,
-          'saving': 0,
-          'color': userColor,
-        });
+        users.putIfAbsent(
+          userId,
+          () => {
+            'displayName': displayName,
+            'income': 0,
+            'expense': 0,
+            'saving': 0,
+            'color': userColor,
+          },
+        );
 
         // 금액 누적
         if (type == 'income') {
@@ -304,7 +332,8 @@ class TransactionRepository {
         } else if (type == 'saving') {
           users[userId]!['saving'] = (users[userId]!['saving'] as int) + amount;
         } else {
-          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          users[userId]!['expense'] =
+              (users[userId]!['expense'] as int) + amount;
           dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
         }
       }
@@ -396,7 +425,9 @@ class TransactionRepository {
   }) async {
     final response = await _client
         .from('recurring_templates')
-        .select('*, categories(name, icon, color), payment_methods(name), fixed_expense_categories(name, color)')
+        .select(
+          '*, categories(name, icon, color), payment_methods(name), fixed_expense_categories(name, color)',
+        )
         .eq('ledger_id', ledgerId)
         .eq('is_active', true)
         .order('created_at', ascending: false);
@@ -408,7 +439,10 @@ class TransactionRepository {
   Future<void> deleteRecurringTemplate(String templateId) async {
     await _client
         .from('recurring_templates')
-        .update({'is_active': false, 'updated_at': DateTime.now().toIso8601String()})
+        .update({
+          'is_active': false,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
         .eq('id', templateId);
   }
 }

@@ -7,7 +7,7 @@ class Transaction extends Equatable {
   final String userId;
   final String? paymentMethodId;
   final int amount;
-  final String type; // income, expense
+  final String type; // income, expense, saving
   final DateTime date;
   final String? title;
   final String? memo;
@@ -17,6 +17,8 @@ class Transaction extends Equatable {
   final DateTime? recurringEndDate;
   final bool isFixedExpense;
   final String? fixedExpenseCategoryId;
+  final bool isAsset;
+  final DateTime? maturityDate;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -47,6 +49,8 @@ class Transaction extends Equatable {
     this.recurringEndDate,
     this.isFixedExpense = false,
     this.fixedExpenseCategoryId,
+    this.isAsset = false,
+    this.maturityDate,
     required this.createdAt,
     required this.updatedAt,
     this.categoryName,
@@ -84,6 +88,10 @@ class Transaction extends Equatable {
           : null,
       isFixedExpense: json['is_fixed_expense'] as bool? ?? false,
       fixedExpenseCategoryId: json['fixed_expense_category_id'] as String?,
+      isAsset: json['is_asset'] as bool? ?? false,
+      maturityDate: json['maturity_date'] != null
+          ? DateTime.parse(json['maturity_date'] as String)
+          : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       categoryName: category?['name'] as String?,
@@ -98,6 +106,7 @@ class Transaction extends Equatable {
   bool get isIncome => type == 'income';
   bool get isExpense => type == 'expense';
   bool get isSaving => type == 'saving';
+  bool get isAssetTransaction => type == 'saving' && isAsset == true;
 
   // 주의: 현재 copyWith에서는 categoryId나 paymentMethodId를 null로 설정할 수 없습니다.
   // null을 전달해도 기존 값이 유지됩니다.
@@ -122,6 +131,8 @@ class Transaction extends Equatable {
     DateTime? recurringEndDate,
     bool? isFixedExpense,
     String? fixedExpenseCategoryId,
+    bool? isAsset,
+    DateTime? maturityDate,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? categoryName,
@@ -151,6 +162,8 @@ class Transaction extends Equatable {
       isFixedExpense: isFixedExpense ?? this.isFixedExpense,
       fixedExpenseCategoryId:
           fixedExpenseCategoryId ?? this.fixedExpenseCategoryId,
+      isAsset: isAsset ?? this.isAsset,
+      maturityDate: maturityDate ?? this.maturityDate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       categoryName: categoryName ?? this.categoryName,
@@ -168,23 +181,25 @@ class Transaction extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        ledgerId,
-        categoryId,
-        userId,
-        paymentMethodId,
-        amount,
-        type,
-        date,
-        title,
-        memo,
-        imageUrl,
-        isRecurring,
-        recurringType,
-        recurringEndDate,
-        isFixedExpense,
-        fixedExpenseCategoryId,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    ledgerId,
+    categoryId,
+    userId,
+    paymentMethodId,
+    amount,
+    type,
+    date,
+    title,
+    memo,
+    imageUrl,
+    isRecurring,
+    recurringType,
+    recurringEndDate,
+    isFixedExpense,
+    fixedExpenseCategoryId,
+    isAsset,
+    maturityDate,
+    createdAt,
+    updatedAt,
+  ];
 }
