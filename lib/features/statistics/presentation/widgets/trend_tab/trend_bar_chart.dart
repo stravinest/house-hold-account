@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import '../../../data/repositories/statistics_repository.dart';
 import '../../../domain/entities/statistics_entities.dart';
-import '../../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../providers/statistics_provider.dart';
 
 class TrendBarChart extends ConsumerWidget {
@@ -15,24 +14,61 @@ class TrendBarChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(trendPeriodProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
+    final selectedDate = ref.watch(statisticsSelectedDateProvider);
 
     if (period == TrendPeriod.monthly) {
-      return _MonthlyTrendChart(selectedType: selectedType);
+      // 날짜가 변경될 때 widget을 재생성하여 데이터와 스크롤 갱신
+      return _MonthlyTrendChart(
+        key: ValueKey('monthly_${selectedDate.year}_${selectedDate.month}'),
+        selectedType: selectedType,
+      );
     } else {
-      return _YearlyTrendChart(selectedType: selectedType);
+      return _YearlyTrendChart(
+        key: ValueKey('yearly_${selectedDate.year}'),
+        selectedType: selectedType,
+      );
     }
   }
 }
 
-class _MonthlyTrendChart extends ConsumerWidget {
+class _MonthlyTrendChart extends ConsumerStatefulWidget {
   final String selectedType;
 
-  const _MonthlyTrendChart({required this.selectedType});
+  const _MonthlyTrendChart({super.key, required this.selectedType});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_MonthlyTrendChart> createState() => _MonthlyTrendChartState();
+}
+
+class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
+  late final ScrollController _scrollController;
+  DateTime? _lastSelectedDate;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToSelectedMonth(List<MonthlyStatistics> data, DateTime selectedDate) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients && data.isNotEmpty) {
+        // 선택된 월은 데이터의 마지막이므로 맨 끝으로 스크롤
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final trendAsync = ref.watch(monthlyTrendWithAverageProvider);
-    final selectedDate = ref.watch(selectedDateProvider);
+    final selectedDate = ref.watch(statisticsSelectedDateProvider);
     final numberFormat = NumberFormat('#,###');
 
     return trendAsync.when(
@@ -40,6 +76,16 @@ class _MonthlyTrendChart extends ConsumerWidget {
         if (trendData.data.isEmpty) {
           return _buildEmptyState(context);
         }
+        final data = trendData.data.cast<MonthlyStatistics>();
+
+        // 선택된 날짜가 변경되었거나 첫 로드인 경우 스크롤 조정
+        if (_lastSelectedDate == null ||
+            _lastSelectedDate!.year != selectedDate.year ||
+            _lastSelectedDate!.month != selectedDate.month) {
+          _lastSelectedDate = selectedDate;
+          _scrollToSelectedMonth(data, selectedDate);
+        }
+
         return _buildChart(context, trendData, selectedDate, numberFormat);
       },
       loading: () => const SizedBox(
@@ -71,14 +117,14 @@ class _MonthlyTrendChart extends ConsumerWidget {
     NumberFormat numberFormat,
   ) {
     final data = trendData.data.cast<MonthlyStatistics>();
-    final average = trendData.getAverageByType(selectedType);
+    final average = trendData.getAverageByType(widget.selectedType);
     final theme = Theme.of(context);
-    final barColor = _getBarColor(selectedType, context);
+    final barColor = _getBarColor(widget.selectedType, context);
 
     // maxY 계산
     double maxY = 0;
     for (final item in data) {
-      final value = _getValueByType(item, selectedType);
+      final value = _getValueByType(item, widget.selectedType);
       if (value > maxY) maxY = value.toDouble();
     }
     if (average > maxY) maxY = average.toDouble();
@@ -88,6 +134,7 @@ class _MonthlyTrendChart extends ConsumerWidget {
     return SizedBox(
       height: 250,
       child: SingleChildScrollView(
+        controller: _scrollController,
         scrollDirection: Axis.horizontal,
         child: SizedBox(
           width: data.length * 60.0 + 40,
@@ -119,11 +166,15 @@ class _MonthlyTrendChart extends ConsumerWidget {
                         final index = value.toInt();
                         if (index >= 0 && index < data.length) {
                           final item = data[index];
+                          final isSelected = item.year == selectedDate.year &&
+                              item.month == selectedDate.month;
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               '${item.year % 100}.${item.month.toString().padLeft(2, '0')}',
-                              style: theme.textTheme.bodySmall,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
                             ),
                           );
                         }
@@ -188,7 +239,7 @@ class _MonthlyTrendChart extends ConsumerWidget {
   ) {
     return List.generate(data.length, (index) {
       final item = data[index];
-      final value = _getValueByType(item, selectedType);
+      final value = _getValueByType(item, widget.selectedType);
       final isSelected = item.year == selectedDate.year && item.month == selectedDate.month;
 
       return BarChartGroupData(
@@ -229,22 +280,60 @@ class _MonthlyTrendChart extends ConsumerWidget {
   }
 }
 
-class _YearlyTrendChart extends ConsumerWidget {
+class _YearlyTrendChart extends ConsumerStatefulWidget {
   final String selectedType;
 
-  const _YearlyTrendChart({required this.selectedType});
+  const _YearlyTrendChart({super.key, required this.selectedType});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final trendAsync = ref.watch(yearlyTrendProvider);
+  ConsumerState<_YearlyTrendChart> createState() => _YearlyTrendChartState();
+}
+
+class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
+  late final ScrollController _scrollController;
+  int? _lastSelectedYear;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToSelectedYear(List<YearlyStatistics> data, DateTime selectedDate) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients && data.isNotEmpty) {
+        // 선택된 연도는 데이터의 마지막이므로 맨 끝으로 스크롤
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final trendAsync = ref.watch(yearlyTrendWithAverageProvider);
+    final selectedDate = ref.watch(statisticsSelectedDateProvider);
     final numberFormat = NumberFormat('#,###');
 
     return trendAsync.when(
-      data: (data) {
-        if (data.isEmpty) {
+      data: (trendData) {
+        if (trendData.data.isEmpty) {
           return _buildEmptyState(context);
         }
-        return _buildChart(context, data, numberFormat);
+        final data = trendData.data.cast<YearlyStatistics>();
+
+        // 선택된 연도가 변경되었거나 첫 로드인 경우 스크롤 조정
+        if (_lastSelectedYear == null || _lastSelectedYear != selectedDate.year) {
+          _lastSelectedYear = selectedDate.year;
+          _scrollToSelectedYear(data, selectedDate);
+        }
+
+        return _buildChart(context, trendData, selectedDate, numberFormat);
       },
       loading: () => const SizedBox(
         height: 250,
@@ -270,111 +359,118 @@ class _YearlyTrendChart extends ConsumerWidget {
 
   Widget _buildChart(
     BuildContext context,
-    List<YearlyStatistics> data,
+    TrendStatisticsData trendData,
+    DateTime selectedDate,
     NumberFormat numberFormat,
   ) {
+    final data = trendData.data.cast<YearlyStatistics>();
+    final average = trendData.getAverageByType(widget.selectedType);
     final theme = Theme.of(context);
-    final barColor = _getBarColor(selectedType, context);
+    final barColor = _getBarColor(widget.selectedType, context);
 
     // maxY 계산
     double maxY = 0;
     for (final item in data) {
-      final value = _getValueByType(item, selectedType);
+      final value = _getValueByType(item, widget.selectedType);
       if (value > maxY) maxY = value.toDouble();
     }
+    if (average > maxY) maxY = average.toDouble();
     maxY = maxY * 1.2;
     if (maxY == 0) maxY = 100;
 
-    // 평균 계산
-    int total = 0;
-    for (final item in data) {
-      total += _getValueByType(item, selectedType);
-    }
-    final average = data.isNotEmpty ? total ~/ data.length : 0;
-
     return SizedBox(
       height: 250,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 16, right: 16, left: 16),
-        child: BarChart(
-          BarChartData(
-            alignment: BarChartAlignment.spaceAround,
-            maxY: maxY,
-            minY: 0,
-            barTouchData: BarTouchData(
-              touchTooltipData: BarTouchTooltipData(
-                getTooltipColor: (_) => theme.colorScheme.surfaceContainerHighest,
-                getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                  final item = data[group.x.toInt()];
-                  return BarTooltipItem(
-                    '${item.year}년\n${numberFormat.format(rod.toY.toInt())}원',
-                    TextStyle(color: theme.colorScheme.onSurface),
-                  );
-                },
-              ),
-            ),
-            titlesData: FlTitlesData(
-              show: true,
-              bottomTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  getTitlesWidget: (value, meta) {
-                    final index = value.toInt();
-                    if (index >= 0 && index < data.length) {
-                      final item = data[index];
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          '${item.year}년',
-                          style: theme.textTheme.bodySmall,
-                        ),
+      child: SingleChildScrollView(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        child: SizedBox(
+          width: data.length * 60.0 + 40,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 16, right: 16, left: 16),
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: maxY,
+                minY: 0,
+                barTouchData: BarTouchData(
+                  touchTooltipData: BarTouchTooltipData(
+                    getTooltipColor: (_) => theme.colorScheme.surfaceContainerHighest,
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      final item = data[group.x.toInt()];
+                      return BarTooltipItem(
+                        '${item.year}년\n${numberFormat.format(rod.toY.toInt())}원',
+                        TextStyle(color: theme.colorScheme.onSurface),
                       );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                  reservedSize: 30,
-                ),
-              ),
-              leftTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
-              ),
-              topTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
-              ),
-              rightTitles: const AxisTitles(
-                sideTitles: SideTitles(showTitles: false),
-              ),
-            ),
-            gridData: FlGridData(
-              show: true,
-              drawVerticalLine: false,
-              horizontalInterval: maxY / 4,
-              getDrawingHorizontalLine: (value) {
-                return FlLine(
-                  color: theme.colorScheme.outlineVariant,
-                  strokeWidth: 1,
-                );
-              },
-            ),
-            borderData: FlBorderData(show: false),
-            barGroups: _buildBarGroups(data, barColor),
-            extraLinesData: ExtraLinesData(
-              horizontalLines: [
-                HorizontalLine(
-                  y: average.toDouble(),
-                  color: theme.colorScheme.outline,
-                  strokeWidth: 1,
-                  dashArray: [5, 5],
-                  label: HorizontalLineLabel(
-                    show: true,
-                    alignment: Alignment.topRight,
-                    labelResolver: (_) => '평균',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.outline,
-                    ),
+                    },
                   ),
                 ),
-              ],
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      getTitlesWidget: (value, meta) {
+                        final index = value.toInt();
+                        if (index >= 0 && index < data.length) {
+                          final item = data[index];
+                          final isSelected = item.year == selectedDate.year;
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              '${item.year}년',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                      reservedSize: 30,
+                    ),
+                  ),
+                  leftTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                ),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval: maxY / 4,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(
+                      color: theme.colorScheme.outlineVariant,
+                      strokeWidth: 1,
+                    );
+                  },
+                ),
+                borderData: FlBorderData(show: false),
+                barGroups: _buildBarGroups(data, selectedDate, barColor),
+                extraLinesData: ExtraLinesData(
+                  horizontalLines: [
+                    HorizontalLine(
+                      y: average.toDouble(),
+                      color: theme.colorScheme.outline,
+                      strokeWidth: 1,
+                      dashArray: [5, 5],
+                      label: HorizontalLineLabel(
+                        show: true,
+                        alignment: Alignment.topRight,
+                        labelResolver: (_) => '평균',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
@@ -384,14 +480,13 @@ class _YearlyTrendChart extends ConsumerWidget {
 
   List<BarChartGroupData> _buildBarGroups(
     List<YearlyStatistics> data,
+    DateTime selectedDate,
     Color barColor,
   ) {
-    final currentYear = DateTime.now().year;
-
     return List.generate(data.length, (index) {
       final item = data[index];
-      final value = _getValueByType(item, selectedType);
-      final isSelected = item.year == currentYear;
+      final value = _getValueByType(item, widget.selectedType);
+      final isSelected = item.year == selectedDate.year;
 
       return BarChartGroupData(
         x: index,
@@ -399,7 +494,7 @@ class _YearlyTrendChart extends ConsumerWidget {
           BarChartRodData(
             toY: value.toDouble(),
             color: isSelected ? barColor : barColor.withOpacity(0.5),
-            width: 40,
+            width: 32,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           ),
         ],

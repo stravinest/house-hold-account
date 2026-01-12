@@ -134,9 +134,6 @@ class _CategoryTile extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _parseColor(category.color),
-        ),
         title: Text(category.name),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -153,17 +150,6 @@ class _CategoryTile extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  Color _parseColor(String colorString) {
-    try {
-      if (colorString.startsWith('#')) {
-        return Color(int.parse(colorString.substring(1), radix: 16) + 0xFF000000);
-      }
-      return Color(int.parse(colorString));
-    } catch (e) {
-      return Colors.grey;
-    }
   }
 
   void _showEditDialog(BuildContext context, Category category) {

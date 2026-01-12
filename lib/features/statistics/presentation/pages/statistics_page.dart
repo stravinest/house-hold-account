@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/statistics_provider.dart';
 import '../widgets/category_tab/category_tab_view.dart';
+import '../widgets/common/statistics_date_selector.dart';
 import '../widgets/payment_method_tab/payment_method_tab_view.dart';
 import '../widgets/trend_tab/trend_tab_view.dart';
 
@@ -43,13 +44,15 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage>
 
     return Column(
       children: [
+        // 날짜 선택
+        const StatisticsDateSelector(),
         // 탭 바
         Container(
           color: theme.colorScheme.surface,
           child: TabBar(
             controller: _tabController,
             tabs: const [
-              Tab(text: '분류별'),
+              Tab(text: '카테고리'),
               Tab(text: '추이'),
               Tab(text: '결제수단'),
             ],

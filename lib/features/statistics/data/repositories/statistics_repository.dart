@@ -35,12 +35,12 @@ class StatisticsRepository {
       final groupKey = categoryId ?? '_uncategorized_';
 
       // 카테고리 정보 추출 (null 안전 처리)
-      String categoryName = '-';
+      String categoryName = '미지정';
       String categoryIcon = '';
       String categoryColor = '#9E9E9E';
 
       if (category != null) {
-        categoryName = category['name']?.toString() ?? '-';
+        categoryName = category['name']?.toString() ?? '미지정';
         categoryIcon = category['icon']?.toString() ?? '';
         categoryColor = category['color']?.toString() ?? '#9E9E9E';
       }
@@ -292,7 +292,7 @@ class StatisticsRepository {
     return results;
   }
 
-  // 월별 추이 (선택된 날짜 기준, 평균값 포함)
+  // 월별 추이 (선택된 날짜 기준, 평균값 포함, 0원 제외)
   Future<TrendStatisticsData> getMonthlyTrendWithAverage({
     required String ledgerId,
     required DateTime baseDate,
@@ -302,6 +302,10 @@ class StatisticsRepository {
     int totalIncome = 0;
     int totalExpense = 0;
     int totalSaving = 0;
+    // 0원이 아닌 달의 개수 (평균 계산용)
+    int incomeCount = 0;
+    int expenseCount = 0;
+    int savingCount = 0;
 
     for (int i = months - 1; i >= 0; i--) {
       final targetDate = DateTime(baseDate.year, baseDate.month - i, 1);
@@ -332,6 +336,11 @@ class StatisticsRepository {
         }
       }
 
+      // 0원이 아닌 경우만 카운트
+      if (income > 0) incomeCount++;
+      if (expense > 0) expenseCount++;
+      if (saving > 0) savingCount++;
+
       totalIncome += income;
       totalExpense += expense;
       totalSaving += saving;
@@ -347,9 +356,78 @@ class StatisticsRepository {
 
     return TrendStatisticsData(
       data: results,
-      averageIncome: months > 0 ? (totalIncome / months).round() : 0,
-      averageExpense: months > 0 ? (totalExpense / months).round() : 0,
-      averageSaving: months > 0 ? (totalSaving / months).round() : 0,
+      averageIncome: incomeCount > 0 ? (totalIncome / incomeCount).round() : 0,
+      averageExpense: expenseCount > 0 ? (totalExpense / expenseCount).round() : 0,
+      averageSaving: savingCount > 0 ? (totalSaving / savingCount).round() : 0,
+    );
+  }
+
+  // 연별 추이 (선택된 날짜 기준, 평균값 포함, 0원 제외)
+  Future<TrendStatisticsData> getYearlyTrendWithAverage({
+    required String ledgerId,
+    required DateTime baseDate,
+    int years = 6,
+  }) async {
+    final results = <YearlyStatistics>[];
+    int totalIncome = 0;
+    int totalExpense = 0;
+    int totalSaving = 0;
+    // 0원이 아닌 연도의 개수 (평균 계산용)
+    int incomeCount = 0;
+    int expenseCount = 0;
+    int savingCount = 0;
+
+    for (int i = years - 1; i >= 0; i--) {
+      final targetYear = baseDate.year - i;
+      final startDate = DateTime(targetYear, 1, 1);
+      final endDate = DateTime(targetYear, 12, 31);
+
+      final response = await _client
+          .from('transactions')
+          .select('amount, type')
+          .eq('ledger_id', ledgerId)
+          .gte('date', startDate.toIso8601String().split('T').first)
+          .lte('date', endDate.toIso8601String().split('T').first);
+
+      int income = 0;
+      int expense = 0;
+      int saving = 0;
+
+      for (final row in response as List) {
+        final amount = (row['amount'] as num).toInt();
+        final type = row['type'] as String;
+
+        if (type == 'income') {
+          income += amount;
+        } else if (type == 'saving') {
+          saving += amount;
+        } else {
+          expense += amount;
+        }
+      }
+
+      // 0원이 아닌 경우만 카운트
+      if (income > 0) incomeCount++;
+      if (expense > 0) expenseCount++;
+      if (saving > 0) savingCount++;
+
+      totalIncome += income;
+      totalExpense += expense;
+      totalSaving += saving;
+
+      results.add(YearlyStatistics(
+        year: targetYear,
+        income: income,
+        expense: expense,
+        saving: saving,
+      ));
+    }
+
+    return TrendStatisticsData(
+      data: results,
+      averageIncome: incomeCount > 0 ? (totalIncome / incomeCount).round() : 0,
+      averageExpense: expenseCount > 0 ? (totalExpense / expenseCount).round() : 0,
+      averageSaving: savingCount > 0 ? (totalSaving / savingCount).round() : 0,
     );
   }
 }

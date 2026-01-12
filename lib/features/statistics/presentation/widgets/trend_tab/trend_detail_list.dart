@@ -81,12 +81,13 @@ class _YearlyDetailList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final trendAsync = ref.watch(yearlyTrendProvider);
+    final trendAsync = ref.watch(yearlyTrendWithAverageProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final numberFormat = NumberFormat('#,###');
 
     return trendAsync.when(
-      data: (data) {
+      data: (trendData) {
+        final data = trendData.data.cast<YearlyStatistics>();
         if (data.isEmpty) {
           return const SizedBox.shrink();
         }

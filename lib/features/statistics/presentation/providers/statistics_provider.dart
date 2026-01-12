@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../ledger/presentation/providers/ledger_provider.dart';
-import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../data/repositories/statistics_repository.dart';
 import '../../domain/entities/statistics_entities.dart';
 
@@ -12,6 +11,9 @@ final statisticsRepositoryProvider = Provider<StatisticsRepository>((ref) {
 
 // 탭 인덱스 관리
 final statisticsTabIndexProvider = StateProvider<int>((ref) => 0);
+
+// 통계 페이지 전용 선택 날짜 Provider (캘린더와 분리하여 독립적인 상태 관리)
+final statisticsSelectedDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
 
 // 선택된 통계 타입 (지출/수입/저축)
 final selectedStatisticsTypeProvider = StateProvider<String>((ref) => 'expense');
@@ -25,7 +27,7 @@ final categoryExpenseStatisticsProvider =
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return [];
 
-  final date = ref.watch(selectedDateProvider);
+  final date = ref.watch(statisticsSelectedDateProvider);
   final repository = ref.watch(statisticsRepositoryProvider);
 
   return repository.getCategoryStatistics(
@@ -42,7 +44,7 @@ final categoryIncomeStatisticsProvider =
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return [];
 
-  final date = ref.watch(selectedDateProvider);
+  final date = ref.watch(statisticsSelectedDateProvider);
   final repository = ref.watch(statisticsRepositoryProvider);
 
   return repository.getCategoryStatistics(
@@ -59,7 +61,7 @@ final categorySavingStatisticsProvider =
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return [];
 
-  final date = ref.watch(selectedDateProvider);
+  final date = ref.watch(statisticsSelectedDateProvider);
   final repository = ref.watch(statisticsRepositoryProvider);
 
   return repository.getCategoryStatistics(
@@ -113,7 +115,7 @@ final monthComparisonProvider =
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return MonthComparisonData.empty();
 
-  final date = ref.watch(selectedDateProvider);
+  final date = ref.watch(statisticsSelectedDateProvider);
   final type = ref.watch(selectedStatisticsTypeProvider);
   final repository = ref.watch(statisticsRepositoryProvider);
 
@@ -131,7 +133,7 @@ final paymentMethodStatisticsProvider =
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return [];
 
-  final date = ref.watch(selectedDateProvider);
+  final date = ref.watch(statisticsSelectedDateProvider);
   final repository = ref.watch(statisticsRepositoryProvider);
 
   // 결제수단 탭에서는 항상 지출만 표시
@@ -156,7 +158,7 @@ final monthlyTrendWithAverageProvider =
     );
   }
 
-  final date = ref.watch(selectedDateProvider);
+  final date = ref.watch(statisticsSelectedDateProvider);
   final repository = ref.watch(statisticsRepositoryProvider);
 
   return repository.getMonthlyTrendWithAverage(
@@ -166,7 +168,30 @@ final monthlyTrendWithAverageProvider =
   );
 });
 
-// 연별 추이
+// 연별 추이 (평균값 포함, 선택된 날짜 기준)
+final yearlyTrendWithAverageProvider =
+    FutureProvider<TrendStatisticsData>((ref) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) {
+    return const TrendStatisticsData(
+      data: [],
+      averageIncome: 0,
+      averageExpense: 0,
+      averageSaving: 0,
+    );
+  }
+
+  final date = ref.watch(statisticsSelectedDateProvider);
+  final repository = ref.watch(statisticsRepositoryProvider);
+
+  return repository.getYearlyTrendWithAverage(
+    ledgerId: ledgerId,
+    baseDate: date,
+    years: 6,
+  );
+});
+
+// 연별 추이 (하위 호환성 유지)
 final yearlyTrendProvider =
     FutureProvider<List<YearlyStatistics>>((ref) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
