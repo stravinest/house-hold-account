@@ -427,6 +427,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
 
                             // Thin rectangular progress bar
                             SizedBox(
+                              width: double.infinity,
                               height: 10,
                               child: Container(
                                 decoration: BoxDecoration(
