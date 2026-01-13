@@ -384,63 +384,74 @@ class _AssetSummaryCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 10),
 
-                // Enhanced progress bar
+                // Enhanced progress bar with clear border
                 Container(
-                  height: 12,
+                  height: 18,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(6),
+                    color: theme.brightness == Brightness.dark
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(9),
+                    border: Border.all(
+                      color: theme.brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.8)
+                          : Colors.grey.shade600,
+                      width: 2,
+                    ),
                   ),
-                  child: Stack(
-                    children: [
-                      // Progress fill with gradient
-                      FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: clampedProgress,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                progressColor.withValues(alpha: 0.8),
-                                progressColor,
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(6),
-                            boxShadow: [
-                              BoxShadow(
-                                color: progressColor.withValues(alpha: 0.3),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Subtle shine effect
-                      if (clampedProgress > 0.1)
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(7),
+                    child: Stack(
+                      children: [
+                        // Progress fill with gradient
                         FractionallySizedBox(
                           alignment: Alignment.centerLeft,
                           widthFactor: clampedProgress,
                           child: Container(
-                            margin: const EdgeInsets.only(
-                              top: 2,
-                              left: 4,
-                              right: 4,
-                            ),
-                            height: 3,
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white.withValues(alpha: 0.0),
-                                  Colors.white.withValues(alpha: 0.3),
-                                  Colors.white.withValues(alpha: 0.0),
+                                  progressColor.withValues(alpha: 0.8),
+                                  progressColor,
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(2),
+                              borderRadius: BorderRadius.circular(7),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: progressColor.withValues(alpha: 0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                    ],
+                        // Subtle shine effect
+                        if (clampedProgress > 0.1)
+                          FractionallySizedBox(
+                            alignment: Alignment.centerLeft,
+                            widthFactor: clampedProgress,
+                            child: Container(
+                              margin: const EdgeInsets.only(
+                                top: 3,
+                                left: 4,
+                                right: 4,
+                              ),
+                              height: 4,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.0),
+                                    Colors.white.withValues(alpha: 0.3),
+                                    Colors.white.withValues(alpha: 0.0),
+                                  ],
+                                ),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),

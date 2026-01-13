@@ -91,10 +91,10 @@ class AssetGoalCard extends ConsumerWidget {
     final clampedProgress = progress.clamp(0.0, 1.0);
     final isCompleted = progress >= 1.0;
 
-    // 배경 트랙 색상 - 다크/라이트 모드에서 명확한 대비
+    // 배경 트랙 색상 - 미달성 영역을 명확하게 표시
     final trackColor = isDark
-        ? Colors.white.withValues(alpha: 0.08)
-        : Colors.black.withValues(alpha: 0.06);
+        ? Colors.white.withValues(alpha: 0.15)
+        : Colors.grey.shade300;
 
     // 내부 그림자 색상
     final innerShadowColor = isDark
@@ -151,11 +151,11 @@ class AssetGoalCard extends ConsumerWidget {
           ),
         ),
 
-        // 커스텀 진행률 바
+        // 커스텀 진행률 바 - 전체 목표 범위(0%~100%)를 명확히 표시
         Container(
-          height: 16,
+          height: 18,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(10),
             color: trackColor,
             // 내부 그림자로 입체감
             boxShadow: [
@@ -166,36 +166,37 @@ class AssetGoalCard extends ConsumerWidget {
                 spreadRadius: -2,
               ),
             ],
-            // 전체 목표 범위를 명확히 표시하는 테두리
+            // 전체 목표 범위(0%~100%)를 명확히 표시하는 강화된 테두리
             border: Border.all(
               color: isDark
-                  ? Colors.white.withValues(alpha: 0.35)
-                  : Colors.black.withValues(alpha: 0.25),
-              width: 1.5,
+                  ? Colors.white.withValues(alpha: 0.8)
+                  : Colors.grey.shade600,
+              width: 2.0,
             ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(7),
+            // 테두리 두께(2px)를 고려하여 내부 borderRadius 조정
+            borderRadius: BorderRadius.circular(8),
             child: Stack(
               children: [
-                // 배경 패턴 (목표 영역 표시)
+                // 배경 패턴 (미달성 영역 표시 - 전체 목표의 일부임을 시각화)
                 Positioned.fill(
                   child: CustomPaint(
                     painter: _ProgressTrackPainter(
                       color: isDark
-                          ? Colors.white.withValues(alpha: 0.03)
-                          : Colors.black.withValues(alpha: 0.02),
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : Colors.grey.shade400.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
 
-                // 진행률 바 (그라데이션)
+                // 진행률 바 (그라데이션) - 달성 영역
                 FractionallySizedBox(
                   alignment: Alignment.centerLeft,
                   widthFactor: clampedProgress,
                   child: Container(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(7),
+                      borderRadius: BorderRadius.circular(8),
                       gradient: LinearGradient(
                         colors: [
                           progressColor,
@@ -227,11 +228,11 @@ class AssetGoalCard extends ConsumerWidget {
                           top: 0,
                           left: 0,
                           right: 0,
-                          height: 6,
+                          height: 7,
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(7),
+                                top: Radius.circular(8),
                               ),
                               gradient: LinearGradient(
                                 colors: [
@@ -254,7 +255,7 @@ class AssetGoalCard extends ConsumerWidget {
                   Positioned.fill(
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(7),
+                        borderRadius: BorderRadius.circular(8),
                         gradient: LinearGradient(
                           colors: [
                             Colors.white.withValues(alpha: 0.0),
