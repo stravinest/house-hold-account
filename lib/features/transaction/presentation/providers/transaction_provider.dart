@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../asset/presentation/providers/asset_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/transaction_repository.dart';
 import '../../domain/entities/transaction.dart';
@@ -153,6 +154,11 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     _ref.invalidate(monthlyTotalProvider);
     _ref.invalidate(dailyTotalsProvider);
 
+    // 자산 거래인 경우 자산 통계도 갱신
+    if (type == 'asset') {
+      _ref.invalidate(assetStatisticsProvider);
+    }
+
     return transaction;
   }
 
@@ -194,6 +200,11 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     _ref.invalidate(monthlyTransactionsProvider);
     _ref.invalidate(monthlyTotalProvider);
     _ref.invalidate(dailyTotalsProvider);
+
+    // 자산 거래인 경우 자산 통계도 갱신
+    if (type == 'asset') {
+      _ref.invalidate(assetStatisticsProvider);
+    }
   }
 
   Future<void> deleteTransaction(String id) async {
@@ -204,6 +215,9 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     _ref.invalidate(monthlyTransactionsProvider);
     _ref.invalidate(monthlyTotalProvider);
     _ref.invalidate(dailyTotalsProvider);
+
+    // 자산 통계도 갱신 (자산 거래가 아닐 경우 무시됨)
+    _ref.invalidate(assetStatisticsProvider);
   }
 
   // 반복 거래 템플릿 생성 및 오늘까지 거래 자동 생성

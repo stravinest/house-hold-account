@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/asset_goal.dart';
 import '../../data/repositories/asset_repository.dart';
+import '../providers/asset_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 
 final assetGoalRepositoryProvider = Provider<AssetRepository>((ref) {
@@ -99,6 +100,17 @@ final assetGoalCurrentAmountProvider = FutureProvider.family<int, AssetGoal>((
   ref,
   goal,
 ) async {
+  // 총자산 변경 감지하여 자동 업데이트
+  ref.watch(
+    assetStatisticsProvider.select(
+      (value) => value.when(
+        data: (stats) => stats.totalAmount,
+        loading: () => null,
+        error: (_, __) => null,
+      ),
+    ),
+  );
+
   final repository = ref.watch(assetGoalRepositoryProvider);
   return repository.getCurrentAmount(
     ledgerId: goal.ledgerId,

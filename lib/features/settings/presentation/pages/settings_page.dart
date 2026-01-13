@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
-import '../../../../config/router.dart';
 import '../../../../shared/themes/theme_provider.dart';
 import '../../../../shared/widgets/color_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -35,7 +33,7 @@ class SettingsPage extends ConsumerWidget {
           SwitchListTile(
             secondary: const Icon(Icons.notifications_outlined),
             title: const Text('알림'),
-            subtitle: const Text('예산 초과, 공유 초대 등 알림 받기'),
+            subtitle: const Text('공유 변경, 초대 등 알림 받기'),
             value: notificationEnabled,
             onChanged: (value) {
               ref.read(notificationEnabledProvider.notifier).state = value;
@@ -348,11 +346,10 @@ class SettingsPage extends ConsumerWidget {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
+    if (confirmed == true) {
+      // signOut() 완료 후 라우터의 refreshListenable이 인증 상태 변경을 감지하여
+      // 자동으로 로그인 페이지로 리다이렉트함
       await ref.read(authNotifierProvider.notifier).signOut();
-      if (context.mounted) {
-        context.go(Routes.login);
-      }
     }
   }
 
@@ -599,10 +596,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('$e'),
-            duration: const Duration(seconds: 1),
-          ),
+          SnackBar(content: Text('$e'), duration: const Duration(seconds: 1)),
         );
       }
     } finally {

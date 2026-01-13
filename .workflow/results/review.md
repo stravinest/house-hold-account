@@ -401,6 +401,105 @@ ScaffoldMessenger.of(context).showSnackBar(
 
 ---
 
+---
+
+# 코드 리뷰 결과 - AssetCategoryList Redesign
+
+## 요약
+- 검토 파일: 1개 (asset_category_list.dart)
+- Critical: 0개
+- High: 1개
+- Medium: 3개
+- Low: 1개
+
+## High 이슈
+### [lib/features/asset/presentation/widgets/asset_category_list.dart:7] 불필요한 ConsumerWidget 사용
+- **문제**: ConsumerWidget으로 변경했으나 WidgetRef를 전혀 사용하지 않음
+- **위험**: 불필요한 리빌드 트리거 및 성능 저하 가능성
+- **해결**: StatelessWidget으로 변경하거나, 실제 provider 사용 시 WidgetRef 활용
+```dart
+class AssetCategoryList extends StatelessWidget {
+  // WidgetRef ref 파라미터 제거
+  @override
+  Widget build(BuildContext context) {  // WidgetRef ref 제거
+    // ... 기존 로직 유지
+  }
+}
+```
+
+## Medium 이슈
+### [lib/features/asset/presentation/widgets/asset_category_list.dart:12-20] 중복된 색상 파싱 로직
+- **문제**: CategoryRankingList와 동일한 `_parseColor` 메서드가 중복 구현됨
+- **위험**: 코드 중복으로 인한 유지보수성 저하
+- **해결**: 공유 유틸리티로 추출하거나, category 패키지에서 제공하는 헬퍼 함수 사용
+```dart
+// core/utils/color_utils.dart에 통합
+Color parseColorString(String? colorString) {
+  if (colorString == null) return Colors.grey;
+  try {
+    final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
+    return Color(colorValue);
+  } catch (e) {
+    return Colors.grey;
+  }
+}
+```
+
+### [lib/features/asset/presentation/widgets/asset_category_list.dart:125] 금액 포맷팅 일관성 부족
+- **문제**: '원' vs ' 원' 혼재 (줄 96: '원', 줄 125: ' 원')
+- **위험**: UI 일관성 저하
+- **해결**: 프로젝트 전체에서 '원'으로 통일
+```dart
+// 수정 전
+'${numberFormat.format(item.amount)} 원',
+
+// 수정 후
+'${numberFormat.format(item.amount)}원',
+```
+
+### [lib/features/asset/presentation/widgets/asset_category_list.dart:57-131] ExpansionTile 복잡성 증가
+- **문제**: 기본 접힘 상태의 ExpansionTile로 사용자 경험 복잡성 증가
+- **위험**: 사용자가 개별 자산을 보려면 추가 클릭 필요
+- **해결**: initiallyExpanded: true로 변경하거나, 디자인 요구사항 재검토
+```dart
+ExpansionTile(
+  initiallyExpanded: true,  // 또는 false 유지하되 UX 검토
+  // ... 나머지 유지
+)
+```
+
+## Low 이슈
+### [lib/features/asset/presentation/widgets/asset_category_list.dart:43] 불필요한 스프레드 연산자
+- **문제**: 정렬 시 불필요한 리스트 복사본 생성
+- **위험**: 메모리 사용량 증가 (대규모 데이터에서 영향)
+- **해결**: 직접 정렬 또는 효율적인 방법 사용
+```dart
+// 수정 전
+final sortedCategories = [...byCategory]
+  ..sort((a, b) => b.amount.compareTo(a.amount));
+
+// 수정 후
+final sortedCategories = List<CategoryAsset>.from(byCategory)
+  ..sort((a, b) => b.amount.compareTo(a.amount));
+```
+
+## 긍정적인 점
+- CategoryRankingList와의 디자인 일관성 성공적 구현
+- 순위/백분율/Progress Bar 기능 정상 추가
+- 금액 기준 정렬 로직 적절하게 구현
+- 만기일 정보 제거로 UI 간소화
+- 프로젝트 컨벤션 준수 (작은따옴표, 한글 주석)
+
+## 추가 권장사항
+- **테스트 코드 작성**: UI 변경에 대한 위젯 테스트 추가 권장
+- **접근성 고려**: ExpansionTile의 확장/접기 상태에 대한 시각적/스크린 리더 지원 검토
+- **성능 최적화**: 대량 데이터 시 ExpansionTile의 렌더링 성능 모니터링
+- **사용성 테스트**: 실제 사용자 피드백을 통한 ExpansionTile 기본 상태 결정
+
+---
+
 ## 전체 평가
 
 **Phase 2 구현은 기능적으로 잘 작동하며 사용성이 크게 향상되었습니다.** 다만 nullable 필드 처리 버그와 에러 처리 일관성 문제를 해결해야 프로덕션 준비가 완료됩니다. Critical 이슈 2건만 수정하면 안전하게 배포 가능합니다.
+
+**AssetCategoryList redesign은 CategoryRankingList와의 디자인 통합에 성공했으나, ConsumerWidget 불필요 사용과 UI 복잡성 증가 문제가 있습니다.** High 이슈 1건 수정과 Medium 이슈 검토를 통해 코드 품질을 개선할 수 있습니다.

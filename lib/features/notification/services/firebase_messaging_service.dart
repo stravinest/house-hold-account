@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../data/repositories/fcm_token_repository.dart';
 import '../../../config/firebase_config.dart';
+import 'local_notification_service.dart';
 
 /// FCM 토큰 관리 서비스
 /// Firebase Cloud Messaging을 통해 푸시 알림 토큰을 관리합니다.
@@ -18,7 +20,7 @@ class FirebaseMessagingService {
   final FcmTokenRepository _tokenRepository = FcmTokenRepository();
 
   // Firebase Messaging 인스턴스 (Firebase가 설정되지 않으면 null)
-  dynamic _messaging;
+  FirebaseMessaging? _messaging;
 
   // 토큰 갱신 리스너 구독
   StreamSubscription? _tokenRefreshSubscription;
@@ -79,11 +81,8 @@ class FirebaseMessagingService {
   /// Firebase Messaging 인스턴스 가져오기
   ///
   /// firebase_messaging 패키지가 설치되지 않은 경우 에러 발생
-  dynamic _getMessagingInstance() {
-    // 실제 구현 시 firebase_messaging 패키지를 import하고
-    // return FirebaseMessaging.instance;
-    // 현재는 패키지가 없으므로 null 반환
-    throw UnsupportedError('firebase_messaging 패키지가 설치되지 않았습니다.');
+  FirebaseMessaging _getMessagingInstance() {
+    return FirebaseMessaging.instance;
   }
 
   /// 알림 권한 요청 (iOS)
@@ -91,18 +90,19 @@ class FirebaseMessagingService {
     try {
       if (_messaging == null) return;
 
-      // 실제 구현:
-      // final settings = await _messaging.requestPermission(
-      //   alert: true,
-      //   badge: true,
-      //   sound: true,
-      // );
-      //
-      // if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      //   print('알림 권한이 허용되었습니다.');
-      // } else {
-      //   print('알림 권한이 거부되었습니다.');
-      // }
+      final settings = await _messaging!.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      if (kDebugMode) {
+        if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+          print('알림 권한이 허용되었습니다.');
+        } else {
+          print('알림 권한이 거부되었습니다.');
+        }
+      }
     } catch (e) {
       if (kDebugMode) {
         print('알림 권한 요청 중 에러 발생: $e');
@@ -118,11 +118,11 @@ class FirebaseMessagingService {
     try {
       if (_messaging == null) return null;
 
-      // 실제 구현:
-      // final token = await _messaging.getToken();
-      // return token;
-
-      return null;
+      final token = await _messaging!.getToken();
+      if (kDebugMode && token != null) {
+        print('FCM 토큰 획득 성공: ${token.substring(0, 20)}...');
+      }
+      return token;
     } catch (e) {
       if (kDebugMode) {
         print('FCM 토큰 획득 중 에러 발생: $e');
@@ -173,8 +173,7 @@ class FirebaseMessagingService {
 
       // FCM 토큰 삭제 (Firebase에서)
       if (_messaging != null) {
-        // 실제 구현:
-        // await _messaging.deleteToken();
+        await _messaging!.deleteToken();
       }
 
       // 구독 취소
@@ -195,16 +194,20 @@ class FirebaseMessagingService {
   void _setupTokenRefreshListener(String userId) {
     if (_messaging == null) return;
 
-    // 실제 구현:
-    // _tokenRefreshSubscription = _messaging.onTokenRefresh.listen((newToken) async {
-    //   try {
-    //     await _saveToken(userId, newToken);
-    //   } catch (e) {
-    //     if (kDebugMode) {
-    //       print('토큰 갱신 저장 중 에러 발생: $e');
-    //     }
-    //   }
-    // });
+    _tokenRefreshSubscription = _messaging!.onTokenRefresh.listen((
+      newToken,
+    ) async {
+      try {
+        if (kDebugMode) {
+          print('FCM 토큰이 갱신되었습니다.');
+        }
+        await _saveToken(userId, newToken);
+      } catch (e) {
+        if (kDebugMode) {
+          print('토큰 갱신 저장 중 에러 발생: $e');
+        }
+      }
+    });
   }
 
   /// 포그라운드/백그라운드 메시지 핸들러 설정
@@ -212,25 +215,23 @@ class FirebaseMessagingService {
     if (_messaging == null) return;
 
     // 포그라운드 메시지 핸들러
-    // 실제 구현:
-    // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-    //   if (kDebugMode) {
-    //     print('포그라운드 메시지 수신: ${message.notification?.title}');
-    //   }
-    //
-    //   // 로컬 알림으로 표시 (LocalNotificationService 사용)
-    //   if (message.notification != null) {
-    //     LocalNotificationService().showNotification(
-    //       title: message.notification!.title ?? '',
-    //       body: message.notification!.body ?? '',
-    //       data: message.data,
-    //     );
-    //   }
-    // });
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      if (kDebugMode) {
+        print('포그라운드 메시지 수신: ${message.notification?.title}');
+      }
+
+      // 로컬 알림으로 표시 (LocalNotificationService 사용)
+      if (message.notification != null) {
+        LocalNotificationService().showNotification(
+          title: message.notification!.title ?? '',
+          body: message.notification!.body ?? '',
+          data: message.data,
+        );
+      }
+    });
 
     // 백그라운드 메시지 핸들러
-    // 실제 구현:
-    // FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   }
 
   /// 서비스 정리 (앱 종료 시 호출)
@@ -242,12 +243,12 @@ class FirebaseMessagingService {
 /// 백그라운드 메시지 핸들러
 ///
 /// 최상위 함수로 정의되어야 합니다 (Firebase 요구사항)
-// @pragma('vm:entry-point')
-// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-//   // Firebase 초기화가 필요한 경우
-//   // await Firebase.initializeApp();
-//
-//   if (kDebugMode) {
-//     print('백그라운드 메시지 수신: ${message.notification?.title}');
-//   }
-// }
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // Firebase 초기화가 필요한 경우 (이미 main.dart에서 초기화됨)
+  // await Firebase.initializeApp();
+
+  if (kDebugMode) {
+    print('백그라운드 메시지 수신: ${message.notification?.title}');
+  }
+}

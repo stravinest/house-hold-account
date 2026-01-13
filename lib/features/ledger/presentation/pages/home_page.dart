@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -76,8 +79,21 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (mounted) {
         await _refreshCalendarData();
       }
+    } on AuthException catch (e) {
+      debugPrint('가계부 초기화 오류 (인증): $e');
+      if (mounted) {
+        _handleAuthError(e);
+      }
+    } on SocketException catch (e) {
+      debugPrint('가계부 초기화 오류 (네트워크): $e');
+      if (mounted) {
+        _showNetworkError();
+      }
     } catch (e) {
       debugPrint('가계부 초기화 오류: $e');
+      if (mounted && _isNetworkError(e)) {
+        _showNetworkError();
+      }
     }
   }
 
@@ -93,11 +109,67 @@ class _HomePageState extends ConsumerState<HomePage> {
       await ref.read(monthlyTransactionsProvider.future);
       await ref.read(monthlyTotalProvider.future);
       await ref.read(dailyTotalsProvider.future);
+    } on AuthException catch (e) {
+      debugPrint('캘린더 새로고침 오류 (인증): $e');
+      if (mounted) {
+        _handleAuthError(e);
+      }
+      rethrow;
+    } on SocketException catch (e) {
+      debugPrint('캘린더 새로고침 오류 (네트워크): $e');
+      if (mounted) {
+        _showNetworkError();
+      }
+      rethrow;
     } catch (e) {
-      // 에러를 상위로 전파하여 RefreshIndicator가 에러 상태를 표시할 수 있도록 함
       debugPrint('캘린더 새로고침 오류: $e');
+      if (mounted && _isNetworkError(e)) {
+        _showNetworkError();
+      }
       rethrow;
     }
+  }
+
+  bool _isNetworkError(dynamic error) {
+    final errorString = error.toString().toLowerCase();
+    return errorString.contains('socketexception') ||
+        errorString.contains('failed host lookup') ||
+        errorString.contains('network') ||
+        errorString.contains('authretryablefetchexception');
+  }
+
+  void _handleAuthError(AuthException error) {
+    final errorMessage = error.message.toLowerCase();
+
+    // 토큰 만료 또는 갱신 실패인 경우
+    if (errorMessage.contains('expired') ||
+        errorMessage.contains('refresh') ||
+        errorMessage.contains('invalid') ||
+        error.statusCode == '401') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('로그인이 만료되었습니다. 다시 로그인해주세요.'),
+          duration: Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      // 자동 로그아웃 및 로그인 페이지로 이동
+      Future.delayed(const Duration(seconds: 1), () async {
+        await ref.read(authNotifierProvider.notifier).signOut();
+      });
+    }
+  }
+
+  void _showNetworkError() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('네트워크 연결을 확인해주세요.'),
+        duration: Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.orange,
+      ),
+    );
   }
 
   void _handleDateSelected(DateTime date) {

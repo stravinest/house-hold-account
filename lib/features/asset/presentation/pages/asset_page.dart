@@ -47,7 +47,7 @@ class AssetPage extends ConsumerWidget {
               const SizedBox(height: 16),
               _SectionCard(
                 title: '자산 목록',
-                child: AssetCategoryList(byCategory: statistics.byCategory),
+                child: AssetCategoryList(assetStatistics: statistics),
               ),
               const SizedBox(height: 80),
             ],

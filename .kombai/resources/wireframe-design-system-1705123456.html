@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>개선된 디자인 시스템 - 공유 가계부</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border: 2px solid #333;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 2px dashed #999;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            background: #e0e0e0;
+            padding: 8px;
+            border: 1px solid #999;
+        }
+        
+        .tag {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #4CAF50;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .tag-new {
+            background: #FF9800;
+        }
+        
+        .grid {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .grid-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .grid-3 {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .card {
+            border: 2px solid #333;
+            padding: 15px;
+            background: white;
+            position: relative;
+        }
+        
+        .color-palette {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .color-item {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        
+        .spacing-demo {
+            border: 1px dashed #999;
+            padding: 10px;
+            margin: 5px 0;
+        }
+        
+        .typography-sample {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 3px solid #333;
+        }
+        
+        .component-box {
+            border: 2px solid #666;
+            padding: 10px;
+            margin: 10px 0;
+            position: relative;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        
+        table th, table td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        table th {
+            background: #e0e0e0;
+        }
+        
+        .button-demo {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 5px;
+            border: 2px solid #333;
+            background: #e0e0e0;
+            cursor: pointer;
+        }
+        
+        .icon-placeholder {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #333;
+            background: #ddd;
+            vertical-align: middle;
+        }
+        
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>개선된 디자인 시스템 제안</h1>
+        <p class="subtitle">일관성, 접근성, 유지보수성 향상을 위한 통합 디자인 시스템</p>
+        
+        <!-- 디자인 토큰 섹션 -->
+        <div class="section">
+            <h2 class="section-title">1. 통합 디자인 토큰</h2>
+            
+            <div style="position: relative; margin-bottom: 20px;">
+                <span class="tag tag-new" title="lib/shared/themes/design_tokens.dart">[NEW] DesignTokens</span>
+                <h3 style="margin-bottom: 10px;">색상 시스템</h3>
+                
+                <div class="color-palette">
+                    <div class="color-item" style="background: #2E7D32;">
+                        <span style="color: white; font-weight: bold;">Primary</span>
+                        <span style="color: white; font-size: 9px;">#2E7D32</span>
+                    </div>
+                    <div class="color-item" style="background: #A8D8EA;">
+                        <span>User 1</span>
+                        <span style="font-size: 9px;">#A8D8EA</span>
+                    </div>
+                    <div class="color-item" style="background: #FFB6A3;">
+                        <span>User 2</span>
+                        <span style="font-size: 9px;">#FFB6A3</span>
+                    </div>
+                    <div class="color-item" style="background: #B8E6C9;">
+                        <span>Success</span>
+                        <span style="font-size: 9px;">#B8E6C9</span>
+                    </div>
+                    <div class="color-item" style="background: #FF5252; color: white;">
+                        <span style="font-weight: bold;">Error</span>
+                        <span style="font-size: 9px;">#FF5252</span>
+                    </div>
+                    <div class="color-item" style="background: #FFC107;">
+                        <span>Warning</span>
+                        <span style="font-size: 9px;">#FFC107</span>
+                    </div>
+                </div>
+                
+                <p style="margin-top: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107;">
+                    <strong>개선사항:</strong> 하드코딩된 Colors.grey, Colors.red 제거 → ColorScheme 사용
+                </p>
+            </div>
+            
+            <div style="position: relative; margin-bottom: 20px;">
+                <span class="tag tag-new" title="lib/shared/themes/design_tokens.dart">[NEW] Spacing</span>
+                <h3 style="margin-bottom: 10px;">간격 시스템</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>토큰명</th>
+                            <th>값 (dp)</th>
+                            <th>사용처</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>xs</td>
+                            <td>4</td>
+                            <td>아이콘 여백, 최소 간격</td>
+                        </tr>
+                        <tr>
+                            <td>sm</td>
+                            <td>8</td>
+                            <td>카드 내부 요소 간격</td>
+                        </tr>
+                        <tr>
+                            <td>md</td>
+                            <td>16</td>
+                            <td>기본 패딩, 섹션 간격</td>
+                        </tr>
+                        <tr>
+                            <td>lg</td>
+                            <td>24</td>
+                            <td>섹션 제목 여백</td>
+                        </tr>
+                        <tr>
+                            <td>xl</td>
+                            <td>32</td>
+                            <td>페이지 상단/하단 여백</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="position: relative;">
+                <span class="tag tag-new" title="lib/shared/themes/design_tokens.dart">[NEW] BorderRadius</span>
+                <h3 style="margin-bottom: 10px;">Border Radius 통일</h3>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>컴포넌트</th>
+                            <th>현재 (혼재)</th>
+                            <th>개선안 (통일)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Card</td>
+                            <td>8, 12, 20 혼용</td>
+                            <td><strong>12</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Button</td>
+                            <td>8, 12, 16 혼용</td>
+                            <td><strong>12</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Input</td>
+                            <td>12</td>
+                            <td><strong>12</strong> (유지)</td>
+                        </tr>
+                        <tr>
+                            <td>BottomSheet</td>
+                            <td>20</td>
+                            <td><strong>20</strong> (유지)</td>
+                        </tr>
+                        <tr>
+                            <td>FAB</td>
+                            <td>16</td>
+                            <td><strong>16</strong> (유지)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- 타이포그래피 섹션 -->
+        <div class="section">
+            <h2 class="section-title">2. 타이포그래피 시스템</h2>
+            
+            <div style="position: relative;">
+                <span class="tag" title="Theme.of(context).textTheme">[REUSE] TextTheme</span>
+                
+                <div class="typography-sample">
+                    <strong>headlineLarge (32sp)</strong> - 페이지 제목, 통계 숫자
+                </div>
+                <div class="typography-sample">
+                    <strong>headlineMedium (28sp)</strong> - 섹션 제목
+                </div>
+                <div class="typography-sample">
+                    <strong>titleLarge (22sp)</strong> - 카드 제목, AppBar 제목
+                </div>
+                <div class="typography-sample">
+                    <strong>bodyLarge (16sp)</strong> - 본문, 리스트 아이템
+                </div>
+                <div class="typography-sample">
+                    <strong>bodyMedium (14sp)</strong> - 보조 텍스트
+                </div>
+                <div class="typography-sample" style="color: #666;">
+                    <strong>bodySmall (12sp)</strong> - 캡션, 힌트, 날짜 표시
+                </div>
+                
+                <p style="margin-top: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffc107;">
+                    <strong>개선사항:</strong> 하드코딩된 fontSize 제거 → textTheme 일관 사용
+                </p>
+            </div>
+        </div>
+        
+        <!-- 컴포넌트 라이브러리 섹션 -->
+        <div class="section">
+            <h2 class="section-title">3. 재사용 가능한 컴포넌트</h2>
+            
+            <div class="grid grid-2">
+                <div style="position: relative;">
+                    <span class="tag tag-new" title="lib/shared/widgets/app_card.dart">[NEW] AppCard</span>
+                    <div class="card">
+                        <h4>통합 Card 컴포넌트</h4>
+                        <p style="font-size: 12px; margin-top: 8px;">
+                            elevation: 0<br>
+                            borderRadius: 12<br>
+                            border: ColorScheme.outlineVariant
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="position: relative;">
+                    <span class="tag tag-new" title="lib/shared/widgets/section_header.dart">[NEW] SectionHeader</span>
+                    <div class="component-box">
+                        <div class="icon-placeholder"></div>
+                        <strong style="margin-left: 8px;">섹션 제목</strong>
+                    </div>
+                </div>
+                
+                <div style="position: relative;">
+                    <span class="tag tag-new" title="lib/shared/widgets/empty_state.dart">[NEW] EmptyState</span>
+                    <div class="component-box" style="text-align: center; padding: 30px;">
+                        <div class="icon-placeholder" style="width: 64px; height: 64px; margin: 0 auto;"></div>
+                        <p style="margin-top: 10px; font-size: 14px;">데이터가 없습니다</p>
+                        <p style="font-size: 12px; color: #666;">새 항목을 추가하세요</p>
+                    </div>
+                </div>
+                
+                <div style="position: relative;">
+                    <span class="tag tag-new" title="lib/shared/widgets/loading_indicator.dart">[NEW] LoadingIndicator</span>
+                    <div class="component-box" style="text-align: center; padding: 30px;">
+                        <div style="width: 40px; height: 40px; border: 3px solid #333; border-radius: 50%; border-top-color: transparent; margin: 0 auto;"></div>
+                        <p style="margin-top: 10px; font-size: 12px;">로딩 중...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 접근성 개선 섹션 -->
+        <div class="section">
+            <h2 class="section-title">4. 접근성 개선</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>항목</th>
+                        <th>현재 문제</th>
+                        <th>개선안</th>
+                        <th>기준</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>터치 타겟</td>
+                        <td>일부 아이콘 버튼 작음</td>
+                        <td>최소 44x44dp 보장</td>
+                        <td>Material Design</td>
+                    </tr>
+                    <tr>
+                        <td>색상 대비</td>
+                        <td>일부 회색 텍스트 대비 낮음</td>
+                        <td>최소 4.5:1 보장</td>
+                        <td>WCAG AA</td>
+                    </tr>
+                    <tr>
+                        <td>포커스 표시</td>
+                        <td>키보드 포커스 불명확</td>
+                        <td>명확한 outline 추가</td>
+                        <td>WCAG 2.4.7</td>
+                    </tr>
+                    <tr>
+                        <td>시맨틱 라벨</td>
+                        <td>일부 아이콘만 있는 버튼</td>
+                        <td>semanticLabel 추가</td>
+                        <td>스크린리더 지원</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 다크 모드 개선 섹션 -->
+        <div class="section">
+            <h2 class="section-title">5. 다크 모드 일관성</h2>
+            
+            <div class="grid grid-2">
+                <div>
+                    <h4 style="color: #d32f2f;">❌ 현재 문제</h4>
+                    <div class="card" style="background: #1e1e1e; color: white; margin-top: 10px;">
+                        <p style="color: #9e9e9e;">하드코딩: Colors.grey[400]</p>
+                        <p style="color: #9e9e9e;">하드코딩: Colors.grey[600]</p>
+                        <p style="color: #f44336;">하드코딩: Colors.red</p>
+                        <p style="font-size: 11px; margin-top: 8px; color: #ffc107;">
+                            → 다크 모드에서 대비 문제 발생
+                        </p>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 style="color: #4caf50;">✓ 개선안</h4>
+                    <div class="card" style="background: #1e1e1e; color: white; margin-top: 10px;">
+                        <p style="color: #b0b0b0;">ColorScheme.onSurfaceVariant</p>
+                        <p style="color: #909090;">ColorScheme.onSurface.withOpacity(0.6)</p>
+                        <p style="color: #ef5350;">ColorScheme.error</p>
+                        <p style="font-size: 11px; margin-top: 8px; color: #4caf50;">
+                            → 테마에 따라 자동 조정
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 레이아웃 패턴 섹션 -->
+        <div class="section">
+            <h2 class="section-title">6. 일관된 레이아웃 패턴</h2>
+            
+            <div style="position: relative;">
+                <span class="tag" title="lib/features/*/presentation/pages/*_page.dart">[REUSE] Page Structure</span>
+                
+                <div style="border: 2px solid #333; padding: 15px; margin-top: 10px;">
+                    <div style="background: #e0e0e0; padding: 10px; margin-bottom: 10px;">
+                        [AppBar - 높이: 56dp]
+                    </div>
+                    <div style="padding: 16px; border: 1px dashed #999;">
+                        [Body - padding: 16dp]
+                        <div style="margin: 16px 0; padding: 12px; border: 1px solid #333;">
+                            [Section 1 - margin-bottom: 16dp]
+                        </div>
+                        <div style="margin: 16px 0; padding: 12px; border: 1px solid #333;">
+                            [Section 2 - margin-bottom: 16dp]
+                        </div>
+                        <div style="margin: 16px 0; padding: 12px; border: 1px solid #333;">
+                            [Section 3 - margin-bottom: 16dp]
+                        </div>
+                    </div>
+                    <div style="background: #e0e0e0; padding: 10px; margin-top: 10px; text-align: right;">
+                        [FAB - margin: 16dp]
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 구현 우선순위 -->
+        <div class="section" style="background: #f0f7ff; border-color: #2196f3;">
+            <h2 class="section-title" style="background: #bbdefb;">7. 구현 우선순위</h2>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>우선순위</th>
+                        <th>작업</th>
+                        <th>영향도</th>
+                        <th>예상 시간</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>P0 (Critical)</strong></td>
+                        <td>디자인 토큰 파일 생성 (design_tokens.dart)</td>
+                        <td>전체 앱</td>
+                        <td>2시간</td>
+                    </tr>
+                    <tr>
+                        <td><strong>P0</strong></td>
+                        <td>하드코딩 색상 → ColorScheme 전환</td>
+                        <td>다크 모드 일관성</td>
+                        <td>4시간</td>
+                    </tr>
+                    <tr>
+                        <td><strong>P1 (High)</strong></td>
+                        <td>공통 위젯 생성 (AppCard, SectionHeader, EmptyState)</td>
+                        <td>코드 중복 제거</td>
+                        <td>3시간</td>
+                    </tr>
+                    <tr>
+                        <td><strong>P1</strong></td>
+                        <td>borderRadius 통일 (8→12)</td>
+                        <td>시각적 일관성</td>
+                        <td>1시간</td>
+                    </tr>
+                    <tr>
+                        <td><strong>P2 (Medium)</strong></td>
+                        <td>타이포그래피 통일 (textTheme 사용)</td>
+                        <td>가독성</td>
+                        <td>2시간</td>
+                    </tr>
+                    <tr>
+                        <td><strong>P2</strong></td>
+                        <td>접근성 개선 (터치 타겟, semanticLabel)</td>
+                        <td>사용성</td>
+                        <td>3시간</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+</body>
+</html>

@@ -15,9 +15,7 @@ class NotificationSettingsPage extends ConsumerWidget {
     final settingsAsync = ref.watch(notificationSettingsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('알림 설정'),
-      ),
+      appBar: AppBar(title: const Text('알림 설정')),
       body: settingsAsync.when(
         data: (settings) => _buildSettingsList(context, ref, settings),
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -34,41 +32,16 @@ class NotificationSettingsPage extends ConsumerWidget {
   ) {
     return ListView(
       children: [
-        // 설명 헤더
         Padding(
           padding: const EdgeInsets.all(16),
           child: Text(
             '받고 싶은 알림을 선택하세요',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
 
-        // 예산 관련 알림
-        _SectionHeader(title: '예산'),
-        _buildNotificationToggle(
-          context,
-          ref,
-          type: NotificationType.budgetWarning,
-          title: '예산 경고',
-          subtitle: '예산의 80%를 초과했을 때 알림',
-          icon: Icons.warning_amber_outlined,
-          enabled: settings[NotificationType.budgetWarning] ?? true,
-        ),
-        _buildNotificationToggle(
-          context,
-          ref,
-          type: NotificationType.budgetExceeded,
-          title: '예산 초과',
-          subtitle: '예산을 초과했을 때 알림',
-          icon: Icons.error_outline,
-          enabled: settings[NotificationType.budgetExceeded] ?? true,
-        ),
-
-        const Divider(),
-
-        // 공유 가계부 관련 알림
         _SectionHeader(title: '공유 가계부'),
         _buildNotificationToggle(
           context,
@@ -82,7 +55,6 @@ class NotificationSettingsPage extends ConsumerWidget {
 
         const Divider(),
 
-        // 초대 관련 알림
         _SectionHeader(title: '초대'),
         _buildNotificationToggle(
           context,
@@ -166,8 +138,8 @@ class NotificationSettingsPage extends ConsumerWidget {
             Text(
               error.toString(),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -190,9 +162,9 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
+          color: Theme.of(context).colorScheme.primary,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

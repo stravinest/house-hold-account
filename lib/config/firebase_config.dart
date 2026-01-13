@@ -9,12 +9,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 class FirebaseConfig {
   /// Android용 Firebase 옵션
   static Map<String, String>? get androidOptions {
-    final apiKey = dotenv.env['FIREBASE_ANDROID_API_KEY'];
-    final appId = dotenv.env['FIREBASE_ANDROID_APP_ID'];
+    final apiKey =
+        dotenv.env['FIREBASE_ANDROID_API_KEY'] ??
+        dotenv.env['FIREBASE_API_KEY'];
+    final appId =
+        dotenv.env['FIREBASE_ANDROID_APP_ID'] ?? dotenv.env['FIREBASE_APP_ID'];
     final messagingSenderId = dotenv.env['FIREBASE_MESSAGING_SENDER_ID'];
     final projectId = dotenv.env['FIREBASE_PROJECT_ID'];
 
-    // 필수 값이 하나라도 없으면 null 반환
     if (apiKey == null ||
         appId == null ||
         messagingSenderId == null ||
@@ -33,18 +35,18 @@ class FirebaseConfig {
 
   /// iOS용 Firebase 옵션
   static Map<String, String>? get iosOptions {
-    final apiKey = dotenv.env['FIREBASE_IOS_API_KEY'];
-    final appId = dotenv.env['FIREBASE_IOS_APP_ID'];
+    final apiKey =
+        dotenv.env['FIREBASE_IOS_API_KEY'] ?? dotenv.env['FIREBASE_API_KEY'];
+    final appId =
+        dotenv.env['FIREBASE_IOS_APP_ID'] ?? dotenv.env['FIREBASE_APP_ID'];
     final messagingSenderId = dotenv.env['FIREBASE_MESSAGING_SENDER_ID'];
     final projectId = dotenv.env['FIREBASE_PROJECT_ID'];
     final iosBundleId = dotenv.env['FIREBASE_IOS_BUNDLE_ID'];
 
-    // 필수 값이 하나라도 없으면 null 반환
     if (apiKey == null ||
         appId == null ||
         messagingSenderId == null ||
-        projectId == null ||
-        iosBundleId == null) {
+        projectId == null) {
       return null;
     }
 
@@ -53,19 +55,20 @@ class FirebaseConfig {
       'appId': appId,
       'messagingSenderId': messagingSenderId,
       'projectId': projectId,
-      'iosBundleId': iosBundleId,
+      'iosBundleId': iosBundleId ?? '',
       'storageBucket': dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     };
   }
 
   /// Web용 Firebase 옵션
   static Map<String, String>? get webOptions {
-    final apiKey = dotenv.env['FIREBASE_WEB_API_KEY'];
-    final appId = dotenv.env['FIREBASE_WEB_APP_ID'];
+    final apiKey =
+        dotenv.env['FIREBASE_WEB_API_KEY'] ?? dotenv.env['FIREBASE_API_KEY'];
+    final appId =
+        dotenv.env['FIREBASE_WEB_APP_ID'] ?? dotenv.env['FIREBASE_APP_ID'];
     final messagingSenderId = dotenv.env['FIREBASE_MESSAGING_SENDER_ID'];
     final projectId = dotenv.env['FIREBASE_PROJECT_ID'];
 
-    // 필수 값이 하나라도 없으면 null 반환
     if (apiKey == null ||
         appId == null ||
         messagingSenderId == null ||

@@ -4,21 +4,17 @@ import 'package:intl/intl.dart';
 import '../../domain/entities/asset_statistics.dart';
 
 class AssetCategoryList extends StatelessWidget {
-  final List<CategoryAsset> byCategory;
+  final AssetStatistics assetStatistics;
 
-  const AssetCategoryList({super.key, required this.byCategory});
+  const AssetCategoryList({super.key, required this.assetStatistics});
 
-  String? _getDateInfo(AssetItem item) {
-    if (item.maturityDate == null) {
-      return null;
-    }
-    final daysLeft = item.maturityDate!.difference(DateTime.now()).inDays;
-    if (daysLeft < 0) {
-      return '만기 ${daysLeft.abs()}일 지남';
-    } else if (daysLeft == 0) {
-      return '오늘 만기';
-    } else {
-      return '만기 ${daysLeft}일 남음';
+  Color _parseColor(String? colorString) {
+    if (colorString == null) return Colors.grey;
+    try {
+      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
+      return Color(colorValue);
+    } catch (e) {
+      return Colors.grey;
     }
   }
 
@@ -27,6 +23,7 @@ class AssetCategoryList extends StatelessWidget {
     final theme = Theme.of(context);
     final numberFormat = NumberFormat('#,###');
 
+    final byCategory = assetStatistics.byCategory;
     if (byCategory.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(32),
@@ -41,58 +38,94 @@ class AssetCategoryList extends StatelessWidget {
       );
     }
 
+    // 금액 기준 내림차순 정렬
+    final sortedCategories = List<CategoryAsset>.from(byCategory)
+      ..sort((a, b) => b.amount.compareTo(a.amount));
+
+    final totalAmount = assetStatistics.totalAmount.toDouble();
+
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: byCategory.map((category) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      category.categoryName,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+      children: sortedCategories.asMap().entries.map((entry) {
+        final rank = entry.key + 1;
+        final category = entry.value;
+        final percentage = totalAmount > 0
+            ? (category.amount / totalAmount) * 100
+            : 0.0;
+        final categoryColor = _parseColor(category.categoryColor);
+
+        return ExpansionTile(
+          initiallyExpanded: false,
+          title: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    // 순위
+                    SizedBox(
+                      width: 24,
+                      child: Text(
+                        '$rank',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: rank <= 3
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    '${numberFormat.format(category.amount)} 원',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.primary,
+                    const SizedBox(width: 12),
+                    // 카테고리명
+                    Expanded(
+                      child: Text(
+                        category.categoryName,
+                        style: theme.textTheme.bodyLarge,
+                      ),
                     ),
+                    // 백분율
+                    Text(
+                      '${percentage.toStringAsFixed(1)}%',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    // 금액
+                    Text(
+                      '${numberFormat.format(category.amount)}원',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Progress Bar
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: percentage / 100,
+                    backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(categoryColor),
+                    minHeight: 6,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            ...category.items.map((item) {
-              final dateInfo = _getDateInfo(item);
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 32,
-                  vertical: 4,
-                ),
-                title: Text(item.title),
-                subtitle: dateInfo != null
-                    ? Text(
-                        dateInfo,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      )
-                    : null,
-                trailing: Text(
-                  '${numberFormat.format(item.amount)} 원',
-                  style: theme.textTheme.bodyMedium,
-                ),
-              );
-            }),
-            const Divider(height: 1),
-          ],
+          ),
+          children: category.items.map((item) {
+            return ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 4,
+              ),
+              title: Text(item.title),
+              trailing: Text(
+                '${numberFormat.format(item.amount)}원',
+                style: theme.textTheme.bodyMedium,
+              ),
+            );
+          }).toList(),
         );
       }).toList(),
     );

@@ -58,16 +58,21 @@ final authChangeNotifierProvider = Provider<AuthChangeNotifier>(
 
 // 라우터 프로바이더
 final routerProvider = Provider<GoRouter>((ref) {
+  final authChangeNotifier = ref.watch(authChangeNotifierProvider);
+
   return GoRouter(
     initialLocation: Routes.splash,
     debugLogDiagnostics: true,
+    refreshListenable: authChangeNotifier,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
       final isLoggedIn = authState.valueOrNull != null;
-      final isAuthRoute = state.matchedLocation == Routes.login ||
+      final isAuthRoute =
+          state.matchedLocation == Routes.login ||
           state.matchedLocation == Routes.signup;
       final isSplash = state.matchedLocation == Routes.splash;
-      final isDeepLinkRoute = state.matchedLocation == Routes.addExpense ||
+      final isDeepLinkRoute =
+          state.matchedLocation == Routes.addExpense ||
           state.matchedLocation == Routes.addIncome;
 
       // 스플래시 화면에서는 리다이렉트하지 않음
@@ -110,9 +115,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 메인
       GoRoute(
         path: Routes.home,
-        builder: (context, state) => HomePage(
-          key: ValueKey(state.matchedLocation),
-        ),
+        builder: (context, state) =>
+            HomePage(key: ValueKey(state.matchedLocation)),
       ),
 
       // 통계
@@ -188,9 +192,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Text('페이지를 찾을 수 없습니다: ${state.matchedLocation}'),
-      ),
+      body: Center(child: Text('페이지를 찾을 수 없습니다: ${state.matchedLocation}')),
     ),
   );
 });
@@ -237,9 +239,9 @@ class _SplashPageState extends ConsumerState<SplashPage> {
             const SizedBox(height: 24),
             Text(
               '공유 가계부',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 48),
             const CircularProgressIndicator(),

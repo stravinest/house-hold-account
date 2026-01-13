@@ -1,21 +1,12 @@
 import '../../../../config/supabase_config.dart';
 import '../../domain/entities/notification_type.dart';
 
-/// 알림 설정 Repository
-/// Supabase notification_settings 테이블과 상호작용하여 사용자의 알림 설정을 관리합니다.
-///
-/// 주의: notification_settings 테이블은 각 알림 타입별로 별도의 boolean 컬럼을 가지고 있습니다.
-/// (budget_warning_enabled, budget_exceeded_enabled 등)
 class NotificationSettingsRepository {
   final _client = SupabaseConfig.client;
 
   /// NotificationType을 컬럼명으로 변환
   String _getColumnName(NotificationType type) {
     switch (type) {
-      case NotificationType.budgetWarning:
-        return 'budget_warning_enabled';
-      case NotificationType.budgetExceeded:
-        return 'budget_exceeded_enabled';
       case NotificationType.sharedLedgerChange:
         return 'shared_ledger_change_enabled';
       case NotificationType.inviteReceived:
@@ -41,17 +32,10 @@ class NotificationSettingsRepository {
 
       if (response == null) {
         // 설정이 없으면 모든 알림이 활성화된 기본값 반환
-        return {
-          for (var type in NotificationType.values) type: true,
-        };
+        return {for (var type in NotificationType.values) type: true};
       }
 
-      // DB 응답을 Map으로 변환
       return {
-        NotificationType.budgetWarning:
-            response['budget_warning_enabled'] as bool? ?? true,
-        NotificationType.budgetExceeded:
-            response['budget_exceeded_enabled'] as bool? ?? true,
         NotificationType.sharedLedgerChange:
             response['shared_ledger_change_enabled'] as bool? ?? true,
         NotificationType.inviteReceived:
@@ -79,14 +63,11 @@ class NotificationSettingsRepository {
       final columnName = _getColumnName(type);
 
       // UPSERT: 설정이 없으면 생성, 있으면 업데이트
-      await _client.from('notification_settings').upsert(
-        {
-          'user_id': userId,
-          columnName: enabled,
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        onConflict: 'user_id',
-      );
+      await _client.from('notification_settings').upsert({
+        'user_id': userId,
+        columnName: enabled,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id');
     } catch (e) {
       // 에러를 호출자에게 전파
       rethrow;
@@ -101,19 +82,13 @@ class NotificationSettingsRepository {
   /// [userId] 사용자 ID
   Future<void> initializeDefaultSettings(String userId) async {
     try {
-      await _client.from('notification_settings').upsert(
-        {
-          'user_id': userId,
-          'budget_warning_enabled': true,
-          'budget_exceeded_enabled': true,
-          'shared_ledger_change_enabled': true,
-          'invite_received_enabled': true,
-          'invite_accepted_enabled': true,
-        },
-        onConflict: 'user_id',
-      );
+      await _client.from('notification_settings').upsert({
+        'user_id': userId,
+        'shared_ledger_change_enabled': true,
+        'invite_received_enabled': true,
+        'invite_accepted_enabled': true,
+      }, onConflict: 'user_id');
     } catch (e) {
-      // 에러를 호출자에게 전파
       rethrow;
     }
   }

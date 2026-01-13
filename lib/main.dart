@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'config/firebase_config.dart';
 import 'config/router.dart';
 import 'config/supabase_config.dart';
+import 'features/notification/services/local_notification_service.dart';
 import 'features/widget/data/services/widget_data_service.dart';
 import 'shared/themes/app_theme.dart';
 import 'shared/themes/theme_provider.dart';
@@ -28,12 +30,15 @@ void main() async {
     debugPrint('Supabase 초기화 실패: $e');
   }
 
-  // Firebase 초기화 (환경변수에 설정되어 있을 경우에만)
   try {
     final firebaseOptions = FirebaseConfig.options;
     if (firebaseOptions != null) {
       await Firebase.initializeApp(options: firebaseOptions);
       debugPrint('Firebase 초기화 완료');
+
+      // Firebase Analytics 초기화 (FCM이 Analytics에 의존함)
+      FirebaseAnalytics.instance;
+      debugPrint('Firebase Analytics 초기화 완료');
     } else {
       debugPrint('Firebase 설정이 없습니다. 푸시 알림 기능은 비활성화됩니다.');
     }
@@ -42,7 +47,6 @@ void main() async {
     debugPrint('푸시 알림 기능은 비활성화됩니다. Firebase 설정을 확인하세요.');
   }
 
-  // 홈 위젯 서비스 초기화
   try {
     await WidgetDataService.initialize();
     debugPrint('홈 위젯 서비스 초기화 완료');
@@ -50,7 +54,13 @@ void main() async {
     debugPrint('홈 위젯 서비스 초기화 실패: $e');
   }
 
-  // SharedPreferences 초기화
+  try {
+    await LocalNotificationService().initialize();
+    debugPrint('로컬 알림 서비스 초기화 완료');
+  } catch (e) {
+    debugPrint('로컬 알림 서비스 초기화 실패: $e');
+  }
+
   final sharedPreferences = await SharedPreferences.getInstance();
 
   runApp(
@@ -67,10 +77,12 @@ class SharedHouseholdAccountApp extends ConsumerStatefulWidget {
   const SharedHouseholdAccountApp({super.key});
 
   @override
-  ConsumerState<SharedHouseholdAccountApp> createState() => _SharedHouseholdAccountAppState();
+  ConsumerState<SharedHouseholdAccountApp> createState() =>
+      _SharedHouseholdAccountAppState();
 }
 
-class _SharedHouseholdAccountAppState extends ConsumerState<SharedHouseholdAccountApp> {
+class _SharedHouseholdAccountAppState
+    extends ConsumerState<SharedHouseholdAccountApp> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
@@ -150,10 +162,7 @@ class _SharedHouseholdAccountAppState extends ConsumerState<SharedHouseholdAccou
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
-        Locale('ko', 'KR'),
-        Locale('en', 'US'),
-      ],
+      supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
       locale: const Locale('ko', 'KR'),
     );
   }

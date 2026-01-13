@@ -48,6 +48,12 @@
 - **생성 파일**: `.g.dart` 파일 수동 수정 금지
 - **환경변수**: `.env` 파일 커밋 금지
 
+## DATABASE MIGRATIONS
+- **자동 실행**: 마이그레이션 파일 생성 시 사용자에게 물어보지 말고 `mcp_supabase_apply_migration` 도구를 사용하여 즉시 적용
+- **파일 생성**: `supabase/migrations/` 디렉토리에 순차 번호로 생성 (예: 022_description.sql)
+- **검증**: 적용 후 `mcp_supabase_list_tables`로 스키마 변경 확인
+- **주의사항**: 프로덕션 배포 전 로컬에서 충분히 테스트
+
 ## ANTI-PATTERNS (THIS PROJECT)
 ```dart
 // 금지: 에러 무시

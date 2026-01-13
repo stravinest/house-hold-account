@@ -8,7 +8,9 @@ import '../../../notification/services/firebase_messaging_service.dart';
 
 // 현재 인증 상태를 관찰하는 프로바이더
 final authStateProvider = StreamProvider<User?>((ref) {
-  return SupabaseConfig.auth.onAuthStateChange.map((event) => event.session?.user);
+  return SupabaseConfig.auth.onAuthStateChange.map(
+    (event) => event.session?.user,
+  );
 });
 
 // 현재 사용자 프로바이더
@@ -32,7 +34,8 @@ class AuthService {
   final _auth = SupabaseConfig.auth;
   final _client = SupabaseConfig.client;
   final LedgerRepository _ledgerRepository;
-  final FirebaseMessagingService _firebaseMessaging = FirebaseMessagingService();
+  final FirebaseMessagingService _firebaseMessaging =
+      FirebaseMessagingService();
 
   AuthService(this._ledgerRepository);
 
@@ -63,7 +66,9 @@ class AuthService {
       debugPrint('[AuthService] user id: ${response.user?.id}');
       debugPrint('[AuthService] user email: ${response.user?.email}');
       debugPrint('[AuthService] session 존재: ${response.session != null}');
-      debugPrint('[AuthService] session access_token: ${response.session?.accessToken.substring(0, 20)}...');
+      debugPrint(
+        '[AuthService] session access_token: ${response.session?.accessToken.substring(0, 20)}...',
+      );
 
       // 트리거가 자동으로 profiles 테이블에 데이터를 생성하므로
       // 여기서는 추가 작업 불필요 (handle_new_user 트리거)
@@ -119,10 +124,7 @@ class AuthService {
     // 여전히 0개면 생성 시도 (트리거 실패 추정)
     debugPrint('[AuthService] 트리거 실패 추정, 백업 가계부 생성 시작');
     try {
-      await _ledgerRepository.createLedger(
-        name: '내 가계부',
-        currency: 'KRW',
-      );
+      await _ledgerRepository.createLedger(name: '내 가계부', currency: 'KRW');
       debugPrint('[AuthService] 백업 가계부 생성 완료');
     } catch (e, st) {
       debugPrint('[AuthService] 백업 가계부 생성 실패: $e');
@@ -148,13 +150,29 @@ class AuthService {
       );
       debugPrint('[AuthService] 로그인 성공: user=${response.user?.id}');
 
-      // FCM 토큰 등록
-      // FCM 초기화 실패가 로그인을 방해하면 안 되므로 try-catch로 감싸고 silent fail
       try {
+        debugPrint('');
+        debugPrint('════════════════════════════════');
+        debugPrint('[AuthService] FCM 초기화 시작...');
+        debugPrint('User ID: ${response.user!.id}');
+        debugPrint('════════════════════════════════');
+
         await _firebaseMessaging.initialize(response.user!.id);
-        debugPrint('[AuthService] FCM 초기화 성공');
-      } catch (e) {
-        debugPrint('[AuthService] FCM 초기화 실패 (무시됨): $e');
+
+        debugPrint('════════════════════════════════');
+        debugPrint('[AuthService] ✅ FCM 초기화 성공!');
+        debugPrint('════════════════════════════════');
+        debugPrint('');
+      } catch (e, st) {
+        debugPrint('');
+        debugPrint('❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌');
+        debugPrint('[AuthService] FCM 초기화 실패!');
+        debugPrint('에러: $e');
+        debugPrint('타입: ${e.runtimeType}');
+        debugPrint('스택 트레이스:');
+        debugPrint('$st');
+        debugPrint('❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌');
+        debugPrint('');
       }
 
       return response;
@@ -197,9 +215,7 @@ class AuthService {
 
   // 비밀번호 변경
   Future<UserResponse> updatePassword(String newPassword) async {
-    return await _auth.updateUser(
-      UserAttributes(password: newPassword),
-    );
+    return await _auth.updateUser(UserAttributes(password: newPassword));
   }
 
   // 현재 비밀번호 검증 후 새 비밀번호로 변경
@@ -226,7 +242,9 @@ class AuthService {
   // HEX 색상 코드 검증
   void _validateHexColor(String color) {
     if (!RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(color)) {
-      throw ArgumentError('Invalid color format. Must be HEX code (e.g., #A8D8EA)');
+      throw ArgumentError(
+        'Invalid color format. Must be HEX code (e.g., #A8D8EA)',
+      );
     }
   }
 
@@ -347,12 +365,14 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
 final authNotifierProvider =
     StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
-  final authService = ref.watch(authServiceProvider);
-  return AuthNotifier(authService);
-});
+      final authService = ref.watch(authServiceProvider);
+      return AuthNotifier(authService);
+    });
 
 // 사용자 프로필을 실시간으로 스트리밍하는 프로바이더
-final userProfileProvider = StreamProvider.autoDispose<Map<String, dynamic>?>((ref) async* {
+final userProfileProvider = StreamProvider.autoDispose<Map<String, dynamic>?>((
+  ref,
+) async* {
   final user = ref.watch(currentUserProvider);
   if (user == null) {
     yield null;
@@ -376,7 +396,10 @@ final userColorProvider = Provider<String>((ref) {
 });
 
 // 특정 사용자 ID로 색상을 조회하는 프로바이더
-final userColorByIdProvider = FutureProvider.family<String, String>((ref, userId) async {
+final userColorByIdProvider = FutureProvider.family<String, String>((
+  ref,
+  userId,
+) async {
   try {
     final response = await SupabaseConfig.client
         .from('profiles')
