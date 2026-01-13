@@ -50,6 +50,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   InstallmentResult? _installmentResult;
   bool _isInstallmentMode = false;
 
+  // 자산 만기일
+  DateTime? _maturityDate;
+
   @override
   void initState() {
     super.initState();
@@ -200,7 +203,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
 
     await notifier.createTransaction(
-      categoryId: _recurringSettings.isFixedExpense ? null : _selectedCategory?.id,
+      categoryId: _recurringSettings.isFixedExpense
+          ? null
+          : _selectedCategory?.id,
       paymentMethodId: _selectedPaymentMethod?.id,
       amount: amount,
       type: _type,
@@ -209,6 +214,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       memo: _memoController.text.isNotEmpty ? _memoController.text : null,
       isFixedExpense: _recurringSettings.isFixedExpense,
       fixedExpenseCategoryId: _selectedFixedExpenseCategory?.id,
+      isAsset: _type == 'asset',
+      maturityDate: _type == 'asset' ? _maturityDate : null,
     );
 
     return '거래가 추가되었습니다';
@@ -224,7 +231,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
     // 템플릿 생성 + 오늘까지 거래 자동 생성
     await notifier.createRecurringTemplate(
-      categoryId: _recurringSettings.isFixedExpense ? null : _selectedCategory?.id,
+      categoryId: _recurringSettings.isFixedExpense
+          ? null
+          : _selectedCategory?.id,
       paymentMethodId: _selectedPaymentMethod?.id,
       amount: amount,
       type: _type,
@@ -341,7 +350,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // 수입/지출/저축 선택
+                        // 수입/지출/자산 선택
                         SegmentedButton<String>(
                           segments: const [
                             ButtonSegment(
@@ -355,8 +364,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                               icon: Icon(Icons.add_circle_outline),
                             ),
                             ButtonSegment(
-                              value: 'saving',
-                              label: Text('저축'),
+                              value: 'asset',
+                              label: Text('자산'),
                               icon: Icon(Icons.savings_outlined),
                             ),
                           ],
@@ -365,8 +374,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                             setState(() {
                               _type = selected.first;
                               _selectedCategory = null;
-                              // 수입/저축으로 변경 시 할부 모드 해제
-                              if (_type == 'income' || _type == 'saving') {
+                              // 수입/자산으로 변경 시 할부 모드 해제
+                              if (_type == 'income' || _type == 'asset') {
                                 _isInstallmentMode = false;
                                 _installmentResult = null;
                                 _selectedPaymentMethod = null;
@@ -482,6 +491,52 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
 
                         const Divider(),
 
+                        // 만기일 선택 (자산 타입일 때만)
+                        if (_type == 'asset') ...[
+                          ListTile(
+                            leading: const Icon(Icons.event_available),
+                            title: Text(
+                              _maturityDate == null
+                                  ? '만기일 선택 (선택사항)'
+                                  : DateFormat(
+                                      'yyyy년 M월 d일 (E)',
+                                      'ko_KR',
+                                    ).format(_maturityDate!),
+                            ),
+                            trailing: _maturityDate == null
+                                ? const Icon(Icons.chevron_right)
+                                : IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      setState(() {
+                                        _maturityDate = null;
+                                      });
+                                    },
+                                  ),
+                            onTap: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate:
+                                    _maturityDate ??
+                                    DateTime.now().add(
+                                      const Duration(days: 365),
+                                    ),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime.now().add(
+                                  const Duration(days: 365 * 30),
+                                ),
+                                helpText: '만기일 선택',
+                              );
+                              if (picked != null) {
+                                setState(() {
+                                  _maturityDate = picked;
+                                });
+                              }
+                            },
+                          ),
+                          const Divider(),
+                        ],
+
                         // 반복 주기 설정 (할부 모드가 아닐 때만)
                         if (!_isInstallmentMode) ...[
                           RecurringSettingsWidget(
@@ -492,7 +547,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                             onChanged: (settings) {
                               setState(() {
                                 // 고정비 상태가 변경되면 해당 카테고리 초기화
-                                if (settings.isFixedExpense != _recurringSettings.isFixedExpense) {
+                                if (settings.isFixedExpense !=
+                                    _recurringSettings.isFixedExpense) {
                                   if (settings.isFixedExpense) {
                                     // 고정비로 변경: 일반 카테고리 초기화
                                     _selectedCategory = null;
@@ -512,25 +568,33 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            _recurringSettings.isFixedExpense ? '고정비 카테고리' : '카테고리',
+                            _recurringSettings.isFixedExpense
+                                ? '고정비 카테고리'
+                                : '카테고리',
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),
 
                         if (_recurringSettings.isFixedExpense)
                           // 고정비 카테고리 표시
-                          ref.watch(fixedExpenseCategoriesProvider).when(
-                            data: (categories) => _buildFixedExpenseCategoryGrid(categories),
-                            loading: () =>
-                                const Center(child: CircularProgressIndicator()),
-                            error: (e, _) => Text('오류: $e'),
-                          )
+                          ref
+                              .watch(fixedExpenseCategoriesProvider)
+                              .when(
+                                data: (categories) =>
+                                    _buildFixedExpenseCategoryGrid(categories),
+                                loading: () => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                                error: (e, _) => Text('오류: $e'),
+                              )
                         else
                           // 일반 카테고리 표시
                           categoriesAsync.when(
-                            data: (categories) => _buildCategoryGrid(categories),
-                            loading: () =>
-                                const Center(child: CircularProgressIndicator()),
+                            data: (categories) =>
+                                _buildCategoryGrid(categories),
+                            loading: () => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
                             error: (e, _) => Text('오류: $e'),
                           ),
 
@@ -672,7 +736,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     );
   }
 
-  Future<void> _deleteFixedExpenseCategory(FixedExpenseCategory category) async {
+  Future<void> _deleteFixedExpenseCategory(
+    FixedExpenseCategory category,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -739,7 +805,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             hintText: '예: 월세, 통신비',
             border: OutlineInputBorder(),
           ),
-          onSubmitted: (_) => _submitFixedExpenseCategory(dialogContext, nameController),
+          onSubmitted: (_) =>
+              _submitFixedExpenseCategory(dialogContext, nameController),
         ),
         actions: [
           TextButton(
@@ -747,7 +814,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             child: const Text('취소'),
           ),
           FilledButton(
-            onPressed: () => _submitFixedExpenseCategory(dialogContext, nameController),
+            onPressed: () =>
+                _submitFixedExpenseCategory(dialogContext, nameController),
             child: const Text('추가'),
           ),
         ],
@@ -980,7 +1048,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               ? '지출'
               : _type == 'income'
               ? '수입'
-              : '저축'} 카테고리 추가',
+              : '자산'} 카테고리 추가',
         ),
         content: TextField(
           controller: nameController,

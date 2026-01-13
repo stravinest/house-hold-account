@@ -68,7 +68,7 @@ class _MonthlyDetailList extends ConsumerWidget {
     switch (type) {
       case 'income':
         return item.income;
-      case 'saving':
+      case 'asset':
         return item.saving;
       default:
         return item.expense;
@@ -123,7 +123,7 @@ class _YearlyDetailList extends ConsumerWidget {
     switch (type) {
       case 'income':
         return item.income;
-      case 'saving':
+      case 'asset':
         return item.saving;
       default:
         return item.expense;

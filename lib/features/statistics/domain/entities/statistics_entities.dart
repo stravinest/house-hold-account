@@ -89,21 +89,21 @@ class TrendStatisticsData {
   final List<dynamic> data; // MonthlyStatistics 또는 YearlyStatistics
   final int averageIncome;
   final int averageExpense;
-  final int averageSaving;
+  final int averageAsset;
 
   const TrendStatisticsData({
     required this.data,
     required this.averageIncome,
     required this.averageExpense,
-    required this.averageSaving,
+    required this.averageAsset,
   });
 
   int getAverageByType(String type) {
     switch (type) {
       case 'income':
         return averageIncome;
-      case 'saving':
-        return averageSaving;
+      case 'asset':
+        return averageAsset;
       default:
         return averageExpense;
     }

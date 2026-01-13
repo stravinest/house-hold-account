@@ -20,7 +20,7 @@ class TransactionDetailSheet extends ConsumerWidget {
     final dateFormat = DateFormat('yyyy년 M월 d일 (E)', 'ko_KR');
     final amountColor = transaction.isIncome
         ? Colors.blue
-        : transaction.isSaving
+        : transaction.isAssetType
             ? Colors.green
             : Colors.red;
 
@@ -118,7 +118,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                     icon: Icons.attach_money,
                     label: '금액',
                     value:
-                        '${transaction.isIncome ? '+' : transaction.isSaving ? '' : '-'}${formatter.format(transaction.amount)}원',
+                        '${transaction.isIncome ? '+' : transaction.isAssetType ? '' : '-'}${formatter.format(transaction.amount)}원',
                     valueColor: amountColor,
                   ),
 

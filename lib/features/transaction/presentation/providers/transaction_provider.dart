@@ -13,8 +13,9 @@ final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
 final selectedDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
 
 // 선택된 날짜의 거래 목록
-final dailyTransactionsProvider =
-    FutureProvider<List<Transaction>>((ref) async {
+final dailyTransactionsProvider = FutureProvider<List<Transaction>>((
+  ref,
+) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return [];
 
@@ -25,8 +26,9 @@ final dailyTransactionsProvider =
 });
 
 // 현재 월의 거래 목록
-final monthlyTransactionsProvider =
-    FutureProvider<List<Transaction>>((ref) async {
+final monthlyTransactionsProvider = FutureProvider<List<Transaction>>((
+  ref,
+) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return [];
 
@@ -43,7 +45,8 @@ final monthlyTransactionsProvider =
 // 현재 월 합계 (사용자별 데이터 포함)
 final monthlyTotalProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
-  if (ledgerId == null) return {'income': 0, 'expense': 0, 'balance': 0, 'users': {}};
+  if (ledgerId == null)
+    return {'income': 0, 'expense': 0, 'balance': 0, 'users': {}};
 
   final date = ref.watch(selectedDateProvider);
   final repository = ref.watch(transactionRepositoryProvider);
@@ -56,20 +59,21 @@ final monthlyTotalProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 });
 
 // 일별 합계 (캘린더용, 사용자별 데이터 포함)
-final dailyTotalsProvider =
-    FutureProvider<Map<DateTime, Map<String, dynamic>>>((ref) async {
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  if (ledgerId == null) return {};
+final dailyTotalsProvider = FutureProvider<Map<DateTime, Map<String, dynamic>>>(
+  (ref) async {
+    final ledgerId = ref.watch(selectedLedgerIdProvider);
+    if (ledgerId == null) return {};
 
-  final date = ref.watch(selectedDateProvider);
-  final repository = ref.watch(transactionRepositoryProvider);
+    final date = ref.watch(selectedDateProvider);
+    final repository = ref.watch(transactionRepositoryProvider);
 
-  return repository.getDailyTotals(
-    ledgerId: ledgerId,
-    year: date.year,
-    month: date.month,
-  );
-});
+    return repository.getDailyTotals(
+      ledgerId: ledgerId,
+      year: date.year,
+      month: date.month,
+    );
+  },
+);
 
 // 거래 관리 노티파이어
 class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
@@ -78,7 +82,7 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
   final Ref _ref;
 
   TransactionNotifier(this._repository, this._ledgerId, this._ref)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadTransactions();
     } else {
@@ -119,6 +123,8 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     DateTime? recurringEndDate,
     bool isFixedExpense = false,
     String? fixedExpenseCategoryId,
+    bool isAsset = false,
+    DateTime? maturityDate,
   }) async {
     if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
 
@@ -137,6 +143,8 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
       recurringEndDate: recurringEndDate,
       isFixedExpense: isFixedExpense,
       fixedExpenseCategoryId: fixedExpenseCategoryId,
+      isAsset: isAsset,
+      maturityDate: maturityDate,
     );
 
     // 데이터 갱신
@@ -242,9 +250,10 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
 }
 
 final transactionNotifierProvider =
-    StateNotifierProvider<TransactionNotifier, AsyncValue<List<Transaction>>>(
-        (ref) {
-  final repository = ref.watch(transactionRepositoryProvider);
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  return TransactionNotifier(repository, ledgerId, ref);
-});
+    StateNotifierProvider<TransactionNotifier, AsyncValue<List<Transaction>>>((
+      ref,
+    ) {
+      final repository = ref.watch(transactionRepositoryProvider);
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      return TransactionNotifier(repository, ledgerId, ref);
+    });

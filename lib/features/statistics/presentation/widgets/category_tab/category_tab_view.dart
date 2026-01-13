@@ -21,7 +21,7 @@ class CategoryTabView extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 타입 필터 (수입/지출/저축)
+          // 타입 필터 (수입/지출/자산)
           const Center(child: StatisticsTypeFilter()),
 
           // 고정비/변동비 필터 (지출 선택 시에만 표시)

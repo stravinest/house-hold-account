@@ -143,7 +143,7 @@ class _TransactionCard extends StatelessWidget {
     final formatter = NumberFormat('#,###', 'ko_KR');
     final amountColor = transaction.isIncome
         ? Colors.blue
-        : transaction.isSaving
+        : transaction.isAssetType
             ? Colors.green
             : Colors.red;
 
@@ -273,7 +273,7 @@ class _TransactionCard extends StatelessWidget {
 
                 // 금액
                 Text(
-                  '${transaction.isIncome ? '+' : transaction.isSaving ? '' : '-'}${formatter.format(transaction.amount)}원',
+                  '${transaction.isIncome ? '+' : transaction.isAssetType ? '' : '-'}${formatter.format(transaction.amount)}원',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         color: amountColor,
                         fontWeight: FontWeight.bold,

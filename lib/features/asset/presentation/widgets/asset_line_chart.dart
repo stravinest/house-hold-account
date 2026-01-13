@@ -29,6 +29,7 @@ class AssetLineChart extends StatelessWidget {
     }
 
     final maxY = _calculateMaxY();
+    final minY = _calculateMinY();
     final spots = _buildSpots();
 
     return AspectRatio(
@@ -45,7 +46,7 @@ class AssetLineChart extends StatelessWidget {
             lineBarsData: [
               LineChartBarData(
                 spots: spots,
-                isCurved: true,
+                isCurved: false,
                 color: theme.colorScheme.primary,
                 barWidth: 3,
                 dotData: FlDotData(
@@ -125,7 +126,7 @@ class AssetLineChart extends StatelessWidget {
             ),
             minX: 0,
             maxX: (monthly.length - 1).toDouble(),
-            minY: 0,
+            minY: minY,
             maxY: maxY,
             lineTouchData: LineTouchData(
               touchTooltipData: LineTouchTooltipData(
@@ -161,9 +162,32 @@ class AssetLineChart extends StatelessWidget {
     final maxAmount = monthly
         .map((m) => m.amount)
         .reduce((a, b) => a > b ? a : b);
-    if (maxAmount == 0) return 100;
+
+    final minAmount = monthly
+        .map((m) => m.amount)
+        .reduce((a, b) => a < b ? a : b);
+
+    if (maxAmount <= 0) return 100;
+
+    if (minAmount < 0) {
+      return ((maxAmount - minAmount) * 1.2).ceilToDouble();
+    }
 
     return (maxAmount * 1.2).ceilToDouble();
+  }
+
+  double _calculateMinY() {
+    if (monthly.isEmpty) return 0;
+
+    final minAmount = monthly
+        .map((m) => m.amount)
+        .reduce((a, b) => a < b ? a : b);
+
+    if (minAmount < 0) {
+      return (minAmount * 1.2).floorToDouble();
+    }
+
+    return 0;
   }
 
   List<FlSpot> _buildSpots() {

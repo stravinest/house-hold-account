@@ -226,7 +226,7 @@ class TransactionRepository {
             'displayName': displayName,
             'income': 0,
             'expense': 0,
-            'saving': 0,
+            'asset': 0,
             'color': userColor,
           },
         );
@@ -236,9 +236,9 @@ class TransactionRepository {
           userTotals[userId]!['income'] =
               (userTotals[userId]!['income'] as int) + amount;
           totalIncome += amount;
-        } else if (type == 'saving') {
-          userTotals[userId]!['saving'] =
-              (userTotals[userId]!['saving'] as int) + amount;
+        } else if (type == 'asset') {
+          userTotals[userId]!['asset'] =
+              (userTotals[userId]!['asset'] as int) + amount;
         } else {
           userTotals[userId]!['expense'] =
               (userTotals[userId]!['expense'] as int) + amount;
@@ -320,7 +320,7 @@ class TransactionRepository {
             'displayName': displayName,
             'income': 0,
             'expense': 0,
-            'saving': 0,
+            'asset': 0,
             'color': userColor,
           },
         );
@@ -329,8 +329,8 @@ class TransactionRepository {
         if (type == 'income') {
           users[userId]!['income'] = (users[userId]!['income'] as int) + amount;
           dayData['totalIncome'] = (dayData['totalIncome'] as int) + amount;
-        } else if (type == 'saving') {
-          users[userId]!['saving'] = (users[userId]!['saving'] as int) + amount;
+        } else if (type == 'asset') {
+          users[userId]!['asset'] = (users[userId]!['asset'] as int) + amount;
         } else {
           users[userId]!['expense'] =
               (users[userId]!['expense'] as int) + amount;

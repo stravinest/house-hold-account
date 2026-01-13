@@ -19,7 +19,7 @@ class TrendTabView extends StatelessWidget {
           const Center(child: PeriodFilter()),
           const SizedBox(height: 12),
 
-          // 타입 필터 (수입/지출/저축)
+          // 타입 필터 (수입/지출/자산)
           const Center(child: StatisticsTypeFilter()),
           const SizedBox(height: 16),
 

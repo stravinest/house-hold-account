@@ -218,18 +218,18 @@ class CalendarView extends ConsumerWidget {
 
     final income = totals?['totalIncome'] ?? 0;
     final expense = totals?['totalExpense'] ?? 0;
-    // 안전한 타입 변환으로 hasSaving 계산
+    // 안전한 타입 변환으로 hasAsset 계산
     final rawUsers = totals?['users'];
-    final usersForSaving = rawUsers is Map
+    final usersForAsset = rawUsers is Map
         ? Map<String, dynamic>.from(rawUsers)
         : <String, dynamic>{};
-    final hasSaving = usersForSaving.values.any((u) {
+    final hasAsset = usersForAsset.values.any((u) {
       final userData = u is Map
           ? Map<String, dynamic>.from(u)
           : <String, dynamic>{};
-      return (userData['saving'] as int? ?? 0) > 0;
+      return (userData['asset'] as int? ?? 0) > 0;
     });
-    final hasData = income > 0 || expense > 0 || hasSaving;
+    final hasData = income > 0 || expense > 0 || hasAsset;
 
     final isWeekend =
         day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;
@@ -430,7 +430,7 @@ class CalendarView extends ConsumerWidget {
       final color = ColorUtils.parseHexColor(colorHex);
       final income = userData['income'] as int? ?? 0;
       final expense = userData['expense'] as int? ?? 0;
-      final saving = userData['saving'] as int? ?? 0;
+      final saving = userData['asset'] as int? ?? 0;
 
       // 수입이 있으면 추가
       if (income > 0) {
@@ -442,7 +442,7 @@ class CalendarView extends ConsumerWidget {
         allItems.add(_AmountItem(color: color, amount: expense));
       }
 
-      // 저축이 있으면 추가
+      // 자산이 있으면 추가
       if (saving > 0) {
         allItems.add(_AmountItem(color: color, amount: saving));
       }
@@ -604,7 +604,7 @@ class _MonthSummary extends StatelessWidget {
             'displayName': member.displayName ?? '사용자',
             'income': 0,
             'expense': 0,
-            'saving': 0,
+            'asset': 0,
             'color': member.color ?? '#A8D8EA',
           };
         }

@@ -260,7 +260,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
     switch (type) {
       case 'income':
         return item.income;
-      case 'saving':
+      case 'asset':
         return item.saving;
       default:
         return item.expense;
@@ -272,7 +272,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
     switch (type) {
       case 'income':
         return isDark ? Colors.blue.shade300 : Colors.blue;
-      case 'saving':
+      case 'asset':
         return isDark ? Colors.green.shade300 : Colors.green;
       default:
         return isDark ? Colors.red.shade300 : Colors.red;
@@ -506,7 +506,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
     switch (type) {
       case 'income':
         return item.income;
-      case 'saving':
+      case 'asset':
         return item.saving;
       default:
         return item.expense;
@@ -518,7 +518,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
     switch (type) {
       case 'income':
         return isDark ? Colors.blue.shade300 : Colors.blue;
-      case 'saving':
+      case 'asset':
         return isDark ? Colors.green.shade300 : Colors.green;
       default:
         return isDark ? Colors.red.shade300 : Colors.red;

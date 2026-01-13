@@ -6,7 +6,7 @@ class Category extends Equatable {
   final String name;
   final String icon;
   final String color;
-  final String type; // income, expense
+  final String type; // income, expense, asset
   final bool isDefault;
   final int sortOrder;
   final DateTime createdAt;
@@ -25,7 +25,7 @@ class Category extends Equatable {
 
   bool get isIncome => type == 'income';
   bool get isExpense => type == 'expense';
-  bool get isSaving => type == 'saving';
+  bool get isAssetType => type == 'asset';
 
   Category copyWith({
     String? id,
@@ -53,14 +53,14 @@ class Category extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        ledgerId,
-        name,
-        icon,
-        color,
-        type,
-        isDefault,
-        sortOrder,
-        createdAt,
-      ];
+    id,
+    ledgerId,
+    name,
+    icon,
+    color,
+    type,
+    isDefault,
+    sortOrder,
+    createdAt,
+  ];
 }

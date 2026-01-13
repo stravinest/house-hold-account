@@ -13,8 +13,8 @@ class CategorySummaryCard extends ConsumerWidget {
     switch (type) {
       case 'income':
         return '수입';
-      case 'saving':
-        return '저축';
+      case 'asset':
+        return '자산';
       case 'expense':
         if (expenseFilter == ExpenseTypeFilter.fixed) {
           return '고정비';
@@ -33,7 +33,7 @@ class CategorySummaryCard extends ConsumerWidget {
     switch (type) {
       case 'income':
         return isDark ? Colors.blue.shade300 : Colors.blue;
-      case 'saving':
+      case 'asset':
         return isDark ? Colors.green.shade300 : Colors.green;
       default:
         return isDark ? Colors.red.shade300 : Colors.red;

@@ -12,6 +12,7 @@ class AppConstants {
   // 거래 타입
   static const String transactionTypeIncome = 'income';
   static const String transactionTypeExpense = 'expense';
+  static const String transactionTypeAsset = 'asset';
 
   // 멤버 권한
   static const String roleOwner = 'owner';

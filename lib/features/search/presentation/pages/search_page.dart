@@ -141,12 +141,12 @@ class _SearchResultItem extends StatelessWidget {
     final dateFormat = DateFormat('yyyy.MM.dd');
     final amountColor = transaction.isIncome
         ? Colors.blue
-        : transaction.isSaving
+        : transaction.isAssetType
             ? Colors.green
             : Colors.red;
     final amountPrefix = transaction.isIncome
         ? '+'
-        : transaction.isSaving
+        : transaction.isAssetType
             ? ''
             : '-';
 

@@ -19,7 +19,7 @@ final statisticsSelectedDateProvider = StateProvider<DateTime>(
   (ref) => DateTime.now(),
 );
 
-// 선택된 통계 타입 (지출/수입/저축)
+// 선택된 통계 타입 (지출/수입/자산)
 final selectedStatisticsTypeProvider = StateProvider<String>(
   (ref) => 'expense',
 );
@@ -76,8 +76,8 @@ final categoryIncomeStatisticsProvider =
       );
     });
 
-// 카테고리별 저축 통계
-final categorySavingStatisticsProvider =
+// 카테고리별 자산 통계
+final categoryAssetStatisticsProvider =
     FutureProvider<List<CategoryStatistics>>((ref) async {
       final ledgerId = ref.watch(selectedLedgerIdProvider);
       if (ledgerId == null) return [];
@@ -89,7 +89,7 @@ final categorySavingStatisticsProvider =
         ledgerId: ledgerId,
         year: date.year,
         month: date.month,
-        type: 'saving',
+        type: 'asset',
       );
     });
 
@@ -101,8 +101,8 @@ final categoryStatisticsProvider = FutureProvider<List<CategoryStatistics>>((
 
   if (type == 'income') {
     return ref.watch(categoryIncomeStatisticsProvider.future);
-  } else if (type == 'saving') {
-    return ref.watch(categorySavingStatisticsProvider.future);
+  } else if (type == 'asset') {
+    return ref.watch(categoryAssetStatisticsProvider.future);
   } else {
     return ref.watch(categoryExpenseStatisticsProvider.future);
   }
@@ -185,7 +185,7 @@ final monthlyTrendWithAverageProvider = FutureProvider<TrendStatisticsData>((
       data: [],
       averageIncome: 0,
       averageExpense: 0,
-      averageSaving: 0,
+      averageAsset: 0,
     );
   }
 
@@ -209,7 +209,7 @@ final yearlyTrendWithAverageProvider = FutureProvider<TrendStatisticsData>((
       data: [],
       averageIncome: 0,
       averageExpense: 0,
-      averageSaving: 0,
+      averageAsset: 0,
     );
   }
 

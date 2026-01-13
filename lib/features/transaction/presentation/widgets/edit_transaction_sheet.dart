@@ -246,7 +246,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // 수입/지출/저축 선택
+                        // 수입/지출/자산 선택
                         SegmentedButton<String>(
                           segments: const [
                             ButtonSegment(
@@ -260,8 +260,8 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                               icon: Icon(Icons.add_circle_outline),
                             ),
                             ButtonSegment(
-                              value: 'saving',
-                              label: Text('저축'),
+                              value: 'asset',
+                              label: Text('자산'),
                               icon: Icon(Icons.savings_outlined),
                             ),
                           ],
@@ -270,7 +270,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                             setState(() {
                               _type = selected.first;
                               _selectedCategory = null;
-                              if (_type == 'income' || _type == 'saving') {
+                              if (_type == 'income' || _type == 'asset') {
                                 _selectedPaymentMethod = null;
                               }
                             });
@@ -547,7 +547,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
               ? '지출'
               : _type == 'income'
               ? '수입'
-              : '저축'} 카테고리 추가',
+              : '자산'} 카테고리 추가',
         ),
         content: TextField(
           controller: nameController,

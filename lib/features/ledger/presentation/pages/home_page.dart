@@ -513,17 +513,17 @@ class _DailyUserSummary extends ConsumerWidget {
             final userColor = _parseColor(colorHex);
             final description = tx.title ?? tx.categoryName ?? '내역 없음';
             final isIncome = tx.type == 'income';
-            final isSaving = tx.type == 'saving';
+            final isAssetType = tx.type == 'asset';
 
-            // 금액 색상 결정: 수입=파란색, 저축=녹색, 지출=빨간색
+            // 금액 색상 결정: 수입=파란색, 자산=녹색, 지출=빨간색
             Color amountColor;
             String amountPrefix;
             if (isIncome) {
               amountColor = Colors.blue.shade700;
               amountPrefix = '';
-            } else if (isSaving) {
+            } else if (isAssetType) {
               amountColor = Colors.green.shade600;
-              amountPrefix = ''; // 저축은 - 없이 표시
+              amountPrefix = ''; // 자산은 - 없이 표시
             } else {
               amountColor = Colors.red.shade700;
               amountPrefix = '-';

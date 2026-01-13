@@ -32,10 +32,10 @@ final expenseCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   return categories.where((c) => c.isExpense).toList();
 });
 
-// 저축 카테고리 목록
+// 자산 카테고리 목록
 final savingCategoriesProvider = FutureProvider<List<Category>>((ref) async {
   final categories = await ref.watch(categoriesProvider.future);
-  return categories.where((c) => c.isSaving).toList();
+  return categories.where((c) => c.isAssetType).toList();
 });
 
 // 카테고리 관리 노티파이어

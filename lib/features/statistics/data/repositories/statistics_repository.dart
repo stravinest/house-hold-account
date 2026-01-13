@@ -152,7 +152,7 @@ class StatisticsRepository {
 
         if (type == 'income') {
           income += amount;
-        } else if (type == 'saving') {
+        } else if (type == 'asset') {
           saving += amount;
         } else {
           expense += amount;
@@ -374,7 +374,7 @@ class StatisticsRepository {
 
         if (type == 'income') {
           income += amount;
-        } else if (type == 'saving') {
+        } else if (type == 'asset') {
           saving += amount;
         } else {
           expense += amount;
@@ -403,7 +403,7 @@ class StatisticsRepository {
     final results = <MonthlyStatistics>[];
     int totalIncome = 0;
     int totalExpense = 0;
-    int totalSaving = 0;
+    int totalAsset = 0;
     // 0원이 아닌 달의 개수 (평균 계산용)
     int incomeCount = 0;
     int expenseCount = 0;
@@ -431,7 +431,7 @@ class StatisticsRepository {
 
         if (type == 'income') {
           income += amount;
-        } else if (type == 'saving') {
+        } else if (type == 'asset') {
           saving += amount;
         } else {
           expense += amount;
@@ -445,7 +445,7 @@ class StatisticsRepository {
 
       totalIncome += income;
       totalExpense += expense;
-      totalSaving += saving;
+      totalAsset += saving;
 
       results.add(
         MonthlyStatistics(
@@ -464,7 +464,7 @@ class StatisticsRepository {
       averageExpense: expenseCount > 0
           ? (totalExpense / expenseCount).round()
           : 0,
-      averageSaving: savingCount > 0 ? (totalSaving / savingCount).round() : 0,
+      averageAsset: savingCount > 0 ? (totalAsset / savingCount).round() : 0,
     );
   }
 
@@ -477,7 +477,7 @@ class StatisticsRepository {
     final results = <YearlyStatistics>[];
     int totalIncome = 0;
     int totalExpense = 0;
-    int totalSaving = 0;
+    int totalAsset = 0;
     // 0원이 아닌 연도의 개수 (평균 계산용)
     int incomeCount = 0;
     int expenseCount = 0;
@@ -505,7 +505,7 @@ class StatisticsRepository {
 
         if (type == 'income') {
           income += amount;
-        } else if (type == 'saving') {
+        } else if (type == 'asset') {
           saving += amount;
         } else {
           expense += amount;
@@ -519,7 +519,7 @@ class StatisticsRepository {
 
       totalIncome += income;
       totalExpense += expense;
-      totalSaving += saving;
+      totalAsset += saving;
 
       results.add(
         YearlyStatistics(
@@ -537,7 +537,7 @@ class StatisticsRepository {
       averageExpense: expenseCount > 0
           ? (totalExpense / expenseCount).round()
           : 0,
-      averageSaving: savingCount > 0 ? (totalSaving / savingCount).round() : 0,
+      averageAsset: savingCount > 0 ? (totalAsset / savingCount).round() : 0,
     );
   }
 }

@@ -60,7 +60,7 @@ class RecurringSettingsWidget extends ConsumerStatefulWidget {
   final RecurringSettings? initialSettings;
   final ValueChanged<RecurringSettings> onChanged;
   final bool enabled;
-  final String transactionType; // 'income', 'expense', 'saving'
+  final String transactionType; // 'income', 'expense', 'asset'
 
   const RecurringSettingsWidget({
     super.key,

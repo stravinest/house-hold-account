@@ -7,7 +7,7 @@ class Transaction extends Equatable {
   final String userId;
   final String? paymentMethodId;
   final int amount;
-  final String type; // income, expense, saving
+  final String type; // income, expense, asset
   final DateTime date;
   final String? title;
   final String? memo;
@@ -105,8 +105,8 @@ class Transaction extends Equatable {
 
   bool get isIncome => type == 'income';
   bool get isExpense => type == 'expense';
-  bool get isSaving => type == 'saving';
-  bool get isAssetTransaction => type == 'saving' && isAsset == true;
+  bool get isAssetType => type == 'asset';
+  bool get isAssetTransaction => type == 'asset' && isAsset == true;
 
   // 주의: 현재 copyWith에서는 categoryId나 paymentMethodId를 null로 설정할 수 없습니다.
   // null을 전달해도 기존 값이 유지됩니다.

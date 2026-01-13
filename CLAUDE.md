@@ -101,10 +101,11 @@ lib/
 
 - `auth`: 인증 (로그인/회원가입, Google 로그인)
 - `ledger`: 가계부 관리 및 메인 화면
-- `transaction`: 수입/지출 거래 기록
+- `transaction`: 수입/지출/자산 거래 기록
 - `category`: 카테고리 관리
 - `budget`: 예산 관리
 - `statistics`: 통계/차트
+- `asset`: 자산 관리 (정기예금, 주식, 펀드, 부동산 등)
 - `share`: 가계부 공유 및 멤버 관리
 - `search`: 거래 검색
 - `settings`: 설정 (사용자 색상 설정 포함)
@@ -122,8 +123,8 @@ Supabase PostgreSQL 사용. 마이그레이션 파일 위치: `supabase/migratio
 - `profiles`: 사용자 프로필 (auth.users 확장, color 컬럼 포함)
 - `ledgers`: 가계부
 - `ledger_members`: 가계부 멤버 (role: owner/admin/member)
-- `categories`: 카테고리 (type: income/expense)
-- `transactions`: 거래 기록 (payment_method_id 포함)
+- `categories`: 카테고리 (type: income/expense/asset)
+- `transactions`: 거래 기록 (payment_method_id, is_asset, maturity_date 포함)
 - `budgets`: 예산
 - `ledger_invites`: 가계부 초대
 
@@ -139,6 +140,8 @@ Supabase PostgreSQL 사용. 마이그레이션 파일 위치: `supabase/migratio
 - `003_auto_create_default_ledger.sql`: 회원가입 시 기본 가계부 자동 생성
 - `004_make_category_nullable.sql`: 카테고리 nullable 처리
 - `006_add_profile_color.sql`: 사용자별 색상 지정 기능
+- `015_convert_saving_to_asset.sql`: 저축(saving) 타입을 자산(asset) 타입으로 통합
+- `016_add_asset_categories.sql`: 자산 카테고리 추가 (정기예금, 적금, 주식, 펀드, 부동산, 암호화폐)
 
 RLS (Row Level Security) 정책이 모든 테이블에 적용되어 있음.
 

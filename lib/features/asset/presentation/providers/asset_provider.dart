@@ -14,27 +14,18 @@ final assetStatisticsProvider = FutureProvider<AssetStatistics>((ref) async {
     return const AssetStatistics(
       totalAmount: 0,
       monthlyChange: 0,
+      monthlyChangeRate: 0.0,
+      annualGrowthRate: 0.0,
       monthly: [],
       byCategory: [],
+      byType: AssetTypeBreakdown(
+        savingAmount: 0,
+        investmentAmount: 0,
+        realEstateAmount: 0,
+      ),
     );
   }
 
   final repository = ref.watch(assetRepositoryProvider);
-  final now = DateTime.now();
-
-  final total = await repository.getTotalAssets(ledgerId: ledgerId);
-  final change = await repository.getMonthlyChange(
-    ledgerId: ledgerId,
-    year: now.year,
-    month: now.month,
-  );
-  final monthly = await repository.getMonthlyAssets(ledgerId: ledgerId);
-  final byCategory = await repository.getAssetsByCategory(ledgerId: ledgerId);
-
-  return AssetStatistics(
-    totalAmount: total,
-    monthlyChange: change,
-    monthly: monthly,
-    byCategory: byCategory,
-  );
+  return repository.getEnhancedStatistics(ledgerId: ledgerId);
 });

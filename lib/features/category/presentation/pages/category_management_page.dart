@@ -45,7 +45,7 @@ class _CategoryManagementPageState
           tabs: const [
             Tab(text: '지출'),
             Tab(text: '수입'),
-            Tab(text: '저축'),
+            Tab(text: '자산'),
           ],
         ),
       ),
@@ -54,7 +54,7 @@ class _CategoryManagementPageState
         children: const [
           _CategoryListView(type: 'expense'),
           _CategoryListView(type: 'income'),
-          _CategoryListView(type: 'saving'),
+          _CategoryListView(type: 'asset'),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -65,7 +65,7 @@ class _CategoryManagementPageState
   }
 
   void _showAddCategoryDialog(BuildContext context) {
-    final types = ['expense', 'income', 'saving'];
+    final types = ['expense', 'income', 'asset'];
     final type = types[_tabController.index];
     showDialog(
       context: context,
@@ -98,7 +98,7 @@ class _CategoryListView extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '등록된 ${type == 'expense' ? '지출' : type == 'income' ? '수입' : '저축'} 카테고리가 없습니다',
+                  '등록된 ${type == 'expense' ? '지출' : type == 'income' ? '수입' : '자산'} 카테고리가 없습니다',
                   style: TextStyle(color: Colors.grey[600]),
                 ),
               ],

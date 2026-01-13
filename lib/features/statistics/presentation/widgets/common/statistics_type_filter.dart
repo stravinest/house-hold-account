@@ -30,9 +30,9 @@ class StatisticsTypeFilter extends ConsumerWidget {
           enabled: enabled && !(disabledTypes?.contains('expense') ?? false),
         ),
         ButtonSegment<String>(
-          value: 'saving',
-          label: const Text('저축'),
-          enabled: enabled && !(disabledTypes?.contains('saving') ?? false),
+          value: 'asset',
+          label: const Text('자산'),
+          enabled: enabled && !(disabledTypes?.contains('asset') ?? false),
         ),
       ],
       selected: {selectedType},

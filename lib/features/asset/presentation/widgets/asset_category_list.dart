@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/constants/asset_constants.dart';
 import '../../domain/entities/asset_statistics.dart';
 
 class AssetCategoryList extends StatelessWidget {
@@ -8,13 +9,18 @@ class AssetCategoryList extends StatelessWidget {
 
   const AssetCategoryList({super.key, required this.byCategory});
 
-  Color _parseColor(String? colorString) {
-    if (colorString == null) return Colors.grey;
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return Colors.grey;
+  String _getDateInfo(AssetItem item) {
+    if (item.maturityDate != null) {
+      final daysLeft = item.maturityDate!.difference(DateTime.now()).inDays;
+      if (daysLeft < 0) {
+        return '만기 ${daysLeft.abs()}일 지남';
+      } else if (daysLeft == 0) {
+        return '오늘 만기';
+      } else {
+        return '만기 ${daysLeft}일 남음';
+      }
+    } else {
+      return '보유 중';
     }
   }
 
@@ -47,15 +53,14 @@ class AssetCategoryList extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: _parseColor(category.categoryColor),
-                      shape: BoxShape.circle,
+                  Icon(
+                    AssetConstants.getCategoryIcon(category.categoryName),
+                    size: 24,
+                    color: AssetConstants.getCategoryColor(
+                      category.categoryName,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12),
                   Text(
                     category.categoryName,
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -64,7 +69,7 @@ class AssetCategoryList extends StatelessWidget {
                   ),
                   const Spacer(),
                   Text(
-                    '${numberFormat.format(category.amount)}원',
+                    '${numberFormat.format(category.amount)} 원',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
@@ -80,16 +85,14 @@ class AssetCategoryList extends StatelessWidget {
                   vertical: 4,
                 ),
                 title: Text(item.title),
-                subtitle: item.maturityDate != null
-                    ? Text(
-                        '만기: ${DateFormat('yyyy.MM').format(item.maturityDate!)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      )
-                    : null,
+                subtitle: Text(
+                  _getDateInfo(item),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
                 trailing: Text(
-                  '${numberFormat.format(item.amount)}원',
+                  '${numberFormat.format(item.amount)} 원',
                   style: theme.textTheme.bodyMedium,
                 ),
               );

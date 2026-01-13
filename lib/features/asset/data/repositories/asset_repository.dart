@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../domain/entities/asset_goal.dart';
 import '../../domain/entities/asset_statistics.dart';
+import '../models/asset_goal_model.dart';
 
 class AssetRepository {
   final SupabaseClient _client;
@@ -13,8 +15,7 @@ class AssetRepository {
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)
-        .eq('type', 'saving')
-        .eq('is_asset', true);
+        .eq('type', 'asset');
 
     int total = 0;
     for (final row in response as List) {
@@ -36,8 +37,7 @@ class AssetRepository {
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)
-        .eq('type', 'saving')
-        .eq('is_asset', true)
+        .eq('type', 'asset')
         .gte('date', startDate.toIso8601String().split('T').first)
         .lte('date', endDate.toIso8601String().split('T').first);
 
@@ -64,8 +64,7 @@ class AssetRepository {
           .from('transactions')
           .select('amount')
           .eq('ledger_id', ledgerId)
-          .eq('type', 'saving')
-          .eq('is_asset', true)
+          .eq('type', 'asset')
           .lte('date', endOfMonth.toIso8601String().split('T').first);
 
       int total = 0;
@@ -103,8 +102,7 @@ class AssetRepository {
           )
         ''')
         .eq('ledger_id', ledgerId)
-        .eq('type', 'saving')
-        .eq('is_asset', true)
+        .eq('type', 'asset')
         .order('date', ascending: false);
 
     final Map<String, List<Map<String, dynamic>>> groupedByCategory = {};
@@ -174,5 +172,227 @@ class AssetRepository {
     categoryAssets.sort((a, b) => b.amount.compareTo(a.amount));
 
     return categoryAssets;
+  }
+
+  Future<List<AssetGoal>> getGoals({required String ledgerId}) async {
+    try {
+      final response = await _client
+          .from('asset_goals')
+          .select()
+          .eq('ledger_id', ledgerId)
+          .order('target_date', ascending: true);
+
+      return (response as List)
+          .map((json) => AssetGoalModel.fromJson(json))
+          .toList();
+    } catch (e) {
+      throw Exception('목표 조회 실패: $e');
+    }
+  }
+
+  Future<AssetGoal> createGoal(AssetGoal goal) async {
+    try {
+      final model = AssetGoalModel(
+        id: goal.id,
+        ledgerId: goal.ledgerId,
+        title: goal.title,
+        targetAmount: goal.targetAmount,
+        targetDate: goal.targetDate,
+        assetType: goal.assetType,
+        categoryIds: goal.categoryIds,
+        createdAt: goal.createdAt,
+        updatedAt: goal.updatedAt,
+        createdBy: goal.createdBy,
+      );
+
+      final response = await _client
+          .from('asset_goals')
+          .insert(model.toInsertJson())
+          .select()
+          .single();
+
+      return AssetGoalModel.fromJson(response);
+    } catch (e) {
+      throw Exception('목표 생성 실패: $e');
+    }
+  }
+
+  Future<AssetGoal> updateGoal(AssetGoal goal) async {
+    try {
+      final model = AssetGoalModel(
+        id: goal.id,
+        ledgerId: goal.ledgerId,
+        title: goal.title,
+        targetAmount: goal.targetAmount,
+        targetDate: goal.targetDate,
+        assetType: goal.assetType,
+        categoryIds: goal.categoryIds,
+        createdAt: goal.createdAt,
+        updatedAt: goal.updatedAt,
+        createdBy: goal.createdBy,
+      );
+
+      final response = await _client
+          .from('asset_goals')
+          .update(model.toUpdateJson())
+          .eq('id', goal.id)
+          .select()
+          .single();
+
+      return AssetGoalModel.fromJson(response);
+    } catch (e) {
+      throw Exception('목표 수정 실패: $e');
+    }
+  }
+
+  Future<void> deleteGoal(String goalId) async {
+    try {
+      await _client.from('asset_goals').delete().eq('id', goalId);
+    } catch (e) {
+      throw Exception('목표 삭제 실패: $e');
+    }
+  }
+
+  Future<int> getCurrentAmount({
+    required String ledgerId,
+    String? assetType,
+    List<String>? categoryIds,
+  }) async {
+    try {
+      var query = _client
+          .from('transactions')
+          .select('amount')
+          .eq('ledger_id', ledgerId)
+          .eq('type', 'asset');
+
+      if (categoryIds != null && categoryIds.isNotEmpty) {
+        query = query.inFilter('category_id', categoryIds);
+      }
+
+      final response = await query;
+
+      int total = 0;
+      for (final row in response as List) {
+        total += (row['amount'] as int);
+      }
+
+      return total;
+    } catch (e) {
+      throw Exception('현재 자산 조회 실패: $e');
+    }
+  }
+
+  Future<AssetTypeBreakdown> getAssetsByType({required String ledgerId}) async {
+    try {
+      final response = await _client
+          .from('transactions')
+          .select('''
+            amount,
+            categories(name)
+          ''')
+          .eq('ledger_id', ledgerId)
+          .eq('type', 'asset');
+
+      int savingAmount = 0;
+      int investmentAmount = 0;
+      int realEstateAmount = 0;
+
+      final savingCategories = ['정기예금', '적금'];
+      final investmentCategories = ['주식', '펀드', '암호화폐'];
+      final realEstateCategories = ['부동산'];
+
+      for (final row in response as List) {
+        final rowMap = row as Map<String, dynamic>;
+        final amount = rowMap['amount'] as int;
+        final category = rowMap['categories'] as Map<String, dynamic>?;
+        final categoryName = category?['name'] as String? ?? '';
+
+        if (savingCategories.contains(categoryName)) {
+          savingAmount += amount;
+        } else if (investmentCategories.contains(categoryName)) {
+          investmentAmount += amount;
+        } else if (realEstateCategories.contains(categoryName)) {
+          realEstateAmount += amount;
+        } else {
+          savingAmount += amount;
+        }
+      }
+
+      return AssetTypeBreakdown(
+        savingAmount: savingAmount,
+        investmentAmount: investmentAmount,
+        realEstateAmount: realEstateAmount,
+      );
+    } catch (e) {
+      throw Exception('자산 타입별 조회 실패: $e');
+    }
+  }
+
+  Future<AssetStatistics> getEnhancedStatistics({
+    required String ledgerId,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final totalAmount = await getTotalAssets(ledgerId: ledgerId);
+
+      final monthlyChange = await getMonthlyChange(
+        ledgerId: ledgerId,
+        year: now.year,
+        month: now.month,
+      );
+
+      final lastMonthTotal = await _getTotalAssetsUntil(
+        ledgerId: ledgerId,
+        date: DateTime(now.year, now.month, 0),
+      );
+
+      final yearAgoTotal = await _getTotalAssetsUntil(
+        ledgerId: ledgerId,
+        date: DateTime(now.year - 1, now.month + 1, 0),
+      );
+
+      final monthlyChangeRate = lastMonthTotal == 0
+          ? 0.0
+          : (monthlyChange / lastMonthTotal) * 100;
+
+      final annualGrowthRate = yearAgoTotal == 0
+          ? 0.0
+          : ((totalAmount - yearAgoTotal) / yearAgoTotal) * 100;
+
+      final monthly = await getMonthlyAssets(ledgerId: ledgerId);
+      final byCategory = await getAssetsByCategory(ledgerId: ledgerId);
+      final byType = await getAssetsByType(ledgerId: ledgerId);
+
+      return AssetStatistics(
+        totalAmount: totalAmount,
+        monthlyChange: monthlyChange,
+        monthlyChangeRate: monthlyChangeRate,
+        annualGrowthRate: annualGrowthRate,
+        monthly: monthly,
+        byCategory: byCategory,
+        byType: byType,
+      );
+    } catch (e) {
+      throw Exception('통계 조회 실패: $e');
+    }
+  }
+
+  Future<int> _getTotalAssetsUntil({
+    required String ledgerId,
+    required DateTime date,
+  }) async {
+    final response = await _client
+        .from('transactions')
+        .select('amount')
+        .eq('ledger_id', ledgerId)
+        .eq('type', 'asset')
+        .lte('date', date.toIso8601String().split('T').first);
+
+    int total = 0;
+    for (final row in response as List) {
+      total += (row['amount'] as int);
+    }
+
+    return total;
   }
 }

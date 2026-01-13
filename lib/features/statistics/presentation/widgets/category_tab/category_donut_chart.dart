@@ -162,8 +162,8 @@ class CategoryDonutChart extends ConsumerWidget {
     switch (type) {
       case 'income':
         return '총 수입';
-      case 'saving':
-        return '총 저축';
+      case 'asset':
+        return '총 자산';
       default:
         return '총 지출';
     }
