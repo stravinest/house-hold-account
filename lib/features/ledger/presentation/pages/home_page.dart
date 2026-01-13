@@ -226,8 +226,8 @@ class _HomePageState extends ConsumerState<HomePage> {
             label: '', // 라벨 숨김
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
+            icon: Icon(Icons.account_balance_outlined),
+            selectedIcon: Icon(Icons.account_balance),
             label: '', // 라벨 숨김
           ),
           NavigationDestination(

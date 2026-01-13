@@ -282,52 +282,6 @@ class AssetRepository {
     }
   }
 
-  Future<AssetTypeBreakdown> getAssetsByType({required String ledgerId}) async {
-    try {
-      final response = await _client
-          .from('transactions')
-          .select('''
-            amount,
-            categories(name)
-          ''')
-          .eq('ledger_id', ledgerId)
-          .eq('type', 'asset');
-
-      int savingAmount = 0;
-      int investmentAmount = 0;
-      int realEstateAmount = 0;
-
-      final savingCategories = ['정기예금', '적금'];
-      final investmentCategories = ['주식', '펀드', '암호화폐'];
-      final realEstateCategories = ['부동산'];
-
-      for (final row in response as List) {
-        final rowMap = row as Map<String, dynamic>;
-        final amount = rowMap['amount'] as int;
-        final category = rowMap['categories'] as Map<String, dynamic>?;
-        final categoryName = category?['name'] as String? ?? '';
-
-        if (savingCategories.contains(categoryName)) {
-          savingAmount += amount;
-        } else if (investmentCategories.contains(categoryName)) {
-          investmentAmount += amount;
-        } else if (realEstateCategories.contains(categoryName)) {
-          realEstateAmount += amount;
-        } else {
-          savingAmount += amount;
-        }
-      }
-
-      return AssetTypeBreakdown(
-        savingAmount: savingAmount,
-        investmentAmount: investmentAmount,
-        realEstateAmount: realEstateAmount,
-      );
-    } catch (e) {
-      throw Exception('자산 타입별 조회 실패: $e');
-    }
-  }
-
   Future<AssetStatistics> getEnhancedStatistics({
     required String ledgerId,
   }) async {
@@ -361,7 +315,6 @@ class AssetRepository {
 
       final monthly = await getMonthlyAssets(ledgerId: ledgerId);
       final byCategory = await getAssetsByCategory(ledgerId: ledgerId);
-      final byType = await getAssetsByType(ledgerId: ledgerId);
 
       return AssetStatistics(
         totalAmount: totalAmount,
@@ -370,7 +323,6 @@ class AssetRepository {
         annualGrowthRate: annualGrowthRate,
         monthly: monthly,
         byCategory: byCategory,
-        byType: byType,
       );
     } catch (e) {
       throw Exception('통계 조회 실패: $e');

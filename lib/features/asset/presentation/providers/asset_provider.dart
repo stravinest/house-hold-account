@@ -18,11 +18,6 @@ final assetStatisticsProvider = FutureProvider<AssetStatistics>((ref) async {
       annualGrowthRate: 0.0,
       monthly: [],
       byCategory: [],
-      byType: AssetTypeBreakdown(
-        savingAmount: 0,
-        investmentAmount: 0,
-        realEstateAmount: 0,
-      ),
     );
   }
 

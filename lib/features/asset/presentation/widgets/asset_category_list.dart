@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/constants/asset_constants.dart';
 import '../../domain/entities/asset_statistics.dart';
 
 class AssetCategoryList extends StatelessWidget {
@@ -9,18 +8,17 @@ class AssetCategoryList extends StatelessWidget {
 
   const AssetCategoryList({super.key, required this.byCategory});
 
-  String _getDateInfo(AssetItem item) {
-    if (item.maturityDate != null) {
-      final daysLeft = item.maturityDate!.difference(DateTime.now()).inDays;
-      if (daysLeft < 0) {
-        return '만기 ${daysLeft.abs()}일 지남';
-      } else if (daysLeft == 0) {
-        return '오늘 만기';
-      } else {
-        return '만기 ${daysLeft}일 남음';
-      }
+  String? _getDateInfo(AssetItem item) {
+    if (item.maturityDate == null) {
+      return null;
+    }
+    final daysLeft = item.maturityDate!.difference(DateTime.now()).inDays;
+    if (daysLeft < 0) {
+      return '만기 ${daysLeft.abs()}일 지남';
+    } else if (daysLeft == 0) {
+      return '오늘 만기';
     } else {
-      return '보유 중';
+      return '만기 ${daysLeft}일 남음';
     }
   }
 
@@ -53,21 +51,14 @@ class AssetCategoryList extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 children: [
-                  Icon(
-                    AssetConstants.getCategoryIcon(category.categoryName),
-                    size: 24,
-                    color: AssetConstants.getCategoryColor(
+                  Expanded(
+                    child: Text(
                       category.categoryName,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    category.categoryName,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
                   Text(
                     '${numberFormat.format(category.amount)} 원',
                     style: theme.textTheme.titleMedium?.copyWith(
@@ -79,18 +70,21 @@ class AssetCategoryList extends StatelessWidget {
               ),
             ),
             ...category.items.map((item) {
+              final dateInfo = _getDateInfo(item);
               return ListTile(
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 4,
                 ),
                 title: Text(item.title),
-                subtitle: Text(
-                  _getDateInfo(item),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+                subtitle: dateInfo != null
+                    ? Text(
+                        dateInfo,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      )
+                    : null,
                 trailing: Text(
                   '${numberFormat.format(item.amount)} 원',
                   style: theme.textTheme.bodyMedium,

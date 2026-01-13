@@ -7,7 +7,6 @@ class AssetStatistics extends Equatable {
   final double annualGrowthRate;
   final List<MonthlyAsset> monthly;
   final List<CategoryAsset> byCategory;
-  final AssetTypeBreakdown byType;
 
   const AssetStatistics({
     required this.totalAmount,
@@ -16,7 +15,6 @@ class AssetStatistics extends Equatable {
     required this.annualGrowthRate,
     required this.monthly,
     required this.byCategory,
-    required this.byType,
   });
 
   @override
@@ -27,7 +25,6 @@ class AssetStatistics extends Equatable {
     annualGrowthRate,
     monthly,
     byCategory,
-    byType,
   ];
 }
 
@@ -89,25 +86,4 @@ class AssetItem extends Equatable {
 
   @override
   List<Object?> get props => [id, title, amount, maturityDate];
-}
-
-class AssetTypeBreakdown extends Equatable {
-  final int savingAmount;
-  final int investmentAmount;
-  final int realEstateAmount;
-
-  const AssetTypeBreakdown({
-    required this.savingAmount,
-    required this.investmentAmount,
-    required this.realEstateAmount,
-  });
-
-  int get total => savingAmount + investmentAmount + realEstateAmount;
-
-  double get savingRatio => total == 0 ? 0.0 : savingAmount / total;
-  double get investmentRatio => total == 0 ? 0.0 : investmentAmount / total;
-  double get realEstateRatio => total == 0 ? 0.0 : realEstateAmount / total;
-
-  @override
-  List<Object?> get props => [savingAmount, investmentAmount, realEstateAmount];
 }
