@@ -60,7 +60,7 @@ class AssetPage extends ConsumerWidget {
   }
 }
 
-class _AssetSummaryCard extends ConsumerWidget {
+class _AssetSummaryCard extends ConsumerStatefulWidget {
   final int totalAmount;
   final int monthlyChange;
   final String? ledgerId;
@@ -72,12 +72,19 @@ class _AssetSummaryCard extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AssetSummaryCard> createState() => _AssetSummaryCardState();
+}
+
+class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
+  bool _showGoalDetails = false;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final numberFormat = NumberFormat('#,###');
-    final isPositive = monthlyChange >= 0;
-    final goalsAsync = ledgerId != null
-        ? ref.watch(assetGoalNotifierProvider(ledgerId!))
+    final isPositive = widget.monthlyChange >= 0;
+    final goalsAsync = widget.ledgerId != null
+        ? ref.watch(assetGoalNotifierProvider(widget.ledgerId!))
         : null;
     final hasGoal = goalsAsync?.value?.isNotEmpty ?? false;
 
@@ -97,7 +104,7 @@ class _AssetSummaryCard extends ConsumerWidget {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
-                if (ledgerId != null && !hasGoal)
+                if (widget.ledgerId != null && !hasGoal)
                   OutlinedButton.icon(
                     onPressed: () => _showGoalFormSheet(context, ref, null),
                     icon: const Icon(Icons.flag_outlined, size: 16),
@@ -115,7 +122,7 @@ class _AssetSummaryCard extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '${numberFormat.format(totalAmount)}원',
+              '${numberFormat.format(widget.totalAmount)}원',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
@@ -131,7 +138,7 @@ class _AssetSummaryCard extends ConsumerWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '이번 달 ${isPositive ? '+' : ''}${numberFormat.format(monthlyChange)}원',
+                  '이번 달 ${isPositive ? '+' : ''}${numberFormat.format(widget.monthlyChange)}원',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: isPositive ? Colors.green : Colors.red,
                     fontWeight: FontWeight.w600,
@@ -139,11 +146,17 @@ class _AssetSummaryCard extends ConsumerWidget {
                 ),
               ],
             ),
-            if (ledgerId != null) ...[
+            if (widget.ledgerId != null) ...[
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 16),
-              _buildGoalSection(context, ref, ledgerId!, numberFormat, theme),
+              _buildGoalSection(
+                context,
+                ref,
+                widget.ledgerId!,
+                numberFormat,
+                theme,
+              ),
             ],
           ],
         ),
@@ -319,12 +332,12 @@ class _AssetSummaryCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Goal title with action buttons
+                // Goal target amount with action buttons
                 Row(
                   children: [
                     Expanded(
                       child: Text(
-                        nearestGoal.title,
+                        '${numberFormat.format(nearestGoal.targetAmount)}원',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.3,
@@ -352,229 +365,265 @@ class _AssetSummaryCard extends ConsumerWidget {
                 ),
                 const SizedBox(height: 20),
 
-                // Progress section with percentage
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '진행률',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: progressColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        '${(progress * 100).toStringAsFixed(1)}%',
-                        style: theme.textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: progressColor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
+                // Progress bar with percentage indicator above current position
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _showGoalDetails = !_showGoalDetails;
+                    });
+                  },
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final barWidth = constraints.maxWidth;
+                        final percentPosition = barWidth * clampedProgress;
+                        final percentText =
+                            '${(progress * 100).toStringAsFixed(1)}%';
 
-                // Enhanced progress bar with clear border
-                Container(
-                  height: 18,
-                  decoration: BoxDecoration(
-                    color: theme.brightness == Brightness.dark
-                        ? Colors.white.withValues(alpha: 0.15)
-                        : Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(9),
-                    border: Border.all(
-                      color: theme.brightness == Brightness.dark
-                          ? Colors.white.withValues(alpha: 0.8)
-                          : Colors.grey.shade600,
-                      width: 2,
-                    ),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(7),
-                    child: Stack(
-                      children: [
-                        // Progress fill with gradient
-                        FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: clampedProgress,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  progressColor.withValues(alpha: 0.8),
-                                  progressColor,
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Percentage indicator positioned above progress
+                            SizedBox(
+                              height: 24,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Positioned(
+                                    left: percentPosition,
+                                    bottom: 0,
+                                    child: Transform.translate(
+                                      offset: const Offset(-20, 0),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: progressColor.withValues(
+                                            alpha: 0.15,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          percentText,
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: progressColor,
+                                                fontSize: 11,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(7),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: progressColor.withValues(alpha: 0.3),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
+                            ),
+                            const SizedBox(height: 4),
+
+                            // Thin rectangular progress bar
+                            SizedBox(
+                              height: 10,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: theme.brightness == Brightness.dark
+                                      ? Colors.white.withValues(alpha: 0.15)
+                                      : Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(2),
+                                  border: Border.all(
+                                    color: theme.brightness == Brightness.dark
+                                        ? Colors.white.withValues(alpha: 0.6)
+                                        : Colors.grey.shade500,
+                                    width: 1,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(1),
+                                  child: FractionallySizedBox(
+                                    alignment: Alignment.centerLeft,
+                                    widthFactor: clampedProgress,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            progressColor.withValues(
+                                              alpha: 0.9,
+                                            ),
+                                            progressColor,
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+
+                            // 0% and 100% labels at ends
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  '0%',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.6),
+                                    fontSize: 10,
+                                  ),
+                                ),
+                                Text(
+                                  '100%',
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant
+                                        .withValues(alpha: 0.6),
+                                    fontSize: 10,
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                        // Subtle shine effect
-                        if (clampedProgress > 0.1)
-                          FractionallySizedBox(
-                            alignment: Alignment.centerLeft,
-                            widthFactor: clampedProgress,
-                            child: Container(
-                              margin: const EdgeInsets.only(
-                                top: 3,
-                                left: 4,
-                                right: 4,
-                              ),
-                              height: 4,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.white.withValues(alpha: 0.0),
-                                    Colors.white.withValues(alpha: 0.3),
-                                    Colors.white.withValues(alpha: 0.0),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
-                      ],
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
                 // Amount display with arrow
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(
-                      alpha: 0.5,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      // Current amount
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '현재',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${numberFormat.format(currentAmount)}원',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      // Arrow indicator
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.1,
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 16,
-                          color: theme.colorScheme.primary,
-                        ),
-                      ),
-                      // Target amount
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '목표',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${numberFormat.format(nearestGoal.targetAmount)}원',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Remaining amount info
-                if (nearestGoal.targetAmount > currentAmount) ...[
-                  const SizedBox(height: 12),
-                  Center(
-                    child: Text(
-                      '${numberFormat.format(nearestGoal.targetAmount - currentAmount)}원 남음',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                ] else if (progress >= 1.0) ...[
-                  const SizedBox(height: 12),
+                if (_showGoalDetails) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.check_circle_rounded,
-                          size: 16,
-                          color: theme.colorScheme.primary,
+                        // Current amount
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '현재',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${numberFormat.format(currentAmount)}원',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.primary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '목표 달성 완료!',
-                          style: theme.textTheme.labelLarge?.copyWith(
+                        // Arrow indicator
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
                             color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        // Target amount
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                '목표',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${numberFormat.format(nearestGoal.targetAmount)}원',
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                ],
+
+                  // Remaining amount info
+                  if (nearestGoal.targetAmount > currentAmount) ...[
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Text(
+                        '${numberFormat.format(nearestGoal.targetAmount - currentAmount)}원 남음',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ] else if (progress >= 1.0) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.check_circle_rounded,
+                            size: 16,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '목표 달성 완료!',
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ] else
+                  Center(
+                    child: Text(
+                      '탭하여 상세 금액 보기',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.6,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             );
           },

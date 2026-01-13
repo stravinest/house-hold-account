@@ -17,7 +17,6 @@ class AssetGoalFormSheet extends ConsumerStatefulWidget {
 }
 
 class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
-  late TextEditingController _titleController;
   late TextEditingController _amountController;
   DateTime? _targetDate;
 
@@ -26,7 +25,6 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.goal?.title);
     final amount = widget.goal?.targetAmount;
     _amountController = TextEditingController(
       text: amount != null ? NumberFormat('#,###', 'ko_KR').format(amount) : '',
@@ -36,7 +34,6 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
 
   @override
   void dispose() {
-    _titleController.dispose();
     _amountController.dispose();
     super.dispose();
   }
@@ -84,8 +81,6 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildTitleField(),
-                        const SizedBox(height: 20),
                         _buildAmountField(),
                         const SizedBox(height: 20),
                         _buildTargetDateField(context),
@@ -126,39 +121,6 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTitleField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '목표 제목',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextFormField(
-          controller: _titleController,
-          textInputAction: TextInputAction.next,
-          decoration: InputDecoration(
-            hintText: '예: 1억 모으기, 결혼자금 마련',
-            prefixIcon: Icon(
-              Icons.flag_outlined,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-          ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return '목표 제목을 입력하세요';
-            }
-            return null;
-          },
-        ),
-      ],
     );
   }
 
@@ -342,7 +304,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
 
       if (isEditing && widget.goal != null) {
         final updatedGoal = widget.goal!.copyWith(
-          title: _titleController.text.trim(),
+          title: '목표',
           targetAmount: targetAmount,
           targetDate: _targetDate,
           assetType: null,
@@ -350,7 +312,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
         await notifier.updateGoal(updatedGoal);
       } else {
         await notifier.createGoal(
-          title: _titleController.text.trim(),
+          title: '목표',
           targetAmount: targetAmount,
           targetDate: _targetDate,
           assetType: null,
