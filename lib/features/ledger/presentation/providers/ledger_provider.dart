@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../data/repositories/ledger_repository.dart';
@@ -12,6 +13,17 @@ final ledgerRepositoryProvider = Provider<LedgerRepository>((ref) {
 
 // 현재 선택된 가계부 ID
 final selectedLedgerIdProvider = StateProvider<String?>((ref) => null);
+
+// selectedLedgerIdProvider 변경 감지 및 SharedPreferences 저장
+final ledgerIdPersistenceProvider = Provider<void>((ref) {
+  ref.listen<String?>(selectedLedgerIdProvider, (previous, next) async {
+    if (next != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('flutter.current_ledger_id', next);
+      debugPrint('Saved current ledger ID to SharedPreferences: $next');
+    }
+  });
+});
 
 // 사용자의 가계부 목록
 final ledgersProvider = FutureProvider<List<Ledger>>((ref) async {
@@ -37,11 +49,12 @@ final currentLedgerProvider = FutureProvider<Ledger?>((ref) async {
 });
 
 // 가계부 멤버 목록
-final ledgerMembersProvider =
-    FutureProvider.family<List<LedgerMember>, String>((ref, ledgerId) async {
-  final repository = ref.watch(ledgerRepositoryProvider);
-  return repository.getMembers(ledgerId);
-});
+final ledgerMembersProvider = FutureProvider.family<List<LedgerMember>, String>(
+  (ref, ledgerId) async {
+    final repository = ref.watch(ledgerRepositoryProvider);
+    return repository.getMembers(ledgerId);
+  },
+);
 
 // 가계부 관리 노티파이어
 class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
@@ -51,7 +64,7 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
   RealtimeChannel? _membersChannel;
 
   LedgerNotifier(this._repository, this._ref)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     loadLedgers();
     _subscribeToChanges();
   }
@@ -183,10 +196,7 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
 
     // 현재 상태와 다르면 업데이트
     if (currentIsShared != shouldBeShared) {
-      await _repository.updateLedger(
-        id: ledgerId,
-        isShared: shouldBeShared,
-      );
+      await _repository.updateLedger(id: ledgerId, isShared: shouldBeShared);
       // Realtime 구독이 자동으로 데이터를 새로고침하므로 별도 호출 불필요
     }
   }
@@ -194,6 +204,6 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
 
 final ledgerNotifierProvider =
     StateNotifierProvider<LedgerNotifier, AsyncValue<List<Ledger>>>((ref) {
-  final repository = ref.watch(ledgerRepositoryProvider);
-  return LedgerNotifier(repository, ref);
-});
+      final repository = ref.watch(ledgerRepositoryProvider);
+      return LedgerNotifier(repository, ref);
+    });

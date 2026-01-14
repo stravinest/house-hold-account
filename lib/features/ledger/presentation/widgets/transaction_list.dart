@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/widgets/empty_state.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../../transaction/presentation/widgets/add_transaction_sheet.dart';
@@ -12,10 +13,7 @@ import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart'
 class TransactionList extends ConsumerWidget {
   final DateTime date;
 
-  const TransactionList({
-    super.key,
-    required this.date,
-  });
+  const TransactionList({super.key, required this.date});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,15 +52,11 @@ class TransactionList extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         children: [
           const SizedBox(height: 100),
-          const Icon(Icons.error_outline, size: 48),
-          const SizedBox(height: 16),
-          Text(
-            '오류가 발생했습니다: $e',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: FilledButton.tonal(
+          EmptyState(
+            icon: Icons.error_outline,
+            message: '오류가 발생했습니다',
+            subtitle: e.toString(),
+            action: FilledButton.tonal(
               onPressed: () => ref.refresh(dailyTransactionsProvider),
               child: const Text('다시 시도'),
             ),
@@ -87,30 +81,11 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       children: [
         const SizedBox(height: 100),
-        Icon(
-          Icons.receipt_long_outlined,
-          size: 64,
-          color: Theme.of(context).colorScheme.outlineVariant,
-        ),
-        const SizedBox(height: 16),
-        Text(
-          dateFormat.format(date),
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          '기록된 내역이 없습니다',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-        ),
-        const SizedBox(height: 24),
-        Center(
-          child: FilledButton.tonal(
+        EmptyState(
+          icon: Icons.receipt_long_outlined,
+          message: dateFormat.format(date),
+          subtitle: '기록된 내역이 없습니다',
+          action: FilledButton.tonal(
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -132,20 +107,17 @@ class _TransactionCard extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback onDelete;
 
-  const _TransactionCard({
-    required this.transaction,
-    required this.onDelete,
-  });
+  const _TransactionCard({required this.transaction, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final formatter = NumberFormat('#,###', 'ko_KR');
     final amountColor = transaction.isIncome
-        ? Colors.blue
+        ? colorScheme.primary
         : transaction.isAssetType
-            ? Colors.green
-            : Colors.red;
+        ? colorScheme.tertiary
+        : colorScheme.error;
 
     return Slidable(
       endActionPane: ActionPane(
@@ -157,9 +129,8 @@ class _TransactionCard extends StatelessWidget {
                 context: context,
                 isScrollControlled: true,
                 useSafeArea: true,
-                builder: (context) => EditTransactionSheet(
-                  transaction: transaction,
-                ),
+                builder: (context) =>
+                    EditTransactionSheet(transaction: transaction),
               );
             },
             backgroundColor: colorScheme.primary,
@@ -205,9 +176,8 @@ class _TransactionCard extends StatelessWidget {
               context: context,
               isScrollControlled: true,
               useSafeArea: true,
-              builder: (context) => TransactionDetailSheet(
-                transaction: transaction,
-              ),
+              builder: (context) =>
+                  TransactionDetailSheet(transaction: transaction),
             );
           },
           borderRadius: BorderRadius.circular(12),
@@ -220,7 +190,8 @@ class _TransactionCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: _parseColor(transaction.categoryColor) ??
+                    color:
+                        _parseColor(transaction.categoryColor) ??
                         colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -242,16 +213,16 @@ class _TransactionCard extends StatelessWidget {
                           transaction.title!.isNotEmpty) ...[
                         Text(
                           transaction.title!,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ] else ...[
                         Text(
                           '제목 없음',
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: colorScheme.onSurfaceVariant,
                               ),
@@ -261,10 +232,8 @@ class _TransactionCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           transaction.userName!,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.outline,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.outline),
                         ),
                       ],
                     ],
@@ -273,11 +242,15 @@ class _TransactionCard extends StatelessWidget {
 
                 // 금액
                 Text(
-                  '${transaction.isIncome ? '+' : transaction.isAssetType ? '' : '-'}${formatter.format(transaction.amount)}원',
+                  '${transaction.isIncome
+                      ? '+'
+                      : transaction.isAssetType
+                      ? ''
+                      : '-'}${formatter.format(transaction.amount)}원',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: amountColor,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: amountColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),

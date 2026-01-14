@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
 import '../../../fixed_expense/domain/entities/fixed_expense_category.dart';
@@ -311,7 +312,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                   margin: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: colorScheme.onSurfaceVariant.withAlpha(76),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
                   ),
                 ),
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_provider.dart';
@@ -19,10 +20,10 @@ class TransactionDetailSheet extends ConsumerWidget {
     final formatter = NumberFormat('#,###', 'ko_KR');
     final dateFormat = DateFormat('yyyy년 M월 d일 (E)', 'ko_KR');
     final amountColor = transaction.isIncome
-        ? Colors.blue
+        ? colorScheme.primary
         : transaction.isAssetType
-            ? Colors.green
-            : Colors.red;
+        ? colorScheme.tertiary
+        : colorScheme.error;
 
     // 현재 사용자 확인
     final currentUser = ref.watch(currentUserProvider);
@@ -46,7 +47,7 @@ class TransactionDetailSheet extends ConsumerWidget {
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               color: colorScheme.onSurfaceVariant.withAlpha(76),
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
             ),
           ),
 
@@ -118,7 +119,11 @@ class TransactionDetailSheet extends ConsumerWidget {
                     icon: Icons.attach_money,
                     label: '금액',
                     value:
-                        '${transaction.isIncome ? '+' : transaction.isAssetType ? '' : '-'}${formatter.format(transaction.amount)}원',
+                        '${transaction.isIncome
+                            ? '+'
+                            : transaction.isAssetType
+                            ? ''
+                            : '-'}${formatter.format(transaction.amount)}원',
                     valueColor: amountColor,
                   ),
 

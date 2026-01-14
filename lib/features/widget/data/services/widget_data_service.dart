@@ -13,12 +13,11 @@ class WidgetDataService {
   static const String _androidMonthlySummaryWidget = 'MonthlySummaryWidget';
 
   // iOS App Group ID (Info.plist와 동일해야 함)
-  static const String _iosAppGroupId = 'group.com.household.shared.sharedHouseholdAccount';
+  static const String _iosAppGroupId =
+      'group.com.household.shared.sharedHouseholdAccount';
 
-  // 위젯 데이터 키
   static const String keyMonthlyExpense = 'monthly_expense';
   static const String keyMonthlyIncome = 'monthly_income';
-  static const String keyMonthlyBalance = 'monthly_balance';
   static const String keyLastUpdated = 'last_updated';
   static const String keyLedgerName = 'ledger_name';
 
@@ -47,21 +46,23 @@ class WidgetDataService {
     required String ledgerName,
   }) async {
     try {
-      final balance = monthlyIncome - monthlyExpense;
       final now = DateTime.now();
       final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
 
-      // 데이터 저장
       await Future.wait([
         HomeWidget.saveWidgetData<int>(keyMonthlyExpense, monthlyExpense),
         HomeWidget.saveWidgetData<int>(keyMonthlyIncome, monthlyIncome),
-        HomeWidget.saveWidgetData<int>(keyMonthlyBalance, balance),
-        HomeWidget.saveWidgetData<String>(keyLastUpdated, dateFormat.format(now)),
+        HomeWidget.saveWidgetData<String>(
+          keyLastUpdated,
+          dateFormat.format(now),
+        ),
         HomeWidget.saveWidgetData<String>(keyLedgerName, ledgerName),
       ]);
 
-      debugPrint('[WidgetDataService] 데이터 저장 완료 - '
-          '지출: $monthlyExpense, 수입: $monthlyIncome, 잔액: $balance');
+      debugPrint(
+        '[WidgetDataService] 데이터 저장 완료 - '
+        '지출: $monthlyExpense, 수입: $monthlyIncome',
+      );
 
       // 위젯 업데이트 트리거
       await refreshWidgets();
@@ -100,7 +101,6 @@ class WidgetDataService {
       await Future.wait([
         HomeWidget.saveWidgetData<int>(keyMonthlyExpense, 0),
         HomeWidget.saveWidgetData<int>(keyMonthlyIncome, 0),
-        HomeWidget.saveWidgetData<int>(keyMonthlyBalance, 0),
         HomeWidget.saveWidgetData<String>(keyLastUpdated, ''),
         HomeWidget.saveWidgetData<String>(keyLedgerName, ''),
       ]);

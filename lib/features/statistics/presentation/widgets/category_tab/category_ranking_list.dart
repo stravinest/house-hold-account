@@ -71,7 +71,7 @@ class _CategoryRankingItem extends StatelessWidget {
       final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
       return Color(colorValue);
     } catch (e) {
-      return Colors.grey;
+      return const Color(0xFF9E9E9E);
     }
   }
 

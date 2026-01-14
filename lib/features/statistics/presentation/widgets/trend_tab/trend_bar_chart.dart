@@ -56,7 +56,10 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
     super.dispose();
   }
 
-  void _scrollToSelectedMonth(List<MonthlyStatistics> data, DateTime selectedDate) {
+  void _scrollToSelectedMonth(
+    List<MonthlyStatistics> data,
+    DateTime selectedDate,
+  ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients && data.isNotEmpty) {
         // 선택된 월은 데이터의 마지막이므로 맨 끝으로 스크롤
@@ -103,8 +106,8 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
         child: Text(
           '데이터가 없습니다',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
@@ -147,7 +150,8 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
                 minY: 0,
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (_) => theme.colorScheme.surfaceContainerHighest,
+                    getTooltipColor: (_) =>
+                        theme.colorScheme.surfaceContainerHighest,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final item = data[group.x.toInt()];
                       return BarTooltipItem(
@@ -166,14 +170,17 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
                         final index = value.toInt();
                         if (index >= 0 && index < data.length) {
                           final item = data[index];
-                          final isSelected = item.year == selectedDate.year &&
+                          final isSelected =
+                              item.year == selectedDate.year &&
                               item.month == selectedDate.month;
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               '${item.year % 100}.${item.month.toString().padLeft(2, '0')}',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                             ),
                           );
@@ -240,7 +247,8 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
     return List.generate(data.length, (index) {
       final item = data[index];
       final value = _getValueByType(item, widget.selectedType);
-      final isSelected = item.year == selectedDate.year && item.month == selectedDate.month;
+      final isSelected =
+          item.year == selectedDate.year && item.month == selectedDate.month;
 
       return BarChartGroupData(
         x: index,
@@ -268,14 +276,14 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
   }
 
   Color _getBarColor(String type, BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     switch (type) {
       case 'income':
-        return isDark ? Colors.blue.shade300 : Colors.blue;
+        return colorScheme.primary;
       case 'asset':
-        return isDark ? Colors.green.shade300 : Colors.green;
+        return colorScheme.tertiary;
       default:
-        return isDark ? Colors.red.shade300 : Colors.red;
+        return colorScheme.error;
     }
   }
 }
@@ -305,7 +313,10 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
     super.dispose();
   }
 
-  void _scrollToSelectedYear(List<YearlyStatistics> data, DateTime selectedDate) {
+  void _scrollToSelectedYear(
+    List<YearlyStatistics> data,
+    DateTime selectedDate,
+  ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients && data.isNotEmpty) {
         // 선택된 연도는 데이터의 마지막이므로 맨 끝으로 스크롤
@@ -328,7 +339,8 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
         final data = trendData.data.cast<YearlyStatistics>();
 
         // 선택된 연도가 변경되었거나 첫 로드인 경우 스크롤 조정
-        if (_lastSelectedYear == null || _lastSelectedYear != selectedDate.year) {
+        if (_lastSelectedYear == null ||
+            _lastSelectedYear != selectedDate.year) {
           _lastSelectedYear = selectedDate.year;
           _scrollToSelectedYear(data, selectedDate);
         }
@@ -350,8 +362,8 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
         child: Text(
           '데이터가 없습니다',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
@@ -394,7 +406,8 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
                 minY: 0,
                 barTouchData: BarTouchData(
                   touchTooltipData: BarTouchTooltipData(
-                    getTooltipColor: (_) => theme.colorScheme.surfaceContainerHighest,
+                    getTooltipColor: (_) =>
+                        theme.colorScheme.surfaceContainerHighest,
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final item = data[group.x.toInt()];
                       return BarTooltipItem(
@@ -419,7 +432,9 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
                             child: Text(
                               '${item.year}년',
                               style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                             ),
                           );
@@ -514,14 +529,14 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
   }
 
   Color _getBarColor(String type, BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     switch (type) {
       case 'income':
-        return isDark ? Colors.blue.shade300 : Colors.blue;
+        return colorScheme.primary;
       case 'asset':
-        return isDark ? Colors.green.shade300 : Colors.green;
+        return colorScheme.tertiary;
       default:
-        return isDark ? Colors.red.shade300 : Colors.red;
+        return colorScheme.error;
     }
   }
 }

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/widgets/empty_state.dart';
 import '../../domain/entities/category.dart';
 import '../providers/category_provider.dart';
 
@@ -14,8 +15,7 @@ class CategoryManagementPage extends ConsumerStatefulWidget {
       _CategoryManagementPageState();
 }
 
-class _CategoryManagementPageState
-    extends ConsumerState<CategoryManagementPage>
+class _CategoryManagementPageState extends ConsumerState<CategoryManagementPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -87,22 +87,14 @@ class _CategoryListView extends ConsumerWidget {
       data: (categories) {
         final filtered = categories.where((c) => c.type == type).toList();
         if (filtered.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.category_outlined,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  '등록된 ${type == 'expense' ? '지출' : type == 'income' ? '수입' : '자산'} 카테고리가 없습니다',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ],
-            ),
+          final typeName = type == 'expense'
+              ? '지출'
+              : type == 'income'
+              ? '수입'
+              : '자산';
+          return EmptyState(
+            icon: Icons.category_outlined,
+            message: '등록된 $typeName 카테고리가 없습니다',
           );
         }
 
@@ -155,21 +147,24 @@ class _CategoryTile extends ConsumerWidget {
   void _showEditDialog(BuildContext context, Category category) {
     showDialog(
       context: context,
-      builder: (context) => _CategoryDialog(
-        type: category.type,
-        category: category,
-      ),
+      builder: (context) =>
+          _CategoryDialog(type: category.type, category: category),
     );
   }
 
   void _showDeleteConfirm(
-      BuildContext context, WidgetRef ref, Category category) {
+    BuildContext context,
+    WidgetRef ref,
+    Category category,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('카테고리 삭제'),
-        content: Text('\'${category.name}\' 카테고리를 삭제하시겠습니까?\n\n'
-            '이 카테고리로 기록된 거래는 삭제되지 않습니다.'),
+        content: Text(
+          '\'${category.name}\' 카테고리를 삭제하시겠습니까?\n\n'
+          '이 카테고리로 기록된 거래는 삭제되지 않습니다.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -213,10 +208,7 @@ class _CategoryDialog extends ConsumerStatefulWidget {
   final String type;
   final Category? category;
 
-  const _CategoryDialog({
-    required this.type,
-    this.category,
-  });
+  const _CategoryDialog({required this.type, this.category});
 
   @override
   ConsumerState<_CategoryDialog> createState() => _CategoryDialogState();
@@ -227,10 +219,22 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   late TextEditingController _nameController;
 
   static const List<String> _colorPalette = [
-    '#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3',
-    '#A8DADC', '#F4A261', '#E76F51', '#2A9D8F',
-    '#4CAF50', '#2196F3', '#9C27B0', '#00BCD4',
-    '#E91E63', '#795548', '#607D8B', '#8BC34A',
+    '#FF6B6B',
+    '#4ECDC4',
+    '#FFE66D',
+    '#95E1D3',
+    '#A8DADC',
+    '#F4A261',
+    '#E76F51',
+    '#2A9D8F',
+    '#4CAF50',
+    '#2196F3',
+    '#9C27B0',
+    '#00BCD4',
+    '#E91E63',
+    '#795548',
+    '#607D8B',
+    '#8BC34A',
   ];
 
   String _generateRandomColor() {
@@ -277,10 +281,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('취소'),
         ),
-        TextButton(
-          onPressed: _submit,
-          child: Text(isEdit ? '수정' : '추가'),
-        ),
+        TextButton(onPressed: _submit, child: Text(isEdit ? '수정' : '추가')),
       ],
     );
   }
@@ -290,12 +291,16 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
 
     try {
       if (widget.category != null) {
-        await ref.read(categoryNotifierProvider.notifier).updateCategory(
+        await ref
+            .read(categoryNotifierProvider.notifier)
+            .updateCategory(
               id: widget.category!.id,
               name: _nameController.text,
             );
       } else {
-        await ref.read(categoryNotifierProvider.notifier).createCategory(
+        await ref
+            .read(categoryNotifierProvider.notifier)
+            .createCategory(
               name: _nameController.text,
               icon: '',
               color: _generateRandomColor(),
@@ -307,9 +312,9 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.category != null
-                ? '카테고리가 수정되었습니다'
-                : '카테고리가 추가되었습니다'),
+            content: Text(
+              widget.category != null ? '카테고리가 수정되었습니다' : '카테고리가 추가되었습니다',
+            ),
             duration: const Duration(seconds: 1),
           ),
         );

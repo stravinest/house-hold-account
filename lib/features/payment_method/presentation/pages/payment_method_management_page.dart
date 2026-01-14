@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/widgets/empty_state.dart';
 import '../../domain/entities/payment_method.dart';
 import '../providers/payment_method_provider.dart';
 
@@ -34,27 +35,13 @@ class _PaymentMethodManagementPageState
       body: paymentMethodsAsync.when(
         data: (paymentMethods) {
           if (paymentMethods.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.credit_card_outlined,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '등록된 결제수단이 없습니다',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddDialog(context),
-                    icon: const Icon(Icons.add),
-                    label: const Text('결제수단 추가'),
-                  ),
-                ],
+            return EmptyState(
+              icon: Icons.credit_card_outlined,
+              message: '등록된 결제수단이 없습니다',
+              action: ElevatedButton.icon(
+                onPressed: () => _showAddDialog(context),
+                icon: const Icon(Icons.add),
+                label: const Text('결제수단 추가'),
               ),
             );
           }

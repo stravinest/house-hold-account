@@ -10,12 +10,12 @@ class AssetDonutChart extends StatelessWidget {
   const AssetDonutChart({super.key, required this.byCategory});
 
   Color _parseColor(String? colorString) {
-    if (colorString == null) return Colors.grey;
+    if (colorString == null) return const Color(0xFF9E9E9E);
     try {
       final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
       return Color(colorValue);
     } catch (e) {
-      return Colors.grey;
+      return const Color(0xFF9E9E9E);
     }
   }
 

@@ -47,12 +47,16 @@ class _MonthlyDetailList extends ConsumerWidget {
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final item = reversedData[index];
-            final previousItem = index < reversedData.length - 1 ? reversedData[index + 1] : null;
+            final previousItem = index < reversedData.length - 1
+                ? reversedData[index + 1]
+                : null;
 
             return _TrendDetailItem(
               label: '${item.year}년 ${item.month}월',
               amount: _getValueByType(item, selectedType),
-              previousAmount: previousItem != null ? _getValueByType(previousItem, selectedType) : null,
+              previousAmount: previousItem != null
+                  ? _getValueByType(previousItem, selectedType)
+                  : null,
               type: selectedType,
               numberFormat: numberFormat,
             );
@@ -102,12 +106,16 @@ class _YearlyDetailList extends ConsumerWidget {
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final item = reversedData[index];
-            final previousItem = index < reversedData.length - 1 ? reversedData[index + 1] : null;
+            final previousItem = index < reversedData.length - 1
+                ? reversedData[index + 1]
+                : null;
 
             return _TrendDetailItem(
               label: '${item.year}년',
               amount: _getValueByType(item, selectedType),
-              previousAmount: previousItem != null ? _getValueByType(previousItem, selectedType) : null,
+              previousAmount: previousItem != null
+                  ? _getValueByType(previousItem, selectedType)
+                  : null,
               type: selectedType,
               numberFormat: numberFormat,
             );
@@ -157,10 +165,7 @@ class _TrendDetailItem extends StatelessWidget {
           // 기간 라벨
           Expanded(
             flex: 2,
-            child: Text(
-              label,
-              style: theme.textTheme.bodyLarge,
-            ),
+            child: Text(label, style: theme.textTheme.bodyLarge),
           ),
           // 금액
           Expanded(
@@ -175,10 +180,7 @@ class _TrendDetailItem extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           // 전월/전년 대비
-          Expanded(
-            flex: 2,
-            child: _buildComparison(context),
-          ),
+          Expanded(flex: 2, child: _buildComparison(context)),
         ],
       ),
     );
@@ -197,11 +199,16 @@ class _TrendDetailItem extends StatelessWidget {
       );
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
     final difference = amount - previousAmount!;
     final isIncrease = difference > 0;
     final isDecrease = difference < 0;
-    final arrow = isIncrease ? Icons.arrow_upward : (isDecrease ? Icons.arrow_downward : Icons.remove);
-    final color = isIncrease ? Colors.red : (isDecrease ? Colors.blue : Colors.grey);
+    final arrow = isIncrease
+        ? Icons.arrow_upward
+        : (isDecrease ? Icons.arrow_downward : Icons.remove);
+    final color = isIncrease
+        ? colorScheme.error
+        : (isDecrease ? colorScheme.primary : colorScheme.onSurfaceVariant);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../shared/themes/theme_provider.dart';
 import '../../../../shared/widgets/color_picker.dart';
+import '../../../../shared/widgets/section_header.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notification/presentation/pages/notification_settings_page.dart';
 
@@ -22,7 +23,7 @@ class SettingsPage extends ConsumerWidget {
       body: ListView(
         children: [
           // 앱 설정 섹션
-          _SectionHeader(title: '앱 설정'),
+          const SectionHeader(title: '앱 설정'),
           ListTile(
             leading: const Icon(Icons.palette_outlined),
             title: const Text('테마'),
@@ -57,7 +58,7 @@ class SettingsPage extends ConsumerWidget {
           const Divider(),
 
           // 계정 섹션
-          _SectionHeader(title: '계정'),
+          const SectionHeader(title: '계정'),
 
           // 프로필 편집 섹션
           Card(
@@ -125,7 +126,7 @@ class SettingsPage extends ConsumerWidget {
           const Divider(),
 
           // 데이터 섹션
-          _SectionHeader(title: '데이터'),
+          const SectionHeader(title: '데이터'),
           ListTile(
             leading: const Icon(Icons.download_outlined),
             title: const Text('데이터 내보내기'),
@@ -137,7 +138,7 @@ class SettingsPage extends ConsumerWidget {
           const Divider(),
 
           // 정보 섹션
-          _SectionHeader(title: '정보'),
+          const SectionHeader(title: '정보'),
           ListTile(
             leading: const Icon(Icons.info_outline),
             title: const Text('앱 정보'),
@@ -164,15 +165,24 @@ class SettingsPage extends ConsumerWidget {
           const Divider(),
 
           // 로그아웃/탈퇴
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text('로그아웃', style: TextStyle(color: Colors.red)),
-            onTap: () => _logout(context, ref),
-          ),
-          ListTile(
-            leading: const Icon(Icons.delete_forever, color: Colors.red),
-            title: const Text('회원 탈퇴', style: TextStyle(color: Colors.red)),
-            onTap: () => _deleteAccount(context, ref),
+          Builder(
+            builder: (context) {
+              final errorColor = Theme.of(context).colorScheme.error;
+              return Column(
+                children: [
+                  ListTile(
+                    leading: Icon(Icons.logout, color: errorColor),
+                    title: Text('로그아웃', style: TextStyle(color: errorColor)),
+                    onTap: () => _logout(context, ref),
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.delete_forever, color: errorColor),
+                    title: Text('회원 탈퇴', style: TextStyle(color: errorColor)),
+                    onTap: () => _deleteAccount(context, ref),
+                  ),
+                ],
+              );
+            },
           ),
 
           const SizedBox(height: 32),
@@ -369,7 +379,9 @@ class SettingsPage extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('탈퇴'),
           ),
         ],
@@ -385,26 +397,6 @@ class SettingsPage extends ConsumerWidget {
         ),
       );
     }
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
   }
 }
 

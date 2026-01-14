@@ -23,20 +23,17 @@ class FixedExpenseSettingsRepository {
     }
   }
 
-  // 고정비 설정 업데이트
   Future<FixedExpenseSettingsModel> updateSettings({
     required String ledgerId,
     required bool includeInExpense,
   }) async {
     try {
-      final updates = FixedExpenseSettingsModel.toUpdateJson(
-        includeInExpense: includeInExpense,
-      );
-
       final response = await _client
           .from('fixed_expense_settings')
-          .update(updates)
-          .eq('ledger_id', ledgerId)
+          .upsert({
+            'ledger_id': ledgerId,
+            'include_in_expense': includeInExpense,
+          }, onConflict: 'ledger_id')
           .select()
           .single();
 

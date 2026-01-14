@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../domain/entities/asset_goal.dart';
 import '../providers/asset_provider.dart';
@@ -134,13 +135,17 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                 Icon(
                   isPositive ? Icons.arrow_upward : Icons.arrow_downward,
                   size: 16,
-                  color: isPositive ? Colors.green : Colors.red,
+                  color: isPositive
+                      ? theme.colorScheme.tertiary
+                      : theme.colorScheme.error,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '이번 달 ${isPositive ? '+' : ''}${numberFormat.format(widget.monthlyChange)}원',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: isPositive ? Colors.green : Colors.red,
+                    color: isPositive
+                        ? theme.colorScheme.tertiary
+                        : theme.colorScheme.error,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -433,17 +438,23 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                                 decoration: BoxDecoration(
                                   color: theme.brightness == Brightness.dark
                                       ? Colors.white.withValues(alpha: 0.15)
-                                      : Colors.grey.shade300,
-                                  borderRadius: BorderRadius.circular(2),
+                                      : theme
+                                            .colorScheme
+                                            .surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(
+                                    BorderRadiusToken.xs,
+                                  ),
                                   border: Border.all(
                                     color: theme.brightness == Brightness.dark
                                         ? Colors.white.withValues(alpha: 0.6)
-                                        : Colors.grey.shade500,
+                                        : theme.colorScheme.onSurfaceVariant,
                                     width: 1,
                                   ),
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(1),
+                                  borderRadius: BorderRadius.circular(
+                                    BorderRadiusToken.xs,
+                                  ),
                                   child: FractionallySizedBox(
                                     alignment: Alignment.centerLeft,
                                     widthFactor: clampedProgress,

@@ -29,14 +29,14 @@ class CategorySummaryCard extends ConsumerWidget {
   }
 
   Color _getTypeColor(String type, BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
     switch (type) {
       case 'income':
-        return isDark ? Colors.blue.shade300 : Colors.blue;
+        return colorScheme.primary;
       case 'asset':
-        return isDark ? Colors.green.shade300 : Colors.green;
+        return colorScheme.tertiary;
       default:
-        return isDark ? Colors.red.shade300 : Colors.red;
+        return colorScheme.error;
     }
   }
 
@@ -115,14 +115,15 @@ class CategorySummaryCard extends ConsumerWidget {
       );
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
     final isIncrease = comparison.isIncrease;
     final isDecrease = comparison.isDecrease;
     final arrow = isIncrease
         ? Icons.arrow_upward
         : (isDecrease ? Icons.arrow_downward : Icons.remove);
     final arrowColor = isIncrease
-        ? Colors.red
-        : (isDecrease ? Colors.blue : Colors.grey);
+        ? colorScheme.error
+        : (isDecrease ? colorScheme.primary : colorScheme.onSurfaceVariant);
     final changeText = isIncrease ? '증가' : (isDecrease ? '감소' : '동일');
 
     return Row(

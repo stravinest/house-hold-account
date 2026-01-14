@@ -3,12 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 /// 반복 주기 타입
-enum RecurringType {
-  none,
-  daily,
-  monthly,
-  yearly,
-}
+enum RecurringType { none, daily, monthly, yearly }
 
 /// 반복 주기 설정 결과
 class RecurringSettings {
@@ -72,10 +67,12 @@ class RecurringSettingsWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<RecurringSettingsWidget> createState() => _RecurringSettingsWidgetState();
+  ConsumerState<RecurringSettingsWidget> createState() =>
+      _RecurringSettingsWidgetState();
 }
 
-class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidget> {
+class _RecurringSettingsWidgetState
+    extends ConsumerState<RecurringSettingsWidget> {
   late RecurringType _selectedType;
   DateTime? _endDate;
   bool _isFixedExpense = false;
@@ -109,8 +106,16 @@ class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidge
 
     var count = 0;
     // 시간 정보 제거하여 날짜만 비교 (종료일 포함 보장)
-    var current = DateTime(widget.startDate.year, widget.startDate.month, widget.startDate.day);
-    final endDateNormalized = DateTime(_endDate!.year, _endDate!.month, _endDate!.day);
+    var current = DateTime(
+      widget.startDate.year,
+      widget.startDate.month,
+      widget.startDate.day,
+    );
+    final endDateNormalized = DateTime(
+      _endDate!.year,
+      _endDate!.month,
+      _endDate!.day,
+    );
 
     while (!current.isAfter(endDateNormalized)) {
       count++;
@@ -124,14 +129,18 @@ class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidge
           final nextYear = nextMonth > 12 ? current.year + 1 : current.year;
           final adjustedMonth = nextMonth > 12 ? 1 : nextMonth;
           final lastDayOfMonth = DateTime(nextYear, adjustedMonth + 1, 0).day;
-          final day = current.day > lastDayOfMonth ? lastDayOfMonth : current.day;
+          final day = current.day > lastDayOfMonth
+              ? lastDayOfMonth
+              : current.day;
           current = DateTime(nextYear, adjustedMonth, day);
           break;
         case RecurringType.yearly:
           // 년 증가 시 윤년 처리 (예: 2/29 -> 2/28)
           final nextYear = current.year + 1;
           final lastDayOfMonth = DateTime(nextYear, current.month + 1, 0).day;
-          final day = current.day > lastDayOfMonth ? lastDayOfMonth : current.day;
+          final day = current.day > lastDayOfMonth
+              ? lastDayOfMonth
+              : current.day;
           current = DateTime(nextYear, current.month, day);
           break;
         case RecurringType.none:
@@ -144,12 +153,14 @@ class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidge
 
   void _notifyChange() {
     final count = _calculateTransactionCount();
-    widget.onChanged(RecurringSettings(
-      type: _selectedType,
-      endDate: _endDate,
-      transactionCount: count,
-      isFixedExpense: _isFixedExpense,
-    ));
+    widget.onChanged(
+      RecurringSettings(
+        type: _selectedType,
+        endDate: _endDate,
+        transactionCount: count,
+        isFixedExpense: _isFixedExpense,
+      ),
+    );
   }
 
   Future<void> _selectEndDate() async {
@@ -268,31 +279,16 @@ class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidge
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text(
-            '반복 주기',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          child: Text('반복 주기', style: Theme.of(context).textTheme.titleMedium),
         ),
 
         // 반복 주기 타입 선택
         SegmentedButton<RecurringType>(
           segments: const [
-            ButtonSegment(
-              value: RecurringType.none,
-              label: Text('없음'),
-            ),
-            ButtonSegment(
-              value: RecurringType.daily,
-              label: Text('일'),
-            ),
-            ButtonSegment(
-              value: RecurringType.monthly,
-              label: Text('월'),
-            ),
-            ButtonSegment(
-              value: RecurringType.yearly,
-              label: Text('년'),
-            ),
+            ButtonSegment(value: RecurringType.none, label: Text('없음')),
+            ButtonSegment(value: RecurringType.daily, label: Text('일')),
+            ButtonSegment(value: RecurringType.monthly, label: Text('월')),
+            ButtonSegment(value: RecurringType.yearly, label: Text('년')),
           ],
           selected: {_selectedType},
           onSelectionChanged: widget.enabled
@@ -315,9 +311,7 @@ class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidge
             title: Text(_getEndDateLabel()),
             subtitle: Text(
               _getEndDateDisplayText(),
-              style: TextStyle(
-                color: colorScheme.onSurface,
-              ),
+              style: TextStyle(color: colorScheme.onSurface),
             ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
@@ -325,12 +319,14 @@ class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidge
                 if (_endDate != null)
                   IconButton(
                     icon: const Icon(Icons.clear, size: 20),
-                    onPressed: widget.enabled ? () {
-                      setState(() {
-                        _endDate = null;
-                      });
-                      _notifyChange();
-                    } : null,
+                    onPressed: widget.enabled
+                        ? () {
+                            setState(() {
+                              _endDate = null;
+                            });
+                            _notifyChange();
+                          }
+                        : null,
                     tooltip: '종료일 해제',
                   ),
                 const Icon(Icons.chevron_right),
@@ -349,11 +345,7 @@ class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidge
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 20,
-                  color: colorScheme.primary,
-                ),
+                Icon(Icons.info_outline, size: 20, color: colorScheme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -387,9 +379,9 @@ class _RecurringSettingsWidgetState extends ConsumerState<RecurringSettingsWidge
       title: const Text('고정비로 등록'),
       subtitle: Text(
         '월세, 보험료 등 정기적으로 지출되는 금액',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: colorScheme.onSurfaceVariant,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
       ),
       value: _isFixedExpense,
       onChanged: widget.enabled
@@ -457,16 +449,12 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
                 labelText: '년도',
                 border: OutlineInputBorder(),
               ),
-              items: List.generate(
-                widget.maxYear - widget.minYear + 1,
-                (index) {
-                  final year = widget.minYear + index;
-                  return DropdownMenuItem(
-                    value: year,
-                    child: Text('$year년'),
-                  );
-                },
-              ),
+              items: List.generate(widget.maxYear - widget.minYear + 1, (
+                index,
+              ) {
+                final year = widget.minYear + index;
+                return DropdownMenuItem(value: year, child: Text('$year년'));
+              }),
               onChanged: (value) {
                 if (value != null) {
                   setState(() {
@@ -497,7 +485,9 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
                   child: Text(
                     '$month월',
                     style: TextStyle(
-                      color: isValid ? null : Colors.grey,
+                      color: isValid
+                          ? null
+                          : Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
                 );
@@ -566,16 +556,10 @@ class _YearPickerDialogState extends State<_YearPickerDialog> {
             labelText: '년도',
             border: OutlineInputBorder(),
           ),
-          items: List.generate(
-            widget.maxYear - widget.minYear + 1,
-            (index) {
-              final year = widget.minYear + index;
-              return DropdownMenuItem(
-                value: year,
-                child: Text('$year년'),
-              );
-            },
-          ),
+          items: List.generate(widget.maxYear - widget.minYear + 1, (index) {
+            final year = widget.minYear + index;
+            return DropdownMenuItem(value: year, child: Text('$year년'));
+          }),
           onChanged: (value) {
             if (value != null) {
               setState(() {

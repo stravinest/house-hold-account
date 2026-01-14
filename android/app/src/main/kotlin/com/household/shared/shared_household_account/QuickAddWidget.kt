@@ -46,38 +46,22 @@ class QuickAddWidget : AppWidgetProvider() {
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_quick_add)
 
-            // 지출 추가 버튼 클릭 이벤트
-            val expenseIntent = createDeepLinkIntent(context, "add-expense")
+            val expenseIntent = createDeepLinkIntent(context, "quick-expense")
             val expensePendingIntent = PendingIntent.getActivity(
                 context,
-                0,
+                appWidgetId,
                 expenseIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                PendingIntent.FLAG_CANCEL_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
             views.setOnClickPendingIntent(R.id.btn_add_expense, expensePendingIntent)
-
-            // 수입 추가 버튼 클릭 이벤트
-            val incomeIntent = createDeepLinkIntent(context, "add-income")
-            val incomePendingIntent = PendingIntent.getActivity(
-                context,
-                1,
-                incomeIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            views.setOnClickPendingIntent(R.id.btn_add_income, incomePendingIntent)
-
-            // 가계부 이름 표시 (SharedPreferences에서 읽기)
-            val widgetData = HomeWidgetPlugin.getData(context)
-            val ledgerName = widgetData.getString("ledger_name", "가계부") ?: "가계부"
-            views.setTextViewText(R.id.widget_title, ledgerName)
 
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
         private fun createDeepLinkIntent(context: Context, path: String): Intent {
-            val uri = Uri.parse("$SCHEME://$path")
-            return Intent(Intent.ACTION_VIEW, uri).apply {
-                setPackage(context.packageName)
+            // Explicitly target QuickInputActivity to avoid intent resolver picking MainActivity
+            return Intent(context, QuickInputActivity::class.java).apply {
+                data = Uri.parse("$SCHEME://$path")
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             }
         }

@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/section_header.dart';
 import '../../domain/entities/fixed_expense_category.dart';
 import '../providers/fixed_expense_category_provider.dart';
 import '../providers/fixed_expense_settings_provider.dart';
@@ -31,9 +33,7 @@ class _FixedExpenseManagementPageState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('고정비 관리'),
-      ),
+      appBar: AppBar(title: const Text('고정비 관리')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -41,7 +41,7 @@ class _FixedExpenseManagementPageState
           const _SettingsCard(),
           const SizedBox(height: 24),
           // 고정비 카테고리 섹션
-          const _SectionHeader(title: '고정비 카테고리'),
+          const SectionHeader(title: '고정비 카테고리'),
           const SizedBox(height: 8),
           const _CategoryListView(),
         ],
@@ -54,30 +54,7 @@ class _FixedExpenseManagementPageState
   }
 
   void _showAddCategoryDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const _CategoryDialog(),
-    );
-  }
-}
-
-/// 섹션 헤더
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
+    showDialog(context: context, builder: (context) => const _CategoryDialog());
   }
 }
 
@@ -142,10 +119,8 @@ class _SettingsCard extends ConsumerWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ),
-        error: (e, _) => ListTile(
-          title: const Text('설정 로드 실패'),
-          subtitle: Text('$e'),
-        ),
+        error: (e, _) =>
+            ListTile(title: const Text('설정 로드 실패'), subtitle: Text('$e')),
       ),
     );
   }
@@ -165,25 +140,10 @@ class _CategoryListView extends ConsumerWidget {
           return Card(
             child: Padding(
               padding: const EdgeInsets.all(32),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.repeat_outlined,
-                    size: 48,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '등록된 고정비 카테고리가 없습니다',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '+ 버튼을 눌러 카테고리를 추가하세요',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                ],
+              child: EmptyState(
+                icon: Icons.repeat_outlined,
+                message: '등록된 고정비 카테고리가 없습니다',
+                subtitle: '+ 버튼을 눌러 카테고리를 추가하세요',
               ),
             ),
           );
@@ -251,13 +211,18 @@ class _CategoryTile extends ConsumerWidget {
   }
 
   void _showDeleteConfirm(
-      BuildContext context, WidgetRef ref, FixedExpenseCategory category) {
+    BuildContext context,
+    WidgetRef ref,
+    FixedExpenseCategory category,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('고정비 카테고리 삭제'),
-        content: Text('\'${category.name}\' 카테고리를 삭제하시겠습니까?\n\n'
-            '이 카테고리로 기록된 거래는 삭제되지 않습니다.'),
+        content: Text(
+          '\'${category.name}\' 카테고리를 삭제하시겠습니까?\n\n'
+          '이 카테고리로 기록된 거래는 삭제되지 않습니다.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -312,10 +277,22 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   late TextEditingController _nameController;
 
   static const List<String> _colorPalette = [
-    '#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3',
-    '#A8DADC', '#F4A261', '#E76F51', '#2A9D8F',
-    '#4CAF50', '#2196F3', '#9C27B0', '#00BCD4',
-    '#E91E63', '#795548', '#607D8B', '#8BC34A',
+    '#FF6B6B',
+    '#4ECDC4',
+    '#FFE66D',
+    '#95E1D3',
+    '#A8DADC',
+    '#F4A261',
+    '#E76F51',
+    '#2A9D8F',
+    '#4CAF50',
+    '#2196F3',
+    '#9C27B0',
+    '#00BCD4',
+    '#E91E63',
+    '#795548',
+    '#607D8B',
+    '#8BC34A',
   ];
 
   String _generateRandomColor() {
@@ -363,10 +340,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('취소'),
         ),
-        TextButton(
-          onPressed: _submit,
-          child: Text(isEdit ? '수정' : '추가'),
-        ),
+        TextButton(onPressed: _submit, child: Text(isEdit ? '수정' : '추가')),
       ],
     );
   }
@@ -395,9 +369,9 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.category != null
-                ? '카테고리가 수정되었습니다'
-                : '카테고리가 추가되었습니다'),
+            content: Text(
+              widget.category != null ? '카테고리가 수정되었습니다' : '카테고리가 추가되었습니다',
+            ),
             duration: const Duration(seconds: 1),
           ),
         );

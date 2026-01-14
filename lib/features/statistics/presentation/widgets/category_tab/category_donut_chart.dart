@@ -14,7 +14,7 @@ class CategoryDonutChart extends ConsumerWidget {
       final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
       return Color(colorValue);
     } catch (e) {
-      return Colors.grey;
+      return const Color(0xFF9E9E9E);
     }
   }
 
@@ -43,8 +43,8 @@ class CategoryDonutChart extends ConsumerWidget {
         child: Text(
           '데이터가 없습니다',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );
@@ -95,13 +95,15 @@ class CategoryDonutChart extends ConsumerWidget {
     final othersTotal = others.fold(0, (sum, item) => sum + item.amount);
 
     if (othersTotal > 0) {
-      top5.add(CategoryStatistics(
-        categoryId: '_others_',
-        categoryName: '기타',
-        categoryIcon: '',
-        categoryColor: '#9E9E9E',
-        amount: othersTotal,
-      ));
+      top5.add(
+        CategoryStatistics(
+          categoryId: '_others_',
+          categoryName: '기타',
+          categoryIcon: '',
+          categoryColor: '#9E9E9E',
+          amount: othersTotal,
+        ),
+      );
     }
 
     return top5;
@@ -112,7 +114,9 @@ class CategoryDonutChart extends ConsumerWidget {
     int totalAmount,
   ) {
     return data.map((item) {
-      final percentage = totalAmount > 0 ? (item.amount / totalAmount) * 100 : 0.0;
+      final percentage = totalAmount > 0
+          ? (item.amount / totalAmount) * 100
+          : 0.0;
       final color = _parseColor(item.categoryColor);
 
       return PieChartSectionData(

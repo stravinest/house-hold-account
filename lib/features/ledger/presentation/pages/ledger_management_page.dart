@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/widgets/empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/ledger.dart';
 import '../providers/ledger_provider.dart';
@@ -19,33 +20,17 @@ class LedgerManagementPage extends ConsumerWidget {
     final selectedId = ref.watch(selectedLedgerIdProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('가계부 관리'),
-      ),
+      appBar: AppBar(title: const Text('가계부 관리')),
       body: ledgersAsync.when(
         data: (ledgers) {
           if (ledgers.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.book_outlined,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    '등록된 가계부가 없습니다',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddLedgerDialog(context, ref),
-                    icon: const Icon(Icons.add),
-                    label: const Text('가계부 만들기'),
-                  ),
-                ],
+            return EmptyState(
+              icon: Icons.book_outlined,
+              message: '등록된 가계부가 없습니다',
+              action: ElevatedButton.icon(
+                onPressed: () => _showAddLedgerDialog(context, ref),
+                icon: const Icon(Icons.add),
+                label: const Text('가계부 만들기'),
               ),
             );
           }
@@ -61,7 +46,9 @@ class LedgerManagementPage extends ConsumerWidget {
                 ledger: ledger,
                 isSelected: isSelected,
                 onSelect: () {
-                  ref.read(ledgerNotifierProvider.notifier).selectLedger(ledger.id);
+                  ref
+                      .read(ledgerNotifierProvider.notifier)
+                      .selectLedger(ledger.id);
                 },
                 ledgersCount: ledgers.length,
               );
@@ -79,10 +66,7 @@ class LedgerManagementPage extends ConsumerWidget {
   }
 
   void _showAddLedgerDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (context) => const _LedgerDialog(),
-    );
+    showDialog(context: context, builder: (context) => const _LedgerDialog());
   }
 }
 
@@ -110,10 +94,7 @@ class _LedgerCard extends ConsumerWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: isSelected
-            ? BorderSide(
-                color: Theme.of(context).colorScheme.primary,
-                width: 2,
-              )
+            ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
             : BorderSide.none,
       ),
       child: InkWell(
@@ -152,18 +133,18 @@ class _LedgerCard extends ConsumerWidget {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primaryContainer,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primaryContainer,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   '사용중',
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimaryContainer,
                                   ),
                                 ),
                               ),
@@ -175,7 +156,9 @@ class _LedgerCard extends ConsumerWidget {
                           ledger.isShared ? '공유 가계부' : '개인 가계부',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
                         if (ledger.isShared)
@@ -212,13 +195,22 @@ class _LedgerCard extends ConsumerWidget {
                           ),
                         ),
                       if (isOwner)
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete, size: 20, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('삭제', style: TextStyle(color: Colors.red)),
+                              Icon(
+                                Icons.delete,
+                                size: 20,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '삭제',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -233,27 +225,48 @@ class _LedgerCard extends ConsumerWidget {
                   ledger.description!,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
               ],
               const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(Icons.attach_money, size: 16, color: Colors.grey[500]),
-                  const SizedBox(width: 4),
-                  Text(
-                    ledger.currency,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(Icons.calendar_today, size: 16, color: Colors.grey[500]),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${ledger.createdAt.year}.${ledger.createdAt.month}.${ledger.createdAt.day}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                  ),
-                ],
+              Builder(
+                builder: (context) {
+                  final colorScheme = Theme.of(context).colorScheme;
+                  return Row(
+                    children: [
+                      Icon(
+                        Icons.attach_money,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        ledger.currency,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(
+                        Icons.calendar_today,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${ledger.createdAt.year}.${ledger.createdAt.month}.${ledger.createdAt.day}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -283,9 +296,7 @@ class _LedgerCard extends ConsumerWidget {
 
     // 이름 추출 헬퍼 함수
     String getName(LedgerMember member) {
-      return member.displayName ??
-          member.email?.split('@')[0] ??
-          '사용자';
+      return member.displayName ?? member.email?.split('@')[0] ?? '사용자';
     }
 
     // 멤버 수에 따라 텍스트 생성
@@ -301,6 +312,7 @@ class _LedgerCard extends ConsumerWidget {
           '${getName(otherMembers[0])}, ${getName(otherMembers[1])} 외 $remainingCount명과 공유 중';
     }
 
+    final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(top: 4),
       child: Row(
@@ -308,7 +320,7 @@ class _LedgerCard extends ConsumerWidget {
           Icon(
             Icons.people_outline,
             size: 14,
-            color: Colors.grey[600],
+            color: colorScheme.onSurface.withOpacity(0.7),
           ),
           const SizedBox(width: 4),
           Expanded(
@@ -316,7 +328,7 @@ class _LedgerCard extends ConsumerWidget {
               memberText,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[600],
+                color: colorScheme.onSurface.withOpacity(0.7),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -340,9 +352,7 @@ class _LedgerCard extends ConsumerWidget {
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('삭제 불가'),
-          content: const Text(
-            '최소 1개의 가계부가 필요합니다.\n다른 가계부를 먼저 생성해주세요.',
-          ),
+          content: const Text('최소 1개의 가계부가 필요합니다.\n다른 가계부를 먼저 생성해주세요.'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -395,14 +405,16 @@ class _LedgerCard extends ConsumerWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('삭제 실패: $e'),
-                      backgroundColor: Colors.red,
+                      backgroundColor: Theme.of(context).colorScheme.error,
                       duration: const Duration(seconds: 1),
                     ),
                   );
                 }
               }
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('삭제'),
           ),
         ],
@@ -432,8 +444,9 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.ledger?.name ?? '');
-    _descriptionController =
-        TextEditingController(text: widget.ledger?.description ?? '');
+    _descriptionController = TextEditingController(
+      text: widget.ledger?.description ?? '',
+    );
     _selectedCurrency = widget.ledger?.currency ?? 'KRW';
   }
 
@@ -503,10 +516,7 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
           onPressed: () => Navigator.pop(context),
           child: const Text('취소'),
         ),
-        TextButton(
-          onPressed: _submit,
-          child: Text(isEdit ? '수정' : '만들기'),
-        ),
+        TextButton(onPressed: _submit, child: Text(isEdit ? '수정' : '만들기')),
       ],
     );
   }
@@ -516,7 +526,9 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
 
     try {
       if (widget.ledger != null) {
-        await ref.read(ledgerNotifierProvider.notifier).updateLedger(
+        await ref
+            .read(ledgerNotifierProvider.notifier)
+            .updateLedger(
               id: widget.ledger!.id,
               name: _nameController.text,
               description: _descriptionController.text.isEmpty
@@ -525,7 +537,9 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
               currency: _selectedCurrency,
             );
       } else {
-        await ref.read(ledgerNotifierProvider.notifier).createLedger(
+        await ref
+            .read(ledgerNotifierProvider.notifier)
+            .createLedger(
               name: _nameController.text,
               description: _descriptionController.text.isEmpty
                   ? null
@@ -538,9 +552,9 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(widget.ledger != null
-                ? '가계부가 수정되었습니다'
-                : '가계부가 생성되었습니다'),
+            content: Text(
+              widget.ledger != null ? '가계부가 수정되었습니다' : '가계부가 생성되었습니다',
+            ),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -563,7 +577,8 @@ class _MemberInfoWidget extends ConsumerStatefulWidget {
   final Ledger ledger;
   final AsyncValue<List<LedgerMember>> membersAsync;
   final String? currentUserId;
-  final Widget Function(BuildContext, List<LedgerMember>, String?) buildMembersInfo;
+  final Widget Function(BuildContext, List<LedgerMember>, String?)
+  buildMembersInfo;
 
   // 이미 동기화 처리된 ledger ID 추적 (위젯 재생성 시에도 유지)
   static final Set<String> _syncedLedgerIds = {};
@@ -587,16 +602,20 @@ class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
       data: (members) {
         // 멤버 수에 따라 공유 상태 자동 동기화 (ledger당 한 번만 실행)
         final needsSync = widget.ledger.isShared && members.length < 2;
-        final alreadySynced = _MemberInfoWidget._syncedLedgerIds.contains(widget.ledger.id);
+        final alreadySynced = _MemberInfoWidget._syncedLedgerIds.contains(
+          widget.ledger.id,
+        );
 
         if (needsSync && !alreadySynced) {
           _MemberInfoWidget._syncedLedgerIds.add(widget.ledger.id);
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            ref.read(ledgerNotifierProvider.notifier).syncShareStatus(
-              ledgerId: widget.ledger.id,
-              memberCount: members.length,
-              currentIsShared: widget.ledger.isShared,
-            );
+            ref
+                .read(ledgerNotifierProvider.notifier)
+                .syncShareStatus(
+                  ledgerId: widget.ledger.id,
+                  memberCount: members.length,
+                  currentIsShared: widget.ledger.isShared,
+                );
           });
         }
 
@@ -620,7 +639,10 @@ class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
             const SizedBox(width: 8),
             Text(
               '멤버 정보 로딩 중...',
-              style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              ),
             ),
           ],
         ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../shared/widgets/empty_state.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 
@@ -84,34 +85,16 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       body: resultsAsync.when(
         data: (results) {
           if (ref.watch(searchQueryProvider).isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.search, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    '제목/메모로 거래 내역을 검색하세요',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
+            return const EmptyState(
+              icon: Icons.search,
+              message: '제목/메모로 거래 내역을 검색하세요',
             );
           }
 
           if (results.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.search_off, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    '검색 결과가 없습니다',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ],
-              ),
+            return const EmptyState(
+              icon: Icons.search_off,
+              message: '검색 결과가 없습니다',
             );
           }
 
@@ -137,18 +120,19 @@ class _SearchResultItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final numberFormat = NumberFormat('#,###');
     final dateFormat = DateFormat('yyyy.MM.dd');
     final amountColor = transaction.isIncome
-        ? Colors.blue
+        ? colorScheme.primary
         : transaction.isAssetType
-            ? Colors.green
-            : Colors.red;
+        ? colorScheme.tertiary
+        : colorScheme.error;
     final amountPrefix = transaction.isIncome
         ? '+'
         : transaction.isAssetType
-            ? ''
-            : '-';
+        ? ''
+        : '-';
 
     return ListTile(
       leading: Container(
@@ -178,28 +162,28 @@ class _SearchResultItem extends StatelessWidget {
           Text(
             dateFormat.format(transaction.date),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
         ],
       ),
       trailing: Text(
         '$amountPrefix${numberFormat.format(transaction.amount)}원',
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: amountColor,
-        ),
+        style: TextStyle(fontWeight: FontWeight.bold, color: amountColor),
       ),
     );
   }
 
   Color _parseColor(String? hexColor) {
-    if (hexColor == null) return Colors.grey;
+    // fallback 색상은 onSurfaceVariant 대신 중립적 회색 상수 사용
+    // (context 없이 호출되므로 ColorScheme 접근 불가)
+    const fallbackColor = Color(0xFF9E9E9E); // Grey 500
+    if (hexColor == null) return fallbackColor;
     try {
       final hex = hexColor.replaceFirst('#', '');
       return Color(int.parse('FF$hex', radix: 16));
     } catch (e) {
-      return Colors.grey;
+      return fallbackColor;
     }
   }
 }

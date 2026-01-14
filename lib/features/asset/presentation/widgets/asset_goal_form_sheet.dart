@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../domain/entities/asset_goal.dart';
 import '../providers/asset_goal_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
@@ -65,7 +66,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                   margin: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: colorScheme.onSurfaceVariant.withAlpha(76),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
                   ),
                 ),
 

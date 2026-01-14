@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/widgets/empty_state.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 
 class DailyCategoryBreakdownSheet extends ConsumerWidget {
   final DateTime date;
 
-  const DailyCategoryBreakdownSheet({
-    super.key,
-    required this.date,
-  });
+  const DailyCategoryBreakdownSheet({super.key, required this.date});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -30,10 +28,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border(
-                bottom: BorderSide(
-                  color: colorScheme.outlineVariant,
-                  width: 1,
-                ),
+                bottom: BorderSide(color: colorScheme.outlineVariant, width: 1),
               ),
             ),
             child: Row(
@@ -44,16 +39,15 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
                     children: [
                       Text(
                         DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(date),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '카테고리별 상세내역',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -111,20 +105,11 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
                   child: CircularProgressIndicator(),
                 ),
               ),
-              error: (error, stack) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error_outline, size: 48),
-                      const SizedBox(height: 16),
-                      Text(
-                        '오류가 발생했습니다',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
+              error: (error, stack) => Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: EmptyState(
+                  icon: Icons.error_outline,
+                  message: '오류가 발생했습니다',
                 ),
               ),
             ),
@@ -135,34 +120,16 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.receipt_long_outlined,
-              size: 64,
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '기록된 내역이 없습니다',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-            ),
-          ],
-        ),
+    return const Padding(
+      padding: EdgeInsets.all(32.0),
+      child: EmptyState(
+        icon: Icons.receipt_long_outlined,
+        message: '기록된 내역이 없습니다',
       ),
     );
   }
 
-  Widget _buildDailySummary(
-    BuildContext context,
-    Map<String, int> totals,
-  ) {
+  Widget _buildDailySummary(BuildContext context, Map<String, int> totals) {
     final formatter = NumberFormat('#,###', 'ko_KR');
     final income = totals['income'] ?? 0;
     final expense = totals['expense'] ?? 0;
@@ -176,7 +143,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
             context,
             '수입',
             income,
-            Colors.blue,
+            Theme.of(context).colorScheme.primary,
             formatter,
           ),
           Container(
@@ -188,7 +155,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
             context,
             '지출',
             expense,
-            Colors.red,
+            Theme.of(context).colorScheme.error,
             formatter,
           ),
         ],
@@ -208,16 +175,16 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           '${formatter.format(amount)}원',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-              ),
+            color: color,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ],
     );
@@ -233,7 +200,8 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
     final formatter = NumberFormat('#,###', 'ko_KR');
     final isIncome = transactions.first.isIncome;
     final categoryIcon = transactions.first.categoryIcon ?? '📦';
-    final categoryColor = _parseColor(transactions.first.categoryColor) ??
+    final categoryColor =
+        _parseColor(transactions.first.categoryColor) ??
         colorScheme.primaryContainer;
 
     return ExpansionTile(
@@ -245,10 +213,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
-          child: Text(
-            categoryIcon,
-            style: const TextStyle(fontSize: 20),
-          ),
+          child: Text(categoryIcon, style: const TextStyle(fontSize: 20)),
         ),
       ),
       title: Text(
@@ -257,15 +222,12 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
       ),
       subtitle: Text(
         '${transactions.length}건',
-        style: TextStyle(
-          fontSize: 12,
-          color: colorScheme.onSurfaceVariant,
-        ),
+        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
       ),
       trailing: Text(
         '${formatter.format(total)}원',
         style: TextStyle(
-          color: isIncome ? Colors.blue : Colors.red,
+          color: isIncome ? colorScheme.primary : colorScheme.error,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -281,10 +243,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
               if (transaction.userName != null) ...[
                 Text(
                   transaction.userName!,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.outline,
-                  ),
+                  style: TextStyle(fontSize: 12, color: colorScheme.outline),
                 ),
                 const SizedBox(width: 8),
               ],
@@ -301,7 +260,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
             '${formatter.format(transaction.amount)}원',
             style: TextStyle(
               fontSize: 13,
-              color: isIncome ? Colors.blue : Colors.red,
+              color: isIncome ? colorScheme.primary : colorScheme.error,
             ),
           ),
         );
@@ -309,7 +268,9 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
     );
   }
 
-  Map<String, List<Transaction>> _groupByCategory(List<Transaction> transactions) {
+  Map<String, List<Transaction>> _groupByCategory(
+    List<Transaction> transactions,
+  ) {
     final Map<String, List<Transaction>> groups = {};
 
     for (final transaction in transactions) {
@@ -335,10 +296,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
       }
     }
 
-    return {
-      'income': income,
-      'expense': expense,
-    };
+    return {'income': income, 'expense': expense};
   }
 
   Color? _parseColor(String? colorStr) {

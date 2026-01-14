@@ -1,4 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseConfig {
@@ -7,7 +8,6 @@ class SupabaseConfig {
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
   static Future<void> initialize() async {
-    // .env 파일 로드
     await dotenv.load(fileName: '.env');
 
     if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
@@ -17,10 +17,15 @@ class SupabaseConfig {
       );
     }
 
-    await Supabase.initialize(
-      url: supabaseUrl,
-      anonKey: supabaseAnonKey,
-    );
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+
+    await _saveConfigToSharedPreferences();
+  }
+
+  static Future<void> _saveConfigToSharedPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('flutter.supabase_url', supabaseUrl);
+    await prefs.setString('flutter.supabase_anon_key', supabaseAnonKey);
   }
 
   static SupabaseClient get client => Supabase.instance.client;

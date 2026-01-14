@@ -624,7 +624,7 @@ class _MonthSummary extends StatelessWidget {
               child: _SummaryColumn(
                 label: '수입',
                 totalAmount: income,
-                color: Colors.blue.shade700,
+                color: colorScheme.primary,
                 users: enrichedUsers,
                 type: _SummaryType.income,
                 memberCount: memberCount,
@@ -635,7 +635,7 @@ class _MonthSummary extends StatelessWidget {
               child: _SummaryColumn(
                 label: '지출',
                 totalAmount: expense,
-                color: Colors.red.shade700,
+                color: colorScheme.error,
                 users: enrichedUsers,
                 type: _SummaryType.expense,
                 memberCount: memberCount,
@@ -855,10 +855,16 @@ class _CustomCalendarHeader extends StatelessWidget {
           ),
           // 새로고침 버튼
           IconButton(
-            icon: const Icon(Icons.refresh, size: 16),
-            onPressed: onRefresh,
+            icon: Icon(
+              Icons.refresh,
+              size: 18,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+            onPressed: () async {
+              await onRefresh();
+            },
             padding: const EdgeInsets.all(4),
-            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           const Spacer(),
           // 이전 월 버튼

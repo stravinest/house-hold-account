@@ -36,9 +36,9 @@ class Routes {
   static const String paymentMethod = '/payment-method';
   static const String ledgerManage = '/ledger-manage';
   static const String fixedExpense = '/fixed-expense';
-  // 위젯 딥링크
   static const String addExpense = '/add-expense';
   static const String addIncome = '/add-income';
+  static const String quickExpense = '/quick-expense';
 }
 
 // 인증 상태 변경을 감지하는 Notifier
@@ -73,7 +73,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isSplash = state.matchedLocation == Routes.splash;
       final isDeepLinkRoute =
           state.matchedLocation == Routes.addExpense ||
-          state.matchedLocation == Routes.addIncome;
+          state.matchedLocation == Routes.addIncome ||
+          state.matchedLocation == Routes.quickExpense;
 
       // 스플래시 화면에서는 리다이렉트하지 않음
       if (isSplash) return null;
@@ -188,6 +189,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => HomePage(
           key: ValueKey(state.matchedLocation),
           initialTransactionType: 'income',
+        ),
+      ),
+
+      GoRoute(
+        path: Routes.quickExpense,
+        builder: (context, state) => HomePage(
+          key: ValueKey(state.matchedLocation),
+          showQuickExpense: true,
         ),
       ),
     ],

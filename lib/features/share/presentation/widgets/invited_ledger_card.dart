@@ -29,11 +29,12 @@ class InvitedLedgerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAccepted = invite.isAccepted;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isCurrentLedger ? _activeBackgroundColor : Colors.white,
+        color: isCurrentLedger ? _activeBackgroundColor : colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isCurrentLedger ? _activeBorderColor : _inactiveBorderColor,
@@ -61,7 +62,9 @@ class InvitedLedgerCard extends StatelessWidget {
                       Icon(
                         Icons.account_balance_wallet,
                         size: 20,
-                        color: isCurrentLedger ? _activeBorderColor : _inactiveBorderColor,
+                        color: isCurrentLedger
+                            ? _activeBorderColor
+                            : _inactiveBorderColor,
                       ),
                       const SizedBox(width: 8),
                       Flexible(
@@ -86,12 +89,12 @@ class InvitedLedgerCard extends StatelessWidget {
                             color: _activeBorderColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text(
+                          child: Text(
                             '사용 중',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                             ),
                           ),
                         ),
@@ -105,7 +108,10 @@ class InvitedLedgerCard extends StatelessWidget {
                     onPressed: onSelectLedger,
                     style: TextButton.styleFrom(
                       foregroundColor: _activeBorderColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       minimumSize: const Size(0, 32),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -120,7 +126,7 @@ class InvitedLedgerCard extends StatelessWidget {
                 Icon(
                   Icons.person_outline,
                   size: 16,
-                  color: Colors.grey[600],
+                  color: colorScheme.onSurface.withOpacity(0.7),
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -128,7 +134,7 @@ class InvitedLedgerCard extends StatelessWidget {
                     '${invite.inviterEmail ?? '알 수 없음'}님의 가계부',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.grey[600],
+                      color: colorScheme.onSurface.withOpacity(0.7),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -138,14 +144,15 @@ class InvitedLedgerCard extends StatelessWidget {
             ),
             // 하단: 상태별 액션 버튼
             const SizedBox(height: 12),
-            _buildActionRow(),
+            _buildActionRow(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildActionRow() {
+  Widget _buildActionRow(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     // pending 상태: 수락/거부 버튼
     if (invite.isPending) {
       return Row(
@@ -155,12 +162,9 @@ class InvitedLedgerCard extends StatelessWidget {
           OutlinedButton(
             onPressed: onReject,
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.grey[600],
-              side: BorderSide(color: Colors.grey[400]!),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 8,
-              ),
+              foregroundColor: colorScheme.onSurface.withOpacity(0.7),
+              side: BorderSide(color: colorScheme.onSurfaceVariant),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
             child: const Text('거부'),
           ),
@@ -170,11 +174,8 @@ class InvitedLedgerCard extends StatelessWidget {
             onPressed: onAccept,
             style: ElevatedButton.styleFrom(
               backgroundColor: _activeBorderColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 8,
-              ),
+              foregroundColor: colorScheme.onPrimary,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             ),
             child: const Text('수락'),
           ),
@@ -189,14 +190,14 @@ class InvitedLedgerCard extends StatelessWidget {
           Icon(
             Icons.check_circle_outline,
             size: 16,
-            color: Colors.green[600],
+            color: colorScheme.tertiary,
           ),
           const SizedBox(width: 6),
           Text(
             '멤버로 참여 중',
             style: TextStyle(
               fontSize: 13,
-              color: Colors.green[700],
+              color: colorScheme.tertiary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -205,7 +206,7 @@ class InvitedLedgerCard extends StatelessWidget {
           TextButton(
             onPressed: onLeave,
             style: TextButton.styleFrom(
-              foregroundColor: Colors.red,
+              foregroundColor: colorScheme.error,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               minimumSize: const Size(0, 32),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,

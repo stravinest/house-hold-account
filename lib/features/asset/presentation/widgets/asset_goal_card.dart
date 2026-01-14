@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/themes/design_tokens.dart' as tokens;
+import '../../../../shared/widgets/empty_state.dart';
 import '../../domain/entities/asset_goal.dart';
 import '../providers/asset_goal_provider.dart';
 
@@ -92,9 +94,10 @@ class AssetGoalCard extends ConsumerWidget {
     final isCompleted = progress >= 1.0;
 
     // 배경 트랙 색상 - 미달성 영역을 명확하게 표시
+    final colorScheme = Theme.of(context).colorScheme;
     final trackColor = isDark
         ? Colors.white.withValues(alpha: 0.15)
-        : Colors.grey.shade300;
+        : colorScheme.surfaceContainerHighest;
 
     // 내부 그림자 색상
     final innerShadowColor = isDark
@@ -155,7 +158,7 @@ class AssetGoalCard extends ConsumerWidget {
         Container(
           height: 18,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(tokens.BorderRadiusToken.sm),
             color: trackColor,
             // 내부 그림자로 입체감
             boxShadow: [
@@ -170,7 +173,7 @@ class AssetGoalCard extends ConsumerWidget {
             border: Border.all(
               color: isDark
                   ? Colors.white.withValues(alpha: 0.8)
-                  : Colors.grey.shade600,
+                  : colorScheme.onSurface.withOpacity(0.6),
               width: 2.0,
             ),
           ),
@@ -185,7 +188,7 @@ class AssetGoalCard extends ConsumerWidget {
                     painter: _ProgressTrackPainter(
                       color: isDark
                           ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.grey.shade400.withValues(alpha: 0.5),
+                          : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                     ),
                   ),
                 ),
@@ -397,7 +400,7 @@ class AssetGoalCard extends ConsumerWidget {
             context,
             icon: Icons.check_circle,
             label: '달성 완료',
-            color: Colors.green,
+            color: Theme.of(context).colorScheme.tertiary,
           ),
       ],
     );
@@ -429,10 +432,12 @@ class AssetGoalCard extends ConsumerWidget {
   }
 
   Color _getProgressColor(double progress) {
-    if (progress >= 1.0) return Colors.green;
-    if (progress >= 0.75) return Colors.blue;
-    if (progress >= 0.5) return Colors.orange;
-    return Colors.red;
+    // context 없이 사용되므로 Material 색상 상수 사용
+    // 100%: 녹색(성공), 75%+: 파랑(진행 중), 50%+: 주황(주의), 그 외: 빨강(경고)
+    if (progress >= 1.0) return const Color(0xFF4CAF50); // Green 500
+    if (progress >= 0.75) return const Color(0xFF2196F3); // Blue 500
+    if (progress >= 0.5) return const Color(0xFFFF9800); // Orange 500
+    return const Color(0xFFF44336); // Red 500
   }
 
   String _formatCurrency(int amount) {
@@ -453,20 +458,11 @@ class AssetGoalListView extends ConsumerWidget {
     return goalsState.when(
       data: (goals) {
         if (goals.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.flag_outlined, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
-                  Text(
-                    '설정된 목표가 없습니다',
-                    style: TextStyle(fontSize: 16, color: Colors.grey),
-                  ),
-                ],
-              ),
+          return const Padding(
+            padding: EdgeInsets.all(32),
+            child: EmptyState(
+              icon: Icons.flag_outlined,
+              message: '설정된 목표가 없습니다',
             ),
           );
         }

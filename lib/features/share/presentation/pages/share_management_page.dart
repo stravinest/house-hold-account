@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/router.dart';
+import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/section_header.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../domain/entities/ledger_invite.dart';
 import '../providers/share_provider.dart';
@@ -19,15 +21,19 @@ class ShareManagementPage extends ConsumerWidget {
     final selectedLedgerId = ref.watch(selectedLedgerIdProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('가계부 및 공유 관리'),
-      ),
+      appBar: AppBar(title: const Text('가계부 및 공유 관리')),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(myOwnedLedgersWithInvitesProvider);
           ref.invalidate(receivedInvitesProvider);
         },
-        child: _buildBody(context, ref, ownedLedgersAsync, receivedInvitesAsync, selectedLedgerId),
+        child: _buildBody(
+          context,
+          ref,
+          ownedLedgersAsync,
+          receivedInvitesAsync,
+          selectedLedgerId,
+        ),
       ),
     );
   }
@@ -41,9 +47,7 @@ class ShareManagementPage extends ConsumerWidget {
   ) {
     // 로딩 상태
     if (ownedLedgersAsync.isLoading || receivedInvitesAsync.isLoading) {
-      return _buildScrollableCenter(
-        child: const CircularProgressIndicator(),
-      );
+      return _buildScrollableCenter(child: const CircularProgressIndicator());
     }
 
     // 에러 상태
@@ -76,41 +80,59 @@ class ShareManagementPage extends ConsumerWidget {
       children: [
         // 내 가계부 섹션
         if (ownedLedgers.isNotEmpty) ...[
-          _buildSectionHeader(context, '내 가계부', Icons.account_balance_wallet),
-          ...ownedLedgers.map((ledgerInfo) => OwnedLedgerCard(
-                ledgerInfo: ledgerInfo,
-                onInviteTap: ledgerInfo.canInvite
-                    ? () => _showInviteDialog(context, ref, ledgerInfo.ledger.id)
-                    : null,
-                onCancelInvite: ledgerInfo.hasPendingInvite
-                    ? () => _showCancelInviteDialog(context, ref, ledgerInfo)
-                    : null,
-                onSelectLedger: !ledgerInfo.isCurrentLedger
-                    ? () => _showSelectLedgerDialog(context, ref, ledgerInfo.ledger.id, ledgerInfo.ledger.name)
-                    : null,
-              )),
+          const SectionHeader(
+            title: '내 가계부',
+            icon: Icons.account_balance_wallet,
+          ),
+          ...ownedLedgers.map(
+            (ledgerInfo) => OwnedLedgerCard(
+              ledgerInfo: ledgerInfo,
+              onInviteTap: ledgerInfo.canInvite
+                  ? () => _showInviteDialog(context, ref, ledgerInfo.ledger.id)
+                  : null,
+              onCancelInvite: ledgerInfo.hasPendingInvite
+                  ? () => _showCancelInviteDialog(context, ref, ledgerInfo)
+                  : null,
+              onSelectLedger: !ledgerInfo.isCurrentLedger
+                  ? () => _showSelectLedgerDialog(
+                      context,
+                      ref,
+                      ledgerInfo.ledger.id,
+                      ledgerInfo.ledger.name,
+                    )
+                  : null,
+            ),
+          ),
         ],
 
         // 초대받은 가계부 섹션
         if (receivedInvites.isNotEmpty) ...[
           if (ownedLedgers.isNotEmpty) const SizedBox(height: 24),
-          _buildSectionHeader(context, '초대받은 가계부', Icons.mail_outline),
-          ...receivedInvites.map((invite) => InvitedLedgerCard(
-                invite: invite,
-                isCurrentLedger: invite.ledgerId == selectedLedgerId,
-                onAccept: invite.isPending
-                    ? () => _acceptInvite(context, ref, invite)
-                    : null,
-                onReject: invite.isPending
-                    ? () => _showRejectConfirmDialog(context, ref, invite)
-                    : null,
-                onLeave: invite.isAccepted
-                    ? () => _showLeaveConfirmDialog(context, ref, invite)
-                    : null,
-                onSelectLedger: invite.isAccepted && invite.ledgerId != selectedLedgerId
-                    ? () => _showSelectLedgerDialog(context, ref, invite.ledgerId, invite.ledgerName ?? '가계부')
-                    : null,
-              )),
+          const SectionHeader(title: '초대받은 가계부', icon: Icons.mail_outline),
+          ...receivedInvites.map(
+            (invite) => InvitedLedgerCard(
+              invite: invite,
+              isCurrentLedger: invite.ledgerId == selectedLedgerId,
+              onAccept: invite.isPending
+                  ? () => _acceptInvite(context, ref, invite)
+                  : null,
+              onReject: invite.isPending
+                  ? () => _showRejectConfirmDialog(context, ref, invite)
+                  : null,
+              onLeave: invite.isAccepted
+                  ? () => _showLeaveConfirmDialog(context, ref, invite)
+                  : null,
+              onSelectLedger:
+                  invite.isAccepted && invite.ledgerId != selectedLedgerId
+                  ? () => _showSelectLedgerDialog(
+                      context,
+                      ref,
+                      invite.ledgerId,
+                      invite.ledgerName ?? '가계부',
+                    )
+                  : null,
+            ),
+          ),
         ],
 
         // 하단 여백
@@ -124,112 +146,40 @@ class ShareManagementPage extends ConsumerWidget {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: [
-        SliverFillRemaining(
-          hasScrollBody: false,
-          child: Center(child: child),
-        ),
+        SliverFillRemaining(hasScrollBody: false, child: Center(child: child)),
       ],
-    );
-  }
-
-  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildEmptyState(BuildContext context) {
     return _buildScrollableCenter(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.account_balance_wallet_outlined,
-            size: 64,
-            color: Colors.grey[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '가계부가 없습니다',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '가계부를 생성하여 시작하세요',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[500],
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => context.push(Routes.ledgerManage),
-            icon: const Icon(Icons.add),
-            label: const Text('가계부 생성하기'),
-          ),
-        ],
+      child: EmptyState(
+        icon: Icons.account_balance_wallet_outlined,
+        message: '가계부가 없습니다',
+        subtitle: '가계부를 생성하여 시작하세요',
+        action: ElevatedButton.icon(
+          onPressed: () => context.push(Routes.ledgerManage),
+          icon: const Icon(Icons.add),
+          label: const Text('가계부 생성하기'),
+        ),
       ),
     );
   }
 
   Widget _buildErrorWidget(BuildContext context, WidgetRef ref, String error) {
     return _buildScrollableCenter(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            Icons.error_outline,
-            size: 64,
-            color: Colors.red[400],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            '오류가 발생했습니다',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              error,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[500],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              ref.invalidate(myOwnedLedgersWithInvitesProvider);
-              ref.invalidate(receivedInvitesProvider);
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text('다시 시도'),
-          ),
-        ],
+      child: EmptyState(
+        icon: Icons.error_outline,
+        message: '오류가 발생했습니다',
+        subtitle: error,
+        action: ElevatedButton.icon(
+          onPressed: () {
+            ref.invalidate(myOwnedLedgersWithInvitesProvider);
+            ref.invalidate(receivedInvitesProvider);
+          },
+          icon: const Icon(Icons.refresh),
+          label: const Text('다시 시도'),
+        ),
       ),
     );
   }
@@ -251,9 +201,7 @@ class ShareManagementPage extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('가계부 변경'),
-        content: Text(
-          '\'$ledgerName\' 가계부를 사용하시겠습니까?',
-        ),
+        content: Text('\'$ledgerName\' 가계부를 사용하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -299,7 +247,9 @@ class ShareManagementPage extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('탈퇴'),
           ),
         ],
@@ -317,7 +267,9 @@ class ShareManagementPage extends ConsumerWidget {
     LedgerInvite invite,
   ) async {
     try {
-      await ref.read(shareNotifierProvider.notifier).leaveLedger(invite.ledgerId);
+      await ref
+          .read(shareNotifierProvider.notifier)
+          .leaveLedger(invite.ledgerId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -352,9 +304,7 @@ class ShareManagementPage extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('초대 취소'),
-        content: Text(
-          '\'${invite.inviteeEmail}\'님에게 보낸 초대를 취소하시겠습니까?',
-        ),
+        content: Text('\'${invite.inviteeEmail}\'님에게 보낸 초대를 취소하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -362,7 +312,9 @@ class ShareManagementPage extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('초대취소'),
           ),
         ],
@@ -381,10 +333,9 @@ class ShareManagementPage extends ConsumerWidget {
     String ledgerId,
   ) async {
     try {
-      await ref.read(shareNotifierProvider.notifier).cancelInvite(
-            inviteId: inviteId,
-            ledgerId: ledgerId,
-          );
+      await ref
+          .read(shareNotifierProvider.notifier)
+          .cancelInvite(inviteId: inviteId, ledgerId: ledgerId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -454,7 +405,9 @@ class ShareManagementPage extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: const Text('거부'),
           ),
         ],
@@ -569,10 +522,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
                 ),
               ],
               selectedItemBuilder: (context) => [
-                const Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('멤버'),
-                ),
+                const Align(alignment: Alignment.centerLeft, child: Text('멤버')),
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text('관리자'),
@@ -612,7 +562,9 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(shareNotifierProvider.notifier).sendInvite(
+      await ref
+          .read(shareNotifierProvider.notifier)
+          .sendInvite(
             ledgerId: widget.ledgerId,
             email: _emailController.text.trim(),
             role: _selectedRole,
@@ -650,10 +602,7 @@ class _RoleDropdownItem extends StatelessWidget {
   final String title;
   final String description;
 
-  const _RoleDropdownItem({
-    required this.title,
-    required this.description,
-  });
+  const _RoleDropdownItem({required this.title, required this.description});
 
   @override
   Widget build(BuildContext context) {
@@ -664,7 +613,10 @@ class _RoleDropdownItem extends StatelessWidget {
         Text(title),
         Text(
           description,
-          style: const TextStyle(fontSize: 12, color: Colors.grey),
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ],
     );

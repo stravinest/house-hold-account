@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../asset/presentation/providers/asset_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
+import '../../../widget/presentation/providers/widget_provider.dart';
 import '../../data/repositories/transaction_repository.dart';
 import '../../domain/entities/transaction.dart';
 
@@ -159,6 +160,10 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
       _ref.invalidate(assetStatisticsProvider);
     }
 
+    // 데이터 재계산 완료를 기다린 후 위젯 업데이트
+    await _ref.read(monthlyTotalProvider.future);
+    await _ref.read(widgetNotifierProvider.notifier).updateWidgetData();
+
     return transaction;
   }
 
@@ -205,6 +210,10 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     if (type == 'asset') {
       _ref.invalidate(assetStatisticsProvider);
     }
+
+    // 데이터 재계산 완료를 기다린 후 위젯 업데이트
+    await _ref.read(monthlyTotalProvider.future);
+    await _ref.read(widgetNotifierProvider.notifier).updateWidgetData();
   }
 
   Future<void> deleteTransaction(String id) async {
@@ -218,6 +227,10 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
 
     // 자산 통계도 갱신 (자산 거래가 아닐 경우 무시됨)
     _ref.invalidate(assetStatisticsProvider);
+
+    // 데이터 재계산 완료를 기다린 후 위젯 업데이트
+    await _ref.read(monthlyTotalProvider.future);
+    await _ref.read(widgetNotifierProvider.notifier).updateWidgetData();
   }
 
   // 반복 거래 템플릿 생성 및 오늘까지 거래 자동 생성
@@ -260,6 +273,10 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     _ref.invalidate(monthlyTransactionsProvider);
     _ref.invalidate(monthlyTotalProvider);
     _ref.invalidate(dailyTotalsProvider);
+
+    // 데이터 재계산 완료를 기다린 후 위젯 업데이트
+    await _ref.read(monthlyTotalProvider.future);
+    await _ref.read(widgetNotifierProvider.notifier).updateWidgetData();
   }
 }
 

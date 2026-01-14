@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'config/firebase_config.dart';
 import 'config/router.dart';
 import 'config/supabase_config.dart';
+import 'features/ledger/presentation/providers/ledger_provider.dart';
 import 'features/notification/services/local_notification_service.dart';
 import 'features/widget/data/services/widget_data_service.dart';
 import 'shared/themes/app_theme.dart';
@@ -90,6 +91,10 @@ class _SharedHouseholdAccountAppState
   void initState() {
     super.initState();
     _initDeepLinks();
+
+    Future.microtask(() {
+      ref.read(ledgerIdPersistenceProvider);
+    });
   }
 
   @override

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
 import '../../../payment_method/domain/entities/payment_method.dart';
@@ -14,10 +15,7 @@ import '../providers/transaction_provider.dart';
 class EditTransactionSheet extends ConsumerStatefulWidget {
   final Transaction transaction;
 
-  const EditTransactionSheet({
-    super.key,
-    required this.transaction,
-  });
+  const EditTransactionSheet({super.key, required this.transaction});
 
   @override
   ConsumerState<EditTransactionSheet> createState() =>
@@ -44,8 +42,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     // 기존 거래 데이터로 초기화
     _type = widget.transaction.type;
     _selectedDate = widget.transaction.date;
-    _amountController.text =
-        NumberFormat('#,###').format(widget.transaction.amount);
+    _amountController.text = NumberFormat(
+      '#,###',
+    ).format(widget.transaction.amount);
     _titleController.text = widget.transaction.title ?? '';
     _memoController.text = widget.transaction.memo ?? '';
 
@@ -80,15 +79,15 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     final categoriesAsync = _type == 'expense'
         ? ref.read(expenseCategoriesProvider)
         : _type == 'income'
-            ? ref.read(incomeCategoriesProvider)
-            : ref.read(savingCategoriesProvider);
+        ? ref.read(incomeCategoriesProvider)
+        : ref.read(savingCategoriesProvider);
 
     categoriesAsync.whenData((categories) {
       if (widget.transaction.categoryId != null) {
         final category = categories.cast<Category?>().firstWhere(
-              (c) => c?.id == widget.transaction.categoryId,
-              orElse: () => null,
-            );
+          (c) => c?.id == widget.transaction.categoryId,
+          orElse: () => null,
+        );
         if (category != null && mounted) {
           setState(() => _selectedCategory = category);
         }
@@ -100,9 +99,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     paymentMethodsAsync.whenData((methods) {
       if (widget.transaction.paymentMethodId != null) {
         final method = methods.cast<PaymentMethod?>().firstWhere(
-              (m) => m?.id == widget.transaction.paymentMethodId,
-              orElse: () => null,
-            );
+          (m) => m?.id == widget.transaction.paymentMethodId,
+          orElse: () => null,
+        );
         if (method != null && mounted) {
           setState(() => _selectedPaymentMethod = method);
         }
@@ -130,20 +129,23 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     setState(() => _isLoading = true);
 
     try {
-      final amount =
-          int.parse(_amountController.text.replaceAll(RegExp(r'[^\d]'), ''));
+      final amount = int.parse(
+        _amountController.text.replaceAll(RegExp(r'[^\d]'), ''),
+      );
 
-      await ref.read(transactionNotifierProvider.notifier).updateTransaction(
+      await ref
+          .read(transactionNotifierProvider.notifier)
+          .updateTransaction(
             id: widget.transaction.id,
             categoryId: _selectedCategory?.id,
             paymentMethodId: _selectedPaymentMethod?.id,
             amount: amount,
             type: _type,
             date: _selectedDate,
-            title:
-                _titleController.text.isNotEmpty ? _titleController.text : null,
-            memo:
-                _memoController.text.isNotEmpty ? _memoController.text : null,
+            title: _titleController.text.isNotEmpty
+                ? _titleController.text
+                : null,
+            memo: _memoController.text.isNotEmpty ? _memoController.text : null,
           );
 
       if (mounted) {
@@ -177,8 +179,8 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     final categoriesAsync = _type == 'expense'
         ? ref.watch(expenseCategoriesProvider)
         : _type == 'income'
-            ? ref.watch(incomeCategoriesProvider)
-            : ref.watch(savingCategoriesProvider);
+        ? ref.watch(incomeCategoriesProvider)
+        : ref.watch(savingCategoriesProvider);
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
 
     // 카테고리/결제수단 초기값 설정
@@ -208,7 +210,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                   margin: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: colorScheme.onSurfaceVariant.withAlpha(76),
-                    borderRadius: BorderRadius.circular(2),
+                    borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
                   ),
                 ),
 
@@ -228,8 +230,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Text('저장'),
                       ),
@@ -321,7 +324,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                             border: InputBorder.none,
                           ),
                           validator: (value) {
-                            if (value == null || value.isEmpty || value == '0') {
+                            if (value == null ||
+                                value.isEmpty ||
+                                value == '0') {
                               return '금액을 입력해주세요';
                             }
                             return null;
@@ -335,8 +340,10 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                         ListTile(
                           leading: const Icon(Icons.calendar_today),
                           title: Text(
-                            DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
-                                .format(_selectedDate),
+                            DateFormat(
+                              'yyyy년 M월 d일 (E)',
+                              'ko_KR',
+                            ).format(_selectedDate),
                           ),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: _selectDate,
@@ -354,8 +361,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                         ),
 
                         categoriesAsync.when(
-                          data: (categories) =>
-                              _buildCategoryChips(categories),
+                          data: (categories) => _buildCategoryChips(categories),
                           loading: () =>
                               const Center(child: CircularProgressIndicator()),
                           error: (e, _) => Text('오류: $e'),
@@ -377,7 +383,8 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                             data: (paymentMethods) =>
                                 _buildPaymentMethodChips(paymentMethods),
                             loading: () => const Center(
-                                child: CircularProgressIndicator()),
+                              child: CircularProgressIndicator(),
+                            ),
                             error: (e, _) => Text('오류: $e'),
                           ),
                           const SizedBox(height: 16),

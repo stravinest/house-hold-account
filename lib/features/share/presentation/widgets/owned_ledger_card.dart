@@ -28,14 +28,19 @@ class OwnedLedgerCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUserId = SupabaseConfig.auth.currentUser?.id;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: ledgerInfo.isCurrentLedger ? _activeBackgroundColor : Colors.white,
+        color: ledgerInfo.isCurrentLedger
+            ? _activeBackgroundColor
+            : colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: ledgerInfo.isCurrentLedger ? _activeBorderColor : _inactiveBorderColor,
+          color: ledgerInfo.isCurrentLedger
+              ? _activeBorderColor
+              : _inactiveBorderColor,
           width: ledgerInfo.isCurrentLedger ? 2.5 : 1.5,
         ),
         boxShadow: [
@@ -60,7 +65,9 @@ class OwnedLedgerCard extends ConsumerWidget {
                       Icon(
                         Icons.account_balance_wallet,
                         size: 20,
-                        color: ledgerInfo.isCurrentLedger ? _activeBorderColor : _inactiveBorderColor,
+                        color: ledgerInfo.isCurrentLedger
+                            ? _activeBorderColor
+                            : _inactiveBorderColor,
                       ),
                       const SizedBox(width: 8),
                       Flexible(
@@ -85,12 +92,12 @@ class OwnedLedgerCard extends ConsumerWidget {
                             color: _activeBorderColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Text(
+                          child: Text(
                             '사용 중',
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                             ),
                           ),
                         ),
@@ -104,7 +111,10 @@ class OwnedLedgerCard extends ConsumerWidget {
                     onPressed: onSelectLedger,
                     style: TextButton.styleFrom(
                       foregroundColor: _activeBorderColor,
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       minimumSize: const Size(0, 32),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
@@ -114,7 +124,7 @@ class OwnedLedgerCard extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             // 중간: 멤버 정보
-            _buildMemberInfo(currentUserId),
+            _buildMemberInfo(context, currentUserId),
             const SizedBox(height: 12),
             // 하단: 초대 상태 + 액션 버튼
             _buildInviteSection(context),
@@ -124,7 +134,8 @@ class OwnedLedgerCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildMemberInfo(String? currentUserId) {
+  Widget _buildMemberInfo(BuildContext context, String? currentUserId) {
+    final colorScheme = Theme.of(context).colorScheme;
     final memberNames = ledgerInfo.members.map((m) {
       if (m.userId == currentUserId) {
         return '나';
@@ -137,14 +148,14 @@ class OwnedLedgerCard extends ConsumerWidget {
         Icon(
           Icons.people_outline,
           size: 16,
-          color: Colors.grey[600],
+          color: colorScheme.onSurface.withOpacity(0.7),
         ),
         const SizedBox(width: 4),
         Text(
           '멤버 ${ledgerInfo.members.length}/${AppConstants.maxMembersPerLedger}명',
           style: TextStyle(
             fontSize: 13,
-            color: Colors.grey[600],
+            color: colorScheme.onSurface.withOpacity(0.7),
           ),
         ),
         if (memberNames.isNotEmpty) ...[
@@ -154,7 +165,7 @@ class OwnedLedgerCard extends ConsumerWidget {
               '(${memberNames.join(', ')})',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[500],
+                color: colorScheme.onSurfaceVariant,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -166,6 +177,7 @@ class OwnedLedgerCard extends ConsumerWidget {
   }
 
   Widget _buildInviteSection(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     // 멤버가 꽉 찬 경우
     if (ledgerInfo.isMemberFull) {
       return _buildStatusRow(
@@ -173,19 +185,23 @@ class OwnedLedgerCard extends ConsumerWidget {
         statusWidget: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
-            color: Colors.grey[200],
+            color: colorScheme.surfaceContainerHigh,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.check_circle, size: 14, color: Colors.grey[600]),
+              Icon(
+                Icons.check_circle,
+                size: 14,
+                color: colorScheme.onSurface.withOpacity(0.7),
+              ),
               const SizedBox(width: 4),
               Text(
                 '멤버 가득 참',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey[600],
+                  color: colorScheme.onSurface.withOpacity(0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -213,6 +229,7 @@ class OwnedLedgerCard extends ConsumerWidget {
       return _buildPendingInviteRow(
         context,
         statusWidget: _buildStatusBadge(
+          context,
           '수락 대기중',
           invite.inviteeEmail,
           Colors.orange,
@@ -226,10 +243,11 @@ class OwnedLedgerCard extends ConsumerWidget {
       return _buildStatusRow(
         context,
         statusWidget: _buildStatusBadge(
+          context,
           '수락됨',
           invite.inviteeEmail,
-          Colors.green,
-          Colors.green[50]!,
+          colorScheme.tertiary,
+          colorScheme.tertiaryContainer,
         ),
         showInviteButton: false,
       );
@@ -240,10 +258,11 @@ class OwnedLedgerCard extends ConsumerWidget {
       return _buildStatusRow(
         context,
         statusWidget: _buildStatusBadge(
+          context,
           '수락 거부됨',
           invite.inviteeEmail,
-          Colors.red,
-          Colors.red[50]!,
+          colorScheme.error,
+          colorScheme.errorContainer,
         ),
         showInviteButton: true,
         inviteEnabled: true,
@@ -264,6 +283,7 @@ class OwnedLedgerCard extends ConsumerWidget {
     BuildContext context, {
     required Widget statusWidget,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
         Expanded(child: statusWidget),
@@ -271,7 +291,7 @@ class OwnedLedgerCard extends ConsumerWidget {
         TextButton(
           onPressed: onCancelInvite,
           style: TextButton.styleFrom(
-            foregroundColor: Colors.red,
+            foregroundColor: colorScheme.error,
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             minimumSize: const Size(0, 32),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -292,14 +312,19 @@ class OwnedLedgerCard extends ConsumerWidget {
     required bool showInviteButton,
     bool inviteEnabled = true,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
     final inviteButton = showInviteButton
         ? ElevatedButton.icon(
             onPressed: inviteEnabled ? onInviteTap : null,
             icon: const Icon(Icons.person_add, size: 16),
             label: const Text('초대'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: inviteEnabled ? _activeBorderColor : Colors.grey[300],
-              foregroundColor: Colors.white,
+              backgroundColor: inviteEnabled
+                  ? _activeBorderColor
+                  : colorScheme.surfaceContainerHighest,
+              foregroundColor: inviteEnabled
+                  ? colorScheme.onPrimary
+                  : colorScheme.onSurfaceVariant,
               minimumSize: const Size(0, 32),
               padding: const EdgeInsets.symmetric(horizontal: 12),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -315,9 +340,7 @@ class OwnedLedgerCard extends ConsumerWidget {
     if (statusWidget == null) {
       return Row(
         mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          if (inviteButton != null) inviteButton,
-        ],
+        children: [if (inviteButton != null) inviteButton],
       );
     }
 
@@ -325,20 +348,19 @@ class OwnedLedgerCard extends ConsumerWidget {
     return Row(
       children: [
         Expanded(child: statusWidget),
-        if (inviteButton != null) ...[
-          const SizedBox(width: 8),
-          inviteButton,
-        ],
+        if (inviteButton != null) ...[const SizedBox(width: 8), inviteButton],
       ],
     );
   }
 
   Widget _buildStatusBadge(
+    BuildContext context,
     String status,
     String email,
     Color color,
     Color backgroundColor,
   ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -357,10 +379,10 @@ class OwnedLedgerCard extends ConsumerWidget {
             ),
             child: Text(
               status,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: colorScheme.onPrimary,
               ),
             ),
           ),
@@ -370,7 +392,7 @@ class OwnedLedgerCard extends ConsumerWidget {
               email,
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.grey[700],
+                color: colorScheme.onSurface.withOpacity(0.8),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

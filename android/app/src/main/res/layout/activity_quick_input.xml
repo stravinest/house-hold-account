@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="320dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/dialog_background"
+    android:layout_gravity="center"
+    android:elevation="8dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="빠른 지출 입력"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#1B1B1F"
+        android:layout_marginBottom="20dp"/>
+
+    <EditText
+        android:id="@+id/amountInput"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:hint="금액"
+        android:inputType="number"
+        android:maxLines="1"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textSize="16sp"
+        android:background="@drawable/input_background"
+        android:textColor="#1B1B1F"
+        android:textColorHint="#74777F"/>
+
+    <EditText
+        android:id="@+id/titleInput"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:hint="제목 (선택)"
+        android:inputType="text"
+        android:maxLines="1"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:textSize="16sp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/input_background"
+        android:textColor="#1B1B1F"
+        android:textColorHint="#74777F"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="24dp"
+        android:gravity="end">
+
+        <Button
+            android:id="@+id/cancelButton"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:minWidth="80dp"
+            android:text="취소"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:textColor="#2E7D32"
+            android:background="@drawable/button_text_background"/>
+
+        <Button
+            android:id="@+id/saveButton"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:minWidth="80dp"
+            android:text="저장"
+            android:textAllCaps="false"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/button_primary_background"/>
+    </LinearLayout>
+</LinearLayout>

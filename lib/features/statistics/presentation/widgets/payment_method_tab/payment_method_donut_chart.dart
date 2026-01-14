@@ -14,7 +14,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
       final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
       return Color(colorValue);
     } catch (e) {
-      return Colors.grey;
+      return const Color(0xFF9E9E9E);
     }
   }
 
@@ -45,8 +45,8 @@ class PaymentMethodDonutChart extends ConsumerWidget {
         child: Text(
           '데이터가 없습니다',
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );

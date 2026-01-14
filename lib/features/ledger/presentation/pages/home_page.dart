@@ -13,17 +13,21 @@ import '../../../statistics/presentation/pages/statistics_page.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../../transaction/presentation/widgets/add_transaction_sheet.dart';
+import '../../../transaction/presentation/widgets/quick_expense_sheet.dart';
 import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart';
 import '../../../widget/presentation/providers/widget_provider.dart';
 import '../providers/ledger_provider.dart';
 import '../widgets/calendar_view.dart';
 
 class HomePage extends ConsumerStatefulWidget {
-  /// 위젯 딥링크에서 전달받는 초기 거래 타입
-  /// 'expense' 또는 'income'
   final String? initialTransactionType;
+  final bool showQuickExpense;
 
-  const HomePage({super.key, this.initialTransactionType});
+  const HomePage({
+    super.key,
+    this.initialTransactionType,
+    this.showQuickExpense = false,
+  });
 
   @override
   ConsumerState<HomePage> createState() => _HomePageState();
@@ -40,8 +44,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     // 앱 시작 시 가계부 목록 로드 및 첫 번째 가계부 자동 생성
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeLedger();
-      // 위젯 딥링크에서 호출된 경우 거래 추가 시트 열기
       _handleInitialTransactionType();
+      _handleQuickExpense();
     });
   }
 
@@ -52,7 +56,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _handleInitialTransactionType() {
     if (widget.initialTransactionType != null) {
-      // 다른 초기화 작업이 완료된 후 시트를 열도록 딜레이 추가
       Future.delayed(const Duration(milliseconds: 100), () {
         if (!mounted) return;
         final date = ref.read(selectedDateProvider);
@@ -60,6 +63,19 @@ class _HomePageState extends ConsumerState<HomePage> {
           context,
           date,
           initialType: widget.initialTransactionType,
+        );
+      });
+    }
+  }
+
+  void _handleQuickExpense() {
+    if (widget.showQuickExpense) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        if (!mounted) return;
+        showDialog(
+          context: context,
+          barrierDismissible: true,
+          builder: (context) => const QuickExpenseSheet(),
         );
       });
     }
@@ -109,6 +125,9 @@ class _HomePageState extends ConsumerState<HomePage> {
       await ref.read(monthlyTransactionsProvider.future);
       await ref.read(monthlyTotalProvider.future);
       await ref.read(dailyTotalsProvider.future);
+
+      // 홈 화면 위젯 데이터 업데이트
+      await ref.read(widgetNotifierProvider.notifier).updateWidgetData();
     } on AuthException catch (e) {
       debugPrint('캘린더 새로고침 오류 (인증): $e');
       if (mounted) {
@@ -588,16 +607,17 @@ class _DailyUserSummary extends ConsumerWidget {
             final isAssetType = tx.type == 'asset';
 
             // 금액 색상 결정: 수입=파란색, 자산=녹색, 지출=빨간색
+            final colorScheme = Theme.of(context).colorScheme;
             Color amountColor;
             String amountPrefix;
             if (isIncome) {
-              amountColor = Colors.blue.shade700;
+              amountColor = colorScheme.primary;
               amountPrefix = '';
             } else if (isAssetType) {
-              amountColor = Colors.green.shade600;
+              amountColor = colorScheme.tertiary;
               amountPrefix = ''; // 자산은 - 없이 표시
             } else {
-              amountColor = Colors.red.shade700;
+              amountColor = colorScheme.error;
               amountPrefix = '-';
             }
 

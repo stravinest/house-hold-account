@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/section_header.dart';
 import '../../domain/entities/notification_type.dart';
 import '../providers/notification_settings_provider.dart';
 
@@ -42,7 +44,7 @@ class NotificationSettingsPage extends ConsumerWidget {
           ),
         ),
 
-        _SectionHeader(title: '공유 가계부'),
+        const SectionHeader(title: '공유 가계부'),
         _buildNotificationToggle(
           context,
           ref,
@@ -55,7 +57,7 @@ class NotificationSettingsPage extends ConsumerWidget {
 
         const Divider(),
 
-        _SectionHeader(title: '초대'),
+        const SectionHeader(title: '초대'),
         _buildNotificationToggle(
           context,
           ref,
@@ -117,55 +119,10 @@ class NotificationSettingsPage extends ConsumerWidget {
 
   /// 에러 뷰 빌드
   Widget _buildErrorView(BuildContext context, Object error) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '알림 설정을 불러올 수 없습니다',
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 섹션 헤더 위젯
-class _SectionHeader extends StatelessWidget {
-  final String title;
-
-  const _SectionHeader({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+    return EmptyState(
+      icon: Icons.error_outline,
+      message: '알림 설정을 불러올 수 없습니다',
+      subtitle: error.toString(),
     );
   }
 }
