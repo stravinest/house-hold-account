@@ -13,13 +13,12 @@
         android:gravity="center"
         android:orientation="vertical">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="+"
-            android:textColor="#2E7D32"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+        <ImageView
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:src="@drawable/widget_icon"
+            android:scaleType="fitCenter"
+            android:contentDescription="지출 추가" />
 
     </LinearLayout>
 

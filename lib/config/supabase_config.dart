@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -5,6 +6,12 @@ class SupabaseConfig {
   static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
 
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
+
+  // 앱 딥링크 스킴
+  static const String appScheme = 'sharedhousehold';
+
+  // 사용하는 스키마
+  static const String schema = 'house';
 
   static Future<void> initialize() async {
     await dotenv.load(fileName: '.env');
@@ -16,7 +23,13 @@ class SupabaseConfig {
       );
     }
 
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+      authOptions: FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
+      postgrestOptions: PostgrestClientOptions(schema: schema),
+      debug: kDebugMode,
+    );
   }
 
   static SupabaseClient get client => Supabase.instance.client;

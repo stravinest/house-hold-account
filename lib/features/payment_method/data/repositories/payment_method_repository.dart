@@ -110,7 +110,7 @@ class PaymentMethodRepository {
         .channel('payment_methods_changes_$ledgerId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
-          schema: 'public',
+          schema: 'house',
           table: 'payment_methods',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,

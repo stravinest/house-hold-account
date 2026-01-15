@@ -9,6 +9,7 @@ class CategoryRepository {
   // 가계부의 모든 카테고리 조회
   Future<List<CategoryModel>> getCategories(String ledgerId) async {
     final response = await _client
+        .schema('house')
         .from('categories')
         .select()
         .eq('ledger_id', ledgerId)
@@ -25,6 +26,7 @@ class CategoryRepository {
     required String type,
   }) async {
     final response = await _client
+        .schema('house')
         .from('categories')
         .select()
         .eq('ledger_id', ledgerId)
@@ -46,6 +48,7 @@ class CategoryRepository {
   }) async {
     // 현재 최대 sort_order 조회
     final maxOrderResponse = await _client
+        .schema('house')
         .from('categories')
         .select('sort_order')
         .eq('ledger_id', ledgerId)
@@ -66,6 +69,7 @@ class CategoryRepository {
     );
 
     final response = await _client
+        .schema('house')
         .from('categories')
         .insert(data)
         .select()
@@ -89,6 +93,7 @@ class CategoryRepository {
     if (sortOrder != null) updates['sort_order'] = sortOrder;
 
     final response = await _client
+        .schema('house')
         .from('categories')
         .update(updates)
         .eq('id', id)
@@ -101,6 +106,7 @@ class CategoryRepository {
   // 카테고리 삭제 (기본 카테고리는 삭제 불가)
   Future<void> deleteCategory(String id) async {
     final response = await _client
+        .schema('house')
         .from('categories')
         .delete()
         .eq('id', id)
@@ -116,6 +122,7 @@ class CategoryRepository {
   Future<void> reorderCategories(List<String> categoryIds) async {
     for (int i = 0; i < categoryIds.length; i++) {
       await _client
+          .schema('house')
           .from('categories')
           .update({'sort_order': i})
           .eq('id', categoryIds[i]);
@@ -131,7 +138,7 @@ class CategoryRepository {
         .channel('categories_changes_$ledgerId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
-          schema: 'public',
+          schema: 'house',
           table: 'categories',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,

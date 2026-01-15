@@ -42,6 +42,13 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="sharedhousehold" android:host="add-income"/>
             </intent-filter>
+            <!-- Deep Link for Supabase Auth Callback (email verification, password reset) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="sharedhousehold" android:host="auth-callback"/>
+            </intent-filter>
         </activity>
 
         <!-- Quick Input Activity (Transparent Dialog) -->

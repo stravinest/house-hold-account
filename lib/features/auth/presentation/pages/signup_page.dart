@@ -47,7 +47,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
     try {
       debugPrint('[SignupPage] signUpWithEmail 호출 시작');
-      await ref.read(authNotifierProvider.notifier).signUpWithEmail(
+      await ref
+          .read(authNotifierProvider.notifier)
+          .signUpWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
             displayName: _nameController.text.trim(),
@@ -56,14 +58,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       debugPrint('[SignupPage] signUpWithEmail 호출 성공');
 
       if (mounted) {
-        debugPrint('[SignupPage] 회원가입 성공 - 로그인 페이지로 이동');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('회원가입 성공! 이메일을 확인해주세요.'),
-            duration: Duration(seconds: 1),
-          ),
-        );
-        context.go(Routes.login);
+        debugPrint('[SignupPage] 회원가입 성공 - 홈으로 이동');
+        context.go(Routes.home);
       }
     } catch (e, st) {
       debugPrint('[SignupPage] 회원가입 실패: $e');
@@ -72,7 +68,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('회원가입 실패: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 1),
           ),
         );
@@ -89,9 +84,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('회원가입'),
-      ),
+      appBar: AppBar(title: const Text('회원가입')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -106,15 +99,15 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 Text(
                   '새 계정 만들기',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '공유 가계부를 시작하려면\n계정을 만들어주세요',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
 
                 const SizedBox(height: 32),
@@ -155,8 +148,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     if (value == null || value.isEmpty) {
                       return '이메일을 입력해주세요';
                     }
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                        .hasMatch(value)) {
+                    if (!RegExp(
+                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                    ).hasMatch(value)) {
                       return '올바른 이메일 형식이 아닙니다';
                     }
                     return null;
@@ -212,8 +206,10 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                             : Icons.visibility_off_outlined,
                       ),
                       onPressed: () {
-                        setState(() =>
-                            _obscureConfirmPassword = !_obscureConfirmPassword);
+                        setState(
+                          () => _obscureConfirmPassword =
+                              !_obscureConfirmPassword,
+                        );
                       },
                     ),
                     hintText: '비밀번호를 다시 입력해주세요',
@@ -249,8 +245,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 Text(
                   '회원가입 시 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
 

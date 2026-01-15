@@ -212,7 +212,7 @@ class InvitedLedgerCard extends StatelessWidget {
               minimumSize: const Size(0, 32),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('탈퇴'),
+            child: const Text('퇴장'),
           ),
         ],
       );

@@ -127,7 +127,7 @@ class FixedExpenseCategoryRepository {
         .channel('fixed_expense_categories_changes_$ledgerId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
-          schema: 'public',
+          schema: 'house',
           table: 'fixed_expense_categories',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,

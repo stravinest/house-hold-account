@@ -137,6 +137,16 @@ class _SharedHouseholdAccountAppState
       return;
     }
 
+    // Supabase 인증 콜백 처리 (이메일 인증, 비밀번호 재설정 등)
+    // sharedhousehold://auth-callback?... 형태로 들어옴
+    if (uri.host == 'auth-callback' || uri.hasFragment) {
+      debugPrint('Supabase 인증 콜백 감지');
+      // Supabase SDK가 자동으로 세션을 처리함
+      // 세션 복구 후 홈으로 이동
+      _handleAuthCallback(uri);
+      return;
+    }
+
     // URI의 host가 라우트 경로가 됨
     // 예: sharedhousehold://add-expense -> /add-expense
     final path = uri.host.isEmpty ? '/' : '/${uri.host}';
@@ -149,6 +159,42 @@ class _SharedHouseholdAccountAppState
       router.go(path);
       debugPrint('딥링크 라우팅: $path');
     });
+  }
+
+  Future<void> _handleAuthCallback(Uri uri) async {
+    debugPrint('인증 콜백 처리 시작: $uri');
+
+    try {
+      // Supabase SDK가 URI에서 토큰을 추출하여 세션 복구
+      final response = await SupabaseConfig.client.auth.getSessionFromUrl(uri);
+      debugPrint('세션 복구 성공');
+
+      final user = response.session.user;
+      final router = ref.read(routerProvider);
+
+      // 이메일 인증 완료 여부 확인
+      if (user.emailConfirmedAt != null) {
+        // 이메일 인증 완료 - 홈으로 이동
+        Future.delayed(const Duration(milliseconds: 500), () {
+          router.go(Routes.home);
+          debugPrint('이메일 인증 완료 - 홈으로 이동');
+        });
+      } else {
+        // 이메일 미인증 - 인증 대기 페이지로 이동
+        final email = user.email ?? '';
+        Future.delayed(const Duration(milliseconds: 500), () {
+          router.go(
+            '${Routes.emailVerification}?email=${Uri.encodeComponent(email)}',
+          );
+          debugPrint('이메일 미인증 - 인증 페이지로 이동');
+        });
+      }
+    } catch (e) {
+      debugPrint('세션 복구 실패: $e');
+      // 실패해도 로그인 페이지로 이동
+      final router = ref.read(routerProvider);
+      router.go(Routes.login);
+    }
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
 import '../providers/auth_provider.dart';
@@ -32,7 +33,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(authNotifierProvider.notifier).signInWithEmail(
+      await ref
+          .read(authNotifierProvider.notifier)
+          .signInWithEmail(
             email: _emailController.text.trim(),
             password: _passwordController.text,
           );
@@ -52,19 +55,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // 3초 후에도 auth state가 업데이트되지 않으면 에러 표시
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            duration: const Duration(seconds: 1),
+          const SnackBar(
+            content: Text('로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.'),
+            duration: Duration(seconds: 1),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        String errorMessage;
+        if (e is AuthApiException) {
+          switch (e.code) {
+            case 'invalid_credentials':
+              errorMessage = '이메일 또는 비밀번호가 틀렸습니다.';
+              break;
+            case 'email_not_confirmed':
+              errorMessage = '이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.';
+              break;
+            default:
+              errorMessage = '로그인 실패: ${e.message}';
+          }
+        } else {
+          errorMessage = '로그인 실패: ${e.toString()}';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('로그인 실패: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
+            content: Text(errorMessage),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -86,7 +102,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Google 로그인 실패: ${e.toString()}'),
-            backgroundColor: Theme.of(context).colorScheme.error,
             duration: const Duration(seconds: 1),
           ),
         );
@@ -98,11 +113,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  // 스플래시 배경색 (연한 연두색)
+  static const Color _splashBackgroundColor = Color(0xFFE9F1E6);
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
+      backgroundColor: _splashBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -111,34 +130,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 40),
 
-                // 로고
-                Icon(
-                  Icons.account_balance_wallet,
-                  size: 80,
-                  color: colorScheme.primary,
+                // 앱 아이콘 로고
+                Center(
+                  child: Image.asset(
+                    'assets/images/app_icon.png',
+                    width: 120,
+                    height: 120,
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
 
                 // 타이틀
                 Text(
                   '공유 가계부',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '가족, 커플, 룸메이트와 함께\n가계부를 관리하세요',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
 
-                const SizedBox(height: 48),
+                const SizedBox(height: 32),
 
                 // 이메일 입력
                 TextFormField(

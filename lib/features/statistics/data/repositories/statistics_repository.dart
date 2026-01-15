@@ -22,6 +22,7 @@ class StatisticsRepository {
         type == 'expense' && expenseTypeFilter == ExpenseTypeFilter.fixed;
 
     var query = _client
+        .schema('house')
         .from('transactions')
         .select(
           useFixedExpenseCategory
@@ -135,6 +136,7 @@ class StatisticsRepository {
 
     // 단일 쿼리로 전체 기간 데이터 조회
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('amount, type, date')
         .eq('ledger_id', ledgerId)
@@ -232,6 +234,7 @@ class StatisticsRepository {
 
     // 현재 월 데이터 조회
     var currentQuery = _client
+        .schema('house')
         .from('transactions')
         .select('amount, is_fixed_expense')
         .eq('ledger_id', ledgerId)
@@ -256,6 +259,7 @@ class StatisticsRepository {
 
     // 지난 월 데이터 조회
     var previousQuery = _client
+        .schema('house')
         .from('transactions')
         .select('amount, is_fixed_expense')
         .eq('ledger_id', ledgerId)
@@ -316,6 +320,7 @@ class StatisticsRepository {
     final endDate = DateTime(year, month + 1, 0);
 
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('amount, payment_method_id, payment_methods(name, icon, color)')
         .eq('ledger_id', ledgerId)
@@ -388,6 +393,7 @@ class StatisticsRepository {
 
     // 단일 쿼리로 전체 기간 데이터 조회
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('amount, type, date')
         .eq('ledger_id', ledgerId)
@@ -445,6 +451,7 @@ class StatisticsRepository {
 
     // 단일 쿼리로 전체 기간 데이터 조회
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('amount, type, date')
         .eq('ledger_id', ledgerId)
@@ -555,6 +562,7 @@ class StatisticsRepository {
 
     // 단일 쿼리로 전체 기간 데이터 조회
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('amount, type, date')
         .eq('ledger_id', ledgerId)

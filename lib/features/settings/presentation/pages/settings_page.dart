@@ -393,13 +393,22 @@ class SettingsPage extends ConsumerWidget {
     );
 
     if (confirmed == true && context.mounted) {
-      // TODO: 회원 탈퇴 처리
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('준비 중인 기능입니다'),
-          duration: Duration(seconds: 1),
-        ),
-      );
+      try {
+        await ref.read(authNotifierProvider.notifier).deleteAccount();
+        // 삭제 성공 후 명시적으로 로그아웃하여 세션 정리 및 로그인 페이지로 이동
+        if (context.mounted) {
+          await ref.read(authNotifierProvider.notifier).signOut();
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('회원 탈퇴 실패: $e'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
     }
   }
 }

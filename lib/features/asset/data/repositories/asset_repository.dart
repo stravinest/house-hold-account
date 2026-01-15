@@ -1,8 +1,38 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/asset_goal.dart';
 import '../../domain/entities/asset_statistics.dart';
 import '../models/asset_goal_model.dart';
+
+// 재시도 가능한 쿼리 실행 헬퍼
+Future<T> _retryOnConnectionError<T>(
+  Future<T> Function() operation, {
+  int maxRetries = 3,
+  Duration delay = const Duration(milliseconds: 500),
+}) async {
+  int attempt = 0;
+  while (true) {
+    try {
+      return await operation();
+    } catch (e) {
+      attempt++;
+      final isConnectionError =
+          e.toString().contains('Connection closed') ||
+          e.toString().contains('ClientException') ||
+          e is SocketException;
+
+      if (!isConnectionError || attempt >= maxRetries) {
+        rethrow;
+      }
+
+      debugPrint('Connection error, retrying ($attempt/$maxRetries)...');
+      await Future.delayed(delay * attempt);
+    }
+  }
+}
 
 class AssetRepository {
   final SupabaseClient _client;
@@ -12,6 +42,7 @@ class AssetRepository {
 
   Future<int> getTotalAssets({required String ledgerId}) async {
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)
@@ -34,6 +65,7 @@ class AssetRepository {
     final endDate = DateTime(year, month + 1, 0);
 
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)
@@ -59,6 +91,7 @@ class AssetRepository {
 
     // 단일 쿼리로 전체 자산 거래 조회 (현재 월까지)
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('amount, date')
         .eq('ledger_id', ledgerId)
@@ -108,6 +141,7 @@ class AssetRepository {
     required String ledgerId,
   }) async {
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('''
           id,
@@ -197,6 +231,7 @@ class AssetRepository {
   Future<List<AssetGoal>> getGoals({required String ledgerId}) async {
     try {
       final response = await _client
+          .schema('house')
           .from('asset_goals')
           .select()
           .eq('ledger_id', ledgerId)
@@ -226,6 +261,7 @@ class AssetRepository {
       );
 
       final response = await _client
+          .schema('house')
           .from('asset_goals')
           .insert(model.toInsertJson())
           .select()
@@ -253,6 +289,7 @@ class AssetRepository {
       );
 
       final response = await _client
+          .schema('house')
           .from('asset_goals')
           .update(model.toUpdateJson())
           .eq('id', goal.id)
@@ -267,7 +304,11 @@ class AssetRepository {
 
   Future<void> deleteGoal(String goalId) async {
     try {
-      await _client.from('asset_goals').delete().eq('id', goalId);
+      await _client
+          .schema('house')
+          .from('asset_goals')
+          .delete()
+          .eq('id', goalId);
     } catch (e, st) {
       Error.throwWithStackTrace(Exception('목표 삭제 실패: $e'), st);
     }
@@ -302,28 +343,34 @@ class AssetRepository {
     }
   }
 
-  // 자산 통계 - 병렬 쿼리로 최적화
+  // 자산 통계 - 병렬 쿼리로 최적화 (연결 오류 시 재시도)
   Future<AssetStatistics> getEnhancedStatistics({
     required String ledgerId,
   }) async {
     try {
       final now = DateTime.now();
 
-      // 독립적인 쿼리들을 병렬로 실행
-      final results = await Future.wait([
-        getTotalAssets(ledgerId: ledgerId),
-        getMonthlyChange(ledgerId: ledgerId, year: now.year, month: now.month),
-        _getTotalAssetsUntil(
-          ledgerId: ledgerId,
-          date: DateTime(now.year, now.month, 0),
-        ),
-        _getTotalAssetsUntil(
-          ledgerId: ledgerId,
-          date: DateTime(now.year - 1, now.month + 1, 0),
-        ),
-        getMonthlyAssets(ledgerId: ledgerId),
-        getAssetsByCategory(ledgerId: ledgerId),
-      ]);
+      // 독립적인 쿼리들을 병렬로 실행 (연결 오류 시 재시도)
+      final results = await _retryOnConnectionError(
+        () => Future.wait([
+          getTotalAssets(ledgerId: ledgerId),
+          getMonthlyChange(
+            ledgerId: ledgerId,
+            year: now.year,
+            month: now.month,
+          ),
+          _getTotalAssetsUntil(
+            ledgerId: ledgerId,
+            date: DateTime(now.year, now.month, 0),
+          ),
+          _getTotalAssetsUntil(
+            ledgerId: ledgerId,
+            date: DateTime(now.year - 1, now.month + 1, 0),
+          ),
+          getMonthlyAssets(ledgerId: ledgerId),
+          getAssetsByCategory(ledgerId: ledgerId),
+        ]),
+      );
 
       final totalAmount = results[0] as int;
       final monthlyChange = results[1] as int;
@@ -358,6 +405,7 @@ class AssetRepository {
     required DateTime date,
   }) async {
     final response = await _client
+        .schema('house')
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)

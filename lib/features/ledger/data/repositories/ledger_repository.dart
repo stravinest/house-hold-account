@@ -12,6 +12,7 @@ class LedgerRepository {
     if (userId == null) throw Exception('로그인이 필요합니다');
 
     final response = await _client
+        .schema('house')
         .from('ledgers')
         .select()
         .order('created_at', ascending: false);
@@ -24,6 +25,7 @@ class LedgerRepository {
   // 가계부 상세 조회
   Future<LedgerModel?> getLedger(String id) async {
     final response = await _client
+        .schema('house')
         .from('ledgers')
         .select()
         .eq('id', id)
@@ -51,6 +53,7 @@ class LedgerRepository {
     );
 
     final response = await _client
+        .schema('house')
         .from('ledgers')
         .insert(data)
         .select()
@@ -76,6 +79,7 @@ class LedgerRepository {
     if (isShared != null) updates['is_shared'] = isShared;
 
     final response = await _client
+        .schema('house')
         .from('ledgers')
         .update(updates)
         .eq('id', id)
@@ -93,6 +97,7 @@ class LedgerRepository {
   // 가계부 멤버 조회
   Future<List<LedgerMemberModel>> getMembers(String ledgerId) async {
     final response = await _client
+        .schema('house')
         .from('ledger_members')
         .select('*, profiles(display_name, email, avatar_url)')
         .eq('ledger_id', ledgerId)
@@ -122,6 +127,7 @@ class LedgerRepository {
     required String role,
   }) async {
     await _client
+        .schema('house')
         .from('ledger_members')
         .update({'role': role})
         .eq('id', memberId);
@@ -129,7 +135,11 @@ class LedgerRepository {
 
   // 멤버 제거
   Future<void> removeMember(String memberId) async {
-    await _client.from('ledger_members').delete().eq('id', memberId);
+    await _client
+        .schema('house')
+        .from('ledger_members')
+        .delete()
+        .eq('id', memberId);
   }
 
   // 실시간 구독 - ledgers 테이블
@@ -138,7 +148,7 @@ class LedgerRepository {
         .channel('ledgers_changes')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
-          schema: 'public',
+          schema: 'house',
           table: 'ledgers',
           callback: (payload) async {
             final ledgers = await getLedgers();
@@ -154,7 +164,7 @@ class LedgerRepository {
         .channel('ledger_members_changes')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
-          schema: 'public',
+          schema: 'house',
           table: 'ledger_members',
           callback: (payload) {
             onMemberChanged();

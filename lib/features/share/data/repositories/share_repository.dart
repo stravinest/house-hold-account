@@ -9,6 +9,7 @@ class ShareRepository {
   // 이메일로 사용자 조회 (가입 여부 확인)
   Future<Map<String, dynamic>?> findUserByEmail(String email) async {
     final response = await _client
+        .schema('house')
         .from('profiles')
         .select('id, email, display_name')
         .eq('email', email.toLowerCase().trim())
@@ -30,6 +31,7 @@ class ShareRepository {
     // ledger_members 테이블에서 소유자(role='owner') 또는 일반 멤버 확인
     // RLS 정책을 우회하지 않고 ledger_members 테이블만 사용
     final member = await _client
+        .schema('house')
         .from('ledger_members')
         .select('id, role')
         .eq('ledger_id', ledgerId)
@@ -45,6 +47,7 @@ class ShareRepository {
     required String email,
   }) async {
     final invite = await _client
+        .schema('house')
         .from('ledger_invites')
         .select('id')
         .eq('ledger_id', ledgerId)
@@ -59,6 +62,7 @@ class ShareRepository {
   // 현재 멤버 수 확인
   Future<int> getMemberCount(String ledgerId) async {
     final response = await _client
+        .schema('house')
         .from('ledger_members')
         .select('id')
         .eq('ledger_id', ledgerId);
@@ -107,13 +111,15 @@ class ShareRepository {
     // 5. 멤버 수 제한 확인
     if (await isMemberLimitReached(ledgerId)) {
       throw Exception(
-          '가계부 멤버는 최대 ${AppConstants.maxMembersPerLedger}명까지만 가능합니다.');
+        '가계부 멤버는 최대 ${AppConstants.maxMembersPerLedger}명까지만 가능합니다.',
+      );
     }
 
     // 만료일: 7일 후
     final expiresAt = DateTime.now().add(const Duration(days: 7));
 
     final response = await _client
+        .schema('house')
         .from('ledger_invites')
         .insert({
           'ledger_id': ledgerId,
@@ -122,7 +128,9 @@ class ShareRepository {
           'role': role,
           'expires_at': expiresAt.toIso8601String(),
         })
-        .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)')
+        .select(
+          '*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)',
+        )
         .single();
 
     return LedgerInvite.fromJson(response);
@@ -140,8 +148,11 @@ class ShareRepository {
     // 조인 쿼리로 가계부 이름과 초대자 정보를 한 번에 조회
     // pending, accepted, rejected 모두 표시 (만료되지 않은 것만)
     final response = await _client
+        .schema('house')
         .from('ledger_invites')
-        .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)')
+        .select(
+          '*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)',
+        )
         .eq('invitee_email', userEmail)
         .inFilter('status', ['pending', 'accepted', 'rejected'])
         .order('created_at', ascending: false);
@@ -154,8 +165,11 @@ class ShareRepository {
   // 보낸 초대 목록 조회
   Future<List<LedgerInvite>> getSentInvites(String ledgerId) async {
     final response = await _client
+        .schema('house')
         .from('ledger_invites')
-        .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)')
+        .select(
+          '*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)',
+        )
         .eq('ledger_id', ledgerId)
         .order('created_at', ascending: false);
 
@@ -167,6 +181,7 @@ class ShareRepository {
   // 초대 수락
   Future<void> acceptInvite(String inviteId) async {
     final invite = await _client
+        .schema('house')
         .from('ledger_invites')
         .select()
         .eq('id', inviteId)
@@ -190,12 +205,14 @@ class ShareRepository {
 
     // 초대 상태 업데이트
     await _client
+        .schema('house')
         .from('ledger_invites')
         .update({'status': 'accepted'})
         .eq('id', inviteId);
 
     // 가계부를 공유 상태로 변경
     await _client
+        .schema('house')
         .from('ledgers')
         .update({'is_shared': true})
         .eq('id', invite['ledger_id']);
@@ -204,6 +221,7 @@ class ShareRepository {
   // 초대 거절
   Future<void> rejectInvite(String inviteId) async {
     await _client
+        .schema('house')
         .from('ledger_invites')
         .update({'status': 'rejected'})
         .eq('id', inviteId);
@@ -211,12 +229,17 @@ class ShareRepository {
 
   // 초대 취소
   Future<void> cancelInvite(String inviteId) async {
-    await _client.from('ledger_invites').delete().eq('id', inviteId);
+    await _client
+        .schema('house')
+        .from('ledger_invites')
+        .delete()
+        .eq('id', inviteId);
   }
 
   // 멤버 목록 조회
   Future<List<LedgerMember>> getMembers(String ledgerId) async {
     final response = await _client
+        .schema('house')
         .from('ledger_members')
         .select('*, profiles(email, display_name, avatar_url, color)')
         .eq('ledger_id', ledgerId)
@@ -234,6 +257,7 @@ class ShareRepository {
     required String role,
   }) async {
     await _client
+        .schema('house')
         .from('ledger_members')
         .update({'role': role})
         .eq('ledger_id', ledgerId)
@@ -246,6 +270,7 @@ class ShareRepository {
     required String userId,
   }) async {
     await _client
+        .schema('house')
         .from('ledger_members')
         .delete()
         .eq('ledger_id', ledgerId)
@@ -253,6 +278,7 @@ class ShareRepository {
 
     // 남은 멤버 수 확인
     final remainingMembers = await _client
+        .schema('house')
         .from('ledger_members')
         .select()
         .eq('ledger_id', ledgerId);

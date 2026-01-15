@@ -73,17 +73,21 @@ class AuthService {
       // 트리거가 자동으로 profiles 테이블에 데이터를 생성하므로
       // 여기서는 추가 작업 불필요 (handle_new_user 트리거)
 
-      // 백업 안전장치: DB 트리거가 실패했을 경우를 대비
-      // 가계부 생성 실패해도 회원가입은 완료되어야 하므로 try-catch로 감싸고 silent fail
-      await _ensureDefaultLedgerExists();
+      // 이메일 확인이 필요한 경우 세션이 null
+      // 세션이 있을 때만 가계부 확인 및 FCM 초기화 진행
+      if (response.session != null) {
+        // 백업 안전장치: DB 트리거가 실패했을 경우를 대비
+        await _ensureDefaultLedgerExists();
 
-      // FCM 토큰 등록
-      // FCM 초기화 실패가 회원가입을 방해하면 안 되므로 try-catch로 감싸고 silent fail
-      try {
-        await _firebaseMessaging.initialize(response.user!.id);
-        debugPrint('[AuthService] FCM 초기화 성공');
-      } catch (e) {
-        debugPrint('[AuthService] FCM 초기화 실패 (무시됨): $e');
+        // FCM 토큰 등록
+        try {
+          await _firebaseMessaging.initialize(response.user!.id);
+          debugPrint('[AuthService] FCM 초기화 성공');
+        } catch (e) {
+          debugPrint('[AuthService] FCM 초기화 실패 (무시됨): $e');
+        }
+      } else {
+        debugPrint('[AuthService] 이메일 확인 필요 - 가계부/FCM 초기화 건너뜀');
       }
 
       return response;
@@ -288,8 +292,8 @@ class AuthService {
 
   // 계정 삭제
   Future<void> deleteAccount() async {
-    // 관련 데이터 삭제는 Supabase의 CASCADE 설정에 의해 자동 처리됨
-    await _auth.signOut();
+    // RPC 함수를 통해 사용자 데이터 및 계정 삭제
+    await SupabaseConfig.client.rpc('delete_user_account');
   }
 }
 
@@ -359,6 +363,17 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    state = const AsyncValue.loading();
+    try {
+      await _authService.deleteAccount();
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 }

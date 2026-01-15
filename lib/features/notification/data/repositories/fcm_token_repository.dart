@@ -13,6 +13,7 @@ class FcmTokenRepository {
   Future<List<FcmTokenModel>> getFcmTokens(String userId) async {
     try {
       final response = await _client
+          .schema('house')
           .from('fcm_tokens')
           .select()
           .eq('user_id', userId)
@@ -44,6 +45,7 @@ class FcmTokenRepository {
       // 1. 이 토큰이 다른 사용자에게 등록되어 있으면 삭제
       // FCM 토큰은 기기에 고유하므로, 한 토큰은 한 사용자에게만 연결되어야 함
       await _client
+          .schema('house')
           .from('fcm_tokens')
           .delete()
           .eq('token', token)
@@ -71,7 +73,11 @@ class FcmTokenRepository {
   /// [token] 삭제할 FCM 토큰
   Future<void> deleteFcmToken(String token) async {
     try {
-      await _client.from('fcm_tokens').delete().eq('token', token);
+      await _client
+          .schema('house')
+          .from('fcm_tokens')
+          .delete()
+          .eq('token', token);
     } catch (e) {
       // 에러를 호출자에게 전파
       rethrow;
@@ -85,7 +91,11 @@ class FcmTokenRepository {
   /// [userId] 사용자 ID
   Future<void> deleteAllUserTokens(String userId) async {
     try {
-      await _client.from('fcm_tokens').delete().eq('user_id', userId);
+      await _client
+          .schema('house')
+          .from('fcm_tokens')
+          .delete()
+          .eq('user_id', userId);
     } catch (e) {
       // 에러를 호출자에게 전파
       rethrow;

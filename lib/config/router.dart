@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/auth/presentation/pages/email_verification_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
@@ -21,6 +22,7 @@ class Routes {
   static const String splash = '/';
   static const String login = '/login';
   static const String signup = '/signup';
+  static const String emailVerification = '/email-verification';
   static const String home = '/home';
   static const String ledgerDetail = '/ledger/:id';
   static const String transaction = '/transaction';
@@ -69,7 +71,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isLoggedIn = authState.valueOrNull != null;
       final isAuthRoute =
           state.matchedLocation == Routes.login ||
-          state.matchedLocation == Routes.signup;
+          state.matchedLocation == Routes.signup ||
+          state.matchedLocation == Routes.emailVerification;
       final isSplash = state.matchedLocation == Routes.splash;
       final isDeepLinkRoute =
           state.matchedLocation == Routes.addExpense ||
@@ -111,6 +114,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: Routes.signup,
         builder: (context, state) => const SignupPage(),
+      ),
+      GoRoute(
+        path: Routes.emailVerification,
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'] ?? '';
+          return EmailVerificationPage(email: email);
+        },
       ),
 
       // 메인
@@ -216,47 +226,36 @@ class SplashPage extends ConsumerStatefulWidget {
 
 class _SplashPageState extends ConsumerState<SplashPage> {
   @override
-  void initState() {
-    super.initState();
-    _checkAuth();
-  }
-
-  Future<void> _checkAuth() async {
-    await Future.delayed(const Duration(seconds: 1));
-    if (!mounted) return;
-
-    final authState = ref.read(authStateProvider);
-    if (authState.valueOrNull != null) {
-      context.go(Routes.home);
-    } else {
-      context.go(Routes.login);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.account_balance_wallet,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              '공유 가계부',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 48),
-            const CircularProgressIndicator(),
-          ],
-        ),
-      ),
+    final authState = ref.watch(authStateProvider);
+
+    // 인증 상태 로딩이 완료되면 즉시 리다이렉트
+    authState.when(
+      data: (user) {
+        // build 중에 navigation을 직접 호출하면 안되므로 다음 프레임에 실행
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          if (user != null) {
+            context.go(Routes.home);
+          } else {
+            context.go(Routes.login);
+          }
+        });
+      },
+      loading: () {
+        // 로딩 중 - 아무것도 안함 (UI만 표시)
+      },
+      error: (_, __) {
+        // 에러 시 로그인 페이지로
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          context.go(Routes.login);
+        });
+      },
     );
+
+    // 네이티브 스플래시가 이미 표시되므로 최소한의 UI만 표시
+    // (빈 화면 방지용 - 실제로는 거의 보이지 않음)
+    return const Scaffold(body: SizedBox.shrink());
   }
 }
