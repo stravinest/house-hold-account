@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../domain/entities/notification_type.dart';
@@ -35,7 +36,7 @@ class NotificationSettingsPage extends ConsumerWidget {
     return ListView(
       children: [
         Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(Spacing.md),
           child: Text(
             '받고 싶은 알림을 선택하세요',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../domain/entities/category.dart';
 import '../providers/category_provider.dart';
@@ -99,7 +100,7 @@ class _CategoryListView extends ConsumerWidget {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(Spacing.md),
           itemCount: filtered.length,
           itemBuilder: (context, index) {
             final category = filtered[index];

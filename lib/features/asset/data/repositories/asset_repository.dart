@@ -49,34 +49,54 @@ class AssetRepository {
     return change;
   }
 
+  // 월별 누적 자산 - 단일 쿼리로 최적화
   Future<List<MonthlyAsset>> getMonthlyAssets({
     required String ledgerId,
     int months = 6,
   }) async {
     final now = DateTime.now();
-    final results = <MonthlyAsset>[];
+    final endOfCurrentMonth = DateTime(now.year, now.month + 1, 0);
 
+    // 단일 쿼리로 전체 자산 거래 조회 (현재 월까지)
+    final response = await _client
+        .from('transactions')
+        .select('amount, date')
+        .eq('ledger_id', ledgerId)
+        .eq('type', 'asset')
+        .lte('date', endOfCurrentMonth.toIso8601String().split('T').first)
+        .order('date', ascending: true);
+
+    // 월별 누적 계산을 위한 준비
+    final results = <MonthlyAsset>[];
+    int runningTotal = 0;
+
+    // 대상 월 목록 생성
+    final targetMonths = <DateTime>[];
     for (int i = months - 1; i >= 0; i--) {
-      final targetDate = DateTime(now.year, now.month - i, 1);
+      targetMonths.add(DateTime(now.year, now.month - i, 1));
+    }
+
+    // 각 거래를 순회하며 월별 누적 계산
+    int txIndex = 0;
+    final transactions = response as List;
+
+    for (final targetDate in targetMonths) {
       final endOfMonth = DateTime(targetDate.year, targetDate.month + 1, 0);
 
-      final response = await _client
-          .from('transactions')
-          .select('amount')
-          .eq('ledger_id', ledgerId)
-          .eq('type', 'asset')
-          .lte('date', endOfMonth.toIso8601String().split('T').first);
+      // 해당 월 말일까지의 거래 누적
+      while (txIndex < transactions.length) {
+        final txDate = DateTime.parse(transactions[txIndex]['date'] as String);
+        if (txDate.isAfter(endOfMonth)) break;
 
-      int total = 0;
-      for (final row in response as List) {
-        total += (row['amount'] as int);
+        runningTotal += (transactions[txIndex]['amount'] as int);
+        txIndex++;
       }
 
       results.add(
         MonthlyAsset(
           year: targetDate.year,
           month: targetDate.month,
-          amount: total,
+          amount: runningTotal,
         ),
       );
     }
@@ -185,8 +205,8 @@ class AssetRepository {
       return (response as List)
           .map((json) => AssetGoalModel.fromJson(json))
           .toList();
-    } catch (e) {
-      throw Exception('목표 조회 실패: $e');
+    } catch (e, st) {
+      Error.throwWithStackTrace(Exception('목표 조회 실패: $e'), st);
     }
   }
 
@@ -212,8 +232,8 @@ class AssetRepository {
           .single();
 
       return AssetGoalModel.fromJson(response);
-    } catch (e) {
-      throw Exception('목표 생성 실패: $e');
+    } catch (e, st) {
+      Error.throwWithStackTrace(Exception('목표 생성 실패: $e'), st);
     }
   }
 
@@ -240,16 +260,16 @@ class AssetRepository {
           .single();
 
       return AssetGoalModel.fromJson(response);
-    } catch (e) {
-      throw Exception('목표 수정 실패: $e');
+    } catch (e, st) {
+      Error.throwWithStackTrace(Exception('목표 수정 실패: $e'), st);
     }
   }
 
   Future<void> deleteGoal(String goalId) async {
     try {
       await _client.from('asset_goals').delete().eq('id', goalId);
-    } catch (e) {
-      throw Exception('목표 삭제 실패: $e');
+    } catch (e, st) {
+      Error.throwWithStackTrace(Exception('목표 삭제 실패: $e'), st);
     }
   }
 
@@ -277,33 +297,40 @@ class AssetRepository {
       }
 
       return total;
-    } catch (e) {
-      throw Exception('현재 자산 조회 실패: $e');
+    } catch (e, st) {
+      Error.throwWithStackTrace(Exception('현재 자산 조회 실패: $e'), st);
     }
   }
 
+  // 자산 통계 - 병렬 쿼리로 최적화
   Future<AssetStatistics> getEnhancedStatistics({
     required String ledgerId,
   }) async {
     try {
       final now = DateTime.now();
-      final totalAmount = await getTotalAssets(ledgerId: ledgerId);
 
-      final monthlyChange = await getMonthlyChange(
-        ledgerId: ledgerId,
-        year: now.year,
-        month: now.month,
-      );
+      // 독립적인 쿼리들을 병렬로 실행
+      final results = await Future.wait([
+        getTotalAssets(ledgerId: ledgerId),
+        getMonthlyChange(ledgerId: ledgerId, year: now.year, month: now.month),
+        _getTotalAssetsUntil(
+          ledgerId: ledgerId,
+          date: DateTime(now.year, now.month, 0),
+        ),
+        _getTotalAssetsUntil(
+          ledgerId: ledgerId,
+          date: DateTime(now.year - 1, now.month + 1, 0),
+        ),
+        getMonthlyAssets(ledgerId: ledgerId),
+        getAssetsByCategory(ledgerId: ledgerId),
+      ]);
 
-      final lastMonthTotal = await _getTotalAssetsUntil(
-        ledgerId: ledgerId,
-        date: DateTime(now.year, now.month, 0),
-      );
-
-      final yearAgoTotal = await _getTotalAssetsUntil(
-        ledgerId: ledgerId,
-        date: DateTime(now.year - 1, now.month + 1, 0),
-      );
+      final totalAmount = results[0] as int;
+      final monthlyChange = results[1] as int;
+      final lastMonthTotal = results[2] as int;
+      final yearAgoTotal = results[3] as int;
+      final monthly = results[4] as List<MonthlyAsset>;
+      final byCategory = results[5] as List<CategoryAsset>;
 
       final monthlyChangeRate = lastMonthTotal == 0
           ? 0.0
@@ -313,9 +340,6 @@ class AssetRepository {
           ? 0.0
           : ((totalAmount - yearAgoTotal) / yearAgoTotal) * 100;
 
-      final monthly = await getMonthlyAssets(ledgerId: ledgerId);
-      final byCategory = await getAssetsByCategory(ledgerId: ledgerId);
-
       return AssetStatistics(
         totalAmount: totalAmount,
         monthlyChange: monthlyChange,
@@ -324,8 +348,8 @@ class AssetRepository {
         monthly: monthly,
         byCategory: byCategory,
       );
-    } catch (e) {
-      throw Exception('통계 조회 실패: $e');
+    } catch (e, st) {
+      Error.throwWithStackTrace(Exception('통계 조회 실패: $e'), st);
     }
   }
 

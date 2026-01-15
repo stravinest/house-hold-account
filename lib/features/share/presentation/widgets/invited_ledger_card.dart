@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../domain/entities/ledger_invite.dart';
 
 class InvitedLedgerCard extends StatelessWidget {
@@ -35,7 +36,7 @@ class InvitedLedgerCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: isCurrentLedger ? _activeBackgroundColor : colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(BorderRadiusToken.md),
         border: Border.all(
           color: isCurrentLedger ? _activeBorderColor : _inactiveBorderColor,
           width: isCurrentLedger ? 2.5 : 1.5,
@@ -49,7 +50,7 @@ class InvitedLedgerCard extends StatelessWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(Spacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

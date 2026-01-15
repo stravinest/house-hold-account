@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/themes/theme_provider.dart';
 import '../../../../shared/widgets/color_picker.dart';
 import '../../../../shared/widgets/section_header.dart';
@@ -62,9 +63,12 @@ class SettingsPage extends ConsumerWidget {
 
           // 프로필 편집 섹션
           Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            margin: const EdgeInsets.symmetric(
+              horizontal: Spacing.md,
+              vertical: Spacing.sm,
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Spacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

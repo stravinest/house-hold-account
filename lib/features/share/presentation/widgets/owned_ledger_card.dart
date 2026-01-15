@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../providers/share_provider.dart';
 
@@ -36,7 +37,7 @@ class OwnedLedgerCard extends ConsumerWidget {
         color: ledgerInfo.isCurrentLedger
             ? _activeBackgroundColor
             : colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(BorderRadiusToken.md),
         border: Border.all(
           color: ledgerInfo.isCurrentLedger
               ? _activeBorderColor
@@ -52,7 +53,7 @@ class OwnedLedgerCard extends ConsumerWidget {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(Spacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -325,7 +325,7 @@ TextFormField(
 ### 1. 테스트 추가
 - **단위 테스트**: `TransactionModel.toCreateJson()`에서 `categoryId: null` 케이스 테스트
 - **위젯 테스트**: "선택 안함" 선택 후 거래 생성 시나리오
-- **통합 테스트**: 카테고리 null 상태로 저장 → 조회 → 수정 플로우
+- **통합 테스트**: 카테고리 null 상태로 저장 -> 조회 -> 수정 플로우
 
 ```dart
 // test/features/transaction/data/models/transaction_model_test.dart
@@ -503,3 +503,508 @@ final sortedCategories = List<CategoryAsset>.from(byCategory)
 **Phase 2 구현은 기능적으로 잘 작동하며 사용성이 크게 향상되었습니다.** 다만 nullable 필드 처리 버그와 에러 처리 일관성 문제를 해결해야 프로덕션 준비가 완료됩니다. Critical 이슈 2건만 수정하면 안전하게 배포 가능합니다.
 
 **AssetCategoryList redesign은 CategoryRankingList와의 디자인 통합에 성공했으나, ConsumerWidget 불필요 사용과 UI 복잡성 증가 문제가 있습니다.** High 이슈 1건 수정과 Medium 이슈 검토를 통해 코드 품질을 개선할 수 있습니다.
+
+---
+
+---
+
+# 종합 코드 리뷰 결과 - house-hold-account 전체 프로젝트
+
+**프로젝트**: house-hold-account (공유 가계부 앱)
+**리뷰 일시**: 2026-01-15
+**리뷰어**: Senior Code Reviewer
+
+---
+
+## Executive Summary
+
+| 심각도 | 이슈 수 | 주요 영역 |
+|--------|---------|-----------|
+| CRITICAL | 3 | N+1 쿼리, 보안, 코드 복잡도 |
+| HIGH | 4 | 에러 처리, SQL Injection 위험, 입력 검증 |
+| MEDIUM | 5 | 코드 구조, 디자인 패턴, 테스트 |
+| LOW | 3 | 스타일, 문서화 |
+
+**전체 검토 범위:**
+- 검토 파일: 주요 5개 + 코드베이스 전체 (~100개 Dart 파일)
+- 코드베이스: Clean Architecture 적용, Feature-first 구조
+- 상태 관리: Riverpod 8.9/10 점수
+- 데이터베이스: Supabase + RLS 정책
+
+---
+
+## Critical 이슈 (필수 수정)
+
+### CRIT-01. [statistics_repository.dart:126-174] N+1 쿼리 문제
+
+- **문제**: `getMonthlyTrend()` 메서드에서 반복문 내 DB 쿼리 실행. 6개월 조회 시 6번의 DB 호출 발생.
+- **위험**: 성능 저하, DB 부하 증가, 사용자 경험 악화
+- **영향 범위**: 통계 페이지 로딩 시간 6배 증가
+
+```dart
+// 문제 코드 (lines 133-143)
+for (int i = months - 1; i >= 0; i--) {
+  // 매 반복마다 DB 쿼리 실행 - N+1 문제!
+  final response = await _client
+      .from('transactions')
+      .select('amount, type')
+      .eq('ledger_id', ledgerId)
+      .gte('date', startDate.toIso8601String().split('T').first)
+      .lte('date', endDate.toIso8601String().split('T').first);
+  // ...
+}
+```
+
+```dart
+// 해결: 단일 쿼리로 전체 기간 조회 후 메모리에서 그룹화
+Future<List<MonthlyStatistics>> getMonthlyTrend({
+  required String ledgerId,
+  int months = 6,
+}) async {
+  final now = DateTime.now();
+  final startDate = DateTime(now.year, now.month - months + 1, 1);
+  final endDate = DateTime(now.year, now.month + 1, 0);
+
+  // 단일 쿼리로 전체 기간 데이터 조회
+  final response = await _client
+      .from('transactions')
+      .select('amount, type, date')
+      .eq('ledger_id', ledgerId)
+      .gte('date', startDate.toIso8601String().split('T').first)
+      .lte('date', endDate.toIso8601String().split('T').first);
+
+  // 메모리에서 월별 그룹화
+  final Map<String, MonthlyStatistics> grouped = {};
+  for (final row in response as List) {
+    final date = DateTime.parse(row['date'] as String);
+    final key = '${date.year}-${date.month}';
+    // ... 그룹화 로직
+  }
+  
+  return grouped.values.toList();
+}
+```
+
+### CRIT-02. [asset_repository.dart:52-85] N+1 쿼리 문제
+
+- **문제**: `getMonthlyAssets()` 메서드에서 동일한 N+1 패턴 발생
+- **위험**: 통계 페이지에서 자산 데이터 로딩 시 성능 저하
+- **영향**: 6개월 자산 추이 조회 시 6번 DB 호출
+
+```dart
+// 문제 코드 (lines 59-69)
+for (int i = months - 1; i >= 0; i--) {
+  final response = await _client
+      .from('transactions')
+      .select('amount')
+      .eq('ledger_id', ledgerId)
+      .eq('type', 'asset')
+      .lte('date', endOfMonth.toIso8601String().split('T').first);
+  // ...
+}
+```
+
+```dart
+// 해결: Supabase RPC 함수 또는 단일 쿼리 + 클라이언트 집계
+// Option 1: DB Function 생성 (권장)
+// CREATE FUNCTION get_monthly_asset_totals(p_ledger_id UUID, p_months INT)
+// RETURNS TABLE(year INT, month INT, total BIGINT) AS $$
+// ...
+
+// Option 2: 전체 조회 후 클라이언트 집계
+final allAssets = await _client
+    .from('transactions')
+    .select('amount, date')
+    .eq('ledger_id', ledgerId)
+    .eq('type', 'asset')
+    .lte('date', DateTime.now().toIso8601String().split('T').first);
+
+// 누적 합계 계산 로직...
+```
+
+### CRIT-03. [add_transaction_sheet.dart] 파일 크기 과대 (1233줄)
+
+- **문제**: 단일 파일에 너무 많은 책임이 집중됨 (SRP 위반)
+- **위험**: 유지보수 어려움, 테스트 어려움, 코드 이해도 저하
+- **권장**: 500줄 이하로 분리
+
+**현재 파일 구조 분석:**
+| 섹션 | 라인 수 | 책임 |
+|------|---------|------|
+| State/Controller | 1-103 | 상태 관리 |
+| Form Validation | 119-137 | 유효성 검증 |
+| Submit Logic | 139-281 | 제출 로직 |
+| Build Method | 283-655 | UI 빌드 |
+| Category Grid | 657-738 | 카테고리 UI |
+| Payment Method | 932-1019 | 결제수단 UI |
+| Dialogs | 1040-1210 | 다이얼로그 |
+| Formatter | 1213-1233 | 입력 포맷터 |
+
+```dart
+// 해결: 위젯 분리 리팩토링
+// lib/features/transaction/presentation/widgets/
+//   add_transaction_sheet.dart           (메인 - 300줄)
+//   add_transaction_form.dart            (폼 컨트롤러)
+//   transaction_type_selector.dart       (수입/지출/자산 선택)
+//   category_selection_grid.dart         (카테고리 그리드)
+//   payment_method_chips.dart            (결제수단 칩)
+//   transaction_dialogs.dart             (다이얼로그 모음)
+```
+
+---
+
+## High 이슈 (수정 권장)
+
+### HIGH-01. [supabase_config.dart:25-29] SharedPreferences 보안 취약점
+
+- **문제**: Supabase URL과 Anon Key를 SharedPreferences에 평문 저장
+- **위험**: 루팅된 기기에서 키 탈취 가능, 앱 역공학 시 노출
+- **심각도**: 중간 (Anon Key는 공개키이나 URL 노출은 권장하지 않음)
+
+```dart
+// 문제 코드 (lines 25-29)
+static Future<void> _saveConfigToSharedPreferences() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString('flutter.supabase_url', supabaseUrl);
+  await prefs.setString('flutter.supabase_anon_key', supabaseAnonKey);
+}
+```
+
+```dart
+// 해결 방안 1: flutter_secure_storage 사용
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+static Future<void> _saveConfigToSecureStorage() async {
+  const storage = FlutterSecureStorage();
+  await storage.write(key: 'supabase_url', value: supabaseUrl);
+  await storage.write(key: 'supabase_anon_key', value: supabaseAnonKey);
+}
+
+// 해결 방안 2: 저장 자체 불필요 (권장)
+// .env에서 직접 로드하므로 SharedPreferences 저장 제거
+// 이 메서드의 용도가 위젯 확장 등이라면 필요시에만 로드
+```
+
+### HIGH-02. [search_page.dart:26] SQL Injection 위험
+
+- **문제**: 사용자 입력을 직접 쿼리에 삽입
+- **위험**: SQL Injection 공격 가능성 (Supabase가 자동 이스케이프하나 방어적 코딩 필요)
+
+```dart
+// 문제 코드 (line 26)
+.or('title.ilike.%$query%,memo.ilike.%$query%')
+```
+
+```dart
+// 해결: 입력 검증 및 sanitize
+final sanitizedQuery = query
+    .replaceAll('%', r'\%')
+    .replaceAll('_', r'\_')
+    .replaceAll("'", "''");
+
+// 또는 Supabase의 파라미터화된 쿼리 사용
+// ilike 연산자는 Supabase에서 자동 이스케이프되나
+// 특수문자 처리가 필요
+```
+
+### HIGH-03. [home_page.dart:465, 703] catch(_) 안티패턴
+
+- **문제**: 에러를 무시하는 catch(_) 패턴 사용 (4곳 발견)
+- **위험**: 디버깅 어려움, 에러 추적 불가, 문제 은폐
+- **발견 위치**:
+  - `home_page.dart:465`
+  - `home_page.dart:703`
+  - `transaction_list.dart:268`
+  - `daily_category_breakdown_sheet.dart:307`
+
+```dart
+// 문제 코드
+} catch (_) {
+  return const Color(0xFFA8D8EA);
+}
+```
+
+```dart
+// 해결: 최소한 로깅 추가
+} catch (e, st) {
+  // 프로덕션에서는 crashlytics/sentry로 전송
+  debugPrint('Color parsing failed: $e');
+  return const Color(0xFFA8D8EA);
+}
+
+// 또는 tryParse 패턴 사용
+Color? _tryParseColor(String? colorStr) {
+  if (colorStr == null) return null;
+  final hex = colorStr.replaceFirst('#', '');
+  final value = int.tryParse('FF$hex', radix: 16);
+  return value != null ? Color(value) : null;
+}
+
+Color _parseColor(String? colorStr) {
+  return _tryParseColor(colorStr) ?? const Color(0xFFA8D8EA);
+}
+```
+
+### HIGH-04. [asset_repository.dart:177-253] rethrow 누락
+
+- **문제**: Repository 메서드들에서 catch 후 Exception 재포장만 하고 rethrow 누락
+- **위험**: 스택 트레이스 손실, 원본 에러 정보 유실
+
+```dart
+// 문제 코드 (lines 188-191)
+} catch (e) {
+  throw Exception('목표 조회 실패: $e');  // 원본 스택트레이스 손실!
+}
+```
+
+```dart
+// 해결: rethrow 추가 또는 커스텀 예외 사용
+// 방법 1: rethrow
+} catch (e, st) {
+  // 로깅
+  debugPrint('목표 조회 실패: $e\n$st');
+  rethrow;
+}
+
+// 방법 2: 커스텀 예외 (프로젝트 표준 따름)
+} catch (e, st) {
+  throw AssetRepositoryException(
+    message: '목표 조회 실패',
+    originalError: e,
+    stackTrace: st,
+  );
+}
+```
+
+---
+
+## Medium 이슈 (개선 권장)
+
+### MED-01. [statistics_repository.dart] 중복 코드
+
+- **문제**: `getYearlyTrend()`와 `getYearlyTrendWithAverage()`가 거의 동일한 로직
+- **권장**: 공통 로직 추출
+
+```dart
+// 해결: 내부 헬퍼 메서드 추출
+Future<List<YearlyStatistics>> _fetchYearlyData({
+  required String ledgerId,
+  required int years,
+  required DateTime baseDate,
+}) async {
+  // 공통 로직
+}
+
+Future<List<YearlyStatistics>> getYearlyTrend(...) async {
+  return _fetchYearlyData(...);
+}
+
+Future<TrendStatisticsData> getYearlyTrendWithAverage(...) async {
+  final data = await _fetchYearlyData(...);
+  // 평균 계산 로직
+}
+```
+
+### MED-02. [add_transaction_sheet.dart:1022-1038] 색상 생성 로직
+
+- **문제**: 랜덤 색상 생성이 시간 기반으로 예측 가능
+- **권장**: 진정한 랜덤 또는 순환 방식 사용
+
+```dart
+// 현재 코드
+return colors[(DateTime.now().millisecondsSinceEpoch % colors.length)];
+
+// 해결: dart:math Random 사용
+import 'dart:math';
+final _random = Random();
+return colors[_random.nextInt(colors.length)];
+```
+
+### MED-03. [search_page.dart:11] StateProvider 직접 수정
+
+- **문제**: `StateProvider` 직접 state 변경 (프로젝트 컨벤션: `invalidate()` 사용 권장)
+- **영향**: 미미하나 일관성 위해 수정 권장
+
+```dart
+// 현재 코드
+ref.read(searchQueryProvider.notifier).state = value;
+
+// 권장: 검색은 즉시 반응이 필요하므로 현재 패턴 유지 가능
+// 단, 복잡한 상태는 StateNotifier 사용 검토
+```
+
+### MED-04. [statistics_repository.dart:87] 이모티콘 하드코딩
+
+- **문제**: 고정비 카테고리 아이콘으로 이모티콘 직접 사용
+- **위험**: 프로젝트 컨벤션 위반 (이모티콘 사용 금지)
+
+```dart
+// 문제 코드 (line 87)
+categoryIcon = '📌';
+
+// 해결: 아이콘 상수 또는 빈 문자열 사용
+categoryIcon = '';  // 또는 Icons 상수 참조
+```
+
+### MED-05. [asset_repository.dart:285-329] getEnhancedStatistics 복잡도
+
+- **문제**: 단일 메서드에서 7개 DB 호출 (N+1보다 더 심각)
+- **권장**: 병렬 처리 또는 DB 함수로 통합
+
+```dart
+// 현재: 순차 호출 7회
+final totalAmount = await getTotalAssets(ledgerId: ledgerId);
+final monthlyChange = await getMonthlyChange(...);
+final lastMonthTotal = await _getTotalAssetsUntil(...);
+final yearAgoTotal = await _getTotalAssetsUntil(...);
+final monthly = await getMonthlyAssets(ledgerId: ledgerId);
+final byCategory = await getAssetsByCategory(ledgerId: ledgerId);
+
+// 해결: Future.wait로 병렬 처리
+final results = await Future.wait([
+  getTotalAssets(ledgerId: ledgerId),
+  getMonthlyChange(...),
+  _getTotalAssetsUntil(ledgerId: ledgerId, date: lastMonthDate),
+  _getTotalAssetsUntil(ledgerId: ledgerId, date: yearAgoDate),
+  getMonthlyAssets(ledgerId: ledgerId),
+  getAssetsByCategory(ledgerId: ledgerId),
+]);
+```
+
+---
+
+## Low 이슈 (선택)
+
+### LOW-01. [add_transaction_sheet.dart:302] 하드코딩된 BorderRadius
+
+- **문제**: `Radius.circular(20)` 직접 사용
+- **권장**: 디자인 토큰 `BorderRadiusToken.xl` 사용
+
+```dart
+// 현재
+borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+
+// 권장
+borderRadius: BorderRadius.vertical(
+  top: Radius.circular(BorderRadiusToken.xl),
+),
+```
+
+### LOW-02. [search_page.dart:180] 주석 없는 fallback 색상
+
+- **문제**: 매직 넘버 `0xFF9E9E9E` 사용
+- **권장**: 상수로 추출 또는 주석 추가
+
+```dart
+// 현재
+const fallbackColor = Color(0xFF9E9E9E); // Grey 500
+
+// 권장: 상수 파일로 이동
+// lib/core/constants/color_constants.dart
+const kFallbackCategoryColor = Color(0xFF9E9E9E);
+```
+
+### LOW-03. [statistics_repository.dart:546-598] Model 클래스 위치
+
+- **문제**: Repository 파일 내에 Model 클래스 정의
+- **권장**: 별도 파일로 분리
+
+```
+// 권장 구조
+lib/features/statistics/
+  domain/entities/
+    category_statistics.dart
+    monthly_statistics.dart
+  data/repositories/
+    statistics_repository.dart  (Repository만)
+```
+
+---
+
+## 아키텍처 평가
+
+### 긍정적인 점
+
+| 항목 | 점수 | 설명 |
+|------|------|------|
+| Feature-First 구조 | 9/10 | Clean Architecture 잘 적용됨 |
+| Riverpod 사용 | 8.5/10 | invalidate 패턴 적절히 사용 |
+| 디자인 시스템 | 8/10 | 디자인 토큰 도입, 일관성 확보 |
+| RLS 정책 | 9/10 | 모든 테이블에 적용됨 |
+
+### 개선 필요
+
+| 항목 | 현재 | 목표 | 권장 조치 |
+|------|------|------|-----------|
+| Repository 쿼리 최적화 | 4/10 | 8/10 | N+1 문제 해결 |
+| 파일 크기 | 5/10 | 8/10 | 대형 파일 분리 |
+| 에러 처리 일관성 | 6/10 | 9/10 | rethrow 패턴 통일 |
+
+---
+
+## 보안 평가
+
+| 항목 | 상태 | 위험도 | 조치 |
+|------|------|--------|------|
+| SharedPreferences 민감정보 | 취약 | 중간 | flutter_secure_storage 전환 |
+| SQL Injection | 낮은 위험 | 낮음 | 입력 sanitize 추가 |
+| RLS 정책 | 양호 | - | 유지 |
+| 환경변수 관리 | 양호 | - | .env 커밋 방지됨 |
+
+---
+
+## 성능 평가
+
+| 문제 | 영향 | 예상 개선 |
+|------|------|----------|
+| N+1 쿼리 (통계) | 페이지 로딩 6배 지연 | 80% 개선 예상 |
+| N+1 쿼리 (자산) | 자산 페이지 지연 | 80% 개선 예상 |
+| 순차 DB 호출 | API 응답 지연 | 50% 개선 예상 |
+
+---
+
+## 권장 조치 우선순위
+
+### 즉시 조치 (1주 내)
+
+1. **CRIT-01, CRIT-02**: N+1 쿼리 문제 해결
+   - `statistics_repository.dart` 리팩토링
+   - `asset_repository.dart` 리팩토링
+   
+2. **HIGH-03, HIGH-04**: 에러 처리 개선
+   - catch(_) 패턴 제거
+   - rethrow 추가
+
+### 단기 조치 (2주 내)
+
+3. **CRIT-03**: add_transaction_sheet.dart 분리
+   - 위젯 컴포넌트화
+   - 테스트 용이성 확보
+
+4. **HIGH-01**: SharedPreferences 보안 개선
+   - flutter_secure_storage 도입 또는 저장 제거
+
+### 중기 조치 (1개월 내)
+
+5. **HIGH-02**: 검색 입력 sanitize
+6. **MED-01~05**: 코드 품질 개선
+7. **LOW-01~03**: 스타일 통일
+
+---
+
+## 결론
+
+전체적으로 Clean Architecture가 잘 적용된 프로젝트입니다. Feature-first 구조와 Riverpod 상태 관리가 적절히 사용되었으며, 디자인 시스템 도입으로 UI 일관성이 확보되어 있습니다.
+
+**주요 개선 영역:**
+1. **성능**: N+1 쿼리 문제가 통계/자산 기능에서 심각하게 발생 (CRITICAL)
+2. **유지보수성**: 대형 파일 분리 필요 (CRITICAL)
+3. **에러 처리**: rethrow 패턴 통일 필요 (HIGH)
+4. **보안**: SharedPreferences 민감정보 저장 개선 (HIGH)
+
+위 이슈들을 우선순위에 따라 해결하면 앱의 품질과 성능이 크게 향상될 것으로 예상됩니다.
+
+---
+
+*이 리뷰는 자동화된 분석과 수동 코드 검토를 통해 작성되었습니다.*
+*리뷰 일시: 2026-01-15*

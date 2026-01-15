@@ -304,7 +304,8 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
     try {
       final hex = colorStr.replaceFirst('#', '');
       return Color(int.parse('FF$hex', radix: 16));
-    } catch (_) {
+    } on FormatException {
+      // 잘못된 hex 형식의 색상값 - 기본값 반환
       return null;
     }
   }

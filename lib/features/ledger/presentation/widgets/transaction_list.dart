@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
@@ -26,7 +27,7 @@ class TransactionList extends ConsumerWidget {
         }
 
         return ListView.separated(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(Spacing.md),
           itemCount: transactions.length,
           separatorBuilder: (context, index) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
@@ -49,7 +50,7 @@ class TransactionList extends ConsumerWidget {
         ],
       ),
       error: (e, _) => ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(Spacing.md),
         children: [
           const SizedBox(height: 100),
           EmptyState(
@@ -78,7 +79,7 @@ class _EmptyState extends StatelessWidget {
     final dateFormat = DateFormat('M월 d일 (E)', 'ko_KR');
 
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Spacing.md),
       children: [
         const SizedBox(height: 100),
         EmptyState(
@@ -180,9 +181,9 @@ class _TransactionCard extends StatelessWidget {
                   TransactionDetailSheet(transaction: transaction),
             );
           },
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(BorderRadiusToken.md),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(Spacing.md),
             child: Row(
               children: [
                 // 카테고리 아이콘
@@ -193,7 +194,7 @@ class _TransactionCard extends StatelessWidget {
                     color:
                         _parseColor(transaction.categoryColor) ??
                         colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(BorderRadiusToken.md),
                   ),
                   child: Center(
                     child: Text(
@@ -265,7 +266,8 @@ class _TransactionCard extends StatelessWidget {
     try {
       final hex = colorStr.replaceFirst('#', '');
       return Color(int.parse('FF$hex', radix: 16));
-    } catch (_) {
+    } on FormatException {
+      // 잘못된 hex 형식의 색상값 - 기본값 반환
       return null;
     }
   }

@@ -10,6 +10,18 @@ import '../../../transaction/domain/entities/transaction.dart';
 // 검색 쿼리 프로바이더
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
+// LIKE 패턴 특수문자 이스케이프
+String _escapeLikePattern(String input) {
+  // PostgreSQL LIKE 패턴에서 와일드카드로 해석되는 문자들을 이스케이프
+  // %: 0개 이상의 문자 매칭
+  // _: 정확히 1개 문자 매칭
+  // \: 이스케이프 문자
+  return input
+      .replaceAll(r'\', r'\\')
+      .replaceAll('%', r'\%')
+      .replaceAll('_', r'\_');
+}
+
 // 검색 결과 프로바이더
 final searchResultsProvider = FutureProvider<List<Transaction>>((ref) async {
   final query = ref.watch(searchQueryProvider);
@@ -17,13 +29,17 @@ final searchResultsProvider = FutureProvider<List<Transaction>>((ref) async {
 
   if (query.isEmpty || ledgerId == null) return [];
 
+  // 특수문자 이스케이프 처리
+  final escapedQuery = _escapeLikePattern(query.trim());
+  if (escapedQuery.isEmpty) return [];
+
   final client = SupabaseConfig.client;
 
   final response = await client
       .from('transactions')
       .select('*, categories(name, icon, color)')
       .eq('ledger_id', ledgerId)
-      .or('title.ilike.%$query%,memo.ilike.%$query%')
+      .or('title.ilike.%$escapedQuery%,memo.ilike.%$escapedQuery%')
       .order('date', ascending: false)
       .limit(50);
 

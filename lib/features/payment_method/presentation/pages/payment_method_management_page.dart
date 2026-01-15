@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../domain/entities/payment_method.dart';
 import '../providers/payment_method_provider.dart';
@@ -47,7 +48,7 @@ class _PaymentMethodManagementPageState
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(Spacing.md),
             itemCount: paymentMethods.length,
             itemBuilder: (context, index) {
               final paymentMethod = paymentMethods[index];

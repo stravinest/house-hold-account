@@ -122,52 +122,84 @@ class StatisticsRepository {
     return result;
   }
 
-  // 월별 수입/지출 추세 (최근 6개월)
+  // 월별 수입/지출 추세 (최근 6개월) - N+1 쿼리 최적화: 단일 쿼리로 변경
   Future<List<MonthlyStatistics>> getMonthlyTrend({
     required String ledgerId,
     int months = 6,
   }) async {
     final now = DateTime.now();
-    final results = <MonthlyStatistics>[];
 
+    // 전체 기간 계산 (단일 쿼리용)
+    final startDate = DateTime(now.year, now.month - months + 1, 1);
+    final endDate = DateTime(now.year, now.month + 1, 0);
+
+    // 단일 쿼리로 전체 기간 데이터 조회
+    final response = await _client
+        .from('transactions')
+        .select('amount, type, date')
+        .eq('ledger_id', ledgerId)
+        .gte('date', startDate.toIso8601String().split('T').first)
+        .lte('date', endDate.toIso8601String().split('T').first);
+
+    // 월별로 그룹화
+    final Map<String, MonthlyStatistics> grouped = {};
+
+    // 빈 월 데이터 초기화
     for (int i = months - 1; i >= 0; i--) {
       final targetDate = DateTime(now.year, now.month - i, 1);
-      final startDate = DateTime(targetDate.year, targetDate.month, 1);
-      final endDate = DateTime(targetDate.year, targetDate.month + 1, 0);
+      final key = '${targetDate.year}-${targetDate.month}';
+      grouped[key] = MonthlyStatistics(
+        year: targetDate.year,
+        month: targetDate.month,
+        income: 0,
+        expense: 0,
+        saving: 0,
+      );
+    }
 
-      final response = await _client
-          .from('transactions')
-          .select('amount, type')
-          .eq('ledger_id', ledgerId)
-          .gte('date', startDate.toIso8601String().split('T').first)
-          .lte('date', endDate.toIso8601String().split('T').first);
+    // 데이터 집계
+    for (final row in response as List) {
+      final amount = (row['amount'] as num).toInt();
+      final type = row['type'] as String;
+      final date = DateTime.parse(row['date'] as String);
+      final key = '${date.year}-${date.month}';
 
-      int income = 0;
-      int expense = 0;
-      int saving = 0;
-
-      for (final row in response as List) {
-        final amount = row['amount'] as int;
-        final type = row['type'] as String;
-
+      if (grouped.containsKey(key)) {
+        final current = grouped[key]!;
         if (type == 'income') {
-          income += amount;
+          grouped[key] = MonthlyStatistics(
+            year: current.year,
+            month: current.month,
+            income: current.income + amount,
+            expense: current.expense,
+            saving: current.saving,
+          );
         } else if (type == 'asset') {
-          saving += amount;
+          grouped[key] = MonthlyStatistics(
+            year: current.year,
+            month: current.month,
+            income: current.income,
+            expense: current.expense,
+            saving: current.saving + amount,
+          );
         } else {
-          expense += amount;
+          grouped[key] = MonthlyStatistics(
+            year: current.year,
+            month: current.month,
+            income: current.income,
+            expense: current.expense + amount,
+            saving: current.saving,
+          );
         }
       }
+    }
 
-      results.add(
-        MonthlyStatistics(
-          year: targetDate.year,
-          month: targetDate.month,
-          income: income,
-          expense: expense,
-          saving: saving,
-        ),
-      );
+    // 날짜 순서대로 정렬하여 반환
+    final results = <MonthlyStatistics>[];
+    for (int i = months - 1; i >= 0; i--) {
+      final targetDate = DateTime(now.year, now.month - i, 1);
+      final key = '${targetDate.year}-${targetDate.month}';
+      results.add(grouped[key]!);
     }
 
     return results;
@@ -344,119 +376,162 @@ class StatisticsRepository {
     return result;
   }
 
-  // 연별 추이 (최근 N년)
+  // 연별 추이 (최근 N년) - 단일 쿼리로 최적화
   Future<List<YearlyStatistics>> getYearlyTrend({
     required String ledgerId,
     int years = 3,
   }) async {
     final now = DateTime.now();
-    final results = <YearlyStatistics>[];
+    final startYear = now.year - years + 1;
+    final startDate = DateTime(startYear, 1, 1);
+    final endDate = DateTime(now.year, 12, 31);
 
-    for (int i = years - 1; i >= 0; i--) {
-      final targetYear = now.year - i;
-      final startDate = DateTime(targetYear, 1, 1);
-      final endDate = DateTime(targetYear, 12, 31);
+    // 단일 쿼리로 전체 기간 데이터 조회
+    final response = await _client
+        .from('transactions')
+        .select('amount, type, date')
+        .eq('ledger_id', ledgerId)
+        .gte('date', startDate.toIso8601String().split('T').first)
+        .lte('date', endDate.toIso8601String().split('T').first);
 
-      final response = await _client
-          .from('transactions')
-          .select('amount, type')
-          .eq('ledger_id', ledgerId)
-          .gte('date', startDate.toIso8601String().split('T').first)
-          .lte('date', endDate.toIso8601String().split('T').first);
-
-      int income = 0;
-      int expense = 0;
-      int saving = 0;
-
-      for (final row in response as List) {
-        final amount = (row['amount'] as num).toInt();
-        final type = row['type'] as String;
-
-        if (type == 'income') {
-          income += amount;
-        } else if (type == 'asset') {
-          saving += amount;
-        } else {
-          expense += amount;
-        }
-      }
-
-      results.add(
-        YearlyStatistics(
-          year: targetYear,
-          income: income,
-          expense: expense,
-          saving: saving,
-        ),
-      );
+    // 연도별 데이터 초기화
+    final yearlyData = <int, Map<String, int>>{};
+    for (int i = 0; i < years; i++) {
+      final year = startYear + i;
+      yearlyData[year] = {'income': 0, 'expense': 0, 'saving': 0};
     }
 
-    return results;
+    // 클라이언트에서 연도별 집계
+    for (final row in response as List) {
+      final dateStr = row['date'] as String;
+      final year = DateTime.parse(dateStr).year;
+      final amount = (row['amount'] as num).toInt();
+      final type = row['type'] as String;
+
+      if (!yearlyData.containsKey(year)) continue;
+
+      if (type == 'income') {
+        yearlyData[year]!['income'] = yearlyData[year]!['income']! + amount;
+      } else if (type == 'asset') {
+        yearlyData[year]!['saving'] = yearlyData[year]!['saving']! + amount;
+      } else {
+        yearlyData[year]!['expense'] = yearlyData[year]!['expense']! + amount;
+      }
+    }
+
+    // 정렬된 결과 반환
+    return yearlyData.entries
+        .map(
+          (e) => YearlyStatistics(
+            year: e.key,
+            income: e.value['income']!,
+            expense: e.value['expense']!,
+            saving: e.value['saving']!,
+          ),
+        )
+        .toList()
+      ..sort((a, b) => a.year.compareTo(b.year));
   }
 
-  // 월별 추이 (선택된 날짜 기준, 평균값 포함, 0원 제외)
+  // 월별 추이 (선택된 날짜 기준, 평균값 포함, 0원 제외) - 단일 쿼리로 최적화
   Future<TrendStatisticsData> getMonthlyTrendWithAverage({
     required String ledgerId,
     required DateTime baseDate,
     int months = 6,
   }) async {
-    final results = <MonthlyStatistics>[];
+    // 시작/종료 날짜 계산
+    final startDate = DateTime(baseDate.year, baseDate.month - months + 1, 1);
+    final endDate = DateTime(baseDate.year, baseDate.month + 1, 0);
+
+    // 단일 쿼리로 전체 기간 데이터 조회
+    final response = await _client
+        .from('transactions')
+        .select('amount, type, date')
+        .eq('ledger_id', ledgerId)
+        .gte('date', startDate.toIso8601String().split('T').first)
+        .lte('date', endDate.toIso8601String().split('T').first);
+
+    // 월별 데이터 초기화
+    final monthlyData = <String, Map<String, int>>{};
+    for (int i = 0; i < months; i++) {
+      final targetDate = DateTime(
+        baseDate.year,
+        baseDate.month - months + 1 + i,
+        1,
+      );
+      final key = '${targetDate.year}-${targetDate.month}';
+      monthlyData[key] = {
+        'income': 0,
+        'expense': 0,
+        'saving': 0,
+        'year': targetDate.year,
+        'month': targetDate.month,
+      };
+    }
+
+    // 클라이언트에서 월별 집계
+    for (final row in response as List) {
+      final dateStr = row['date'] as String;
+      final date = DateTime.parse(dateStr);
+      final key = '${date.year}-${date.month}';
+      final amount = (row['amount'] as num).toInt();
+      final type = row['type'] as String;
+
+      if (!monthlyData.containsKey(key)) continue;
+
+      if (type == 'income') {
+        monthlyData[key]!['income'] = monthlyData[key]!['income']! + amount;
+      } else if (type == 'asset') {
+        monthlyData[key]!['saving'] = monthlyData[key]!['saving']! + amount;
+      } else {
+        monthlyData[key]!['expense'] = monthlyData[key]!['expense']! + amount;
+      }
+    }
+
+    // 평균 계산 (0원 제외)
     int totalIncome = 0;
     int totalExpense = 0;
     int totalAsset = 0;
-    // 0원이 아닌 달의 개수 (평균 계산용)
     int incomeCount = 0;
     int expenseCount = 0;
     int savingCount = 0;
 
-    for (int i = months - 1; i >= 0; i--) {
-      final targetDate = DateTime(baseDate.year, baseDate.month - i, 1);
-      final startDate = DateTime(targetDate.year, targetDate.month, 1);
-      final endDate = DateTime(targetDate.year, targetDate.month + 1, 0);
+    final results = <MonthlyStatistics>[];
+    for (final entry in monthlyData.entries) {
+      final data = entry.value;
+      final income = data['income']!;
+      final expense = data['expense']!;
+      final saving = data['saving']!;
 
-      final response = await _client
-          .from('transactions')
-          .select('amount, type')
-          .eq('ledger_id', ledgerId)
-          .gte('date', startDate.toIso8601String().split('T').first)
-          .lte('date', endDate.toIso8601String().split('T').first);
-
-      int income = 0;
-      int expense = 0;
-      int saving = 0;
-
-      for (final row in response as List) {
-        final amount = (row['amount'] as num).toInt();
-        final type = row['type'] as String;
-
-        if (type == 'income') {
-          income += amount;
-        } else if (type == 'asset') {
-          saving += amount;
-        } else {
-          expense += amount;
-        }
+      if (income > 0) {
+        totalIncome += income;
+        incomeCount++;
       }
-
-      // 0원이 아닌 경우만 카운트
-      if (income > 0) incomeCount++;
-      if (expense > 0) expenseCount++;
-      if (saving > 0) savingCount++;
-
-      totalIncome += income;
-      totalExpense += expense;
-      totalAsset += saving;
+      if (expense > 0) {
+        totalExpense += expense;
+        expenseCount++;
+      }
+      if (saving > 0) {
+        totalAsset += saving;
+        savingCount++;
+      }
 
       results.add(
         MonthlyStatistics(
-          year: targetDate.year,
-          month: targetDate.month,
+          year: data['year']!,
+          month: data['month']!,
           income: income,
           expense: expense,
           saving: saving,
         ),
       );
     }
+
+    // 날짜순 정렬
+    results.sort((a, b) {
+      final yearCmp = a.year.compareTo(b.year);
+      return yearCmp != 0 ? yearCmp : a.month.compareTo(b.month);
+    });
 
     return TrendStatisticsData(
       data: results,
@@ -468,68 +543,89 @@ class StatisticsRepository {
     );
   }
 
-  // 연별 추이 (선택된 날짜 기준, 평균값 포함, 0원 제외)
+  // 연별 추이 (선택된 날짜 기준, 평균값 포함, 0원 제외) - 단일 쿼리로 최적화
   Future<TrendStatisticsData> getYearlyTrendWithAverage({
     required String ledgerId,
     required DateTime baseDate,
     int years = 6,
   }) async {
-    final results = <YearlyStatistics>[];
+    final startYear = baseDate.year - years + 1;
+    final startDate = DateTime(startYear, 1, 1);
+    final endDate = DateTime(baseDate.year, 12, 31);
+
+    // 단일 쿼리로 전체 기간 데이터 조회
+    final response = await _client
+        .from('transactions')
+        .select('amount, type, date')
+        .eq('ledger_id', ledgerId)
+        .gte('date', startDate.toIso8601String().split('T').first)
+        .lte('date', endDate.toIso8601String().split('T').first);
+
+    // 연도별 데이터 초기화
+    final yearlyData = <int, Map<String, int>>{};
+    for (int i = 0; i < years; i++) {
+      final year = startYear + i;
+      yearlyData[year] = {'income': 0, 'expense': 0, 'saving': 0};
+    }
+
+    // 클라이언트에서 연도별 집계
+    for (final row in response as List) {
+      final dateStr = row['date'] as String;
+      final year = DateTime.parse(dateStr).year;
+      final amount = (row['amount'] as num).toInt();
+      final type = row['type'] as String;
+
+      if (!yearlyData.containsKey(year)) continue;
+
+      if (type == 'income') {
+        yearlyData[year]!['income'] = yearlyData[year]!['income']! + amount;
+      } else if (type == 'asset') {
+        yearlyData[year]!['saving'] = yearlyData[year]!['saving']! + amount;
+      } else {
+        yearlyData[year]!['expense'] = yearlyData[year]!['expense']! + amount;
+      }
+    }
+
+    // 평균 계산 (0원 제외)
     int totalIncome = 0;
     int totalExpense = 0;
     int totalAsset = 0;
-    // 0원이 아닌 연도의 개수 (평균 계산용)
     int incomeCount = 0;
     int expenseCount = 0;
     int savingCount = 0;
 
-    for (int i = years - 1; i >= 0; i--) {
-      final targetYear = baseDate.year - i;
-      final startDate = DateTime(targetYear, 1, 1);
-      final endDate = DateTime(targetYear, 12, 31);
+    final results = <YearlyStatistics>[];
+    for (final entry in yearlyData.entries) {
+      final data = entry.value;
+      final income = data['income']!;
+      final expense = data['expense']!;
+      final saving = data['saving']!;
 
-      final response = await _client
-          .from('transactions')
-          .select('amount, type')
-          .eq('ledger_id', ledgerId)
-          .gte('date', startDate.toIso8601String().split('T').first)
-          .lte('date', endDate.toIso8601String().split('T').first);
-
-      int income = 0;
-      int expense = 0;
-      int saving = 0;
-
-      for (final row in response as List) {
-        final amount = (row['amount'] as num).toInt();
-        final type = row['type'] as String;
-
-        if (type == 'income') {
-          income += amount;
-        } else if (type == 'asset') {
-          saving += amount;
-        } else {
-          expense += amount;
-        }
+      if (income > 0) {
+        totalIncome += income;
+        incomeCount++;
       }
-
-      // 0원이 아닌 경우만 카운트
-      if (income > 0) incomeCount++;
-      if (expense > 0) expenseCount++;
-      if (saving > 0) savingCount++;
-
-      totalIncome += income;
-      totalExpense += expense;
-      totalAsset += saving;
+      if (expense > 0) {
+        totalExpense += expense;
+        expenseCount++;
+      }
+      if (saving > 0) {
+        totalAsset += saving;
+        savingCount++;
+      }
 
       results.add(
         YearlyStatistics(
-          year: targetYear,
+          year: entry.key,
           income: income,
           expense: expense,
           saving: saving,
         ),
       );
     }
+
+    // 연도순 정렬
+    results.sort((a, b) => a.year.compareTo(b.year));
 
     return TrendStatisticsData(
       data: results,

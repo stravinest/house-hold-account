@@ -88,7 +88,7 @@ class TransactionDetailSheet extends ConsumerWidget {
           // 상세 내용
           Flexible(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(Spacing.md),
               child: Column(
                 children: [
                   // 제목
