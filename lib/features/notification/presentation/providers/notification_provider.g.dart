@@ -28,7 +28,7 @@ final firebaseMessagingServiceProvider =
 // ignore: unused_element
 typedef FirebaseMessagingServiceRef =
     AutoDisposeProviderRef<FirebaseMessagingService>;
-String _$notificationHash() => r'26b18ed39650b4073573dbf2f1e3ac3864a1830b';
+String _$notificationHash() => r'bc95d4a5972cdf97a08d97e9cb5a52339067decb';
 
 /// 알림 Provider
 ///

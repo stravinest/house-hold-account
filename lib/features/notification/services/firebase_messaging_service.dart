@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/repositories/fcm_token_repository.dart';
 import '../../../config/firebase_config.dart';
 import 'local_notification_service.dart';
@@ -147,14 +148,26 @@ class FirebaseMessagingService {
         deviceType = 'ios';
       }
 
+      if (kDebugMode) {
+        print('[FCM] Saving token for user: $userId');
+        print('[FCM] Token prefix: ${token.substring(0, 20)}...');
+        print('[FCM] Device type: $deviceType');
+      }
+
       await _tokenRepository.saveFcmToken(
         userId: userId,
         token: token,
         deviceType: deviceType,
       );
+
+      if (kDebugMode) {
+        print('[FCM] Token saved successfully for user: $userId');
+      }
     } catch (e) {
       if (kDebugMode) {
-        print('FCM 토큰 저장 중 에러 발생: $e');
+        print('[FCM] Token save FAILED for user: $userId');
+        print('[FCM] Error: $e');
+        print('[FCM] Error type: ${e.runtimeType}');
       }
       rethrow;
     }
@@ -218,6 +231,19 @@ class FirebaseMessagingService {
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       if (kDebugMode) {
         print('포그라운드 메시지 수신: ${message.notification?.title}');
+      }
+
+      // 본인이 생성한 거래에 대한 알림은 무시
+      final creatorUserId = message.data['creator_user_id'];
+      final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+
+      if (creatorUserId != null &&
+          currentUserId != null &&
+          creatorUserId == currentUserId) {
+        if (kDebugMode) {
+          print('본인이 생성한 거래 알림 무시: creator=$creatorUserId');
+        }
+        return;
       }
 
       // 로컬 알림으로 표시 (LocalNotificationService 사용)

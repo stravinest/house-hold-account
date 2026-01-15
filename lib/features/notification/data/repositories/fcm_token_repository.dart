@@ -27,9 +27,10 @@ class FcmTokenRepository {
     }
   }
 
-  /// FCM 토큰 저장 (UPSERT)
+  /// FCM 토큰 저장
   ///
-  /// 동일한 user_id와 token 조합이 이미 존재하면 업데이트, 없으면 삽입합니다.
+  /// FCM 토큰은 기기에 고유하므로, 같은 토큰이 다른 사용자에게 등록되어 있으면
+  /// 먼저 삭제한 후 현재 사용자에게 등록합니다.
   ///
   /// [userId] 사용자 ID
   /// [token] FCM 토큰
@@ -40,20 +41,25 @@ class FcmTokenRepository {
     required String deviceType,
   }) async {
     try {
+      // 1. 이 토큰이 다른 사용자에게 등록되어 있으면 삭제
+      // FCM 토큰은 기기에 고유하므로, 한 토큰은 한 사용자에게만 연결되어야 함
+      await _client
+          .from('fcm_tokens')
+          .delete()
+          .eq('token', token)
+          .neq('user_id', userId);
+
       final data = FcmTokenModel.toCreateJson(
         userId: userId,
         token: token,
         deviceType: deviceType,
       );
 
-      // UPSERT: user_id와 token이 같으면 updated_at만 갱신
-      await _client.from('fcm_tokens').upsert(
-        {
-          ...data,
-          'updated_at': DateTime.now().toIso8601String(),
-        },
-        onConflict: 'user_id,token',
-      );
+      // 2. 현재 사용자에게 토큰 저장 (UPSERT)
+      await _client.from('fcm_tokens').upsert({
+        ...data,
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'user_id,token');
     } catch (e) {
       // 에러를 호출자에게 전파
       rethrow;

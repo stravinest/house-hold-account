@@ -13,6 +13,7 @@ import 'config/firebase_config.dart';
 import 'config/router.dart';
 import 'config/supabase_config.dart';
 import 'features/ledger/presentation/providers/ledger_provider.dart';
+import 'features/notification/presentation/providers/notification_provider.dart';
 import 'features/notification/services/local_notification_service.dart';
 import 'features/widget/data/services/widget_data_service.dart';
 import 'shared/themes/app_theme.dart';
@@ -154,6 +155,11 @@ class _SharedHouseholdAccountAppState
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+
+    // FCM 토큰 관리: 사용자 인증 상태 변경 시 자동으로 토큰 저장/삭제
+    // notificationProvider가 authStateChangesProvider를 watch하므로
+    // 로그인/로그아웃 시 FCM 토큰이 자동으로 관리됨
+    ref.watch(notificationProvider);
 
     return MaterialApp.router(
       title: '공유 가계부',
