@@ -101,16 +101,16 @@ class TransactionDetailSheet extends ConsumerWidget {
                     context,
                     icon: Icons.title,
                     label: l10n.labelTitle,
-                    value: transaction.title.isNotEmpty == true
+                    value: transaction.title?.isNotEmpty == true
                         ? transaction.title!
                         : l10n.transactionNoTitle,
-                    valueColor: transaction.title.isNotEmpty == true
+                    valueColor: transaction.title?.isNotEmpty == true
                         ? null
                         : colorScheme.onSurfaceVariant,
                   ),
 
                   // 메모 (있을 경우)
-                  if (transaction.memo.isNotEmpty == true)
+                  if (transaction.memo?.isNotEmpty == true)
                     _buildDetailRow(
                       context,
                       icon: Icons.note,

@@ -82,7 +82,7 @@ class _SettingsCard extends ConsumerWidget {
                   includeInExpense
                       ? l10n.fixedExpenseIncludeInExpenseOn
                       : l10n.fixedExpenseIncludeInExpenseOff,
-                  style: Theme.of(context).textTheme.bodySmall?,
+                  style: Theme.of(context).textTheme.bodySmall,
                 ),
                 value: includeInExpense,
                 onChanged: (value) async {
@@ -314,7 +314,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.category.name ?? '');
+    _nameController = TextEditingController(text: widget.category?.name ?? '');
   }
 
   @override

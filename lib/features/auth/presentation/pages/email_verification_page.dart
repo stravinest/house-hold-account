@@ -289,7 +289,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                 _isVerified
                     ? l10n.emailVerificationDone
                     : l10n.emailVerificationSent,
-                style: textTheme.bodyLarge.copyWith(
+                style: textTheme.bodyLarge?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
                 textAlign: TextAlign.center,
@@ -383,7 +383,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
             _isVerified
                 ? l10n.emailVerificationVerified
                 : l10n.emailVerificationNotVerified,
-            style: textTheme.labelLarge.copyWith(
+            style: textTheme.labelLarge?.copyWith(
               color: _isVerified
                   ? colorScheme.onPrimaryContainer
                   : colorScheme.onErrorContainer,

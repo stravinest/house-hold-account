@@ -82,9 +82,9 @@ class _RecurringSettingsWidgetState
   @override
   void initState() {
     super.initState();
-    _selectedType = widget.initialSettings.type ?? RecurringType.none;
-    _endDate = widget.initialSettings.endDate;
-    _isFixedExpense = widget.initialSettings.isFixedExpense ?? false;
+    _selectedType = widget.initialSettings?.type ?? RecurringType.none;
+    _endDate = widget.initialSettings?.endDate;
+    _isFixedExpense = widget.initialSettings?.isFixedExpense ?? false;
   }
 
   @override

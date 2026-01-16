@@ -74,7 +74,7 @@ final currentLedgerMembersProvider = FutureProvider<List<LedgerMember>>((ref) as
 // 현재 가계부의 멤버 수
 final currentLedgerMemberCountProvider = Provider<int>((ref) {
   final membersAsync = ref.watch(currentLedgerMembersProvider);
-  return membersAsync.valueOrNull.length ?? 0;
+  return membersAsync.valueOrNull?.length ?? 0;
 });
 
 // 멤버 추가 가능 여부
