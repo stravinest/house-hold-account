@@ -35,9 +35,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   Future<void> _handleSignup() async {
     debugPrint('[SignupPage] signup started');
     debugPrint('[SignupPage] name: ${_nameController.text.trim()}');
-    debugPrint(
-      '[SignupPage] password length: ${_passwordController.text.length}',
-    );
 
     if (!_formKey.currentState!.validate()) {
       debugPrint('[SignupPage] form validation failed');
