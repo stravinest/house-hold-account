@@ -180,7 +180,6 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context).languageCode;
     final categoriesAsync = _type == 'expense'
         ? ref.watch(expenseCategoriesProvider)
@@ -199,53 +198,21 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       minChildSize: 0.5,
       maxChildSize: 0.95,
       expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
+      builder: (context, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
           child: Form(
             key: _formKey,
             child: Column(
               children: [
-                // 핸들 바
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(vertical: 12),
-                  decoration: BoxDecoration(
-                    color: colorScheme.onSurfaceVariant.withAlpha(76),
-                    borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
-                  ),
+                const SheetHandle(),
+                SheetHeader(
+                  onCancel: () => Navigator.pop(context),
+                  onSave: _submit,
+                  isLoading: _isLoading,
                 ),
-
-                // 헤더
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(l10n.commonCancel),
-                      ),
-                      TextButton(
-                        onPressed: _isLoading ? null : _submit,
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(l10n.commonSave),
-                      ),
-                    ],
-                  ),
-                ),
-
                 const Divider(),
 
                 Expanded(
@@ -431,8 +398,8 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
               ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
