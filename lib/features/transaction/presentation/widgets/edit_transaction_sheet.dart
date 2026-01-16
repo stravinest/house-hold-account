@@ -179,7 +179,6 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final locale = Localizations.localeOf(context).languageCode;
     final categoriesAsync = _type == 'expense'
         ? ref.watch(expenseCategoriesProvider)
         : _type == 'income'
@@ -248,21 +247,8 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                         const Divider(),
                         const SizedBox(height: 16),
 
-                        // 날짜 선택
-                        ListTile(
-                          leading: const Icon(Icons.calendar_today),
-                          title: Text(
-                            locale == 'ko'
-                                ? DateFormat(
-                                    'yyyy년 M월 d일 (E)',
-                                    'ko_KR',
-                                  ).format(_selectedDate)
-                                : DateFormat(
-                                    'MMMM d, yyyy (E)',
-                                    'en_US',
-                                  ).format(_selectedDate),
-                          ),
-                          trailing: const Icon(Icons.chevron_right),
+                        DateSelectorTile(
+                          selectedDate: _selectedDate,
                           onTap: _selectDate,
                         ),
 
