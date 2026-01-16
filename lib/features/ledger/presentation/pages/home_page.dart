@@ -125,10 +125,12 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     // 실제 데이터 로딩 완료를 기다림
     try {
-      await ref.read(dailyTransactionsProvider.future);
-      await ref.read(monthlyTransactionsProvider.future);
-      await ref.read(monthlyTotalProvider.future);
-      await ref.read(dailyTotalsProvider.future);
+      await Future.wait([
+        ref.read(dailyTransactionsProvider.future),
+        ref.read(monthlyTransactionsProvider.future),
+        ref.read(monthlyTotalProvider.future),
+        ref.read(dailyTotalsProvider.future),
+      ]);
 
       // 홈 화면 위젯 데이터 업데이트
       await ref.read(widgetNotifierProvider.notifier).updateWidgetData();
