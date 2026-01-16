@@ -49,7 +49,6 @@ class AuthService {
     String? displayName,
   }) async {
     debugPrint('[AuthService] signUpWithEmail 시작');
-    debugPrint('[AuthService] 이메일: $email');
     debugPrint('[AuthService] 비밀번호 길이: ${password.length}');
     debugPrint('[AuthService] 표시 이름: $displayName');
     debugPrint('[AuthService] Supabase URL: ${SupabaseConfig.supabaseUrl}');
@@ -64,7 +63,6 @@ class AuthService {
 
       debugPrint('[AuthService] signUp 응답 받음');
       debugPrint('[AuthService] user id: ${response.user?.id}');
-      debugPrint('[AuthService] user email: ${response.user?.email}');
       debugPrint('[AuthService] session 존재: ${response.session != null}');
       debugPrint(
         '[AuthService] session access_token: ${response.session?.accessToken?.substring(0, 20)}...',
@@ -144,7 +142,6 @@ class AuthService {
     required String password,
   }) async {
     debugPrint('[AuthService] signInWithEmail 시작');
-    debugPrint('[AuthService] 이메일: $email');
     debugPrint('[AuthService] 비밀번호 길이: ${password.length}');
     debugPrint('[AuthService] Supabase URL: ${SupabaseConfig.supabaseUrl}');
     try {
