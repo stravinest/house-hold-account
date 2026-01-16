@@ -521,8 +521,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                                         ),
                                         child: Text(
                                           percentText,
-                                          style: theme.textTheme.labelSmall
-                                              ?.copyWith(
+                                          style: theme.textTheme.labelSmall?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                                 color: progressColor,
                                                 fontSize: 11,

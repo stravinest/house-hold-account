@@ -76,8 +76,7 @@ class LocalNotificationService {
       await _notificationsPlugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
-          >()
-          ?.createNotificationChannel(androidChannel);
+          >()?.createNotificationChannel(androidChannel);
     } catch (e) {
       if (kDebugMode) {
         print('Android 알림 채널 생성 중 에러 발생: $e');

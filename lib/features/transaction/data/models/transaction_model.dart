@@ -90,8 +90,7 @@ class TransactionModel extends Transaction {
       'image_url': imageUrl,
       'is_recurring': isRecurring,
       'recurring_type': recurringType,
-      'recurring_end_date': recurringEndDate
-          ?.toIso8601String()
+      'recurring_end_date': recurringEndDate?.toIso8601String()
           .split('T')
           .first,
       'is_fixed_expense': isFixedExpense,
@@ -135,8 +134,7 @@ class TransactionModel extends Transaction {
       'image_url': imageUrl,
       'is_recurring': isRecurring,
       'recurring_type': recurringType,
-      'recurring_end_date': recurringEndDate
-          ?.toIso8601String()
+      'recurring_end_date': recurringEndDate?.toIso8601String()
           .split('T')
           .first,
       'is_fixed_expense': isFixedExpense,
