@@ -11,6 +11,7 @@ import '../../../payment_method/domain/entities/payment_method.dart';
 import '../../../payment_method/presentation/providers/payment_method_provider.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_provider.dart';
+import 'transaction_form_fields.dart';
 
 /// 기존 거래를 수정하는 Bottom Sheet
 class EditTransactionSheet extends ConsumerStatefulWidget {
