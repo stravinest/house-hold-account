@@ -266,13 +266,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 // Google 로그인
                 OutlinedButton.icon(
                   onPressed: _isLoading ? null : _handleGoogleLogin,
-                  icon: Image.network(
-                    'https://www.google.com/favicon.ico',
+                  icon: Image.asset(
+                    'assets/images/google_logo.png',
                     width: 20,
                     height: 20,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.g_mobiledata, size: 20);
-                    },
                   ),
                   label: const Text('Google'),
                 ),
