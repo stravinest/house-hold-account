@@ -209,6 +209,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final selectedDate = ref.watch(selectedDateProvider);
     final ledgersAsync = ref.watch(ledgersProvider);
     final currentLedgerAsync = ref.watch(currentLedgerProvider);
@@ -225,6 +226,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             data: (ledgers) => ledgers.length > 1
                 ? IconButton(
                     icon: const Icon(Icons.book),
+                    tooltip: l10n?.tooltipBook ?? 'Ledger Management',
                     onPressed: () => _showLedgerSelector(context),
                     visualDensity: VisualDensity.compact,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -235,6 +237,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           IconButton(
             icon: const Icon(Icons.search),
+            tooltip: l10n?.tooltipSearch ?? 'Search',
             onPressed: () {
               context.push(Routes.search);
             },
@@ -243,6 +246,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           IconButton(
             icon: const Icon(Icons.settings),
+            tooltip: l10n?.tooltipSettings ?? 'Settings',
             onPressed: () {
               context.push(Routes.settings);
             },
