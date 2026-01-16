@@ -222,35 +222,15 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        // 수입/지출/자산 선택
-                        SegmentedButton<String>(
-                          segments: [
-                            ButtonSegment(
-                              value: 'expense',
-                              label: Text(l10n.transactionExpense),
-                              icon: const Icon(Icons.remove_circle_outline),
-                            ),
-                            ButtonSegment(
-                              value: 'income',
-                              label: Text(l10n.transactionIncome),
-                              icon: const Icon(Icons.add_circle_outline),
-                            ),
-                            ButtonSegment(
-                              value: 'asset',
-                              label: Text(l10n.transactionAsset),
-                              icon: const Icon(Icons.savings_outlined),
-                            ),
-                          ],
-                          selected: {_type},
-                          onSelectionChanged: (selected) {
-                            setState(() {
-                              _type = selected.first;
-                              _selectedCategory = null;
-                              if (_type == 'income' || _type == 'asset') {
-                                _selectedPaymentMethod = null;
-                              }
-                            });
-                          },
+                        TransactionTypeSelector(
+                          selectedType: _type,
+                          onTypeChanged: (t) => setState(() {
+                            _type = t;
+                            _selectedCategory = null;
+                            if (t == 'income' || t == 'asset') {
+                              _selectedPaymentMethod = null;
+                            }
+                          }),
                         ),
 
                         const SizedBox(height: 24),
