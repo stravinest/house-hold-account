@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/utils/category_l10n_helper.dart';
+import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/asset_statistics.dart';
 
@@ -24,7 +24,6 @@ class AssetCategoryList extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final numberFormat = NumberFormat('#,###');
 
     final byCategory = assetStatistics.byCategory;
     if (byCategory.isEmpty) {
@@ -98,7 +97,7 @@ class AssetCategoryList extends StatelessWidget {
                     const SizedBox(width: 12),
                     // 금액
                     Text(
-                      '${numberFormat.format(category.amount)}${l10n.transactionAmountUnit}',
+                      '${NumberFormatUtils.currency.format(category.amount)}${l10n.transactionAmountUnit}',
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -127,7 +126,7 @@ class AssetCategoryList extends StatelessWidget {
               ),
               title: Text(item.title),
               trailing: Text(
-                '${numberFormat.format(item.amount)}${l10n.transactionAmountUnit}',
+                '${NumberFormatUtils.currency.format(item.amount)}${l10n.transactionAmountUnit}',
                 style: theme.textTheme.bodyMedium,
               ),
             );

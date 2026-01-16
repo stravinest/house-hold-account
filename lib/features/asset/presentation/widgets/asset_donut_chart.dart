@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
+import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/asset_statistics.dart';
 
@@ -24,7 +24,6 @@ class AssetDonutChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final numberFormat = NumberFormat('#,###');
 
     if (byCategory.isEmpty) {
       return SizedBox(
@@ -69,7 +68,7 @@ class AssetDonutChart extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
+                '${NumberFormatUtils.currency.format(totalAmount)}${l10n.transactionAmountUnit}',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),

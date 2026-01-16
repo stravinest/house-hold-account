@@ -1,7 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
+import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/asset_statistics.dart';
 
@@ -14,7 +14,6 @@ class AssetLineChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final numberFormat = NumberFormat('#,###');
 
     if (monthly.isEmpty) {
       return Center(
@@ -97,7 +96,7 @@ class AssetLineChart extends StatelessWidget {
                   getTitlesWidget: (value, meta) {
                     if (value == maxY || value == 0) {
                       return Text(
-                        numberFormat.format(value.toInt()),
+                        NumberFormatUtils.currency.format(value.toInt()),
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: 10,
                         ),
@@ -140,7 +139,7 @@ class AssetLineChart extends StatelessWidget {
                     if (index >= 0 && index < monthly.length) {
                       final item = monthly[index];
                       return LineTooltipItem(
-                        '${item.year}.${item.month.toString().padLeft(2, '0')}\n${numberFormat.format(item.amount)}원',
+                        '${item.year}.${item.month.toString().padLeft(2, '0')}\n${NumberFormatUtils.currency.format(item.amount)}원',
                         TextStyle(
                           color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.bold,

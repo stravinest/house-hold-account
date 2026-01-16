@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
+import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
@@ -184,7 +184,6 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final numberFormat = NumberFormat('#,###');
     final isPositive = widget.monthlyChange >= 0;
     final goalsAsync = widget.ledgerId != null
         ? ref.watch(assetGoalNotifierProvider(widget.ledgerId!))
@@ -225,7 +224,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${numberFormat.format(widget.totalAmount)}${l10n.transactionAmountUnit}',
+              '${NumberFormatUtils.currency.format(widget.totalAmount)}${l10n.transactionAmountUnit}',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
@@ -244,7 +243,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                 const SizedBox(width: 4),
                 Text(
                   l10n.assetThisMonth(
-                    '${isPositive ? '+' : ''}${numberFormat.format(widget.monthlyChange)}',
+                    '${isPositive ? '+' : ''}${NumberFormatUtils.currency.format(widget.monthlyChange)}',
                   ),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: isPositive
@@ -263,7 +262,6 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                 context,
                 ref,
                 widget.ledgerId!,
-                numberFormat,
                 theme,
               ),
             ],
@@ -337,7 +335,6 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
     BuildContext context,
     WidgetRef ref,
     String ledgerId,
-    NumberFormat numberFormat,
     ThemeData theme,
   ) {
     final l10n = AppLocalizations.of(context)!;
@@ -448,7 +445,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                   children: [
                     Expanded(
                       child: Text(
-                        '${numberFormat.format(nearestGoal.targetAmount)}${l10n.transactionAmountUnit}',
+                        '${NumberFormatUtils.currency.format(nearestGoal.targetAmount)}${l10n.transactionAmountUnit}',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.3,
@@ -636,7 +633,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${numberFormat.format(currentAmount)}${l10n.transactionAmountUnit}',
+                                '${NumberFormatUtils.currency.format(currentAmount)}${l10n.transactionAmountUnit}',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.primary,
@@ -674,7 +671,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${numberFormat.format(nearestGoal.targetAmount)}${l10n.transactionAmountUnit}',
+                                '${NumberFormatUtils.currency.format(nearestGoal.targetAmount)}${l10n.transactionAmountUnit}',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.onSurface,
@@ -693,7 +690,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                     Center(
                       child: Text(
                         l10n.assetGoalRemaining(
-                          numberFormat.format(
+                          NumberFormatUtils.currency.format(
                             nearestGoal.targetAmount - currentAmount,
                           ),
                         ),
