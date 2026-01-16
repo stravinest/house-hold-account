@@ -41,6 +41,11 @@
   "tooltipSort": "Sort",
   "tooltipInfo": "Information",
 
+  "navTabCalendar": "Calendar",
+  "navTabStatistics": "Statistics",
+  "navTabAsset": "Asset",
+  "navTabMore": "More",
+
   "authLogin": "Log In",
   "authSignup": "Sign Up",
   "authLogout": "Log Out",
