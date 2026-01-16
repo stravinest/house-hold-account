@@ -61,8 +61,8 @@ class StatisticsRepository {
 
       // 고정비 필터일 때는 fixed_expense_category_id 사용
       final categoryId = useFixedExpenseCategory
-          ? rowMap['fixed_expense_category_id']?.toString()
-          : rowMap['category_id']?.toString();
+          ? rowMap['fixed_expense_category_id'].toString()
+          : rowMap['category_id'].toString();
 
       // 고정비 필터일 때는 fixed_expense_categories 사용
       final category = useFixedExpenseCategory
@@ -95,9 +95,9 @@ class StatisticsRepository {
         categoryColor = '#9E9E9E';
 
         if (category != null) {
-          categoryName = category['name']?.toString() ?? '미지정';
-          categoryIcon = category['icon']?.toString() ?? '';
-          categoryColor = category['color']?.toString() ?? '#9E9E9E';
+          categoryName = category['name'].toString() ?? '미지정';
+          categoryIcon = category['icon'].toString() ?? '';
+          categoryColor = category['color'].toString() ?? '#9E9E9E';
         }
       }
 
@@ -317,7 +317,7 @@ class StatisticsRepository {
 
     for (final row in response as List) {
       final rowMap = row as Map<String, dynamic>;
-      final paymentMethodId = rowMap['payment_method_id']?.toString();
+      final paymentMethodId = rowMap['payment_method_id'].toString();
       final amount = (rowMap['amount'] as num?).toInt() ?? 0;
       final paymentMethod = rowMap['payment_methods'] as Map<String, dynamic>?;
 
@@ -332,9 +332,9 @@ class StatisticsRepository {
       String pmColor = '#9E9E9E';
 
       if (paymentMethod != null) {
-        pmName = paymentMethod['name']?.toString() ?? '미지정';
-        pmIcon = paymentMethod['icon']?.toString() ?? '';
-        pmColor = paymentMethod['color']?.toString() ?? '#9E9E9E';
+        pmName = paymentMethod['name'].toString() ?? '미지정';
+        pmIcon = paymentMethod['icon'].toString() ?? '';
+        pmColor = paymentMethod['color'].toString() ?? '#9E9E9E';
       }
 
       if (grouped.containsKey(groupKey)) {
