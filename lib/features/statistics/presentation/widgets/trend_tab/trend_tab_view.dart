@@ -1,20 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../providers/statistics_provider.dart';
 import '../common/period_filter.dart';
 import '../common/statistics_type_filter.dart';
 import 'trend_bar_chart.dart';
 import 'trend_detail_list.dart';
 
-class TrendTabView extends StatelessWidget {
+class TrendTabView extends ConsumerWidget {
   const TrendTabView({super.key});
 
+  Future<void> _refreshTrendData(WidgetRef ref) async {
+    ref.invalidate(monthlyTrendWithAverageProvider);
+    ref.invalidate(yearlyTrendWithAverageProvider);
+
+    // 실제 데이터 로딩 완료를 기다림
+    await Future.wait([
+      ref.read(monthlyTrendWithAverageProvider.future),
+      ref.read(yearlyTrendWithAverageProvider.future),
+    ]);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
+    return RefreshIndicator(
+      onRefresh: () => _refreshTrendData(ref),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 기간 필터 (월별/연별)
@@ -61,6 +77,7 @@ class TrendTabView extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }
