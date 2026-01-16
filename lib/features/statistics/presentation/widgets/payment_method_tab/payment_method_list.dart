@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../../../shared/themes/design_tokens.dart';
+import '../../../../../shared/widgets/skeleton_loading.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
 
@@ -37,7 +39,7 @@ class PaymentMethodList extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const _SkeletonPaymentMethodList(),
       error: (error, _) =>
           Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
@@ -125,6 +127,73 @@ class _PaymentMethodItem extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(color),
               minHeight: 6,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 결제수단 리스트 스켈레톤 로딩
+class _SkeletonPaymentMethodList extends StatelessWidget {
+  const _SkeletonPaymentMethodList();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 5,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) => const _SkeletonPaymentMethodItem(),
+    );
+  }
+}
+
+/// 결제수단 아이템 스켈레톤
+class _SkeletonPaymentMethodItem extends StatelessWidget {
+  const _SkeletonPaymentMethodItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // 순위
+              const SizedBox(
+                width: 24,
+                child: SkeletonLine(width: 16, height: 20),
+              ),
+              const SizedBox(width: 12),
+              // 결제수단명
+              Expanded(
+                child: SkeletonLine(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  height: 16,
+                ),
+              ),
+              // 비율
+              SkeletonLine(
+                width: MediaQuery.of(context).size.width * 0.15,
+                height: 14,
+              ),
+              const SizedBox(width: 12),
+              // 금액
+              SkeletonLine(
+                width: MediaQuery.of(context).size.width * 0.2,
+                height: 16,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 진행 바
+          SkeletonBox(
+            width: double.infinity,
+            height: 6,
+            borderRadius: 4,
           ),
         ],
       ),
