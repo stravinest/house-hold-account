@@ -197,104 +197,103 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
           color: Theme.of(context).colorScheme.surface,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SheetHandle(),
-                SheetHeader(
-                  onCancel: () => Navigator.pop(context),
-                  onSave: _submit,
-                  isLoading: _isLoading,
-                ),
-                const Divider(),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              const SheetHandle(),
+              SheetHeader(
+                onCancel: () => Navigator.pop(context),
+                onSave: _submit,
+                isLoading: _isLoading,
+              ),
+              const Divider(),
 
-                Expanded(
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        TransactionTypeSelector(
-                          selectedType: _type,
-                          onTypeChanged: (t) => setState(() {
-                            _type = t;
-                            _selectedCategory = null;
-                            if (t == 'income' || t == 'asset') {
-                              _selectedPaymentMethod = null;
-                            }
-                          }),
-                        ),
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TransactionTypeSelector(
+                        selectedType: _type,
+                        onTypeChanged: (t) => setState(() {
+                          _type = t;
+                          _selectedCategory = null;
+                          if (t == 'income' || t == 'asset') {
+                            _selectedPaymentMethod = null;
+                          }
+                        }),
+                      ),
 
-                        const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                        TitleInputField(controller: _titleController),
+                      TitleInputField(controller: _titleController),
 
-                        const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                        // 금액 입력
-                        AmountInputField(
-                          controller: _amountController,
-                          focusNode: _amountFocusNode,
-                          isInstallmentMode: false,
-                        ),
+                      // 금액 입력
+                      AmountInputField(
+                        controller: _amountController,
+                        focusNode: _amountFocusNode,
+                        isInstallmentMode: false,
+                      ),
 
-                        const Divider(),
-                        const SizedBox(height: 16),
+                      const Divider(),
+                      const SizedBox(height: 16),
 
-                        DateSelectorTile(
-                          selectedDate: _selectedDate,
-                          onTap: _selectDate,
-                        ),
+                      DateSelectorTile(
+                        selectedDate: _selectedDate,
+                        onTap: _selectDate,
+                      ),
 
-                        const Divider(),
+                      const Divider(),
 
-                        CategorySectionWidget(
-                          isFixedExpense: false,
-                          selectedCategory: _selectedCategory,
-                          selectedFixedExpenseCategory: null,
-                          transactionType: _type,
-                          onCategorySelected: (c) =>
-                              setState(() => _selectedCategory = c),
-                          onFixedExpenseCategorySelected: (_) {},
-                          enabled: !_isLoading,
-                        ),
+                      CategorySectionWidget(
+                        isFixedExpense: false,
+                        selectedCategory: _selectedCategory,
+                        selectedFixedExpenseCategory: null,
+                        transactionType: _type,
+                        onCategorySelected: (c) =>
+                            setState(() => _selectedCategory = c),
+                        onFixedExpenseCategorySelected: (_) {},
+                        enabled: !_isLoading,
+                      ),
 
-                        const SizedBox(height: Spacing.md),
-                        const Divider(),
+                      const SizedBox(height: Spacing.md),
+                      const Divider(),
 
-                        // 결제수단 선택 (지출일 때만)
-                        if (_type == 'expense') ...[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Text(
-                              l10n.transactionPaymentMethod,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
+                      // 결제수단 선택 (지출일 때만)
+                      if (_type == 'expense') ...[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            l10n.transactionPaymentMethod,
+                            style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          paymentMethodsAsync.when(
-                            data: (paymentMethods) =>
-                                _buildPaymentMethodChips(paymentMethods, l10n),
-                            loading: () => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                            error: (e, _) =>
-                                Text(l10n.errorWithMessage(e.toString())),
+                        ),
+                        paymentMethodsAsync.when(
+                          data: (paymentMethods) =>
+                              _buildPaymentMethodChips(paymentMethods, l10n),
+                          loading: () => const Center(
+                            child: CircularProgressIndicator(),
                           ),
-                          const SizedBox(height: 16),
-                          const Divider(),
-                        ],
-
-                        MemoInputSection(controller: _memoController),
-
-                        const SizedBox(height: 100),
+                          error: (e, _) =>
+                              Text(l10n.errorWithMessage(e.toString())),
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(),
                       ],
-                    ),
+
+                      MemoInputSection(controller: _memoController),
+
+                      const SizedBox(height: 100),
+                    ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
