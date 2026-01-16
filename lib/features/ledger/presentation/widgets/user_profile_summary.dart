@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../transaction/presentation/providers/transaction_provider.dart';
+
 import '../../../../core/utils/color_utils.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+import '../../../transaction/presentation/providers/transaction_provider.dart';
 
 class UserProfileSummary extends ConsumerWidget {
   const UserProfileSummary({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final monthlyTotal = ref.watch(monthlyTotalProvider);
 
     return monthlyTotal.when(
@@ -34,16 +37,13 @@ class UserProfileSummary extends ConsumerWidget {
                 return const SizedBox.shrink();
               }
               final userData = Map<String, dynamic>.from(userDataRaw);
-              final displayName = userData['displayName'] as String? ?? '사용자';
+              final displayName =
+                  userData['displayName'] as String? ?? l10n.ledgerUser;
               final expense = userData['expense'] as int? ?? 0;
               final colorHex = userData['color'] as String? ?? '#A8D8EA';
               final color = ColorUtils.parseHexColor(colorHex);
 
-              return UserChip(
-                name: displayName,
-                amount: expense,
-                color: color,
-              );
+              return UserChip(name: displayName, amount: expense, color: color);
             }).toList(),
           ),
         );
@@ -82,25 +82,19 @@ class UserChip extends StatelessWidget {
           Container(
             width: 12,
             height: 12,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                name,
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
+              Text(name, style: Theme.of(context).textTheme.labelSmall),
               Text(
                 '-${formatter.format(amount)}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),

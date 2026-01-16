@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../fixed_expense/domain/entities/fixed_expense_category.dart';
@@ -45,13 +46,17 @@ class CategorySectionWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
           child: Text(
-            isFixedExpense ? '고정비 카테고리' : '카테고리',
+            isFixedExpense
+                ? l10n.fixedExpenseCategoryTitle
+                : l10n.categoryTitle,
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
@@ -88,13 +93,15 @@ class PaymentMethodSectionWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
           child: Text(
-            '결제수단 (선택)',
+            l10n.paymentMethodOptional,
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),

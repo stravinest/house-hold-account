@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import 'payment_method_donut_chart.dart';
 import 'payment_method_list.dart';
 
@@ -8,6 +9,7 @@ class PaymentMethodTabView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return SingleChildScrollView(
@@ -32,7 +34,7 @@ class PaymentMethodTabView extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '결제수단 통계는 지출 내역만 표시됩니다.',
+                    l10n.statisticsPaymentNotice,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -51,7 +53,7 @@ class PaymentMethodTabView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '결제수단별 분포',
+                    l10n.statisticsPaymentDistribution,
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
@@ -70,7 +72,7 @@ class PaymentMethodTabView extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
-                    '결제수단별 순위',
+                    l10n.statisticsPaymentRanking,
                     style: theme.textTheme.titleMedium,
                   ),
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../features/auth/presentation/pages/email_verification_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
@@ -210,9 +211,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
     ],
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(child: Text('페이지를 찾을 수 없습니다: ${state.matchedLocation}')),
-    ),
+    errorBuilder: (context, state) {
+      final l10n = AppLocalizations.of(context);
+      final message = l10n?.errorNotFound ?? 'Page not found';
+      return Scaffold(
+        body: Center(child: Text('$message: ${state.matchedLocation}')),
+      );
+    },
   );
 });
 

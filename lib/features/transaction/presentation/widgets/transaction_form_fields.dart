@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 
 /// 거래 타입 선택 위젯
@@ -17,22 +18,23 @@ class TransactionTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SegmentedButton<String>(
-      segments: const [
+      segments: [
         ButtonSegment(
           value: 'expense',
-          label: Text('지출'),
-          icon: Icon(Icons.remove_circle_outline),
+          label: Text(l10n.transactionExpense),
+          icon: const Icon(Icons.remove_circle_outline),
         ),
         ButtonSegment(
           value: 'income',
-          label: Text('수입'),
-          icon: Icon(Icons.add_circle_outline),
+          label: Text(l10n.transactionIncome),
+          icon: const Icon(Icons.add_circle_outline),
         ),
         ButtonSegment(
           value: 'asset',
-          label: Text('자산'),
-          icon: Icon(Icons.savings_outlined),
+          label: Text(l10n.transactionAsset),
+          icon: const Icon(Icons.savings_outlined),
         ),
       ],
       selected: {selectedType},
@@ -49,17 +51,19 @@ class TitleInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return TextFormField(
       controller: controller,
       maxLines: 1,
       textInputAction: TextInputAction.next,
-      decoration: const InputDecoration(
-        labelText: '제목',
-        hintText: '예: 점심식사, 월급',
-        prefixIcon: Icon(Icons.edit),
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: l10n.transactionTitle,
+        hintText: l10n.categoryNameHintExample,
+        prefixIcon: const Icon(Icons.edit),
+        border: const OutlineInputBorder(),
       ),
-      validator: (v) => v == null || v.trim().isEmpty ? '제목을 입력해주세요' : null,
+      validator: (v) =>
+          v == null || v.trim().isEmpty ? l10n.transactionTitleRequired : null,
     );
   }
 }
@@ -79,24 +83,26 @@ class AmountInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     return TextFormField(
       controller: controller,
       focusNode: focusNode,
       keyboardType: TextInputType.number,
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
-        AmountInputFormatter(),
+        AmountInputFormatter(locale),
       ],
       style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
       textAlign: TextAlign.center,
-      decoration: const InputDecoration(
-        suffixText: '원',
-        suffixStyle: TextStyle(fontSize: 18),
+      decoration: InputDecoration(
+        suffixText: l10n.transactionAmountUnit,
+        suffixStyle: const TextStyle(fontSize: 18),
         border: InputBorder.none,
       ),
       validator: (v) =>
           !isInstallmentMode && (v == null || v.isEmpty || v == '0')
-          ? '금액을 입력해주세요'
+          ? l10n.transactionAmountRequired
           : null,
     );
   }
@@ -115,9 +121,13 @@ class DateSelectorTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final locale = Localizations.localeOf(context).languageCode;
+    final dateFormat = locale == 'ko'
+        ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
+        : DateFormat('MMMM d, yyyy (E)', 'en_US');
     return ListTile(
       leading: const Icon(Icons.calendar_today),
-      title: Text(DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(selectedDate)),
+      title: Text(dateFormat.format(selectedDate)),
       trailing: const Icon(Icons.chevron_right),
       onTap: onTap,
     );
@@ -139,12 +149,17 @@ class MaturityDateTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final dateFormat = locale == 'ko'
+        ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
+        : DateFormat('MMMM d, yyyy (E)', 'en_US');
     return ListTile(
       leading: const Icon(Icons.event_available),
       title: Text(
         maturityDate == null
-            ? '만기일 선택 (선택사항)'
-            : DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(maturityDate!),
+            ? l10n.maturityDateSelectOptional
+            : dateFormat.format(maturityDate!),
       ),
       trailing: maturityDate == null
           ? const Icon(Icons.chevron_right)
@@ -162,22 +177,23 @@ class MemoInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
           child: Text(
-            '메모 (선택)',
+            l10n.transactionMemoOptional,
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),
         TextFormField(
           controller: controller,
           maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: '추가 메모를 입력하세요',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            hintText: l10n.transactionMemoHint,
+            border: const OutlineInputBorder(),
           ),
         ),
       ],
@@ -219,12 +235,13 @@ class SheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          TextButton(onPressed: onCancel, child: const Text('취소')),
+          TextButton(onPressed: onCancel, child: Text(l10n.commonCancel)),
           TextButton(
             onPressed: isLoading ? null : onSave,
             child: isLoading
@@ -233,7 +250,7 @@ class SheetHeader extends StatelessWidget {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('저장'),
+                : Text(l10n.commonSave),
           ),
         ],
       ),
@@ -243,6 +260,10 @@ class SheetHeader extends StatelessWidget {
 
 /// 금액 포맷터 (천 단위 구분)
 class AmountInputFormatter extends TextInputFormatter {
+  final String locale;
+
+  AmountInputFormatter(this.locale);
+
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -251,7 +272,10 @@ class AmountInputFormatter extends TextInputFormatter {
     if (newValue.text.isEmpty) return newValue;
     final number = int.tryParse(newValue.text.replaceAll(',', ''));
     if (number == null) return oldValue;
-    final formatted = NumberFormat('#,###', 'ko_KR').format(number);
+    final formatted = NumberFormat(
+      '#,###',
+      locale == 'ko' ? 'ko_KR' : 'en_US',
+    ).format(number);
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),

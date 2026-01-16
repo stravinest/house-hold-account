@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../providers/statistics_provider.dart';
 
@@ -20,6 +21,7 @@ class CategoryDonutChart extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final statisticsAsync = ref.watch(categoryStatisticsProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final numberFormat = NumberFormat('#,###');
@@ -27,21 +29,28 @@ class CategoryDonutChart extends ConsumerWidget {
     return statisticsAsync.when(
       data: (statistics) {
         if (statistics.isEmpty) {
-          return _buildEmptyState(context);
+          return _buildEmptyState(context, l10n);
         }
-        return _buildChart(context, statistics, selectedType, numberFormat);
+        return _buildChart(
+          context,
+          l10n,
+          statistics,
+          selectedType,
+          numberFormat,
+        );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('오류: $error')),
+      error: (error, _) =>
+          Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
     return SizedBox(
       height: 250,
       child: Center(
         child: Text(
-          '데이터가 없습니다',
+          l10n.statisticsNoData,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -52,12 +61,13 @@ class CategoryDonutChart extends ConsumerWidget {
 
   Widget _buildChart(
     BuildContext context,
+    AppLocalizations l10n,
     List<CategoryStatistics> statistics,
     String selectedType,
     NumberFormat numberFormat,
   ) {
     // 상위 5개 + 기타 처리
-    final processedData = _processData(statistics);
+    final processedData = _processData(l10n, statistics);
     final totalAmount = statistics.fold(0, (sum, item) => sum + item.amount);
 
     return SizedBox(
@@ -76,13 +86,22 @@ class CategoryDonutChart extends ConsumerWidget {
             ),
           ),
           // 중앙 총금액 표시
-          _buildCenterText(context, totalAmount, selectedType, numberFormat),
+          _buildCenterText(
+            context,
+            l10n,
+            totalAmount,
+            selectedType,
+            numberFormat,
+          ),
         ],
       ),
     );
   }
 
-  List<CategoryStatistics> _processData(List<CategoryStatistics> statistics) {
+  List<CategoryStatistics> _processData(
+    AppLocalizations l10n,
+    List<CategoryStatistics> statistics,
+  ) {
     if (statistics.length <= 5) {
       return statistics;
     }
@@ -98,7 +117,7 @@ class CategoryDonutChart extends ConsumerWidget {
       top5.add(
         CategoryStatistics(
           categoryId: '_others_',
-          categoryName: '기타',
+          categoryName: l10n.statisticsOther,
           categoryIcon: '',
           categoryColor: '#9E9E9E',
           amount: othersTotal,
@@ -135,12 +154,13 @@ class CategoryDonutChart extends ConsumerWidget {
 
   Widget _buildCenterText(
     BuildContext context,
+    AppLocalizations l10n,
     int totalAmount,
     String selectedType,
     NumberFormat numberFormat,
   ) {
     final theme = Theme.of(context);
-    final typeLabel = _getTypeLabel(selectedType);
+    final typeLabel = _getTypeLabel(l10n, selectedType);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -153,7 +173,7 @@ class CategoryDonutChart extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${numberFormat.format(totalAmount)}원',
+          '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -162,14 +182,14 @@ class CategoryDonutChart extends ConsumerWidget {
     );
   }
 
-  String _getTypeLabel(String type) {
+  String _getTypeLabel(AppLocalizations l10n, String type) {
     switch (type) {
       case 'income':
-        return '총 수입';
+        return l10n.statisticsTotalIncome;
       case 'asset':
-        return '총 자산';
+        return l10n.statisticsTotalAsset;
       default:
-        return '총 지출';
+        return l10n.statisticsTotalExpense;
     }
   }
 }

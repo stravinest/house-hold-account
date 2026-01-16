@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../common/period_filter.dart';
 import '../common/statistics_type_filter.dart';
 import 'trend_bar_chart.dart';
@@ -10,6 +11,7 @@ class TrendTabView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -31,7 +33,7 @@ class TrendTabView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '추이',
+                    l10n.statisticsTrend,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
@@ -50,7 +52,7 @@ class TrendTabView extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
-                    '상세 내역',
+                    l10n.statisticsDetail,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),

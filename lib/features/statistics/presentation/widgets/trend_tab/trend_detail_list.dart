@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
@@ -26,6 +27,7 @@ class _MonthlyDetailList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final trendAsync = ref.watch(monthlyTrendWithAverageProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final numberFormat = NumberFormat('#,###');
@@ -52,19 +54,21 @@ class _MonthlyDetailList extends ConsumerWidget {
                 : null;
 
             return _TrendDetailItem(
-              label: '${item.year}년 ${item.month}월',
+              label: l10n.statisticsYearMonth(item.year, item.month),
               amount: _getValueByType(item, selectedType),
               previousAmount: previousItem != null
                   ? _getValueByType(previousItem, selectedType)
                   : null,
               type: selectedType,
               numberFormat: numberFormat,
+              l10n: l10n,
             );
           },
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('오류: $error')),
+      error: (error, _) =>
+          Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
   }
 
@@ -85,6 +89,7 @@ class _YearlyDetailList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final trendAsync = ref.watch(yearlyTrendWithAverageProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final numberFormat = NumberFormat('#,###');
@@ -111,19 +116,21 @@ class _YearlyDetailList extends ConsumerWidget {
                 : null;
 
             return _TrendDetailItem(
-              label: '${item.year}년',
+              label: l10n.statisticsYear(item.year),
               amount: _getValueByType(item, selectedType),
               previousAmount: previousItem != null
                   ? _getValueByType(previousItem, selectedType)
                   : null,
               type: selectedType,
               numberFormat: numberFormat,
+              l10n: l10n,
             );
           },
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('오류: $error')),
+      error: (error, _) =>
+          Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
   }
 
@@ -145,6 +152,7 @@ class _TrendDetailItem extends StatelessWidget {
   final int? previousAmount;
   final String type;
   final NumberFormat numberFormat;
+  final AppLocalizations l10n;
 
   const _TrendDetailItem({
     required this.label,
@@ -152,6 +160,7 @@ class _TrendDetailItem extends StatelessWidget {
     this.previousAmount,
     required this.type,
     required this.numberFormat,
+    required this.l10n,
   });
 
   @override
@@ -171,7 +180,7 @@ class _TrendDetailItem extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              '${numberFormat.format(amount)}원',
+              '${numberFormat.format(amount)}${l10n.transactionAmountUnit}',
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w500,
               ),
@@ -216,7 +225,7 @@ class _TrendDetailItem extends StatelessWidget {
         Icon(arrow, size: 14, color: color),
         const SizedBox(width: 2),
         Text(
-          '${numberFormat.format(difference.abs())}원',
+          '${numberFormat.format(difference.abs())}${l10n.transactionAmountUnit}',
           style: theme.textTheme.bodySmall?.copyWith(color: color),
         ),
       ],

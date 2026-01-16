@@ -5,6 +5,9 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+
+import 'l10n/generated/app_localizations.dart';
+import 'shared/themes/locale_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -201,6 +204,7 @@ class _SharedHouseholdAccountAppState
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
 
     // FCM 토큰 관리: 사용자 인증 상태 변경 시 자동으로 토큰 저장/삭제
     // notificationProvider가 authStateChangesProvider를 watch하므로
@@ -208,19 +212,21 @@ class _SharedHouseholdAccountAppState
     ref.watch(notificationProvider);
 
     return MaterialApp.router(
-      title: '공유 가계부',
+      onGenerateTitle: (context) =>
+          AppLocalizations.of(context)?.appTitle ?? 'Shared Household Account',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       routerConfig: router,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [Locale('ko', 'KR'), Locale('en', 'US')],
-      locale: const Locale('ko', 'KR'),
+      supportedLocales: SupportedLocales.all,
+      locale: locale,
     );
   }
 }

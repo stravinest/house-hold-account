@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../config/supabase_config.dart';
-import '../../../../shared/themes/design_tokens.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/themes/design_tokens.dart';
 import '../providers/share_provider.dart';
 
 class OwnedLedgerCard extends ConsumerWidget {
@@ -28,6 +29,7 @@ class OwnedLedgerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final currentUserId = SupabaseConfig.auth.currentUser?.id;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -94,7 +96,7 @@ class OwnedLedgerCard extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '사용 중',
+                            l10n.shareInUse,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -119,29 +121,33 @@ class OwnedLedgerCard extends ConsumerWidget {
                       minimumSize: const Size(0, 32),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text('사용'),
+                    child: Text(l10n.shareUse),
                   ),
               ],
             ),
             const SizedBox(height: 12),
             // 중간: 멤버 정보
-            _buildMemberInfo(context, currentUserId),
+            _buildMemberInfo(context, currentUserId, l10n),
             const SizedBox(height: 12),
             // 하단: 초대 상태 + 액션 버튼
-            _buildInviteSection(context),
+            _buildInviteSection(context, l10n),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMemberInfo(BuildContext context, String? currentUserId) {
+  Widget _buildMemberInfo(
+    BuildContext context,
+    String? currentUserId,
+    AppLocalizations l10n,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final memberNames = ledgerInfo.members.map((m) {
       if (m.userId == currentUserId) {
-        return '나';
+        return l10n.shareMe;
       }
-      return m.displayName ?? m.email ?? '알 수 없음';
+      return m.displayName ?? m.email ?? l10n.shareUnknown;
     }).toList();
 
     return Row(
@@ -153,7 +159,10 @@ class OwnedLedgerCard extends ConsumerWidget {
         ),
         const SizedBox(width: 4),
         Text(
-          '멤버 ${ledgerInfo.members.length}/${AppConstants.maxMembersPerLedger}명',
+          l10n.shareMemberCount(
+            ledgerInfo.members.length,
+            AppConstants.maxMembersPerLedger,
+          ),
           style: TextStyle(
             fontSize: 13,
             color: colorScheme.onSurface.withOpacity(0.7),
@@ -177,12 +186,13 @@ class OwnedLedgerCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildInviteSection(BuildContext context) {
+  Widget _buildInviteSection(BuildContext context, AppLocalizations l10n) {
     final colorScheme = Theme.of(context).colorScheme;
     // 멤버가 꽉 찬 경우
     if (ledgerInfo.isMemberFull) {
       return _buildStatusRow(
         context,
+        l10n,
         statusWidget: Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           decoration: BoxDecoration(
@@ -199,7 +209,7 @@ class OwnedLedgerCard extends ConsumerWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '멤버 가득 참',
+                l10n.shareMemberFull,
                 style: TextStyle(
                   fontSize: 12,
                   color: colorScheme.onSurface.withOpacity(0.7),
@@ -217,6 +227,7 @@ class OwnedLedgerCard extends ConsumerWidget {
     if (ledgerInfo.hasNoInvite) {
       return _buildStatusRow(
         context,
+        l10n,
         statusWidget: null,
         showInviteButton: true,
         inviteEnabled: true,
@@ -229,9 +240,10 @@ class OwnedLedgerCard extends ConsumerWidget {
     if (ledgerInfo.hasPendingInvite) {
       return _buildPendingInviteRow(
         context,
+        l10n,
         statusWidget: _buildStatusBadge(
           context,
-          '수락 대기중',
+          l10n.sharePendingAccept,
           invite.inviteeEmail,
           Colors.orange,
           Colors.orange[50]!,
@@ -243,9 +255,10 @@ class OwnedLedgerCard extends ConsumerWidget {
     if (ledgerInfo.hasAcceptedInvite) {
       return _buildStatusRow(
         context,
+        l10n,
         statusWidget: _buildStatusBadge(
           context,
-          '수락됨',
+          l10n.shareAccepted,
           invite.inviteeEmail,
           colorScheme.tertiary,
           colorScheme.tertiaryContainer,
@@ -258,9 +271,10 @@ class OwnedLedgerCard extends ConsumerWidget {
     if (ledgerInfo.hasRejectedInvite) {
       return _buildStatusRow(
         context,
+        l10n,
         statusWidget: _buildStatusBadge(
           context,
-          '수락 거부됨',
+          l10n.shareRejected,
           invite.inviteeEmail,
           colorScheme.error,
           colorScheme.errorContainer,
@@ -273,6 +287,7 @@ class OwnedLedgerCard extends ConsumerWidget {
     // 기본 (만료 등)
     return _buildStatusRow(
       context,
+      l10n,
       statusWidget: null,
       showInviteButton: true,
       inviteEnabled: true,
@@ -281,7 +296,8 @@ class OwnedLedgerCard extends ConsumerWidget {
 
   // 수락 대기중 상태 전용 Row (초대취소 버튼 포함)
   Widget _buildPendingInviteRow(
-    BuildContext context, {
+    BuildContext context,
+    AppLocalizations l10n, {
     required Widget statusWidget,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -301,14 +317,15 @@ class OwnedLedgerCard extends ConsumerWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
-          child: const Text('초대취소'),
+          child: Text(l10n.shareInviteCancelText),
         ),
       ],
     );
   }
 
   Widget _buildStatusRow(
-    BuildContext context, {
+    BuildContext context,
+    AppLocalizations l10n, {
     Widget? statusWidget,
     required bool showInviteButton,
     bool inviteEnabled = true,
@@ -318,7 +335,7 @@ class OwnedLedgerCard extends ConsumerWidget {
         ? ElevatedButton.icon(
             onPressed: inviteEnabled ? onInviteTap : null,
             icon: const Icon(Icons.person_add, size: 16),
-            label: const Text('초대'),
+            label: Text(l10n.shareInvite),
             style: ElevatedButton.styleFrom(
               backgroundColor: inviteEnabled
                   ? _activeBorderColor

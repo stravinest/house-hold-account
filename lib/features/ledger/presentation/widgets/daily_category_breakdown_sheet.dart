@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/category_l10n_helper.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
@@ -13,6 +15,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final transactionsAsync = ref.watch(dailyTransactionsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -44,7 +47,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '카테고리별 상세내역',
+                        l10n.calendarCategoryBreakdown,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -109,7 +112,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
                 padding: const EdgeInsets.all(32.0),
                 child: EmptyState(
                   icon: Icons.error_outline,
-                  message: '오류가 발생했습니다',
+                  message: l10n.errorGeneric,
                 ),
               ),
             ),
@@ -120,16 +123,18 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(32.0),
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.all(32.0),
       child: EmptyState(
         icon: Icons.receipt_long_outlined,
-        message: '기록된 내역이 없습니다',
+        message: l10n.calendarNoRecords,
       ),
     );
   }
 
   Widget _buildDailySummary(BuildContext context, Map<String, int> totals) {
+    final l10n = AppLocalizations.of(context)!;
     final formatter = NumberFormat('#,###', 'ko_KR');
     final income = totals['income'] ?? 0;
     final expense = totals['expense'] ?? 0;
@@ -141,7 +146,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
         children: [
           _buildSummaryItem(
             context,
-            '수입',
+            l10n.transactionIncome,
             income,
             Theme.of(context).colorScheme.primary,
             formatter,
@@ -153,7 +158,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
           ),
           _buildSummaryItem(
             context,
-            '지출',
+            l10n.transactionExpense,
             expense,
             Theme.of(context).colorScheme.error,
             formatter,
@@ -170,6 +175,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
     Color color,
     NumberFormat formatter,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         Text(
@@ -180,7 +186,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${formatter.format(amount)}원',
+          '${formatter.format(amount)}${l10n.transactionAmountUnit}',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: color,
             fontWeight: FontWeight.bold,
@@ -196,6 +202,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
     List<Transaction> transactions,
     int total,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final formatter = NumberFormat('#,###', 'ko_KR');
     final isIncome = transactions.first.isIncome;
@@ -217,15 +224,15 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
         ),
       ),
       title: Text(
-        categoryName,
+        CategoryL10nHelper.translate(categoryName, l10n),
         style: const TextStyle(fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        '${transactions.length}건',
+        l10n.calendarTransactionCount(transactions.length),
         style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
       ),
       trailing: Text(
-        '${formatter.format(total)}원',
+        '${formatter.format(total)}${l10n.transactionAmountUnit}',
         style: TextStyle(
           color: isIncome ? colorScheme.primary : colorScheme.error,
           fontWeight: FontWeight.bold,
@@ -249,7 +256,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
               ],
               Expanded(
                 child: Text(
-                  transaction.title ?? '제목 없음',
+                  transaction.title ?? l10n.transactionNoTitle,
                   style: const TextStyle(fontSize: 13),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -257,7 +264,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
             ],
           ),
           trailing: Text(
-            '${formatter.format(transaction.amount)}원',
+            '${formatter.format(transaction.amount)}${l10n.transactionAmountUnit}',
             style: TextStyle(
               fontSize: 13,
               color: isIncome ? colorScheme.primary : colorScheme.error,
@@ -274,6 +281,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
     final Map<String, List<Transaction>> groups = {};
 
     for (final transaction in transactions) {
+      // '미분류' 키는 CategoryL10nHelper에서 번역됨
       final categoryName = transaction.categoryName ?? '미분류';
       if (!groups.containsKey(categoryName)) {
         groups[categoryName] = [];

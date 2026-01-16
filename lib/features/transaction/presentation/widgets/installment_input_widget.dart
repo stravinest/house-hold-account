@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
+
 /// 할부 계산 결과
 class InstallmentResult {
   final int totalAmount;
@@ -40,7 +42,9 @@ class InstallmentResult {
     final endYear = startDate.year + (totalMonths - 1) ~/ 12;
     final endMonth = ((totalMonths - 1) % 12) + 1;
     final lastDayOfEndMonth = DateTime(endYear, endMonth + 1, 0).day;
-    final endDay = startDate.day > lastDayOfEndMonth ? lastDayOfEndMonth : startDate.day;
+    final endDay = startDate.day > lastDayOfEndMonth
+        ? lastDayOfEndMonth
+        : startDate.day;
     final endDate = DateTime(endYear, endMonth, endDay);
 
     return InstallmentResult(
@@ -88,7 +92,10 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
   }
 
   void _updatePreview() {
-    final totalAmountText = _totalAmountController.text.replaceAll(RegExp(r'[^\d]'), '');
+    final totalAmountText = _totalAmountController.text.replaceAll(
+      RegExp(r'[^\d]'),
+      '',
+    );
     final monthsText = _monthsController.text;
 
     if (totalAmountText.isEmpty || monthsText.isEmpty) {
@@ -101,7 +108,10 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
     final totalAmount = int.tryParse(totalAmountText);
     final months = int.tryParse(monthsText);
 
-    if (totalAmount == null || totalAmount <= 0 || months == null || months <= 0) {
+    if (totalAmount == null ||
+        totalAmount <= 0 ||
+        months == null ||
+        months <= 0) {
       setState(() {
         _previewResult = null;
       });
@@ -135,13 +145,21 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
     widget.onApplied(_previewResult!);
   }
 
-  String _formatAmount(int amount) {
-    return NumberFormat('#,###', 'ko_KR').format(amount);
+  String _formatAmount(int amount, String locale) {
+    return NumberFormat(
+      '#,###',
+      locale == 'ko' ? 'ko_KR' : 'en_US',
+    ).format(amount);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     final colorScheme = Theme.of(context).colorScheme;
+    final dateFormat = locale == 'ko'
+        ? DateFormat('yyyy년 M월', 'ko_KR')
+        : DateFormat('MMMM yyyy', 'en_US');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,8 +167,8 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
         // 할부 입력 토글 (스위치만 터치 가능)
         ListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('할부로 입력'),
-          subtitle: const Text('총금액을 여러 달에 나눠서 기록합니다'),
+          title: Text(l10n.installmentInput),
+          subtitle: Text(l10n.installmentInputDescription),
           trailing: Switch(
             value: _isInstallment,
             onChanged: widget.enabled
@@ -181,9 +199,7 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
               decoration: BoxDecoration(
                 color: colorScheme.primaryContainer.withAlpha(76),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: colorScheme.primary.withAlpha(76),
-                ),
+                border: Border.all(color: colorScheme.primary.withAlpha(76)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +213,7 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '할부 적용됨',
+                        l10n.installmentApplied,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: colorScheme.primary,
@@ -207,31 +223,32 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
                   ),
                   const SizedBox(height: 12),
                   _buildResultRow(
-                    '총 금액',
-                    '${_formatAmount(_previewResult!.totalAmount)}원',
+                    l10n.installmentTotalAmount,
+                    '${_formatAmount(_previewResult!.totalAmount, locale)}${l10n.transactionAmountUnit}',
                   ),
                   const SizedBox(height: 4),
                   _buildResultRow(
-                    '월 납입금',
-                    '${_formatAmount(_previewResult!.baseAmount)}원',
+                    l10n.installmentMonthlyPayment,
+                    '${_formatAmount(_previewResult!.baseAmount, locale)}${l10n.transactionAmountUnit}',
                   ),
-                  if (_previewResult!.firstMonthAmount != _previewResult!.baseAmount) ...[
+                  if (_previewResult!.firstMonthAmount !=
+                      _previewResult!.baseAmount) ...[
                     const SizedBox(height: 4),
                     _buildResultRow(
-                      '첫 달',
-                      '${_formatAmount(_previewResult!.firstMonthAmount)}원',
+                      l10n.installmentFirstMonth,
+                      '${_formatAmount(_previewResult!.firstMonthAmount, locale)}${l10n.transactionAmountUnit}',
                       highlight: true,
                     ),
                   ],
                   const SizedBox(height: 4),
                   _buildResultRow(
-                    '할부 기간',
-                    '${_previewResult!.months}개월',
+                    l10n.installmentPeriod,
+                    l10n.installmentMonths(_previewResult!.months),
                   ),
                   const SizedBox(height: 4),
                   _buildResultRow(
-                    '종료월',
-                    DateFormat('yyyy년 M월', 'ko_KR').format(_previewResult!.endDate),
+                    l10n.installmentEndMonth,
+                    dateFormat.format(_previewResult!.endDate),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
@@ -244,7 +261,7 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
                               });
                             }
                           : null,
-                      child: const Text('수정하기'),
+                      child: Text(l10n.installmentModify),
                     ),
                   ),
                 ],
@@ -259,14 +276,14 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
-                _AmountInputFormatter(),
+                _AmountInputFormatter(locale),
               ],
-              decoration: const InputDecoration(
-                labelText: '총 금액',
-                hintText: '할부 총 금액을 입력하세요',
-                suffixText: '원',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.attach_money),
+              decoration: InputDecoration(
+                labelText: l10n.installmentTotalAmount,
+                hintText: l10n.installmentTotalAmountHint,
+                suffixText: l10n.transactionAmountUnit,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.attach_money),
               ),
               onChanged: (_) => _updatePreview(),
             ),
@@ -283,12 +300,12 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
                 LengthLimitingTextInputFormatter(2),
                 _MonthsInputFormatter(),
               ],
-              decoration: const InputDecoration(
-                labelText: '개월 수',
-                hintText: '1-60개월',
-                suffixText: '개월',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.calendar_month),
+              decoration: InputDecoration(
+                labelText: l10n.installmentMonthsLabel,
+                hintText: l10n.installmentMonthsHint,
+                suffixText: l10n.monthLabel,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.calendar_month),
               ),
               onChanged: (_) => _updatePreview(),
             ),
@@ -301,9 +318,7 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerHighest.withAlpha(76),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: colorScheme.outline.withAlpha(76),
-                  ),
+                  border: Border.all(color: colorScheme.outline.withAlpha(76)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -317,7 +332,7 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '할부 계산 미리보기',
+                          l10n.installmentPreview,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.onSurfaceVariant,
@@ -327,26 +342,27 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
                     ),
                     const SizedBox(height: 12),
                     _buildResultRow(
-                      '월 납입금',
-                      '${_formatAmount(_previewResult!.baseAmount)}원',
+                      l10n.installmentMonthlyPayment,
+                      '${_formatAmount(_previewResult!.baseAmount, locale)}${l10n.transactionAmountUnit}',
                     ),
-                    if (_previewResult!.firstMonthAmount != _previewResult!.baseAmount) ...[
+                    if (_previewResult!.firstMonthAmount !=
+                        _previewResult!.baseAmount) ...[
                       const SizedBox(height: 4),
                       _buildResultRow(
-                        '첫 달',
-                        '${_formatAmount(_previewResult!.firstMonthAmount)}원',
+                        l10n.installmentFirstMonth,
+                        '${_formatAmount(_previewResult!.firstMonthAmount, locale)}${l10n.transactionAmountUnit}',
                         highlight: true,
                       ),
                     ],
                     const SizedBox(height: 4),
                     _buildResultRow(
-                      '할부 기간',
-                      '${_previewResult!.months}개월',
+                      l10n.installmentPeriod,
+                      l10n.installmentMonths(_previewResult!.months),
                     ),
                     const SizedBox(height: 4),
                     _buildResultRow(
-                      '종료월',
-                      DateFormat('yyyy년 M월', 'ko_KR').format(_previewResult!.endDate),
+                      l10n.installmentEndMonth,
+                      dateFormat.format(_previewResult!.endDate),
                     ),
                     const SizedBox(height: 16),
                     SizedBox(
@@ -354,7 +370,7 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
                       child: FilledButton.icon(
                         onPressed: widget.enabled ? _applyInstallment : null,
                         icon: const Icon(Icons.check),
-                        label: const Text('할부 적용'),
+                        label: Text(l10n.installmentApply),
                       ),
                     ),
                   ],
@@ -383,7 +399,7 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '금액이 개월 수보다 커야 합니다',
+                        l10n.installmentAmountError,
                         style: TextStyle(color: colorScheme.error),
                       ),
                     ),
@@ -423,6 +439,10 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
 
 /// 금액 포맷터 (천 단위 구분)
 class _AmountInputFormatter extends TextInputFormatter {
+  final String locale;
+
+  _AmountInputFormatter(this.locale);
+
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -433,7 +453,7 @@ class _AmountInputFormatter extends TextInputFormatter {
     final number = int.tryParse(newValue.text.replaceAll(',', ''));
     if (number == null) return oldValue;
 
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final formatter = NumberFormat('#,###', locale == 'ko' ? 'ko_KR' : 'en_US');
     final formatted = formatter.format(number);
 
     return TextEditingValue(

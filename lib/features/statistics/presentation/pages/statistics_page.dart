@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../providers/statistics_provider.dart';
 import '../widgets/category_tab/category_tab_view.dart';
 import '../widgets/common/statistics_date_selector.dart';
@@ -27,7 +28,8 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage>
 
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
-      ref.read(statisticsTabIndexProvider.notifier).state = _tabController.index;
+      ref.read(statisticsTabIndexProvider.notifier).state =
+          _tabController.index;
     }
   }
 
@@ -41,28 +43,25 @@ class _StatisticsPageState extends ConsumerState<StatisticsPage>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
-        // 날짜 선택
         const StatisticsDateSelector(),
-        // 탭 바
         Container(
           color: theme.colorScheme.surface,
           child: TabBar(
             controller: _tabController,
-            tabs: const [
-              Tab(text: '카테고리'),
-              Tab(text: '추이'),
-              Tab(text: '결제수단'),
+            tabs: [
+              Tab(text: l10n.statisticsCategory),
+              Tab(text: l10n.statisticsTrend),
+              Tab(text: l10n.statisticsPaymentMethod),
             ],
             labelColor: theme.colorScheme.primary,
             unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
             indicatorColor: theme.colorScheme.primary,
           ),
         ),
-
-        // 탭 콘텐츠
         Expanded(
           child: TabBarView(
             controller: _tabController,

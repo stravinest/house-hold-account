@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../transaction/domain/entities/transaction.dart';
@@ -72,6 +73,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final resultsAsync = ref.watch(searchResultsProvider);
 
     return Scaffold(
@@ -79,8 +81,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         title: TextField(
           controller: _searchController,
           focusNode: _focusNode,
-          decoration: const InputDecoration(
-            hintText: '제목/메모로 검색...',
+          decoration: InputDecoration(
+            hintText: l10n.searchHint,
             border: InputBorder.none,
           ),
           onChanged: (value) {
@@ -101,16 +103,13 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       body: resultsAsync.when(
         data: (results) {
           if (ref.watch(searchQueryProvider).isEmpty) {
-            return const EmptyState(
-              icon: Icons.search,
-              message: '제목/메모로 거래 내역을 검색하세요',
-            );
+            return EmptyState(icon: Icons.search, message: l10n.searchEmpty);
           }
 
           if (results.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.search_off,
-              message: '검색 결과가 없습니다',
+              message: l10n.searchNoResults,
             );
           }
 
@@ -123,7 +122,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('오류: $e')),
+        error: (e, st) =>
+            Center(child: Text(l10n.errorWithMessage(e.toString()))),
       ),
     );
   }
@@ -136,6 +136,7 @@ class _SearchResultItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final numberFormat = NumberFormat('#,###');
     final dateFormat = DateFormat('yyyy.MM.dd');
@@ -160,12 +161,12 @@ class _SearchResultItem extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            transaction.categoryIcon ?? '📦',
+            transaction.categoryIcon ?? '',
             style: const TextStyle(fontSize: 20),
           ),
         ),
       ),
-      title: Text(transaction.categoryName ?? '미분류'),
+      title: Text(transaction.categoryName ?? l10n.searchUncategorized),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -184,7 +185,7 @@ class _SearchResultItem extends StatelessWidget {
         ],
       ),
       trailing: Text(
-        '$amountPrefix${numberFormat.format(transaction.amount)}원',
+        '$amountPrefix${numberFormat.format(transaction.amount)}${l10n.transactionAmountUnit}',
         style: TextStyle(fontWeight: FontWeight.bold, color: amountColor),
       ),
     );

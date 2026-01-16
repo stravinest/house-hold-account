@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../domain/entities/ledger.dart';
 import '../../../../core/utils/color_utils.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+import '../../domain/entities/ledger.dart';
 
 /// 캘린더 셀 관련 상수
 class CalendarCellConfig {
@@ -179,7 +180,16 @@ class CalendarDaysOfWeekHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const days = ['일', '월', '화', '수', '목', '금', '토'];
+    final l10n = AppLocalizations.of(context)!;
+    final days = [
+      l10n.calendarDaySun,
+      l10n.calendarDayMon,
+      l10n.calendarDayTue,
+      l10n.calendarDayWed,
+      l10n.calendarDayThu,
+      l10n.calendarDayFri,
+      l10n.calendarDaySat,
+    ];
 
     return Container(
       height: CalendarConstants.daysOfWeekHeight,

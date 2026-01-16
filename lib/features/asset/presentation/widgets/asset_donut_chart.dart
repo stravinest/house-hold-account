@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/asset_statistics.dart';
 
 class AssetDonutChart extends StatelessWidget {
@@ -21,6 +22,7 @@ class AssetDonutChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final numberFormat = NumberFormat('#,###');
 
@@ -29,7 +31,7 @@ class AssetDonutChart extends StatelessWidget {
         height: 250,
         child: Center(
           child: Text(
-            '데이터가 없습니다',
+            l10n.assetNoData,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -38,7 +40,7 @@ class AssetDonutChart extends StatelessWidget {
       );
     }
 
-    final processedData = _processData();
+    final processedData = _processData(l10n);
     final totalAmount = byCategory.fold(0, (sum, item) => sum + item.amount);
 
     return SizedBox(
@@ -60,14 +62,14 @@ class AssetDonutChart extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '총 자산',
+                l10n.assetTotal,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
-                '${numberFormat.format(totalAmount)}원',
+                '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -79,7 +81,7 @@ class AssetDonutChart extends StatelessWidget {
     );
   }
 
-  List<CategoryAsset> _processData() {
+  List<CategoryAsset> _processData(AppLocalizations l10n) {
     if (byCategory.length <= 5) {
       return byCategory;
     }
@@ -93,7 +95,7 @@ class AssetDonutChart extends StatelessWidget {
       top5.add(
         CategoryAsset(
           categoryId: '_others_',
-          categoryName: '기타',
+          categoryName: l10n.assetOther,
           categoryIcon: null,
           categoryColor: '#9E9E9E',
           amount: othersTotal,

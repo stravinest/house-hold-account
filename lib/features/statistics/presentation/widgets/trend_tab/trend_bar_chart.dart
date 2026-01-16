@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
@@ -70,6 +71,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final trendAsync = ref.watch(monthlyTrendWithAverageProvider);
     final selectedDate = ref.watch(statisticsSelectedDateProvider);
     final numberFormat = NumberFormat('#,###');
@@ -77,7 +79,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
     return trendAsync.when(
       data: (trendData) {
         if (trendData.data.isEmpty) {
-          return _buildEmptyState(context);
+          return _buildEmptyState(context, l10n);
         }
         final data = trendData.data.cast<MonthlyStatistics>();
 
@@ -89,22 +91,29 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
           _scrollToSelectedMonth(data, selectedDate);
         }
 
-        return _buildChart(context, trendData, selectedDate, numberFormat);
+        return _buildChart(
+          context,
+          l10n,
+          trendData,
+          selectedDate,
+          numberFormat,
+        );
       },
       loading: () => const SizedBox(
         height: 250,
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (error, _) => Center(child: Text('오류: $error')),
+      error: (error, _) =>
+          Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
     return SizedBox(
       height: 250,
       child: Center(
         child: Text(
-          '데이터가 없습니다',
+          l10n.statisticsNoData,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -115,6 +124,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
 
   Widget _buildChart(
     BuildContext context,
+    AppLocalizations l10n,
     TrendStatisticsData trendData,
     DateTime selectedDate,
     NumberFormat numberFormat,
@@ -155,7 +165,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final item = data[group.x.toInt()];
                       return BarTooltipItem(
-                        '${item.year}.${item.month.toString().padLeft(2, '0')}\n${numberFormat.format(rod.toY.toInt())}원',
+                        '${item.year}.${item.month.toString().padLeft(2, '0')}\n${numberFormat.format(rod.toY.toInt())}${l10n.transactionAmountUnit}',
                         TextStyle(color: theme.colorScheme.onSurface),
                       );
                     },
@@ -223,7 +233,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
                       label: HorizontalLineLabel(
                         show: true,
                         alignment: Alignment.topRight,
-                        labelResolver: (_) => '평균',
+                        labelResolver: (_) => l10n.statisticsAverage,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.outline,
                         ),
@@ -327,6 +337,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final trendAsync = ref.watch(yearlyTrendWithAverageProvider);
     final selectedDate = ref.watch(statisticsSelectedDateProvider);
     final numberFormat = NumberFormat('#,###');
@@ -334,7 +345,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
     return trendAsync.when(
       data: (trendData) {
         if (trendData.data.isEmpty) {
-          return _buildEmptyState(context);
+          return _buildEmptyState(context, l10n);
         }
         final data = trendData.data.cast<YearlyStatistics>();
 
@@ -345,22 +356,29 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
           _scrollToSelectedYear(data, selectedDate);
         }
 
-        return _buildChart(context, trendData, selectedDate, numberFormat);
+        return _buildChart(
+          context,
+          l10n,
+          trendData,
+          selectedDate,
+          numberFormat,
+        );
       },
       loading: () => const SizedBox(
         height: 250,
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (error, _) => Center(child: Text('오류: $error')),
+      error: (error, _) =>
+          Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
     return SizedBox(
       height: 250,
       child: Center(
         child: Text(
-          '데이터가 없습니다',
+          l10n.statisticsNoData,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -371,6 +389,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
 
   Widget _buildChart(
     BuildContext context,
+    AppLocalizations l10n,
     TrendStatisticsData trendData,
     DateTime selectedDate,
     NumberFormat numberFormat,
@@ -411,7 +430,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final item = data[group.x.toInt()];
                       return BarTooltipItem(
-                        '${item.year}년\n${numberFormat.format(rod.toY.toInt())}원',
+                        '${l10n.statisticsYear(item.year)}\n${numberFormat.format(rod.toY.toInt())}${l10n.transactionAmountUnit}',
                         TextStyle(color: theme.colorScheme.onSurface),
                       );
                     },
@@ -430,7 +449,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
                           return Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
-                              '${item.year}년',
+                              l10n.statisticsYear(item.year),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: isSelected
                                     ? FontWeight.bold
@@ -477,7 +496,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
                       label: HorizontalLineLabel(
                         show: true,
                         alignment: Alignment.topRight,
-                        labelResolver: (_) => '평균',
+                        labelResolver: (_) => l10n.statisticsAverage,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.outline,
                         ),

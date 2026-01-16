@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
 import '../../../../config/supabase_config.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 
 class EmailVerificationPage extends ConsumerStatefulWidget {
@@ -55,9 +56,11 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // 앱이 포그라운드로 돌아올 때 인증 상태 확인
+    // App resumed to foreground, check verification status
     if (state == AppLifecycleState.resumed && !_isVerified) {
-      debugPrint('[EmailVerificationPage] 앱 포그라운드 복귀 - 인증 상태 확인');
+      debugPrint(
+        '[EmailVerificationPage] App resumed - checking verification status',
+      );
       _checkVerificationFromServer();
     }
   }
@@ -80,7 +83,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
         '[EmailVerificationPage] emailConfirmedAt: ${user?.emailConfirmedAt}',
       );
 
-      // 이메일 인증 완료 감지
+      // Detect email verification completion
       if (event == AuthChangeEvent.signedIn ||
           event == AuthChangeEvent.userUpdated) {
         if (user != null && user.emailConfirmedAt != null) {
@@ -93,7 +96,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
     });
   }
 
-  // 5초마다 서버에서 인증 상태 확인 (웹에서 인증 완료한 경우 감지)
+  // Poll server every 5 seconds (to detect web verification completion)
   void _startPolling() {
     _pollingTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!_isVerified && mounted) {
@@ -102,7 +105,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
     });
   }
 
-  // 서버에서 최신 사용자 정보를 가져와 인증 상태 확인
+  // Get latest user info from server to check verification status
   Future<void> _checkVerificationFromServer() async {
     if (_isVerified || _isChecking) return;
 
@@ -110,12 +113,12 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
     _syncAnimationController.forward(from: 0);
 
     try {
-      // 서버에서 최신 사용자 정보 가져오기
+      // Get latest user info from server
       final response = await SupabaseConfig.auth.getUser();
       final user = response.user;
 
       debugPrint(
-        '[EmailVerificationPage] 서버 확인 - emailConfirmedAt: ${user?.emailConfirmedAt}',
+        '[EmailVerificationPage] Server check - emailConfirmedAt: ${user?.emailConfirmedAt}',
       );
 
       if (user != null && user.emailConfirmedAt != null) {
@@ -126,7 +129,9 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
         }
       }
     } catch (e) {
-      debugPrint('[EmailVerificationPage] 서버 인증 상태 확인 실패: $e');
+      debugPrint(
+        '[EmailVerificationPage] Server verification check failed: $e',
+      );
     } finally {
       if (mounted) {
         setState(() => _isChecking = false);
@@ -154,23 +159,27 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
       );
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('인증 메일을 다시 보냈습니다. 메일함을 확인해주세요.'),
-            duration: Duration(seconds: 3),
+          SnackBar(
+            content: Text(l10n.emailVerificationResent),
+            duration: const Duration(seconds: 3),
           ),
         );
 
-        // 60초 쿨다운 시작
+        // Start 60 second cooldown
         setState(() => _resendCooldown = 60);
         _startCooldownTimer();
       }
     } catch (e) {
-      debugPrint('[EmailVerificationPage] 인증 메일 재전송 실패: $e');
+      debugPrint(
+        '[EmailVerificationPage] Resend verification email failed: $e',
+      );
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('인증 메일 전송에 실패했습니다: $e'),
+            content: Text(l10n.emailVerificationResendFailed(e.toString())),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -197,10 +206,11 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('이메일 인증'),
+        title: Text(l10n.emailVerificationTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go(Routes.login),
@@ -212,7 +222,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // 인증 상태 아이콘
+              // Verification status icon
               Container(
                 width: 120,
                 height: 120,
@@ -235,9 +245,11 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
 
               SizedBox(height: Spacing.xl),
 
-              // 상태 텍스트
+              // Status text
               Text(
-                _isVerified ? '이메일 인증 완료!' : '이메일 인증 대기 중',
+                _isVerified
+                    ? l10n.emailVerificationComplete
+                    : l10n.emailVerificationWaiting,
                 style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: _isVerified ? colorScheme.primary : null,
@@ -246,7 +258,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
 
               SizedBox(height: Spacing.md),
 
-              // 이메일 주소
+              // Email address
               Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: Spacing.md,
@@ -266,16 +278,16 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
 
               SizedBox(height: Spacing.lg),
 
-              // 인증 상태 배지
-              _buildVerificationBadge(colorScheme, textTheme),
+              // Verification badge
+              _buildVerificationBadge(colorScheme, textTheme, l10n),
 
               SizedBox(height: Spacing.lg),
 
-              // 안내 텍스트
+              // Guide text
               Text(
                 _isVerified
-                    ? '인증이 완료되었습니다.\n잠시 후 홈 화면으로 이동합니다.'
-                    : '위 이메일로 인증 메일을 보냈습니다.\n메일함을 확인하고 인증 링크를 클릭해주세요.',
+                    ? l10n.emailVerificationDone
+                    : l10n.emailVerificationSent,
                 style: textTheme.bodyLarge?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -285,19 +297,23 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
               if (!_isVerified) ...[
                 SizedBox(height: Spacing.xl),
 
-                // 인증 상태 확인 버튼
+                // Check verification status button
                 OutlinedButton.icon(
                   onPressed: _isChecking ? null : _checkVerificationFromServer,
                   icon: RotationTransition(
                     turns: _syncAnimationController,
                     child: const Icon(Icons.sync),
                   ),
-                  label: Text(_isChecking ? '확인 중...' : '인증 상태 확인'),
+                  label: Text(
+                    _isChecking
+                        ? l10n.emailVerificationChecking
+                        : l10n.emailVerificationCheckStatus,
+                  ),
                 ),
 
                 SizedBox(height: Spacing.sm),
 
-                // 재전송 버튼
+                // Resend button
                 OutlinedButton.icon(
                   onPressed: _resendCooldown > 0 || _isResending
                       ? null
@@ -314,27 +330,18 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                       : const Icon(Icons.refresh),
                   label: Text(
                     _resendCooldown > 0
-                        ? '재전송 ($_resendCooldown초 후 가능)'
-                        : '인증 메일 다시 보내기',
+                        ? l10n.emailVerificationResendCooldown(_resendCooldown)
+                        : l10n.emailVerificationResendButton,
                   ),
                 ),
 
                 SizedBox(height: Spacing.md),
-
-                // 자동 확인 안내 + 스팸 폴더 안내
-                Text(
-                  '5초마다 자동으로 인증 상태를 확인합니다.\n메일이 오지 않나요? 스팸 폴더를 확인해주세요.',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
               ],
 
               if (_isVerified) ...[
                 SizedBox(height: Spacing.xl),
 
-                // 로딩 인디케이터
+                // Loading indicator
                 const CircularProgressIndicator(),
               ],
             ],
@@ -344,7 +351,11 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
     );
   }
 
-  Widget _buildVerificationBadge(ColorScheme colorScheme, TextTheme textTheme) {
+  Widget _buildVerificationBadge(
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    AppLocalizations l10n,
+  ) {
     return Container(
       padding: EdgeInsets.symmetric(
         horizontal: Spacing.md,
@@ -368,7 +379,9 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
           ),
           SizedBox(width: Spacing.xs),
           Text(
-            _isVerified ? '인증 완료' : '미인증',
+            _isVerified
+                ? l10n.emailVerificationVerified
+                : l10n.emailVerificationNotVerified,
             style: textTheme.labelLarge?.copyWith(
               color: _isVerified
                   ? colorScheme.onPrimaryContainer

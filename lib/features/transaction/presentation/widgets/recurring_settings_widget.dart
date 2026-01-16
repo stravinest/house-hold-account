@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
+
 /// 반복 주기 타입
 enum RecurringType { none, daily, monthly, yearly }
 
@@ -241,29 +243,35 @@ class _RecurringSettingsWidgetState
     }
   }
 
-  String _getEndDateDisplayText() {
-    if (_endDate == null) return '계속 반복';
+  String _getEndDateDisplayText(AppLocalizations l10n, String locale) {
+    if (_endDate == null) return l10n.recurringContinueRepeat;
 
     switch (_selectedType) {
       case RecurringType.daily:
-        return DateFormat('yyyy년 M월 d일', 'ko_KR').format(_endDate!);
+        final dateFormat = locale == 'ko'
+            ? DateFormat('yyyy년 M월 d일', 'ko_KR')
+            : DateFormat('MMMM d, yyyy', 'en_US');
+        return dateFormat.format(_endDate!);
       case RecurringType.monthly:
-        return DateFormat('yyyy년 M월', 'ko_KR').format(_endDate!);
+        final dateFormat = locale == 'ko'
+            ? DateFormat('yyyy년 M월', 'ko_KR')
+            : DateFormat('MMMM yyyy', 'en_US');
+        return dateFormat.format(_endDate!);
       case RecurringType.yearly:
-        return '${_endDate!.year}년';
+        return l10n.yearFormat(_endDate!.year);
       case RecurringType.none:
         return '';
     }
   }
 
-  String _getEndDateLabel() {
+  String _getEndDateLabel(AppLocalizations l10n) {
     switch (_selectedType) {
       case RecurringType.daily:
-        return '종료일';
+        return l10n.recurringEndDate;
       case RecurringType.monthly:
-        return '종료월';
+        return l10n.recurringEndMonth;
       case RecurringType.yearly:
-        return '종료년';
+        return l10n.recurringEndYear;
       case RecurringType.none:
         return '';
     }
@@ -271,6 +279,8 @@ class _RecurringSettingsWidgetState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
     final colorScheme = Theme.of(context).colorScheme;
     final transactionCount = _calculateTransactionCount();
 
@@ -279,16 +289,31 @@ class _RecurringSettingsWidgetState
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Text('반복 주기', style: Theme.of(context).textTheme.titleMedium),
+          child: Text(
+            l10n.recurringPeriod,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
         ),
 
         // 반복 주기 타입 선택
         SegmentedButton<RecurringType>(
-          segments: const [
-            ButtonSegment(value: RecurringType.none, label: Text('없음')),
-            ButtonSegment(value: RecurringType.daily, label: Text('일')),
-            ButtonSegment(value: RecurringType.monthly, label: Text('월')),
-            ButtonSegment(value: RecurringType.yearly, label: Text('년')),
+          segments: [
+            ButtonSegment(
+              value: RecurringType.none,
+              label: Text(l10n.recurringNone),
+            ),
+            ButtonSegment(
+              value: RecurringType.daily,
+              label: Text(l10n.recurringDaily),
+            ),
+            ButtonSegment(
+              value: RecurringType.monthly,
+              label: Text(l10n.recurringMonthly),
+            ),
+            ButtonSegment(
+              value: RecurringType.yearly,
+              label: Text(l10n.recurringYearly),
+            ),
           ],
           selected: {_selectedType},
           onSelectionChanged: widget.enabled
@@ -308,9 +333,9 @@ class _RecurringSettingsWidgetState
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.event),
-            title: Text(_getEndDateLabel()),
+            title: Text(_getEndDateLabel(l10n)),
             subtitle: Text(
-              _getEndDateDisplayText(),
+              _getEndDateDisplayText(l10n, locale),
               style: TextStyle(color: colorScheme.onSurface),
             ),
             trailing: Row(
@@ -327,7 +352,7 @@ class _RecurringSettingsWidgetState
                             _notifyChange();
                           }
                         : null,
-                    tooltip: '종료일 해제',
+                    tooltip: l10n.recurringClearEndDate,
                   ),
                 const Icon(Icons.chevron_right),
               ],
@@ -350,8 +375,8 @@ class _RecurringSettingsWidgetState
                 Expanded(
                   child: Text(
                     _endDate != null
-                        ? '총 $transactionCount건의 거래가 생성됩니다'
-                        : '계속 반복 (매일 자동 생성)',
+                        ? l10n.recurringTransactionCount(transactionCount)
+                        : l10n.recurringDailyAutoCreate,
                     style: TextStyle(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.w500,
@@ -365,7 +390,7 @@ class _RecurringSettingsWidgetState
           // 고정비 설정 (지출 타입이고 반복이 설정된 경우에만)
           if (widget.transactionType == 'expense') ...[
             const SizedBox(height: 16),
-            _buildFixedExpenseSection(colorScheme),
+            _buildFixedExpenseSection(colorScheme, l10n),
           ],
         ],
       ],
@@ -373,12 +398,15 @@ class _RecurringSettingsWidgetState
   }
 
   /// 고정비 설정 섹션 빌드 (체크박스만)
-  Widget _buildFixedExpenseSection(ColorScheme colorScheme) {
+  Widget _buildFixedExpenseSection(
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+  ) {
     return CheckboxListTile(
       contentPadding: EdgeInsets.zero,
-      title: const Text('고정비로 등록'),
+      title: Text(l10n.fixedExpenseRegister),
       subtitle: Text(
-        '월세, 보험료 등 정기적으로 지출되는 금액',
+        l10n.fixedExpenseDescription,
         style: Theme.of(
           context,
         ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
@@ -435,8 +463,9 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('종료월 선택'),
+      title: Text(l10n.recurringEndMonth),
       content: SizedBox(
         width: 300,
         child: Column(
@@ -445,15 +474,18 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
             // 년도 선택
             DropdownButtonFormField<int>(
               initialValue: _selectedYear,
-              decoration: const InputDecoration(
-                labelText: '년도',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.yearLabel,
+                border: const OutlineInputBorder(),
               ),
               items: List.generate(widget.maxYear - widget.minYear + 1, (
                 index,
               ) {
                 final year = widget.minYear + index;
-                return DropdownMenuItem(value: year, child: Text('$year년'));
+                return DropdownMenuItem(
+                  value: year,
+                  child: Text(l10n.yearFormat(year)),
+                );
               }),
               onChanged: (value) {
                 if (value != null) {
@@ -472,9 +504,9 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
             // 월 선택
             DropdownButtonFormField<int>(
               initialValue: _selectedMonth,
-              decoration: const InputDecoration(
-                labelText: '월',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.monthLabel,
+                border: const OutlineInputBorder(),
               ),
               items: List.generate(12, (index) {
                 final month = index + 1;
@@ -483,7 +515,7 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
                   value: month,
                   enabled: isValid,
                   child: Text(
-                    '$month월',
+                    l10n.monthFormat(month),
                     style: TextStyle(
                       color: isValid
                           ? null
@@ -506,13 +538,13 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () {
             Navigator.pop(context, DateTime(_selectedYear, _selectedMonth));
           },
-          child: const Text('확인'),
+          child: Text(l10n.commonConfirm),
         ),
       ],
     );
@@ -546,19 +578,23 @@ class _YearPickerDialogState extends State<_YearPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('종료년 선택'),
+      title: Text(l10n.recurringEndYear),
       content: SizedBox(
         width: 200,
         child: DropdownButtonFormField<int>(
           initialValue: _selectedYear,
-          decoration: const InputDecoration(
-            labelText: '년도',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.yearLabel,
+            border: const OutlineInputBorder(),
           ),
           items: List.generate(widget.maxYear - widget.minYear + 1, (index) {
             final year = widget.minYear + index;
-            return DropdownMenuItem(value: year, child: Text('$year년'));
+            return DropdownMenuItem(
+              value: year,
+              child: Text(l10n.yearFormat(year)),
+            );
           }),
           onChanged: (value) {
             if (value != null) {
@@ -572,13 +608,13 @@ class _YearPickerDialogState extends State<_YearPickerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: () {
             Navigator.pop(context, _selectedYear);
           },
-          child: const Text('확인'),
+          child: Text(l10n.commonConfirm),
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
 import '../common/expense_type_filter.dart';
@@ -9,22 +10,26 @@ import '../common/expense_type_filter.dart';
 class CategorySummaryCard extends ConsumerWidget {
   const CategorySummaryCard({super.key});
 
-  String _getTypeLabel(String type, ExpenseTypeFilter? expenseFilter) {
+  String _getTypeLabel(
+    AppLocalizations l10n,
+    String type,
+    ExpenseTypeFilter? expenseFilter,
+  ) {
     switch (type) {
       case 'income':
-        return '수입';
+        return l10n.transactionIncome;
       case 'asset':
-        return '자산';
+        return l10n.transactionAsset;
       case 'expense':
         if (expenseFilter == ExpenseTypeFilter.fixed) {
-          return '고정비';
+          return l10n.statisticsFixed;
         } else if (expenseFilter == ExpenseTypeFilter.variable) {
-          return '변동비';
+          return l10n.statisticsVariable;
         } else {
-          return '지출';
+          return l10n.transactionExpense;
         }
       default:
-        return '지출';
+        return l10n.transactionExpense;
     }
   }
 
@@ -42,6 +47,7 @@ class CategorySummaryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final expenseFilter = ref.watch(selectedExpenseTypeFilterProvider);
     final comparisonAsync = ref.watch(monthComparisonProvider);
@@ -53,13 +59,15 @@ class CategorySummaryCard extends ConsumerWidget {
         child: comparisonAsync.when(
           data: (comparison) => _buildContent(
             context,
+            l10n,
             selectedType,
             expenseFilter,
             comparison,
             numberFormat,
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) => Center(child: Text('오류: $error')),
+          error: (error, _) =>
+              Center(child: Text(l10n.errorWithMessage(error.toString()))),
         ),
       ),
     );
@@ -67,12 +75,13 @@ class CategorySummaryCard extends ConsumerWidget {
 
   Widget _buildContent(
     BuildContext context,
+    AppLocalizations l10n,
     String selectedType,
     ExpenseTypeFilter expenseFilter,
     MonthComparisonData comparison,
     NumberFormat numberFormat,
   ) {
-    final typeLabel = _getTypeLabel(selectedType, expenseFilter);
+    final typeLabel = _getTypeLabel(l10n, selectedType, expenseFilter);
     final typeColor = _getTypeColor(selectedType, context);
     final theme = Theme.of(context);
 
@@ -80,27 +89,28 @@ class CategorySummaryCard extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '총 $typeLabel',
+          l10n.statisticsTotal(typeLabel),
           style: theme.textTheme.titleMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 8),
         Text(
-          '${numberFormat.format(comparison.currentTotal)}원',
+          '${numberFormat.format(comparison.currentTotal)}${l10n.transactionAmountUnit}',
           style: theme.textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: typeColor,
           ),
         ),
         const SizedBox(height: 12),
-        _buildComparisonRow(context, comparison, numberFormat),
+        _buildComparisonRow(context, l10n, comparison, numberFormat),
       ],
     );
   }
 
   Widget _buildComparisonRow(
     BuildContext context,
+    AppLocalizations l10n,
     MonthComparisonData comparison,
     NumberFormat numberFormat,
   ) {
@@ -108,7 +118,7 @@ class CategorySummaryCard extends ConsumerWidget {
 
     if (comparison.previousTotal == 0 && comparison.currentTotal == 0) {
       return Text(
-        '지난달 데이터 없음',
+        l10n.statisticsNoPreviousData,
         style: theme.textTheme.bodyMedium?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
@@ -124,14 +134,16 @@ class CategorySummaryCard extends ConsumerWidget {
     final arrowColor = isIncrease
         ? colorScheme.error
         : (isDecrease ? colorScheme.primary : colorScheme.onSurfaceVariant);
-    final changeText = isIncrease ? '증가' : (isDecrease ? '감소' : '동일');
+    final changeText = isIncrease
+        ? l10n.statisticsIncrease
+        : (isDecrease ? l10n.statisticsDecrease : l10n.statisticsSame);
 
     return Row(
       children: [
         Icon(arrow, size: 16, color: arrowColor),
         const SizedBox(width: 4),
         Text(
-          '${numberFormat.format(comparison.difference.abs())}원',
+          '${numberFormat.format(comparison.difference.abs())}${l10n.transactionAmountUnit}',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: arrowColor,
             fontWeight: FontWeight.w500,
@@ -139,7 +151,10 @@ class CategorySummaryCard extends ConsumerWidget {
         ),
         const SizedBox(width: 8),
         Text(
-          '(지난달 대비 ${comparison.percentageChange.abs().toStringAsFixed(1)}% $changeText)',
+          l10n.statisticsVsLastMonth(
+            comparison.percentageChange.abs().toStringAsFixed(1),
+            changeText,
+          ),
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

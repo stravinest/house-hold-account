@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart' as tokens;
 import '../../../../shared/widgets/empty_state.dart';
 import '../../domain/entities/asset_goal.dart';
@@ -21,6 +22,7 @@ class AssetGoalCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final currentAmount = ref.watch(assetGoalCurrentAmountProvider(goal));
     final progress = ref.watch(assetGoalProgressProvider(goal));
     final remainingDays = ref.watch(assetGoalRemainingDaysProvider(goal));
@@ -59,11 +61,11 @@ class AssetGoalCard extends ConsumerWidget {
                 data: (amount) => Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildProgressBar(context, progress),
+                    _buildProgressBar(context, l10n, progress),
                     const SizedBox(height: 8),
-                    _buildAmountRow(context, amount),
+                    _buildAmountRow(context, l10n, amount),
                     const SizedBox(height: 8),
-                    _buildInfoRow(context, remainingDays, progress),
+                    _buildInfoRow(context, l10n, remainingDays, progress),
                   ],
                 ),
                 loading: () => const Center(
@@ -87,7 +89,11 @@ class AssetGoalCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildProgressBar(BuildContext context, double progress) {
+  Widget _buildProgressBar(
+    BuildContext context,
+    AppLocalizations l10n,
+    double progress,
+  ) {
     final progressColor = _getProgressColor(progress);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final clampedProgress = progress.clamp(0.0, 1.0);
@@ -115,7 +121,7 @@ class AssetGoalCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '달성률',
+                l10n.assetGoalAchievementRate,
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
@@ -323,7 +329,11 @@ class AssetGoalCard extends ConsumerWidget {
     return hsl.withLightness((hsl.lightness + 0.15).clamp(0.0, 1.0)).toColor();
   }
 
-  Widget _buildAmountRow(BuildContext context, int currentAmount) {
+  Widget _buildAmountRow(
+    BuildContext context,
+    AppLocalizations l10n,
+    int currentAmount,
+  ) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -331,7 +341,7 @@ class AssetGoalCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '현재',
+              l10n.assetGoalCurrentAmount,
               style: TextStyle(
                 fontSize: 11,
                 color: Theme.of(context).textTheme.bodySmall?.color,
@@ -352,7 +362,7 @@ class AssetGoalCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              '목표',
+              l10n.assetGoalTargetAmount,
               style: TextStyle(
                 fontSize: 11,
                 color: Theme.of(context).textTheme.bodySmall?.color,
@@ -370,6 +380,7 @@ class AssetGoalCard extends ConsumerWidget {
 
   Widget _buildInfoRow(
     BuildContext context,
+    AppLocalizations l10n,
     int? remainingDays,
     double progress,
   ) {
@@ -391,15 +402,15 @@ class AssetGoalCard extends ConsumerWidget {
             context,
             icon: isOverdue ? Icons.warning : Icons.access_time,
             label: isOverdue
-                ? '${remainingDays.abs()}일 경과'
-                : 'D-$remainingDays',
+                ? l10n.assetGoalDaysPassed(remainingDays.abs())
+                : l10n.assetGoalDaysRemaining(remainingDays),
             color: isOverdue ? Theme.of(context).colorScheme.error : null,
           ),
         if (isCompleted)
           _buildChip(
             context,
             icon: Icons.check_circle,
-            label: '달성 완료',
+            label: l10n.assetGoalCompleted,
             color: Theme.of(context).colorScheme.tertiary,
           ),
       ],
@@ -453,16 +464,17 @@ class AssetGoalListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final goalsState = ref.watch(assetGoalNotifierProvider(ledgerId));
 
     return goalsState.when(
       data: (goals) {
         if (goals.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(32),
+          return Padding(
+            padding: const EdgeInsets.all(32),
             child: EmptyState(
               icon: Icons.flag_outlined,
-              message: '설정된 목표가 없습니다',
+              message: l10n.assetGoalNone,
             ),
           );
         }
@@ -476,7 +488,7 @@ class AssetGoalListView extends ConsumerWidget {
             return AssetGoalCard(
               goal: goal,
               onTap: () => onGoalTap?.call(goal),
-              onDelete: () => _showDeleteDialog(context, ref, goal),
+              onDelete: () => _showDeleteDialog(context, ref, l10n, goal),
             );
           },
         );
@@ -502,21 +514,22 @@ class AssetGoalListView extends ConsumerWidget {
   Future<void> _showDeleteDialog(
     BuildContext context,
     WidgetRef ref,
+    AppLocalizations l10n,
     AssetGoal goal,
   ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('목표 삭제'),
-        content: Text('${goal.title} 목표를 삭제하시겠습니까?'),
+        title: Text(l10n.assetGoalDeleteTitle),
+        content: Text(l10n.assetGoalDeleteMessage(goal.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -529,7 +542,7 @@ class AssetGoalListView extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('목표가 삭제되었습니다')));
+        ).showSnackBar(SnackBar(content: Text(l10n.assetGoalDeleted)));
       }
     }
   }

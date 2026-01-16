@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../domain/entities/asset_goal.dart';
@@ -17,6 +18,7 @@ class AssetPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final statisticsAsync = ref.watch(assetStatisticsProvider);
 
     return RefreshIndicator(
@@ -37,17 +39,17 @@ class AssetPage extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               _SectionCard(
-                title: '자산 변화',
+                title: l10n.assetChange,
                 child: AssetLineChart(monthly: statistics.monthly),
               ),
               const SizedBox(height: 16),
               _SectionCard(
-                title: '카테고리별 분포',
+                title: l10n.assetCategoryDistribution,
                 child: AssetDonutChart(byCategory: statistics.byCategory),
               ),
               const SizedBox(height: 16),
               _SectionCard(
-                title: '자산 목록',
+                title: l10n.assetList,
                 child: AssetCategoryList(assetStatistics: statistics),
               ),
               const SizedBox(height: 80),
@@ -55,7 +57,8 @@ class AssetPage extends ConsumerWidget {
           ),
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(child: Text('오류: $error')),
+        error: (error, stackTrace) =>
+            Center(child: Text(l10n.errorWithMessage(error.toString()))),
       ),
     );
   }
@@ -81,6 +84,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final numberFormat = NumberFormat('#,###');
     final isPositive = widget.monthlyChange >= 0;
@@ -100,7 +104,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '총 자산',
+                  l10n.assetTotal,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -109,7 +113,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                   OutlinedButton.icon(
                     onPressed: () => _showGoalFormSheet(context, ref, null),
                     icon: const Icon(Icons.flag_outlined, size: 16),
-                    label: const Text('목표 설정'),
+                    label: Text(l10n.assetGoalSet),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -123,7 +127,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${numberFormat.format(widget.totalAmount)}원',
+              '${numberFormat.format(widget.totalAmount)}${l10n.transactionAmountUnit}',
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
@@ -141,7 +145,9 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '이번 달 ${isPositive ? '+' : ''}${numberFormat.format(widget.monthlyChange)}원',
+                  l10n.assetThisMonth(
+                    '${isPositive ? '+' : ''}${numberFormat.format(widget.monthlyChange)}',
+                  ),
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: isPositive
                         ? theme.colorScheme.tertiary
@@ -187,22 +193,23 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
     AssetGoal goal,
     String ledgerId,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('목표 삭제'),
-        content: Text('\'${goal.title}\' 목표를 삭제하시겠습니까?'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.assetGoalDelete),
+        content: Text(l10n.assetGoalDeleteConfirm(goal.title)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.error,
             ),
-            child: const Text('삭제'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -216,13 +223,13 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
         if (context.mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('목표가 삭제되었습니다')));
+          ).showSnackBar(SnackBar(content: Text(l10n.assetGoalDeleted)));
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('삭제 실패: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.assetGoalDeleteFailed(e.toString()))),
+          );
         }
       }
     }
@@ -235,6 +242,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
     NumberFormat numberFormat,
     ThemeData theme,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final goalsAsync = ref.watch(assetGoalNotifierProvider(ledgerId));
 
     return goalsAsync.when(
@@ -264,7 +272,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  '목표를 설정하고\n자산을 계획적으로 관리하세요',
+                  l10n.assetGoalEmpty,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     height: 1.5,
@@ -323,7 +331,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '목표',
+                          l10n.assetGoalTitle,
                           style: theme.textTheme.labelLarge?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
@@ -342,7 +350,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                   children: [
                     Expanded(
                       child: Text(
-                        '${numberFormat.format(nearestGoal.targetAmount)}원',
+                        '${numberFormat.format(nearestGoal.targetAmount)}${l10n.transactionAmountUnit}',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.3,
@@ -523,7 +531,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                '현재',
+                                l10n.assetGoalCurrent,
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w500,
@@ -531,7 +539,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${numberFormat.format(currentAmount)}원',
+                                '${numberFormat.format(currentAmount)}${l10n.transactionAmountUnit}',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.primary,
@@ -561,7 +569,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '목표',
+                                l10n.assetGoalTarget,
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w500,
@@ -569,7 +577,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '${numberFormat.format(nearestGoal.targetAmount)}원',
+                                '${numberFormat.format(nearestGoal.targetAmount)}${l10n.transactionAmountUnit}',
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.onSurface,
@@ -587,7 +595,11 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                     const SizedBox(height: 12),
                     Center(
                       child: Text(
-                        '${numberFormat.format(nearestGoal.targetAmount - currentAmount)}원 남음',
+                        l10n.assetGoalRemaining(
+                          numberFormat.format(
+                            nearestGoal.targetAmount - currentAmount,
+                          ),
+                        ),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -615,7 +627,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '목표 달성 완료!',
+                            l10n.assetGoalAchieved,
                             style: theme.textTheme.labelLarge?.copyWith(
                               color: theme.colorScheme.primary,
                               fontWeight: FontWeight.bold,
@@ -628,7 +640,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                 ] else
                   Center(
                     child: Text(
-                      '탭하여 상세 금액 보기',
+                      l10n.assetGoalTapForDetails,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant.withValues(
                           alpha: 0.6,
@@ -668,7 +680,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '목표 정보를 불러올 수 없습니다',
+                    l10n.assetGoalLoadError,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.error,
                     ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../fixed_expense/domain/entities/fixed_expense_category.dart';
 import '../../../fixed_expense/presentation/providers/fixed_expense_category_provider.dart';
 
@@ -52,19 +53,20 @@ class _FixedExpenseCategorySelectorWidgetState
 
   /// 고정비 카테고리 추가 다이얼로그 표시
   void _showAddFixedExpenseCategoryDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('고정비 카테고리 추가'),
+        title: Text(l10n.fixedExpenseCategoryAdd),
         content: TextField(
           controller: nameController,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: '카테고리 이름',
-            hintText: '예: 월세, 통신비',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.fixedExpenseCategoryName,
+            hintText: l10n.fixedExpenseCategoryNameHint,
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) =>
               _submitFixedExpenseCategory(dialogContext, nameController),
@@ -72,12 +74,12 @@ class _FixedExpenseCategorySelectorWidgetState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () =>
                 _submitFixedExpenseCategory(dialogContext, nameController),
-            child: const Text('추가'),
+            child: Text(l10n.commonAdd),
           ),
         ],
       ),
@@ -89,11 +91,13 @@ class _FixedExpenseCategorySelectorWidgetState
     BuildContext dialogContext,
     TextEditingController nameController,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('카테고리 이름을 입력해주세요'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text(l10n.fixedExpenseCategoryNameRequired),
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -115,9 +119,9 @@ class _FixedExpenseCategorySelectorWidgetState
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('고정비 카테고리가 추가되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.fixedExpenseCategoryAdded),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -127,7 +131,7 @@ class _FixedExpenseCategorySelectorWidgetState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -139,19 +143,21 @@ class _FixedExpenseCategorySelectorWidgetState
   Future<void> _deleteFixedExpenseCategory(
     FixedExpenseCategory category,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('고정비 카테고리 삭제'),
-        content: Text('\'${category.name}\' 카테고리를 삭제하시겠습니까?'),
+        title: Text(l10n.fixedExpenseCategoryDelete),
+        content: Text(l10n.fixedExpenseCategoryDeleteConfirm(category.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -171,9 +177,9 @@ class _FixedExpenseCategorySelectorWidgetState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('고정비 카테고리가 삭제되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.fixedExpenseCategoryDeleted),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -183,7 +189,7 @@ class _FixedExpenseCategorySelectorWidgetState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -193,16 +199,20 @@ class _FixedExpenseCategorySelectorWidgetState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final categoriesAsync = ref.watch(fixedExpenseCategoriesProvider);
 
     return categoriesAsync.when(
-      data: (categories) => _buildFixedExpenseCategoryGrid(categories),
+      data: (categories) => _buildFixedExpenseCategoryGrid(categories, l10n),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('오류: $e'),
+      error: (e, _) => Text(l10n.errorWithMessage(e.toString())),
     );
   }
 
-  Widget _buildFixedExpenseCategoryGrid(List<FixedExpenseCategory> categories) {
+  Widget _buildFixedExpenseCategoryGrid(
+    List<FixedExpenseCategory> categories,
+    AppLocalizations l10n,
+  ) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -211,7 +221,7 @@ class _FixedExpenseCategorySelectorWidgetState
         FilterChip(
           selected: widget.selectedCategory == null,
           showCheckmark: false,
-          label: const Text('선택 안함'),
+          label: Text(l10n.fixedExpenseCategoryNone),
           onSelected: widget.enabled
               ? (_) => widget.onCategorySelected(null)
               : null,
@@ -234,7 +244,7 @@ class _FixedExpenseCategorySelectorWidgetState
         // 고정비 카테고리 추가 버튼
         ActionChip(
           avatar: const Icon(Icons.add, size: 18),
-          label: const Text('추가'),
+          label: Text(l10n.commonAdd),
           onPressed: widget.enabled ? _showAddFixedExpenseCategoryDialog : null,
         ),
       ],

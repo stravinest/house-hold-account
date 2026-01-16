@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
 
@@ -67,36 +68,43 @@ class _CategorySelectorWidgetState
 
   /// 카테고리 추가 다이얼로그 표시
   void _showAddCategoryDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
+
+    String typeLabel;
+    switch (widget.transactionType) {
+      case 'expense':
+        typeLabel = l10n.transactionExpense;
+        break;
+      case 'income':
+        typeLabel = l10n.transactionIncome;
+        break;
+      default:
+        typeLabel = l10n.transactionAsset;
+    }
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(
-          '${widget.transactionType == 'expense'
-              ? '지출'
-              : widget.transactionType == 'income'
-              ? '수입'
-              : '자산'} 카테고리 추가',
-        ),
+        title: Text(l10n.categoryAddType(typeLabel)),
         content: TextField(
           controller: nameController,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: '카테고리 이름',
-            hintText: '예: 식비, 교통비',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.categoryName,
+            hintText: l10n.categoryNameHintExample,
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) => _submitCategory(dialogContext, nameController),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => _submitCategory(dialogContext, nameController),
-            child: const Text('추가'),
+            child: Text(l10n.commonAdd),
           ),
         ],
       ),
@@ -108,11 +116,12 @@ class _CategorySelectorWidgetState
     BuildContext dialogContext,
     TextEditingController nameController,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     if (nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('카테고리 이름을 입력해주세요'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text(l10n.categoryNameRequired),
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -133,9 +142,9 @@ class _CategorySelectorWidgetState
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('카테고리가 추가되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.categoryAdded),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -148,7 +157,7 @@ class _CategorySelectorWidgetState
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -158,19 +167,20 @@ class _CategorySelectorWidgetState
 
   /// 카테고리 삭제
   Future<void> _deleteCategory(Category category) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('카테고리 삭제'),
-        content: Text('\'${category.name}\' 카테고리를 삭제하시겠습니까?'),
+        title: Text(l10n.categoryDeleteConfirmTitle),
+        content: Text(l10n.categoryDeleteConfirm(category.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -190,9 +200,9 @@ class _CategorySelectorWidgetState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('카테고리가 삭제되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.categoryDeleted),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -205,7 +215,7 @@ class _CategorySelectorWidgetState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -222,13 +232,14 @@ class _CategorySelectorWidgetState
         : ref.watch(savingCategoriesProvider);
 
     return categoriesAsync.when(
-      data: (categories) => _buildCategoryGrid(categories),
+      data: (categories) => _buildCategoryGrid(context, categories),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('오류: $e'),
+      error: (e, _) => Text('${AppLocalizations.of(context)!.commonError}: $e'),
     );
   }
 
-  Widget _buildCategoryGrid(List<Category> categories) {
+  Widget _buildCategoryGrid(BuildContext context, List<Category> categories) {
+    final l10n = AppLocalizations.of(context)!;
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -237,7 +248,7 @@ class _CategorySelectorWidgetState
         FilterChip(
           selected: widget.selectedCategory == null,
           showCheckmark: false,
-          label: const Text('선택 안함'),
+          label: Text(l10n.transactionNone),
           onSelected: widget.enabled
               ? (_) => widget.onCategorySelected(null)
               : null,
@@ -267,7 +278,7 @@ class _CategorySelectorWidgetState
         // 카테고리 추가 버튼
         ActionChip(
           avatar: const Icon(Icons.add, size: 18),
-          label: const Text('추가'),
+          label: Text(l10n.commonAdd),
           onPressed: widget.enabled ? _showAddCategoryDialog : null,
         ),
       ],

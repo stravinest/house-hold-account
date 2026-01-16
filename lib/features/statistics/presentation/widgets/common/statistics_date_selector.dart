@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../../providers/statistics_provider.dart';
 
 // 통계 페이지 날짜 선택 위젯
@@ -10,6 +10,7 @@ class StatisticsDateSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedDate = ref.watch(statisticsSelectedDateProvider);
     final theme = Theme.of(context);
 
@@ -31,7 +32,10 @@ class StatisticsDateSelector extends ConsumerWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Text(
-                DateFormat('yyyy년 M월', 'ko_KR').format(selectedDate),
+                l10n.statisticsYearMonthFormat(
+                  selectedDate.year,
+                  selectedDate.month,
+                ),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -70,7 +74,11 @@ class StatisticsDateSelector extends ConsumerWidget {
     ref.invalidate(yearlyTrendWithAverageProvider);
   }
 
-  void _showMonthPicker(BuildContext context, WidgetRef ref, DateTime currentDate) {
+  void _showMonthPicker(
+    BuildContext context,
+    WidgetRef ref,
+    DateTime currentDate,
+  ) {
     showModalBottomSheet(
       context: context,
       builder: (context) => _MonthPickerSheet(
@@ -109,6 +117,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final now = DateTime.now();
 
@@ -122,7 +131,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '날짜 선택',
+                l10n.statisticsDateSelect,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -131,7 +140,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                 onPressed: () {
                   widget.onDateSelected(DateTime(now.year, now.month, 1));
                 },
-                child: const Text('오늘'),
+                child: Text(l10n.statisticsToday),
               ),
             ],
           ),
@@ -149,7 +158,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                 },
               ),
               Text(
-                '$_selectedYear년',
+                l10n.statisticsYearLabel(_selectedYear),
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -178,7 +187,8 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
             itemCount: 12,
             itemBuilder: (context, index) {
               final month = index + 1;
-              final isSelected = _selectedYear == widget.selectedDate.year &&
+              final isSelected =
+                  _selectedYear == widget.selectedDate.year &&
                   month == widget.selectedDate.month;
               final isCurrent = _selectedYear == now.year && month == now.month;
 
@@ -192,8 +202,8 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                     color: isSelected
                         ? theme.colorScheme.primary
                         : isCurrent
-                            ? theme.colorScheme.primaryContainer
-                            : null,
+                        ? theme.colorScheme.primaryContainer
+                        : null,
                     borderRadius: BorderRadius.circular(8),
                     border: isCurrent && !isSelected
                         ? Border.all(color: theme.colorScheme.primary)
@@ -201,13 +211,13 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    '$month월',
+                    l10n.statisticsMonthLabel(month),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: isSelected
                           ? theme.colorScheme.onPrimary
                           : isCurrent
-                              ? theme.colorScheme.primary
-                              : null,
+                          ? theme.colorScheme.primary
+                          : null,
                       fontWeight: isSelected || isCurrent
                           ? FontWeight.bold
                           : FontWeight.normal,

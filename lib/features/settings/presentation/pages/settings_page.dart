@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
+import '../../../../shared/themes/locale_provider.dart';
 import '../../../../shared/themes/theme_provider.dart';
 import '../../../../shared/widgets/color_picker.dart';
 import '../../../../shared/widgets/section_header.dart';
@@ -17,25 +19,34 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final locale = ref.watch(localeProvider);
     final notificationEnabled = ref.watch(notificationEnabledProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('설정')),
+      appBar: AppBar(title: Text(l10n.settingsTitle)),
       body: ListView(
         children: [
           // 앱 설정 섹션
-          const SectionHeader(title: '앱 설정'),
+          SectionHeader(title: l10n.settingsAppSettings),
           ListTile(
             leading: const Icon(Icons.palette_outlined),
-            title: const Text('테마'),
-            subtitle: Text(_getThemeModeLabel(themeMode)),
+            title: Text(l10n.settingsTheme),
+            subtitle: Text(_getThemeModeLabel(themeMode, l10n)),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showThemeSelector(context, ref, themeMode),
+            onTap: () => _showThemeSelector(context, ref, themeMode, l10n),
+          ),
+          ListTile(
+            leading: const Icon(Icons.language_outlined),
+            title: Text(l10n.settingsLanguage),
+            subtitle: Text(_getLocaleLabel(locale, l10n)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => _showLanguageSelector(context, ref, locale, l10n),
           ),
           SwitchListTile(
             secondary: const Icon(Icons.notifications_outlined),
-            title: const Text('알림'),
-            subtitle: const Text('공유 변경, 초대 등 알림 받기'),
+            title: Text(l10n.settingsNotification),
+            subtitle: Text(l10n.settingsNotificationDescription),
             value: notificationEnabled,
             onChanged: (value) {
               ref.read(notificationEnabledProvider.notifier).state = value;
@@ -43,8 +54,8 @@ class SettingsPage extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.notifications_active),
-            title: const Text('알림 설정'),
-            subtitle: const Text('알림 유형별 설정'),
+            title: Text(l10n.settingsNotificationSettings),
+            subtitle: Text(l10n.settingsNotificationSettingsDescription),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               Navigator.push(
@@ -59,7 +70,7 @@ class SettingsPage extends ConsumerWidget {
           const Divider(),
 
           // 계정 섹션
-          const SectionHeader(title: '계정'),
+          SectionHeader(title: l10n.settingsAccount),
 
           // 프로필 편집 섹션
           Card(
@@ -72,13 +83,19 @@ class SettingsPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('프로필', style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    l10n.settingsProfile,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 16),
                   // 표시 이름
-                  const _DisplayNameEditor(),
+                  _DisplayNameEditor(l10n: l10n),
                   const SizedBox(height: 24),
                   // 색상 선택
-                  Text('내 색상', style: Theme.of(context).textTheme.titleSmall),
+                  Text(
+                    l10n.settingsMyColor,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                   const SizedBox(height: 12),
                   Consumer(
                     builder: (context, ref, child) {
@@ -90,13 +107,12 @@ class SettingsPage extends ConsumerWidget {
                           final authService = ref.read(authServiceProvider);
                           try {
                             await authService.updateProfile(color: color);
-                            // 프로파일 프로바이더를 새로고침하여 UI 즉시 업데이트
                             ref.invalidate(userProfileProvider);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('색상이 변경되었습니다'),
-                                  duration: Duration(seconds: 1),
+                                SnackBar(
+                                  content: Text(l10n.settingsColorChanged),
+                                  duration: const Duration(seconds: 1),
                                 ),
                               );
                             }
@@ -104,7 +120,11 @@ class SettingsPage extends ConsumerWidget {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text('색상 변경 실패: $e'),
+                                  content: Text(
+                                    l10n.settingsColorChangeFailed(
+                                      e.toString(),
+                                    ),
+                                  ),
                                   duration: const Duration(seconds: 1),
                                 ),
                               );
@@ -122,36 +142,36 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: 8),
           ListTile(
             leading: const Icon(Icons.lock_outline),
-            title: const Text('비밀번호 변경'),
+            title: Text(l10n.settingsPasswordChange),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showPasswordChangeDialog(context, ref),
+            onTap: () => _showPasswordChangeDialog(context, ref, l10n),
           ),
 
           const Divider(),
 
           // 데이터 섹션
-          const SectionHeader(title: '데이터'),
+          SectionHeader(title: l10n.settingsData),
           ListTile(
             leading: const Icon(Icons.download_outlined),
-            title: const Text('데이터 내보내기'),
-            subtitle: const Text('거래 내역을 CSV로 내보내기'),
+            title: Text(l10n.settingsDataExport),
+            subtitle: Text(l10n.settingsDataExportDescription),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _exportData(context),
+            onTap: () => _exportData(context, l10n),
           ),
 
           const Divider(),
 
           // 정보 섹션
-          const SectionHeader(title: '정보'),
+          SectionHeader(title: l10n.settingsInfo),
           ListTile(
             leading: const Icon(Icons.info_outline),
-            title: const Text('앱 정보'),
-            subtitle: const Text('버전 1.0.0'),
-            onTap: () => _showAboutDialog(context),
+            title: Text(l10n.settingsAppInfo),
+            subtitle: Text(l10n.settingsVersion('1.0.0')),
+            onTap: () => _showAboutDialog(context, l10n),
           ),
           ListTile(
             leading: const Icon(Icons.description_outlined),
-            title: const Text('이용약관'),
+            title: Text(l10n.settingsTerms),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               // TODO: 이용약관 페이지로 이동
@@ -159,7 +179,7 @@ class SettingsPage extends ConsumerWidget {
           ),
           ListTile(
             leading: const Icon(Icons.privacy_tip_outlined),
-            title: const Text('개인정보처리방침'),
+            title: Text(l10n.settingsPrivacy),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
               // TODO: 개인정보처리방침 페이지로 이동
@@ -176,13 +196,19 @@ class SettingsPage extends ConsumerWidget {
                 children: [
                   ListTile(
                     leading: Icon(Icons.logout, color: errorColor),
-                    title: Text('로그아웃', style: TextStyle(color: errorColor)),
-                    onTap: () => _logout(context, ref),
+                    title: Text(
+                      l10n.authLogout,
+                      style: TextStyle(color: errorColor),
+                    ),
+                    onTap: () => _logout(context, ref, l10n),
                   ),
                   ListTile(
                     leading: Icon(Icons.delete_forever, color: errorColor),
-                    title: Text('회원 탈퇴', style: TextStyle(color: errorColor)),
-                    onTap: () => _deleteAccount(context, ref),
+                    title: Text(
+                      l10n.settingsDeleteAccount,
+                      style: TextStyle(color: errorColor),
+                    ),
+                    onTap: () => _deleteAccount(context, ref, l10n),
                   ),
                 ],
               );
@@ -195,14 +221,22 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  String _getThemeModeLabel(ThemeMode mode) {
+  String _getThemeModeLabel(ThemeMode mode, AppLocalizations l10n) {
     switch (mode) {
       case ThemeMode.light:
-        return '라이트 모드';
+        return l10n.settingsThemeLight;
       case ThemeMode.dark:
-        return '다크 모드';
+        return l10n.settingsThemeDark;
       case ThemeMode.system:
-        return '시스템 설정';
+        return l10n.settingsThemeSystem;
+    }
+  }
+
+  String _getLocaleLabel(Locale locale, AppLocalizations l10n) {
+    if (locale.languageCode == 'ko') {
+      return l10n.settingsLanguageKorean;
+    } else {
+      return l10n.settingsLanguageEnglish;
     }
   }
 
@@ -210,6 +244,7 @@ class SettingsPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     ThemeMode current,
+    AppLocalizations l10n,
   ) {
     showModalBottomSheet(
       context: context,
@@ -223,7 +258,7 @@ class SettingsPage extends ConsumerWidget {
                   ? Theme.of(context).colorScheme.primary
                   : Colors.transparent,
             ),
-            title: const Text('시스템 설정'),
+            title: Text(l10n.settingsThemeSystem),
             onTap: () async {
               try {
                 await ref
@@ -237,7 +272,7 @@ class SettingsPage extends ConsumerWidget {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('테마 저장 실패: $e'),
+                      content: Text(l10n.settingsThemeSaveFailed(e.toString())),
                       duration: const Duration(seconds: 1),
                     ),
                   );
@@ -252,7 +287,7 @@ class SettingsPage extends ConsumerWidget {
                   ? Theme.of(context).colorScheme.primary
                   : Colors.transparent,
             ),
-            title: const Text('라이트 모드'),
+            title: Text(l10n.settingsThemeLight),
             onTap: () async {
               try {
                 await ref
@@ -266,7 +301,7 @@ class SettingsPage extends ConsumerWidget {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('테마 저장 실패: $e'),
+                      content: Text(l10n.settingsThemeSaveFailed(e.toString())),
                       duration: const Duration(seconds: 1),
                     ),
                   );
@@ -281,7 +316,7 @@ class SettingsPage extends ConsumerWidget {
                   ? Theme.of(context).colorScheme.primary
                   : Colors.transparent,
             ),
-            title: const Text('다크 모드'),
+            title: Text(l10n.settingsThemeDark),
             onTap: () async {
               try {
                 await ref
@@ -295,7 +330,7 @@ class SettingsPage extends ConsumerWidget {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('테마 저장 실패: $e'),
+                      content: Text(l10n.settingsThemeSaveFailed(e.toString())),
                       duration: const Duration(seconds: 1),
                     ),
                   );
@@ -309,84 +344,166 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  void _showPasswordChangeDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
+  void _showLanguageSelector(
+    BuildContext context,
+    WidgetRef ref,
+    Locale current,
+    AppLocalizations l10n,
+  ) {
+    showModalBottomSheet(
       context: context,
-      builder: (context) => _PasswordChangeDialog(ref: ref),
-    );
-  }
-
-  void _exportData(BuildContext context) {
-    // TODO: 데이터 내보내기 구현
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('준비 중인 기능입니다'),
-        duration: Duration(seconds: 1),
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            leading: Icon(
+              Icons.check,
+              color: current.languageCode == 'ko'
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
+            ),
+            title: Text(l10n.settingsLanguageKorean),
+            onTap: () async {
+              try {
+                await ref
+                    .read(localeProvider.notifier)
+                    .setLocale(SupportedLocales.korean);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.settingsLanguageChanged),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              }
+            },
+          ),
+          ListTile(
+            leading: Icon(
+              Icons.check,
+              color: current.languageCode == 'en'
+                  ? Theme.of(context).colorScheme.primary
+                  : Colors.transparent,
+            ),
+            title: Text(l10n.settingsLanguageEnglish),
+            onTap: () async {
+              try {
+                await ref
+                    .read(localeProvider.notifier)
+                    .setLocale(SupportedLocales.english);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.settingsLanguageChanged),
+                      duration: const Duration(seconds: 1),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
+              }
+            },
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
 
-  void _showAboutDialog(BuildContext context) {
+  void _showPasswordChangeDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => _PasswordChangeDialog(ref: ref, l10n: l10n),
+    );
+  }
+
+  void _exportData(BuildContext context, AppLocalizations l10n) {
+    // TODO: 데이터 내보내기 구현
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(l10n.settingsFeaturePreparing),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  void _showAboutDialog(BuildContext context, AppLocalizations l10n) {
     showAboutDialog(
       context: context,
-      applicationName: '공유 가계부',
+      applicationName: l10n.settingsAboutAppName,
       applicationVersion: '1.0.0',
       applicationIcon: const Icon(Icons.account_balance_wallet, size: 48),
       children: [
         const SizedBox(height: 16),
-        const Text('Flutter + Supabase로 만든 공유 가계부 앱입니다.'),
+        Text(l10n.settingsAboutAppDescription),
         const SizedBox(height: 8),
-        const Text('가족, 연인, 룸메이트와 함께 지출을 관리하세요.'),
+        Text(l10n.settingsAboutAppSubDescription),
       ],
     );
   }
 
-  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+  Future<void> _logout(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('로그아웃'),
-        content: const Text('정말 로그아웃하시겠습니까?'),
+        title: Text(l10n.authLogout),
+        content: Text(l10n.settingsLogoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('로그아웃'),
+            child: Text(l10n.authLogout),
           ),
         ],
       ),
     );
 
     if (confirmed == true) {
-      // signOut() 완료 후 라우터의 refreshListenable이 인증 상태 변경을 감지하여
-      // 자동으로 로그인 페이지로 리다이렉트함
       await ref.read(authNotifierProvider.notifier).signOut();
     }
   }
 
-  Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
+  Future<void> _deleteAccount(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('회원 탈퇴'),
-        content: const Text(
-          '정말 탈퇴하시겠습니까?\n\n'
-          '모든 데이터가 삭제되며 복구할 수 없습니다.',
-        ),
+        title: Text(l10n.settingsDeleteAccount),
+        content: Text(l10n.settingsDeleteAccountConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('탈퇴'),
+            child: Text(l10n.shareLeave),
           ),
         ],
       ),
@@ -395,7 +512,6 @@ class SettingsPage extends ConsumerWidget {
     if (confirmed == true && context.mounted) {
       try {
         await ref.read(authNotifierProvider.notifier).deleteAccount();
-        // 삭제 성공 후 명시적으로 로그아웃하여 세션 정리 및 로그인 페이지로 이동
         if (context.mounted) {
           await ref.read(authNotifierProvider.notifier).signOut();
         }
@@ -403,7 +519,7 @@ class SettingsPage extends ConsumerWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('회원 탈퇴 실패: $e'),
+              content: Text(l10n.settingsDeleteAccountFailed(e.toString())),
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
@@ -415,7 +531,9 @@ class SettingsPage extends ConsumerWidget {
 
 // 표시 이름 편집 위젯
 class _DisplayNameEditor extends ConsumerStatefulWidget {
-  const _DisplayNameEditor();
+  final AppLocalizations l10n;
+
+  const _DisplayNameEditor({required this.l10n});
 
   @override
   ConsumerState<_DisplayNameEditor> createState() => _DisplayNameEditorState();
@@ -426,6 +544,8 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
   String _originalValue = '';
   bool _isChanged = false;
   bool _isLoading = false;
+
+  AppLocalizations get l10n => widget.l10n;
 
   @override
   void initState() {
@@ -467,9 +587,9 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('표시 이름이 변경되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.settingsDisplayNameChanged),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -477,7 +597,7 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('표시 이름 변경 실패: $e'),
+            content: Text(l10n.settingsDisplayNameChangeFailed(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -496,14 +616,12 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
     final profile = ref.watch(userProfileProvider).valueOrNull;
     final displayName = profile?['display_name'] ?? '';
 
-    // 프로필이 로드되면 초기값 설정 (한 번만)
     if (_originalValue.isEmpty && displayName.isNotEmpty) {
       _originalValue = displayName;
       _controller.text = displayName;
     } else if (_originalValue.isEmpty &&
         _controller.text.isEmpty &&
         profile != null) {
-      // 프로필은 로드됐지만 display_name이 비어있는 경우
       _originalValue = '';
     }
 
@@ -513,20 +631,18 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
         Expanded(
           child: TextFormField(
             controller: _controller,
-            decoration: const InputDecoration(
-              labelText: '표시 이름',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.settingsDisplayName,
+              border: const OutlineInputBorder(),
             ),
           ),
         ),
         const SizedBox(width: 8),
-        // 수정 버튼 - 텍스트가 가로로 표시되도록 충분한 너비 확보
         SizedBox(
           width: 80,
           height: 56,
           child: FilledButton(
             onPressed: _isChanged && !_isLoading ? _saveDisplayName : null,
-            // 버튼 내부 패딩을 줄여서 텍스트가 가로로 표시되도록 함
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 8),
             ),
@@ -539,7 +655,7 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
                       color: Colors.white,
                     ),
                   )
-                : const Text('수정'),
+                : Text(l10n.commonEdit),
           ),
         ),
       ],
@@ -550,8 +666,9 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
 // 비밀번호 변경 다이얼로그
 class _PasswordChangeDialog extends StatefulWidget {
   final WidgetRef ref;
+  final AppLocalizations l10n;
 
-  const _PasswordChangeDialog({required this.ref});
+  const _PasswordChangeDialog({required this.ref, required this.l10n});
 
   @override
   State<_PasswordChangeDialog> createState() => _PasswordChangeDialogState();
@@ -566,6 +683,8 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
   bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
   bool _obscureConfirmPassword = true;
+
+  AppLocalizations get l10n => widget.l10n;
 
   @override
   void dispose() {
@@ -592,9 +711,9 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('비밀번호가 변경되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.settingsPasswordChanged),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -616,7 +735,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('비밀번호 변경'),
+      title: Text(l10n.settingsPasswordChange),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -627,7 +746,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 controller: _currentPasswordController,
                 obscureText: _obscureCurrentPassword,
                 decoration: InputDecoration(
-                  labelText: '현재 비밀번호',
+                  labelText: l10n.settingsCurrentPassword,
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -644,7 +763,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '현재 비밀번호를 입력하세요';
+                    return l10n.settingsCurrentPasswordHint;
                   }
                   return null;
                 },
@@ -654,7 +773,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 controller: _newPasswordController,
                 obscureText: _obscureNewPassword,
                 decoration: InputDecoration(
-                  labelText: '새 비밀번호',
+                  labelText: l10n.settingsNewPassword,
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -671,10 +790,10 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '새 비밀번호를 입력하세요';
+                    return l10n.settingsNewPasswordHint;
                   }
                   if (value.length < 6) {
-                    return '비밀번호는 6자 이상이어야 합니다';
+                    return l10n.validationPasswordTooShort;
                   }
                   return null;
                 },
@@ -684,7 +803,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
                 decoration: InputDecoration(
-                  labelText: '새 비밀번호 확인',
+                  labelText: l10n.settingsNewPasswordConfirm,
                   border: const OutlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -701,10 +820,10 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '새 비밀번호를 다시 입력하세요';
+                    return l10n.settingsNewPasswordConfirmHint;
                   }
                   if (value != _newPasswordController.text) {
-                    return '새 비밀번호가 일치하지 않습니다';
+                    return l10n.settingsNewPasswordMismatch;
                   }
                   return null;
                 },
@@ -716,7 +835,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: _isLoading ? null : _changePassword,
@@ -729,7 +848,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                     color: Colors.white,
                   ),
                 )
-              : const Text('변경'),
+              : Text(l10n.settingsChange),
         ),
       ],
     );

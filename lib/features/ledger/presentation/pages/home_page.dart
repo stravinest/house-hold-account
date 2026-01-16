@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../asset/presentation/pages/asset_page.dart';
 import '../../../statistics/presentation/pages/statistics_page.dart';
@@ -82,13 +83,16 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _initializeLedger() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final ledgers = await ref.read(ledgersProvider.future);
       if (ledgers.isEmpty) {
-        // 가계부가 없으면 기본 가계부 생성
         await ref
             .read(ledgerNotifierProvider.notifier)
-            .createLedger(name: '내 가계부', currency: 'KRW');
+            .createLedger(
+              name: l10n?.ledgerMyLedgers ?? 'My Ledger',
+              currency: 'KRW',
+            );
       }
 
       // 가계부 초기화 후 데이터 새로고침
@@ -158,22 +162,24 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _handleAuthError(AuthException error) {
+    final l10n = AppLocalizations.of(context);
     final errorMessage = error.message.toLowerCase();
 
-    // 토큰 만료 또는 갱신 실패인 경우
     if (errorMessage.contains('expired') ||
         errorMessage.contains('refresh') ||
         errorMessage.contains('invalid') ||
         error.statusCode == '401') {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('로그인이 만료되었습니다. 다시 로그인해주세요.'),
-          duration: Duration(seconds: 4),
+        SnackBar(
+          content: Text(
+            l10n?.errorSessionExpired ??
+                'Session expired. Please log in again.',
+          ),
+          duration: const Duration(seconds: 4),
           behavior: SnackBarBehavior.floating,
         ),
       );
 
-      // 자동 로그아웃 및 로그인 페이지로 이동
       Future.delayed(const Duration(seconds: 1), () async {
         await ref.read(authNotifierProvider.notifier).signOut();
       });
@@ -181,10 +187,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _showNetworkError() {
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('네트워크 연결을 확인해주세요.'),
-        duration: Duration(seconds: 3),
+      SnackBar(
+        content: Text(
+          l10n?.errorNetwork ?? 'Please check your network connection.',
+        ),
+        duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.orange,
       ),
@@ -347,6 +356,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _showLedgerSelector(BuildContext context) {
     final ledgersAsync = ref.read(ledgersProvider);
+    final l10n = AppLocalizations.of(context);
 
     showModalBottomSheet(
       context: context,
@@ -367,7 +377,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                     : null,
               ),
               title: Text(ledger.name),
-              subtitle: Text(ledger.isShared ? '공유 가계부' : '개인 가계부'),
+              subtitle: Text(
+                ledger.isShared
+                    ? (l10n?.ledgerShared ?? 'Shared Ledger')
+                    : (l10n?.ledgerPersonal ?? 'Personal Ledger'),
+              ),
               trailing: isSelected ? const Icon(Icons.check) : null,
               onTap: () {
                 ref
@@ -379,7 +393,9 @@ class _HomePageState extends ConsumerState<HomePage> {
           },
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (e, _) => Center(
+          child: Text(l10n?.errorWithMessage(e.toString()) ?? 'Error: $e'),
+        ),
       ),
     );
   }
@@ -469,6 +485,7 @@ class MoreTabView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final user = ref.watch(currentUserProvider);
     final profile = ref.watch(userProfileProvider).valueOrNull;
     final userColor = profile?['color'] as String?;
@@ -476,7 +493,6 @@ class MoreTabView extends ConsumerWidget {
 
     return ListView(
       children: [
-        // 프로필 섹션
         ListTile(
           leading: CircleAvatar(
             backgroundColor: _parseColor(userColor),
@@ -485,16 +501,15 @@ class MoreTabView extends ConsumerWidget {
               style: const TextStyle(color: Colors.white),
             ),
           ),
-          title: Text(user?.email ?? '사용자'),
+          title: Text(user?.email ?? l10n.user),
           subtitle: displayName != null && displayName.isNotEmpty
               ? Text(displayName)
               : null,
         ),
         const Divider(),
-        // 메뉴 아이템들
         ListTile(
           leading: const Icon(Icons.people_outline),
-          title: const Text('가계부 및 공유 관리'),
+          title: Text(l10n.moreMenuShareManagement),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             context.push(Routes.share);
@@ -502,7 +517,7 @@ class MoreTabView extends ConsumerWidget {
         ),
         ListTile(
           leading: const Icon(Icons.category_outlined),
-          title: const Text('카테고리 관리'),
+          title: Text(l10n.moreMenuCategoryManagement),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             context.push(Routes.category);
@@ -510,7 +525,7 @@ class MoreTabView extends ConsumerWidget {
         ),
         ListTile(
           leading: const Icon(Icons.credit_card_outlined),
-          title: const Text('결제수단 관리'),
+          title: Text(l10n.moreMenuPaymentMethodManagement),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             context.push(Routes.paymentMethod);
@@ -518,7 +533,7 @@ class MoreTabView extends ConsumerWidget {
         ),
         ListTile(
           leading: const Icon(Icons.repeat),
-          title: const Text('고정비 관리'),
+          title: Text(l10n.moreMenuFixedExpenseManagement),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             context.push(Routes.fixedExpense);
@@ -527,7 +542,7 @@ class MoreTabView extends ConsumerWidget {
         const Divider(),
         ListTile(
           leading: const Icon(Icons.settings_outlined),
-          title: const Text('설정'),
+          title: Text(l10n.settingsTitle),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
             context.push(Routes.settings);
@@ -535,21 +550,21 @@ class MoreTabView extends ConsumerWidget {
         ),
         ListTile(
           leading: const Icon(Icons.logout),
-          title: const Text('로그아웃'),
+          title: Text(l10n.authLogout),
           onTap: () async {
             final confirmed = await showDialog<bool>(
               context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('로그아웃'),
-                content: const Text('정말 로그아웃하시겠습니까?'),
+              builder: (dialogContext) => AlertDialog(
+                title: Text(l10n.authLogout),
+                content: Text(l10n.settingsLogoutConfirm),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('취소'),
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: Text(l10n.commonCancel),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('로그아웃'),
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: Text(l10n.authLogout),
                   ),
                 ],
               ),
@@ -573,6 +588,7 @@ class _DailyUserSummary extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final dailyTransactionsAsync = ref.watch(dailyTransactionsProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final formatter = NumberFormat('#,###', 'ko_KR');
@@ -583,30 +599,26 @@ class _DailyUserSummary extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
-        // 사용자별로 거래 그룹화
         final Map<String, List<Transaction>> transactionsByUser = {};
         for (final tx in transactions) {
           transactionsByUser.putIfAbsent(tx.userId, () => []).add(tx);
         }
 
-        // 모든 거래 행 생성
         final List<Widget> transactionRows = [];
 
         for (final entry in transactionsByUser.entries) {
           final userTransactions = entry.value;
 
-          // 금액 순으로 정렬
           userTransactions.sort((a, b) => b.amount.compareTo(a.amount));
 
           for (final tx in userTransactions) {
-            final userName = tx.userName ?? '사용자';
+            final userName = tx.userName ?? l10n.user;
             final colorHex = tx.userColor ?? '#A8D8EA';
             final userColor = _parseColor(colorHex);
-            final description = tx.title ?? tx.categoryName ?? '내역 없음';
+            final description = tx.title ?? tx.categoryName ?? l10n.noHistory;
             final isIncome = tx.type == 'income';
             final isAssetType = tx.type == 'asset';
 
-            // 금액 색상 결정: 수입=파란색, 자산=녹색, 지출=빨간색
             final colorScheme = Theme.of(context).colorScheme;
             Color amountColor;
             String amountPrefix;
@@ -615,7 +627,7 @@ class _DailyUserSummary extends ConsumerWidget {
               amountPrefix = '';
             } else if (isAssetType) {
               amountColor = colorScheme.tertiary;
-              amountPrefix = ''; // 자산은 - 없이 표시
+              amountPrefix = '';
             } else {
               amountColor = colorScheme.error;
               amountPrefix = '-';
@@ -666,7 +678,7 @@ class _DailyUserSummary extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '$amountPrefix${formatter.format(tx.amount)}원',
+                        '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
                         style: TextStyle(
                           fontSize: 11,
                           color: amountColor,

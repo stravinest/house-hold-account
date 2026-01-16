@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/transaction.dart';
@@ -16,9 +17,13 @@ class TransactionDetailSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final formatter = NumberFormat('#,###', 'ko_KR');
-    final dateFormat = DateFormat('yyyy년 M월 d일 (E)', 'ko_KR');
+    final locale = Localizations.localeOf(context).languageCode;
+    final formatter = NumberFormat('#,###', locale == 'ko' ? 'ko_KR' : 'en_US');
+    final dateFormat = locale == 'ko'
+        ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
+        : DateFormat('MMMM d, yyyy (E)', 'en_US');
     final amountColor = transaction.isIncome
         ? colorScheme.primary
         : transaction.isAssetType
@@ -62,7 +67,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                     children: [
                       TextButton.icon(
                         icon: const Icon(Icons.edit, size: 18),
-                        label: const Text('수정'),
+                        label: Text(l10n.commonEdit),
                         onPressed: () => _openEditSheet(context),
                       ),
                       TextButton.icon(
@@ -72,7 +77,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                           color: colorScheme.error,
                         ),
                         label: Text(
-                          '삭제',
+                          l10n.commonDelete,
                           style: TextStyle(color: colorScheme.error),
                         ),
                         onPressed: () => _showDeleteConfirmDialog(context, ref),
@@ -95,10 +100,10 @@ class TransactionDetailSheet extends ConsumerWidget {
                   _buildDetailRow(
                     context,
                     icon: Icons.title,
-                    label: '제목',
+                    label: l10n.labelTitle,
                     value: transaction.title?.isNotEmpty == true
                         ? transaction.title!
-                        : '제목 없음',
+                        : l10n.transactionNoTitle,
                     valueColor: transaction.title?.isNotEmpty == true
                         ? null
                         : colorScheme.onSurfaceVariant,
@@ -109,7 +114,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                     _buildDetailRow(
                       context,
                       icon: Icons.note,
-                      label: '메모',
+                      label: l10n.labelMemo,
                       value: transaction.memo!,
                     ),
 
@@ -117,13 +122,13 @@ class TransactionDetailSheet extends ConsumerWidget {
                   _buildDetailRow(
                     context,
                     icon: Icons.attach_money,
-                    label: '금액',
+                    label: l10n.labelAmount,
                     value:
                         '${transaction.isIncome
                             ? '+'
                             : transaction.isAssetType
                             ? ''
-                            : '-'}${formatter.format(transaction.amount)}원',
+                            : '-'}${formatter.format(transaction.amount)}${l10n.transactionAmountUnit}',
                     valueColor: amountColor,
                   ),
 
@@ -131,7 +136,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                   _buildDetailRow(
                     context,
                     icon: Icons.calendar_today,
-                    label: '날짜',
+                    label: l10n.labelDate,
                     value: dateFormat.format(transaction.date),
                   ),
 
@@ -140,7 +145,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                     _buildDetailRow(
                       context,
                       icon: Icons.category,
-                      label: '카테고리',
+                      label: l10n.labelCategory,
                       value: transaction.categoryName!,
                     ),
 
@@ -149,7 +154,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                     _buildDetailRow(
                       context,
                       icon: Icons.credit_card,
-                      label: '결제수단',
+                      label: l10n.labelPaymentMethod,
                       value: transaction.paymentMethodName!,
                     ),
 
@@ -158,7 +163,7 @@ class TransactionDetailSheet extends ConsumerWidget {
                     _buildDetailRow(
                       context,
                       icon: Icons.person,
-                      label: '작성자',
+                      label: l10n.labelAuthor,
                       value: transaction.userName!,
                     ),
 
@@ -220,22 +225,23 @@ class TransactionDetailSheet extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('거래 삭제'),
-        content: const Text('이 거래를 삭제하시겠습니까?'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.transactionDeleteConfirmTitle),
+        content: Text(l10n.transactionDeleteConfirmMessage),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
             ),
-            child: const Text('삭제'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -249,9 +255,9 @@ class TransactionDetailSheet extends ConsumerWidget {
         if (context.mounted) {
           Navigator.pop(context); // 상세 시트 닫기
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('거래가 삭제되었습니다'),
-              duration: Duration(seconds: 1),
+            SnackBar(
+              content: Text(l10n.transactionDeleted),
+              duration: const Duration(seconds: 1),
             ),
           );
         }
@@ -259,7 +265,7 @@ class TransactionDetailSheet extends ConsumerWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('삭제 실패: $e'),
+              content: Text(l10n.transactionDeleteFailed(e.toString())),
               duration: const Duration(seconds: 1),
             ),
           );

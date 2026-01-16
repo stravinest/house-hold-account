@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/asset_statistics.dart';
 
 class AssetLineChart extends StatelessWidget {
@@ -11,6 +12,7 @@ class AssetLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final numberFormat = NumberFormat('#,###');
 
@@ -19,7 +21,7 @@ class AssetLineChart extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32),
           child: Text(
-            '자산 데이터가 없습니다',
+            l10n.assetNoAssetData,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -79,7 +81,7 @@ class AssetLineChart extends StatelessWidget {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          '${item.month}월',
+                          l10n.statisticsMonthLabel(item.month),
                           style: theme.textTheme.bodySmall,
                         ),
                       );

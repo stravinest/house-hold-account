@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../domain/entities/fixed_expense_category.dart';
@@ -32,8 +33,9 @@ class _FixedExpenseManagementPageState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: const Text('고정비 관리')),
+      appBar: AppBar(title: Text(l10n.fixedExpenseManagement)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -41,7 +43,7 @@ class _FixedExpenseManagementPageState
           const _SettingsCard(),
           const SizedBox(height: 24),
           // 고정비 카테고리 섹션
-          const SectionHeader(title: '고정비 카테고리'),
+          SectionHeader(title: l10n.fixedExpenseCategoryTitle),
           const SizedBox(height: 8),
           const _CategoryListView(),
         ],
@@ -64,6 +66,7 @@ class _SettingsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final settingsAsync = ref.watch(fixedExpenseSettingsNotifierProvider);
 
     return Card(
@@ -73,11 +76,11 @@ class _SettingsCard extends ConsumerWidget {
           return Column(
             children: [
               SwitchListTile(
-                title: const Text('고정비를 지출에 편입'),
+                title: Text(l10n.fixedExpenseIncludeInExpense),
                 subtitle: Text(
                   includeInExpense
-                      ? '고정비가 달력과 통계의 지출에 포함됩니다'
-                      : '고정비가 달력과 통계의 지출에서 제외됩니다',
+                      ? l10n.fixedExpenseIncludeInExpenseOn
+                      : l10n.fixedExpenseIncludeInExpenseOff,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 value: includeInExpense,
@@ -90,7 +93,9 @@ class _SettingsCard extends ConsumerWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            value ? '고정비가 지출에 포함됩니다' : '고정비가 지출에서 제외됩니다',
+                            value
+                                ? l10n.fixedExpenseIncludedSnackbar
+                                : l10n.fixedExpenseExcludedSnackbar,
                           ),
                           duration: const Duration(seconds: 1),
                         ),
@@ -100,7 +105,9 @@ class _SettingsCard extends ConsumerWidget {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('설정 변경 실패: $e'),
+                          content: Text(
+                            l10n.fixedExpenseSettingsFailed(e.toString()),
+                          ),
                           duration: const Duration(seconds: 1),
                         ),
                       );
@@ -111,16 +118,18 @@ class _SettingsCard extends ConsumerWidget {
             ],
           );
         },
-        loading: () => const ListTile(
-          title: Text('고정비를 지출에 편입'),
-          trailing: SizedBox(
+        loading: () => ListTile(
+          title: Text(l10n.fixedExpenseIncludeInExpense),
+          trailing: const SizedBox(
             width: 24,
             height: 24,
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ),
-        error: (e, _) =>
-            ListTile(title: const Text('설정 로드 실패'), subtitle: Text('$e')),
+        error: (e, _) => ListTile(
+          title: Text(l10n.fixedExpenseSettingsLoadFailed),
+          subtitle: Text('$e'),
+        ),
       ),
     );
   }
@@ -132,6 +141,7 @@ class _CategoryListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final categoriesAsync = ref.watch(fixedExpenseCategoryNotifierProvider);
 
     return categoriesAsync.when(
@@ -142,8 +152,8 @@ class _CategoryListView extends ConsumerWidget {
               padding: const EdgeInsets.all(32),
               child: EmptyState(
                 icon: Icons.repeat_outlined,
-                message: '등록된 고정비 카테고리가 없습니다',
-                subtitle: '+ 버튼을 눌러 카테고리를 추가하세요',
+                message: l10n.fixedExpenseCategoryEmpty,
+                subtitle: l10n.fixedExpenseCategoryEmptySubtitle,
               ),
             ),
           );
@@ -167,7 +177,7 @@ class _CategoryListView extends ConsumerWidget {
       error: (e, _) => Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Text('오류: $e'),
+          child: Text(l10n.errorWithMessage(e.toString())),
         ),
       ),
     );
@@ -215,18 +225,16 @@ class _CategoryTile extends ConsumerWidget {
     WidgetRef ref,
     FixedExpenseCategory category,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('고정비 카테고리 삭제'),
-        content: Text(
-          '\'${category.name}\' 카테고리를 삭제하시겠습니까?\n\n'
-          '이 카테고리로 기록된 거래는 삭제되지 않습니다.',
-        ),
+        title: Text(l10n.fixedExpenseCategoryDelete),
+        content: Text(l10n.fixedExpenseCategoryDeleteConfirm(category.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () async {
@@ -237,9 +245,9 @@ class _CategoryTile extends ConsumerWidget {
                     .deleteCategory(category.id);
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('카테고리가 삭제되었습니다'),
-                      duration: Duration(seconds: 1),
+                    SnackBar(
+                      content: Text(l10n.categoryDeleted),
+                      duration: const Duration(seconds: 1),
                     ),
                   );
                 }
@@ -247,14 +255,14 @@ class _CategoryTile extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('삭제 실패: $e'),
+                      content: Text(l10n.categoryDeleteFailed(e.toString())),
                       duration: const Duration(seconds: 1),
                     ),
                   );
                 }
               }
             },
-            child: const Text('삭제'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -313,23 +321,26 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEdit = widget.category != null;
 
     return AlertDialog(
-      title: Text(isEdit ? '고정비 카테고리 수정' : '고정비 카테고리 추가'),
+      title: Text(
+        isEdit ? l10n.fixedExpenseCategoryEdit : l10n.fixedExpenseCategoryAdd,
+      ),
       content: Form(
         key: _formKey,
         child: TextFormField(
           controller: _nameController,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: '카테고리 이름',
-            hintText: '예: 월세, 보험료, 구독료',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.categoryName,
+            hintText: l10n.fixedExpenseCategoryNameHint,
+            border: const OutlineInputBorder(),
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return '카테고리 이름을 입력하세요';
+              return l10n.categoryNameRequired;
             }
             return null;
           },
@@ -338,15 +349,20 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: Text(l10n.commonCancel),
         ),
-        TextButton(onPressed: _submit, child: Text(isEdit ? '수정' : '추가')),
+        TextButton(
+          onPressed: _submit,
+          child: Text(isEdit ? l10n.commonEdit : l10n.commonAdd),
+        ),
       ],
     );
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final l10n = AppLocalizations.of(context)!;
 
     try {
       if (widget.category != null) {
@@ -370,7 +386,9 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.category != null ? '카테고리가 수정되었습니다' : '카테고리가 추가되었습니다',
+              widget.category != null
+                  ? l10n.categoryUpdated
+                  : l10n.categoryAdded,
             ),
             duration: const Duration(seconds: 1),
           ),
@@ -380,7 +398,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );

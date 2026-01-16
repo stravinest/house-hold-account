@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../domain/entities/ledger_invite.dart';
 
@@ -29,6 +30,7 @@ class InvitedLedgerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isAccepted = invite.isAccepted;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -70,7 +72,7 @@ class InvitedLedgerCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
-                          invite.ledgerName ?? '가계부',
+                          invite.ledgerName ?? l10n.ledgerTitle,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -91,7 +93,7 @@ class InvitedLedgerCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '사용 중',
+                            l10n.shareInUse,
                             style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -116,7 +118,7 @@ class InvitedLedgerCard extends StatelessWidget {
                       minimumSize: const Size(0, 32),
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
-                    child: const Text('사용'),
+                    child: Text(l10n.shareUse),
                   ),
               ],
             ),
@@ -132,7 +134,9 @@ class InvitedLedgerCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
-                    '${invite.inviterEmail ?? '알 수 없음'}님의 가계부',
+                    l10n.shareInviterLedger(
+                      invite.inviterEmail ?? l10n.shareUnknown,
+                    ),
                     style: TextStyle(
                       fontSize: 13,
                       color: colorScheme.onSurface.withOpacity(0.7),
@@ -153,6 +157,7 @@ class InvitedLedgerCard extends StatelessWidget {
   }
 
   Widget _buildActionRow(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     // pending 상태: 수락/거부 버튼
     if (invite.isPending) {
@@ -167,7 +172,7 @@ class InvitedLedgerCard extends StatelessWidget {
               side: BorderSide(color: colorScheme.onSurfaceVariant),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
-            child: const Text('거부'),
+            child: Text(l10n.shareReject),
           ),
           const SizedBox(width: 8),
           // 수락 버튼
@@ -178,7 +183,7 @@ class InvitedLedgerCard extends StatelessWidget {
               foregroundColor: colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             ),
-            child: const Text('수락'),
+            child: Text(l10n.shareAccept),
           ),
         ],
       );
@@ -195,7 +200,7 @@ class InvitedLedgerCard extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            '멤버로 참여 중',
+            l10n.shareMemberParticipating,
             style: TextStyle(
               fontSize: 13,
               color: colorScheme.tertiary,
@@ -212,7 +217,7 @@ class InvitedLedgerCard extends StatelessWidget {
               minimumSize: const Size(0, 32),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text('퇴장'),
+            child: Text(l10n.shareLeave),
           ),
         ],
       );

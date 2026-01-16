@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
@@ -93,24 +94,26 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   }
 
   Future<void> _selectMaturityDate() async {
+    final l10n = AppLocalizations.of(context)!;
     final picked = await showDatePicker(
       context: context,
       initialDate:
           _maturityDate ?? DateTime.now().add(const Duration(days: 365)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365 * 30)),
-      helpText: '만기일 선택',
+      helpText: l10n.maturityDateSelect,
     );
     if (picked != null) setState(() => _maturityDate = picked);
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_isInstallmentMode && _installmentResult == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('할부 정보를 입력해주세요'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text(l10n.installmentInfoRequired),
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -139,10 +142,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           startDate: _selectedDate,
           endDate: _installmentResult!.endDate,
           recurringType: 'monthly',
-          title: title != null ? '$title (할부)' : '할부',
+          title: title != null
+              ? '$title (${l10n.installmentLabel})'
+              : l10n.installmentLabel,
           memo: memo,
         );
-        successMessage = '${_installmentResult!.months}개월 할부가 등록되었습니다';
+        successMessage = l10n.installmentRegistered(_installmentResult!.months);
       } else if (_recurringSettings.isRecurring) {
         await notifier.createRecurringTemplate(
           categoryId: _recurringSettings.isFixedExpense
@@ -160,9 +165,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           fixedExpenseCategoryId: _selectedFixedExpenseCategory?.id,
         );
         final endText = _recurringSettings.endDate != null
-            ? '${_recurringSettings.endDate!.year}년 ${_recurringSettings.endDate!.month}월까지'
-            : '계속';
-        successMessage = '반복 거래가 등록되었습니다 ($endText)';
+            ? l10n.recurringUntil(
+                _recurringSettings.endDate!.year,
+                _recurringSettings.endDate!.month,
+              )
+            : l10n.recurringContinue;
+        successMessage = l10n.recurringRegistered(endText);
       } else {
         await notifier.createTransaction(
           categoryId: _recurringSettings.isFixedExpense
@@ -179,7 +187,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
           isAsset: _type == 'asset',
           maturityDate: _type == 'asset' ? _maturityDate : null,
         );
-        successMessage = '거래가 추가되었습니다';
+        successMessage = l10n.transactionAdded;
       }
 
       if (mounted) {
@@ -199,7 +207,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -342,22 +350,25 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     }),
   );
 
-  Widget _buildPaymentSection() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
-        child: Text(
-          '결제수단 (선택)',
-          style: Theme.of(context).textTheme.titleMedium,
+  Widget _buildPaymentSection() {
+    final l10n = AppLocalizations.of(context)!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+          child: Text(
+            l10n.transactionPaymentMethodOptional,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
         ),
-      ),
-      PaymentMethodSelectorWidget(
-        selectedPaymentMethod: _selectedPaymentMethod,
-        onPaymentMethodSelected: (m) =>
-            setState(() => _selectedPaymentMethod = m),
-        enabled: !_isLoading,
-      ),
-    ],
-  );
+        PaymentMethodSelectorWidget(
+          selectedPaymentMethod: _selectedPaymentMethod,
+          onPaymentMethodSelected: (m) =>
+              setState(() => _selectedPaymentMethod = m),
+          enabled: !_isLoading,
+        ),
+      ],
+    );
+  }
 }

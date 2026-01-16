@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
 
@@ -20,30 +21,32 @@ class PaymentMethodDonutChart extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final statisticsAsync = ref.watch(paymentMethodStatisticsProvider);
     final numberFormat = NumberFormat('#,###');
 
     return statisticsAsync.when(
       data: (statistics) {
         if (statistics.isEmpty) {
-          return _buildEmptyState(context);
+          return _buildEmptyState(context, l10n);
         }
-        return _buildChart(context, statistics, numberFormat);
+        return _buildChart(context, l10n, statistics, numberFormat);
       },
       loading: () => const SizedBox(
         height: 250,
         child: Center(child: CircularProgressIndicator()),
       ),
-      error: (error, _) => Center(child: Text('오류: $error')),
+      error: (error, _) =>
+          Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
     return SizedBox(
       height: 250,
       child: Center(
         child: Text(
-          '데이터가 없습니다',
+          l10n.statisticsNoData,
           style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -54,6 +57,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
 
   Widget _buildChart(
     BuildContext context,
+    AppLocalizations l10n,
     List<PaymentMethodStatistics> statistics,
     NumberFormat numberFormat,
   ) {
@@ -75,7 +79,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
             ),
           ),
           // 중앙 총금액 표시
-          _buildCenterText(context, totalAmount, numberFormat),
+          _buildCenterText(context, l10n, totalAmount, numberFormat),
         ],
       ),
     );
@@ -105,6 +109,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
 
   Widget _buildCenterText(
     BuildContext context,
+    AppLocalizations l10n,
     int totalAmount,
     NumberFormat numberFormat,
   ) {
@@ -114,14 +119,14 @@ class PaymentMethodDonutChart extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          '총 지출',
+          l10n.statisticsTotalExpense,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          '${numberFormat.format(totalAmount)}원',
+          '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),

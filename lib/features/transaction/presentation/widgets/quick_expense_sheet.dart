@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
@@ -89,15 +90,16 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
       );
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         final scaffoldMessenger = ScaffoldMessenger.of(context);
         final navigator = Navigator.of(context);
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           navigator.pop();
           scaffoldMessenger.showSnackBar(
-            const SnackBar(
-              content: Text('지출이 추가되었습니다'),
-              duration: Duration(seconds: 1),
+            SnackBar(
+              content: Text(l10n.transactionExpenseAdded),
+              duration: const Duration(seconds: 1),
             ),
           );
         });
@@ -120,6 +122,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final categoriesAsync = ref.watch(categoryNotifierProvider);
 
@@ -139,7 +142,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                '빠른 지출 추가',
+                l10n.transactionQuickExpense,
                 style: Theme.of(
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -152,15 +155,15 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
-                  labelText: '금액',
-                  suffixText: '원',
+                  labelText: l10n.transactionAmount,
+                  suffixText: l10n.transactionAmountUnit,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(BorderRadiusToken.md),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty || value == '0') {
-                    return '금액을 입력해주세요';
+                    return l10n.transactionAmountRequired;
                   }
                   return null;
                 },
@@ -170,14 +173,14 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
               TextFormField(
                 controller: _titleController,
                 decoration: InputDecoration(
-                  labelText: '제목',
+                  labelText: l10n.transactionTitle,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(BorderRadiusToken.md),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '제목을 입력해주세요';
+                    return l10n.transactionTitleRequired;
                   }
                   return null;
                 },
@@ -193,7 +196,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                   return DropdownButtonFormField<Category>(
                     value: _selectedCategory,
                     decoration: InputDecoration(
-                      labelText: '카테고리',
+                      labelText: l10n.transactionCategory,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(
                           BorderRadiusToken.md,
@@ -223,7 +226,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, __) => const Text('카테고리를 불러올 수 없습니다'),
+                error: (_, __) => Text(l10n.transactionCategoryLoadError),
               ),
               SizedBox(height: Spacing.lg),
 
@@ -232,7 +235,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                 children: [
                   TextButton(
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
-                    child: const Text('취소'),
+                    child: Text(l10n.commonCancel),
                   ),
                   SizedBox(width: Spacing.sm),
                   ElevatedButton(
@@ -248,7 +251,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                               ),
                             ),
                           )
-                        : const Text('저장'),
+                        : Text(l10n.commonSave),
                   ),
                 ],
               ),

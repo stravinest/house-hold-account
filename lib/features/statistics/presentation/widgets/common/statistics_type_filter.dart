@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../../providers/statistics_provider.dart';
 
 class StatisticsTypeFilter extends ConsumerWidget {
@@ -15,23 +16,24 @@ class StatisticsTypeFilter extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
 
     return SegmentedButton<String>(
       segments: [
         ButtonSegment<String>(
           value: 'income',
-          label: const Text('수입'),
+          label: Text(l10n.statisticsTypeIncome),
           enabled: enabled && !(disabledTypes?.contains('income') ?? false),
         ),
         ButtonSegment<String>(
           value: 'expense',
-          label: const Text('지출'),
+          label: Text(l10n.statisticsTypeExpense),
           enabled: enabled && !(disabledTypes?.contains('expense') ?? false),
         ),
         ButtonSegment<String>(
           value: 'asset',
-          label: const Text('자산'),
+          label: Text(l10n.statisticsTypeAsset),
           enabled: enabled && !(disabledTypes?.contains('asset') ?? false),
         ),
       ],
@@ -42,9 +44,7 @@ class StatisticsTypeFilter extends ConsumerWidget {
                   newSelection.first;
             }
           : null,
-      style: ButtonStyle(
-        visualDensity: VisualDensity.compact,
-      ),
+      style: const ButtonStyle(visualDensity: VisualDensity.compact),
     );
   }
 }

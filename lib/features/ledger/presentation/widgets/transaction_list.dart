@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../transaction/domain/entities/transaction.dart';
@@ -49,21 +50,24 @@ class TransactionList extends ConsumerWidget {
           Center(child: CircularProgressIndicator()),
         ],
       ),
-      error: (e, _) => ListView(
-        padding: const EdgeInsets.all(Spacing.md),
-        children: [
-          const SizedBox(height: 100),
-          EmptyState(
-            icon: Icons.error_outline,
-            message: '오류가 발생했습니다',
-            subtitle: e.toString(),
-            action: FilledButton.tonal(
-              onPressed: () => ref.refresh(dailyTransactionsProvider),
-              child: const Text('다시 시도'),
+      error: (e, _) {
+        final l10n = AppLocalizations.of(context)!;
+        return ListView(
+          padding: const EdgeInsets.all(Spacing.md),
+          children: [
+            const SizedBox(height: 100),
+            EmptyState(
+              icon: Icons.error_outline,
+              message: l10n.errorGeneric,
+              subtitle: e.toString(),
+              action: FilledButton.tonal(
+                onPressed: () => ref.refresh(dailyTransactionsProvider),
+                child: Text(l10n.commonRetry),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }
@@ -76,6 +80,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final dateFormat = DateFormat('M월 d일 (E)', 'ko_KR');
 
     return ListView(
@@ -85,7 +90,7 @@ class _EmptyState extends StatelessWidget {
         EmptyState(
           icon: Icons.receipt_long_outlined,
           message: dateFormat.format(date),
-          subtitle: '기록된 내역이 없습니다',
+          subtitle: l10n.calendarNoRecords,
           action: FilledButton.tonal(
             onPressed: () {
               showModalBottomSheet(
@@ -95,7 +100,7 @@ class _EmptyState extends StatelessWidget {
                 builder: (context) => AddTransactionSheet(initialDate: date),
               );
             },
-            child: const Text('새 거래'),
+            child: Text(l10n.calendarNewTransaction),
           ),
         ),
       ],
@@ -112,6 +117,7 @@ class _TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final formatter = NumberFormat('#,###', 'ko_KR');
     final amountColor = transaction.isIncome
@@ -137,23 +143,23 @@ class _TransactionCard extends StatelessWidget {
             backgroundColor: colorScheme.primary,
             foregroundColor: colorScheme.onPrimary,
             icon: Icons.edit,
-            label: '수정',
+            label: l10n.commonEdit,
           ),
           SlidableAction(
             onPressed: (_) async {
               final confirmed = await showDialog<bool>(
                 context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text('거래 삭제'),
-                  content: const Text('이 거래를 삭제하시겠습니까?'),
+                builder: (dialogContext) => AlertDialog(
+                  title: Text(l10n.calendarTransactionDelete),
+                  content: Text(l10n.calendarTransactionDeleteConfirm),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context, false),
-                      child: const Text('취소'),
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: Text(l10n.commonCancel),
                     ),
                     TextButton(
-                      onPressed: () => Navigator.pop(context, true),
-                      child: const Text('삭제'),
+                      onPressed: () => Navigator.pop(dialogContext, true),
+                      child: Text(l10n.commonDelete),
                     ),
                   ],
                 ),
@@ -166,7 +172,7 @@ class _TransactionCard extends StatelessWidget {
             backgroundColor: colorScheme.error,
             foregroundColor: colorScheme.onError,
             icon: Icons.delete,
-            label: '삭제',
+            label: l10n.commonDelete,
           ),
         ],
       ),
@@ -221,7 +227,7 @@ class _TransactionCard extends StatelessWidget {
                         ),
                       ] else ...[
                         Text(
-                          '제목 없음',
+                          l10n.transactionNoTitle,
                           style: Theme.of(context).textTheme.titleSmall
                               ?.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -247,7 +253,7 @@ class _TransactionCard extends StatelessWidget {
                       ? '+'
                       : transaction.isAssetType
                       ? ''
-                      : '-'}${formatter.format(transaction.amount)}원',
+                      : '-'}${formatter.format(transaction.amount)}${l10n.transactionAmountUnit}',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: amountColor,
                     fontWeight: FontWeight.bold,

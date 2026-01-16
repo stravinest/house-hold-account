@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -54,29 +55,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       // 3초 후에도 auth state가 업데이트되지 않으면 에러 표시
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.authLoginError),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         String errorMessage;
         if (e is AuthApiException) {
           switch (e.code) {
             case 'invalid_credentials':
-              errorMessage = '이메일 또는 비밀번호가 틀렸습니다.';
+              errorMessage = l10n.authInvalidCredentials;
               break;
             case 'email_not_confirmed':
-              errorMessage = '이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.';
+              errorMessage = l10n.authEmailNotVerified;
               break;
             default:
-              errorMessage = '로그인 실패: ${e.message}';
+              errorMessage = l10n.errorWithMessage(e.message);
           }
         } else {
-          errorMessage = '로그인 실패: ${e.toString()}';
+          errorMessage = l10n.errorWithMessage(e.toString());
         }
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -99,9 +102,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       await ref.read(authNotifierProvider.notifier).signInWithGoogle();
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Google 로그인 실패: ${e.toString()}'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -119,6 +123,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: _splashBackgroundColor,
@@ -144,7 +149,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
                 // 타이틀
                 Text(
-                  '공유 가계부',
+                  l10n.appTitle,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -152,7 +157,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '가족, 커플, 룸메이트와 함께\n가계부를 관리하세요',
+                  l10n.appSubtitle,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -166,16 +171,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: '이메일',
-                    prefixIcon: Icon(Icons.email_outlined),
+                  decoration: InputDecoration(
+                    labelText: l10n.authEmail,
+                    prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '이메일을 입력해주세요';
+                      return l10n.validationEmailRequired;
                     }
                     if (!value.contains('@')) {
-                      return '올바른 이메일 형식이 아닙니다';
+                      return l10n.validationEmailInvalid;
                     }
                     return null;
                   },
@@ -189,7 +194,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (_) => _handleEmailLogin(),
                   decoration: InputDecoration(
-                    labelText: '비밀번호',
+                    labelText: l10n.authPassword,
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -204,10 +209,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return '비밀번호를 입력해주세요';
+                      return l10n.validationPasswordRequired;
                     }
                     if (value.length < 6) {
-                      return '비밀번호는 6자 이상이어야 합니다';
+                      return l10n.validationPasswordTooShort;
                     }
                     return null;
                   },
@@ -220,7 +225,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     onPressed: () {
                       // TODO: 비밀번호 재설정 페이지로 이동
                     },
-                    child: const Text('비밀번호를 잊으셨나요?'),
+                    child: Text(l10n.authForgotPassword),
                   ),
                 ),
 
@@ -235,7 +240,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           width: 20,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('로그인'),
+                      : Text(l10n.authLogin),
                 ),
 
                 const SizedBox(height: 24),
@@ -247,7 +252,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        '또는',
+                        l10n.authOr,
                         style: TextStyle(color: colorScheme.onSurfaceVariant),
                       ),
                     ),
@@ -268,7 +273,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       return const Icon(Icons.g_mobiledata, size: 20);
                     },
                   ),
-                  label: const Text('Google로 계속하기'),
+                  label: const Text('Google'),
                 ),
 
                 const SizedBox(height: 32),
@@ -278,12 +283,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '계정이 없으신가요?',
+                      l10n.authNoAccount,
                       style: TextStyle(color: colorScheme.onSurfaceVariant),
                     ),
                     TextButton(
                       onPressed: () => context.push(Routes.signup),
-                      child: const Text('회원가입'),
+                      child: Text(l10n.authSignup),
                     ),
                   ],
                 ),

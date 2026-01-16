@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../../providers/statistics_provider.dart';
 import '../common/expense_type_filter.dart';
 import '../common/statistics_type_filter.dart';
@@ -13,6 +14,7 @@ class CategoryTabView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
 
@@ -31,7 +33,8 @@ class CategoryTabView extends ConsumerWidget {
               child: ExpenseTypeFilterWidget(
                 selectedFilter: expenseTypeFilter,
                 onChanged: (filter) {
-                  ref.read(selectedExpenseTypeFilterProvider.notifier).state = filter;
+                  ref.read(selectedExpenseTypeFilterProvider.notifier).state =
+                      filter;
                 },
               ),
             ),
@@ -50,7 +53,7 @@ class CategoryTabView extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '카테고리별 분포',
+                    l10n.statisticsCategoryDistribution,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
@@ -69,7 +72,7 @@ class CategoryTabView extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   child: Text(
-                    '카테고리별 순위',
+                    l10n.statisticsCategoryRanking,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),

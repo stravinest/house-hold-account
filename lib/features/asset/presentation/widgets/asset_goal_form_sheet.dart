@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../domain/entities/asset_goal.dart';
 import '../providers/asset_goal_provider.dart';
@@ -41,6 +42,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEditing = widget.goal != null;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -71,7 +73,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                 ),
 
                 // 헤더
-                _buildHeader(context, isEditing),
+                _buildHeader(context, l10n, isEditing),
 
                 const Divider(height: 1),
 
@@ -82,11 +84,11 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildAmountField(),
+                        _buildAmountField(l10n),
                         const SizedBox(height: 20),
-                        _buildTargetDateField(context),
+                        _buildTargetDateField(context, l10n),
                         const SizedBox(height: 32),
-                        _buildSubmitButton(context, isEditing),
+                        _buildSubmitButton(context, l10n, isEditing),
                         const SizedBox(height: 32),
                       ],
                     ),
@@ -100,7 +102,11 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, bool isEditing) {
+  Widget _buildHeader(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isEditing,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
@@ -108,29 +114,29 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
         children: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           Text(
-            isEditing ? '목표 수정' : '새 목표 설정',
+            isEditing ? l10n.assetGoalEdit : l10n.assetGoalNew,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           TextButton(
             onPressed: () => _submit(context, isEditing),
-            child: const Text('저장'),
+            child: Text(l10n.commonSave),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAmountField() {
+  Widget _buildAmountField(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '목표 금액',
+          l10n.assetGoalAmount,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -154,17 +160,17 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
               Icons.monetization_on_outlined,
               color: Theme.of(context).colorScheme.primary,
             ),
-            suffixText: '원',
+            suffixText: l10n.transactionAmountUnit,
             suffixStyle: Theme.of(context).textTheme.titleMedium,
           ),
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
-              return '목표 금액을 입력하세요';
+              return l10n.assetGoalAmountRequired;
             }
             final cleanValue = value.replaceAll(RegExp(r'[^\d]'), '');
             final amount = int.tryParse(cleanValue);
             if (amount == null || amount <= 0) {
-              return '올바른 금액을 입력하세요';
+              return l10n.assetGoalAmountInvalid;
             }
             return null;
           },
@@ -173,14 +179,14 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
     );
   }
 
-  Widget _buildTargetDateField(BuildContext context) {
+  Widget _buildTargetDateField(BuildContext context, AppLocalizations l10n) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '목표 날짜 (선택)',
+          l10n.assetGoalDateOptional,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: colorScheme.onSurfaceVariant,
@@ -209,7 +215,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                               'yyyy년 M월 d일 (E)',
                               'ko_KR',
                             ).format(_targetDate!)
-                          : '목표 달성 날짜를 선택하세요',
+                          : l10n.assetGoalDateHint,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: _targetDate != null
                             ? colorScheme.onSurface
@@ -247,7 +253,11 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
     );
   }
 
-  Widget _buildSubmitButton(BuildContext context, bool isEditing) {
+  Widget _buildSubmitButton(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isEditing,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return FilledButton(
@@ -259,7 +269,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: Text(
-        isEditing ? '목표 수정' : '목표 생성',
+        isEditing ? l10n.assetGoalEdit : l10n.assetGoalCreate,
         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
@@ -284,13 +294,14 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
   }
 
   Future<void> _submit(BuildContext context, bool isEditing) async {
+    final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     final ledgerId = ref.read(selectedLedgerIdProvider);
     if (ledgerId == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('가계부를 선택하세요')));
+      ).showSnackBar(SnackBar(content: Text(l10n.assetLedgerRequired)));
       return;
     }
 
@@ -305,7 +316,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
 
       if (isEditing && widget.goal != null) {
         final updatedGoal = widget.goal!.copyWith(
-          title: '목표',
+          title: l10n.assetGoalTitle,
           targetAmount: targetAmount,
           targetDate: _targetDate,
           assetType: null,
@@ -313,7 +324,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
         await notifier.updateGoal(updatedGoal);
       } else {
         await notifier.createGoal(
-          title: '목표',
+          title: l10n.assetGoalTitle,
           targetAmount: targetAmount,
           targetDate: _targetDate,
           assetType: null,
@@ -324,14 +335,18 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
         ref.invalidate(assetGoalsProvider);
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isEditing ? '목표가 수정되었습니다' : '목표가 생성되었습니다')),
+          SnackBar(
+            content: Text(
+              isEditing ? l10n.assetGoalUpdated : l10n.assetGoalCreated,
+            ),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+        );
       }
     }
   }

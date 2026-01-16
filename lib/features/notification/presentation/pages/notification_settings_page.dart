@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/section_header.dart';
@@ -15,14 +16,15 @@ class NotificationSettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final settingsAsync = ref.watch(notificationSettingsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('알림 설정')),
+      appBar: AppBar(title: Text(l10n.notificationSettingsTitle)),
       body: settingsAsync.when(
-        data: (settings) => _buildSettingsList(context, ref, settings),
+        data: (settings) => _buildSettingsList(context, ref, settings, l10n),
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => _buildErrorView(context, error),
+        error: (error, stackTrace) => _buildErrorView(context, error, l10n),
       ),
     );
   }
@@ -32,39 +34,40 @@ class NotificationSettingsPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     Map<NotificationType, bool> settings,
+    AppLocalizations l10n,
   ) {
     return ListView(
       children: [
         Padding(
           padding: const EdgeInsets.all(Spacing.md),
           child: Text(
-            '받고 싶은 알림을 선택하세요',
+            l10n.notificationSettingsDescription,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),
 
-        const SectionHeader(title: '공유 가계부'),
+        SectionHeader(title: l10n.notificationSectionSharedLedger),
         _buildNotificationToggle(
           context,
           ref,
           type: NotificationType.sharedLedgerChange,
-          title: '공유 가계부 변경',
-          subtitle: '다른 멤버가 거래를 추가/수정/삭제했을 때 알림',
+          title: l10n.notificationSharedLedgerChange,
+          subtitle: l10n.notificationSharedLedgerChangeDesc,
           icon: Icons.people_outline,
           enabled: settings[NotificationType.sharedLedgerChange] ?? true,
         ),
 
         const Divider(),
 
-        const SectionHeader(title: '초대'),
+        SectionHeader(title: l10n.notificationSectionInvite),
         _buildNotificationToggle(
           context,
           ref,
           type: NotificationType.inviteReceived,
-          title: '가계부 초대 받음',
-          subtitle: '다른 사용자가 가계부에 초대했을 때 알림',
+          title: l10n.notificationInviteReceived,
+          subtitle: l10n.notificationInviteReceivedDesc,
           icon: Icons.mail_outline,
           enabled: settings[NotificationType.inviteReceived] ?? true,
         ),
@@ -72,8 +75,8 @@ class NotificationSettingsPage extends ConsumerWidget {
           context,
           ref,
           type: NotificationType.inviteAccepted,
-          title: '초대 수락됨',
-          subtitle: '내가 보낸 초대를 다른 사용자가 수락했을 때 알림',
+          title: l10n.notificationInviteAccepted,
+          subtitle: l10n.notificationInviteAcceptedDesc,
           icon: Icons.check_circle_outline,
           enabled: settings[NotificationType.inviteAccepted] ?? true,
         ),
@@ -93,6 +96,7 @@ class NotificationSettingsPage extends ConsumerWidget {
     required IconData icon,
     required bool enabled,
   }) {
+    final l10n = AppLocalizations.of(context)!;
     return SwitchListTile(
       secondary: Icon(icon),
       title: Text(title),
@@ -107,7 +111,9 @@ class NotificationSettingsPage extends ConsumerWidget {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('설정 저장 실패: $e'),
+                content: Text(
+                  l10n.notificationSettingsSaveFailed(e.toString()),
+                ),
                 backgroundColor: Theme.of(context).colorScheme.error,
                 duration: const Duration(seconds: 1),
               ),
@@ -119,10 +125,14 @@ class NotificationSettingsPage extends ConsumerWidget {
   }
 
   /// 에러 뷰 빌드
-  Widget _buildErrorView(BuildContext context, Object error) {
+  Widget _buildErrorView(
+    BuildContext context,
+    Object error,
+    AppLocalizations l10n,
+  ) {
     return EmptyState(
       icon: Icons.error_outline,
-      message: '알림 설정을 불러올 수 없습니다',
+      message: l10n.notificationSettingsLoadFailed,
       subtitle: error.toString(),
     );
   }

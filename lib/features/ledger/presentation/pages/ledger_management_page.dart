@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/ledger.dart';
@@ -16,21 +17,22 @@ class LedgerManagementPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final ledgersAsync = ref.watch(ledgerNotifierProvider);
     final selectedId = ref.watch(selectedLedgerIdProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('가계부 관리')),
+      appBar: AppBar(title: Text(l10n.ledgerManagement)),
       body: ledgersAsync.when(
         data: (ledgers) {
           if (ledgers.isEmpty) {
             return EmptyState(
               icon: Icons.book_outlined,
-              message: '등록된 가계부가 없습니다',
+              message: l10n.ledgerNoLedgers,
               action: ElevatedButton.icon(
                 onPressed: () => _showAddLedgerDialog(context, ref),
                 icon: const Icon(Icons.add),
-                label: const Text('가계부 만들기'),
+                label: Text(l10n.ledgerCreateButton),
               ),
             );
           }
@@ -56,7 +58,8 @@ class LedgerManagementPage extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('오류: $e')),
+        error: (e, _) =>
+            Center(child: Text(l10n.errorWithMessage(e.toString()))),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddLedgerDialog(context, ref),
@@ -85,6 +88,7 @@ class _LedgerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final currentUserId = ref.watch(currentUserProvider)?.id;
     final isOwner = ledger.ownerId == currentUserId;
     final membersAsync = ref.watch(ledgerMembersProvider(ledger.id));
@@ -139,7 +143,7 @@ class _LedgerCard extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  '사용중',
+                                  l10n.ledgerInUse,
                                   style: TextStyle(
                                     fontSize: 10,
                                     color: Theme.of(
@@ -153,7 +157,9 @@ class _LedgerCard extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          ledger.isShared ? '공유 가계부' : '개인 가계부',
+                          ledger.isShared
+                              ? l10n.ledgerShared
+                              : l10n.ledgerPersonal,
                           style: TextStyle(
                             fontSize: 12,
                             color: Theme.of(
@@ -184,13 +190,13 @@ class _LedgerCard extends ConsumerWidget {
                     },
                     itemBuilder: (context) => [
                       if (isOwner)
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'edit',
                           child: Row(
                             children: [
-                              Icon(Icons.edit, size: 20),
-                              SizedBox(width: 8),
-                              Text('수정'),
+                              const Icon(Icons.edit, size: 20),
+                              const SizedBox(width: 8),
+                              Text(l10n.commonEdit),
                             ],
                           ),
                         ),
@@ -206,7 +212,7 @@ class _LedgerCard extends ConsumerWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                '삭제',
+                                l10n.commonDelete,
                                 style: TextStyle(
                                   color: Theme.of(context).colorScheme.error,
                                 ),
@@ -280,6 +286,8 @@ class _LedgerCard extends ConsumerWidget {
     List<LedgerMember> members,
     String? currentUserId,
   ) {
+    final l10n = AppLocalizations.of(context)!;
+
     // currentUserId가 null이면 표시하지 않음
     if (currentUserId == null) {
       return const SizedBox.shrink();
@@ -296,20 +304,27 @@ class _LedgerCard extends ConsumerWidget {
 
     // 이름 추출 헬퍼 함수
     String getName(LedgerMember member) {
-      return member.displayName ?? member.email?.split('@')[0] ?? '사용자';
+      return member.displayName ??
+          member.email?.split('@')[0] ??
+          l10n.ledgerUser;
     }
 
     // 멤버 수에 따라 텍스트 생성
     String memberText;
     if (otherMembers.length == 1) {
-      memberText = '${getName(otherMembers[0])}님과 공유 중';
+      memberText = l10n.ledgerSharedWithOne(getName(otherMembers[0]));
     } else if (otherMembers.length == 2) {
-      memberText =
-          '${getName(otherMembers[0])}, ${getName(otherMembers[1])}님과 공유 중';
+      memberText = l10n.ledgerSharedWithTwo(
+        getName(otherMembers[0]),
+        getName(otherMembers[1]),
+      );
     } else {
       final remainingCount = otherMembers.length - 2;
-      memberText =
-          '${getName(otherMembers[0])}, ${getName(otherMembers[1])} 외 $remainingCount명과 공유 중';
+      memberText = l10n.ledgerSharedWithMany(
+        getName(otherMembers[0]),
+        getName(otherMembers[1]),
+        remainingCount,
+      );
     }
 
     final colorScheme = Theme.of(context).colorScheme;
@@ -346,17 +361,19 @@ class _LedgerCard extends ConsumerWidget {
   }
 
   void _showDeleteConfirm(BuildContext context, WidgetRef ref, Ledger ledger) {
+    final l10n = AppLocalizations.of(context)!;
+
     // 가계부가 1개뿐이면 삭제 불가 경고
     if (ledgersCount <= _LedgerConstants.minLedgerCount) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('삭제 불가'),
-          content: const Text('최소 1개의 가계부가 필요합니다.\n다른 가계부를 먼저 생성해주세요.'),
+          title: Text(l10n.ledgerDeleteNotAllowedTitle),
+          content: Text(l10n.ledgerDeleteNotAllowedContent),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('확인'),
+              child: Text(l10n.commonConfirm),
             ),
           ],
         ),
@@ -372,17 +389,15 @@ class _LedgerCard extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('가계부 삭제'),
+        title: Text(l10n.ledgerDeleteConfirmTitle),
         content: Text(
-          '\'${ledger.name}\' 가계부를 삭제하시겠습니까?\n\n'
-          '${isCurrentlySelected ? '현재 사용 중인 가계부입니다.\n삭제 후 다른 가계부로 자동 전환됩니다.\n\n' : ''}'
-          '이 가계부에 기록된 모든 거래, 카테고리, 예산이 함께 삭제됩니다.\n'
-          '이 작업은 되돌릴 수 없습니다.',
+          '${isCurrentlySelected ? l10n.ledgerDeleteCurrentInUseWarning : ''}'
+          '${l10n.ledgerDeleteConfirmWithName(ledger.name)}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () async {
@@ -394,9 +409,9 @@ class _LedgerCard extends ConsumerWidget {
 
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('가계부가 삭제되었습니다'),
-                      duration: Duration(seconds: 1),
+                    SnackBar(
+                      content: Text(l10n.ledgerDeleted),
+                      duration: const Duration(seconds: 1),
                     ),
                   );
                 }
@@ -404,7 +419,7 @@ class _LedgerCard extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('삭제 실패: $e'),
+                      content: Text(l10n.ledgerDeleteFailed(e.toString())),
                       backgroundColor: Theme.of(context).colorScheme.error,
                       duration: const Duration(seconds: 1),
                     ),
@@ -415,7 +430,7 @@ class _LedgerCard extends ConsumerWidget {
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('삭제'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -459,10 +474,11 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEdit = widget.ledger != null;
 
     return AlertDialog(
-      title: Text(isEdit ? '가계부 수정' : '새 가계부'),
+      title: Text(isEdit ? l10n.ledgerEditTitle : l10n.ledgerNewTitle),
       content: Form(
         key: _formKey,
         child: SingleChildScrollView(
@@ -471,13 +487,13 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: '가계부 이름',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.ledgerNameLabel,
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return '가계부 이름을 입력하세요';
+                    return l10n.ledgerNameRequired;
                   }
                   return null;
                 },
@@ -485,18 +501,18 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: '설명 (선택)',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.ledgerDescriptionLabel,
+                  border: const OutlineInputBorder(),
                 ),
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 initialValue: _selectedCurrency,
-                decoration: const InputDecoration(
-                  labelText: '통화',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: l10n.ledgerCurrencyLabel,
+                  border: const OutlineInputBorder(),
                 ),
                 items: _currencies
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -514,14 +530,19 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: Text(l10n.commonCancel),
         ),
-        TextButton(onPressed: _submit, child: Text(isEdit ? '수정' : '만들기')),
+        TextButton(
+          onPressed: _submit,
+          child: Text(isEdit ? l10n.commonEdit : l10n.ledgerCreateButton),
+        ),
       ],
     );
   }
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
+
     if (!_formKey.currentState!.validate()) return;
 
     try {
@@ -553,7 +574,7 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.ledger != null ? '가계부가 수정되었습니다' : '가계부가 생성되었습니다',
+              widget.ledger != null ? l10n.ledgerUpdated : l10n.ledgerCreated,
             ),
             duration: const Duration(seconds: 1),
           ),
@@ -563,7 +584,7 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -598,6 +619,8 @@ class _MemberInfoWidget extends ConsumerStatefulWidget {
 class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return widget.membersAsync.when(
       data: (members) {
         // 멤버 수에 따라 공유 상태 자동 동기화 (ledger당 한 번만 실행)
@@ -631,14 +654,14 @@ class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
         padding: const EdgeInsets.only(top: 4),
         child: Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 12,
               height: 12,
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 8),
             Text(
-              '멤버 정보 로딩 중...',
+              l10n.ledgerMemberLoading,
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),

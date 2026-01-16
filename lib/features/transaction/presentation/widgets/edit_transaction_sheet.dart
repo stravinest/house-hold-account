@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
@@ -149,19 +150,21 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
           );
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('거래가 수정되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.transactionUpdated),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -175,7 +178,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final locale = Localizations.localeOf(context).languageCode;
     final categoriesAsync = _type == 'expense'
         ? ref.watch(expenseCategoriesProvider)
         : _type == 'income'
@@ -222,7 +227,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                     children: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('취소'),
+                        child: Text(l10n.commonCancel),
                       ),
                       TextButton(
                         onPressed: _isLoading ? null : _submit,
@@ -234,7 +239,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : const Text('저장'),
+                            : Text(l10n.commonSave),
                       ),
                     ],
                   ),
@@ -251,21 +256,21 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                       children: [
                         // 수입/지출/자산 선택
                         SegmentedButton<String>(
-                          segments: const [
+                          segments: [
                             ButtonSegment(
                               value: 'expense',
-                              label: Text('지출'),
-                              icon: Icon(Icons.remove_circle_outline),
+                              label: Text(l10n.transactionExpense),
+                              icon: const Icon(Icons.remove_circle_outline),
                             ),
                             ButtonSegment(
                               value: 'income',
-                              label: Text('수입'),
-                              icon: Icon(Icons.add_circle_outline),
+                              label: Text(l10n.transactionIncome),
+                              icon: const Icon(Icons.add_circle_outline),
                             ),
                             ButtonSegment(
                               value: 'asset',
-                              label: Text('자산'),
-                              icon: Icon(Icons.savings_outlined),
+                              label: Text(l10n.transactionAsset),
+                              icon: const Icon(Icons.savings_outlined),
                             ),
                           ],
                           selected: {_type},
@@ -288,15 +293,15 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                           maxLines: 1,
                           keyboardType: TextInputType.text,
                           textInputAction: TextInputAction.next,
-                          decoration: const InputDecoration(
-                            labelText: '제목',
-                            hintText: '예: 점심식사, 월급',
-                            prefixIcon: Icon(Icons.edit),
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            labelText: l10n.transactionTitle,
+                            hintText: l10n.categoryNameHintExample,
+                            prefixIcon: const Icon(Icons.edit),
+                            border: const OutlineInputBorder(),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return '제목을 입력해주세요';
+                              return l10n.transactionTitleRequired;
                             }
                             return null;
                           },
@@ -311,23 +316,23 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                           keyboardType: TextInputType.number,
                           inputFormatters: [
                             FilteringTextInputFormatter.digitsOnly,
-                            _AmountInputFormatter(),
+                            _AmountInputFormatter(locale),
                           ],
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                           ),
                           textAlign: TextAlign.center,
-                          decoration: const InputDecoration(
-                            suffixText: '원',
-                            suffixStyle: TextStyle(fontSize: 18),
+                          decoration: InputDecoration(
+                            suffixText: l10n.transactionAmountUnit,
+                            suffixStyle: const TextStyle(fontSize: 18),
                             border: InputBorder.none,
                           ),
                           validator: (value) {
                             if (value == null ||
                                 value.isEmpty ||
                                 value == '0') {
-                              return '금액을 입력해주세요';
+                              return l10n.transactionAmountRequired;
                             }
                             return null;
                           },
@@ -340,10 +345,15 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                         ListTile(
                           leading: const Icon(Icons.calendar_today),
                           title: Text(
-                            DateFormat(
-                              'yyyy년 M월 d일 (E)',
-                              'ko_KR',
-                            ).format(_selectedDate),
+                            locale == 'ko'
+                                ? DateFormat(
+                                    'yyyy년 M월 d일 (E)',
+                                    'ko_KR',
+                                  ).format(_selectedDate)
+                                : DateFormat(
+                                    'MMMM d, yyyy (E)',
+                                    'en_US',
+                                  ).format(_selectedDate),
                           ),
                           trailing: const Icon(Icons.chevron_right),
                           onTap: _selectDate,
@@ -355,16 +365,18 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            '카테고리',
+                            l10n.transactionCategory,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),
 
                         categoriesAsync.when(
-                          data: (categories) => _buildCategoryChips(categories),
+                          data: (categories) =>
+                              _buildCategoryChips(categories, l10n),
                           loading: () =>
                               const Center(child: CircularProgressIndicator()),
-                          error: (e, _) => Text('오류: $e'),
+                          error: (e, _) =>
+                              Text(l10n.errorWithMessage(e.toString())),
                         ),
 
                         const SizedBox(height: 16),
@@ -375,17 +387,18 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Text(
-                              '결제수단',
+                              l10n.transactionPaymentMethod,
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ),
                           paymentMethodsAsync.when(
                             data: (paymentMethods) =>
-                                _buildPaymentMethodChips(paymentMethods),
+                                _buildPaymentMethodChips(paymentMethods, l10n),
                             loading: () => const Center(
                               child: CircularProgressIndicator(),
                             ),
-                            error: (e, _) => Text('오류: $e'),
+                            error: (e, _) =>
+                                Text(l10n.errorWithMessage(e.toString())),
                           ),
                           const SizedBox(height: 16),
                           const Divider(),
@@ -395,7 +408,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Text(
-                            '메모 (선택)',
+                            l10n.transactionMemoOptional,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),
@@ -403,9 +416,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                           controller: _memoController,
                           maxLines: 3,
                           keyboardType: TextInputType.text,
-                          decoration: const InputDecoration(
-                            hintText: '추가 메모를 입력하세요',
-                            border: OutlineInputBorder(),
+                          decoration: InputDecoration(
+                            hintText: l10n.transactionMemoHint,
+                            border: const OutlineInputBorder(),
                           ),
                         ),
 
@@ -422,7 +435,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     );
   }
 
-  Widget _buildCategoryChips(List<Category> categories) {
+  Widget _buildCategoryChips(List<Category> categories, AppLocalizations l10n) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -431,7 +444,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         FilterChip(
           selected: _selectedCategory == null,
           showCheckmark: false,
-          label: const Text('선택 안함'),
+          label: Text(l10n.transactionNone),
           onSelected: (_) {
             setState(() => _selectedCategory = null);
           },
@@ -461,7 +474,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         // 카테고리 추가 버튼
         ActionChip(
           avatar: const Icon(Icons.add, size: 18),
-          label: const Text('추가'),
+          label: Text(l10n.commonAdd),
           onPressed: () => _showAddCategoryDialog(),
         ),
       ],
@@ -469,19 +482,20 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
   }
 
   Future<void> _deleteCategory(Category category) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('카테고리 삭제'),
-        content: Text('\'${category.name}\' 카테고리를 삭제하시겠습니까?'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.categoryDeleteConfirmTitle),
+        content: Text(l10n.categoryDeleteConfirm(category.name)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -500,9 +514,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('카테고리가 삭제되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.categoryDeleted),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -515,7 +529,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -544,36 +558,37 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
   // 카테고리 추가 다이얼로그
   void _showAddCategoryDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
+
+    final typeLabel = _type == 'expense'
+        ? l10n.transactionExpense
+        : _type == 'income'
+        ? l10n.transactionIncome
+        : l10n.transactionAsset;
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(
-          '${_type == 'expense'
-              ? '지출'
-              : _type == 'income'
-              ? '수입'
-              : '자산'} 카테고리 추가',
-        ),
+        title: Text(l10n.categoryAddType(typeLabel)),
         content: TextField(
           controller: nameController,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: '카테고리 이름',
-            hintText: '예: 식비, 교통비',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.categoryName,
+            hintText: l10n.categoryNameHintExample,
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) => _submitCategory(dialogContext, nameController),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => _submitCategory(dialogContext, nameController),
-            child: const Text('추가'),
+            child: Text(l10n.commonAdd),
           ),
         ],
       ),
@@ -584,11 +599,12 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     BuildContext dialogContext,
     TextEditingController nameController,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     if (nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('카테고리 이름을 입력해주세요'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text(l10n.categoryNameRequired),
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -609,9 +625,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('카테고리가 추가되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.categoryAdded),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -624,7 +640,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -632,7 +648,10 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     }
   }
 
-  Widget _buildPaymentMethodChips(List<PaymentMethod> paymentMethods) {
+  Widget _buildPaymentMethodChips(
+    List<PaymentMethod> paymentMethods,
+    AppLocalizations l10n,
+  ) {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -641,7 +660,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         FilterChip(
           selected: _selectedPaymentMethod == null,
           showCheckmark: false,
-          label: const Text('선택 안함'),
+          label: Text(l10n.transactionNone),
           onSelected: (_) {
             setState(() => _selectedPaymentMethod = null);
           },
@@ -662,7 +681,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         // 결제수단 추가 버튼
         ActionChip(
           avatar: const Icon(Icons.add, size: 18),
-          label: const Text('추가'),
+          label: Text(l10n.commonAdd),
           onPressed: () => _showAddPaymentMethodDialog(),
         ),
       ],
@@ -670,19 +689,20 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
   }
 
   Future<void> _deletePaymentMethod(PaymentMethod method) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('결제수단 삭제'),
-        content: Text('\'${method.name}\' 결제수단을 삭제하시겠습니까?'),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.paymentMethodDeleteConfirmTitle),
+        content: Text(l10n.paymentMethodDeleteConfirm(method.name)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제'),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -701,9 +721,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('결제수단이 삭제되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.paymentMethodDeleted),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -713,7 +733,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -723,19 +743,20 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
   // 결제수단 추가 다이얼로그
   void _showAddPaymentMethodDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('결제수단 추가'),
+        title: Text(l10n.paymentMethodAdd),
         content: TextField(
           controller: nameController,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: '결제수단 이름',
-            hintText: '예: 신용카드, 현금',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.paymentMethodName,
+            hintText: l10n.paymentMethodNameHintExample,
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) =>
               _submitPaymentMethod(dialogContext, nameController),
@@ -743,12 +764,12 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () =>
                 _submitPaymentMethod(dialogContext, nameController),
-            child: const Text('추가'),
+            child: Text(l10n.commonAdd),
           ),
         ],
       ),
@@ -759,11 +780,12 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     BuildContext dialogContext,
     TextEditingController nameController,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     if (nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('결제수단 이름을 입력해주세요'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text(l10n.paymentMethodNameRequired),
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -783,9 +805,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('결제수단이 추가되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.paymentMethodAdded),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -795,7 +817,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -806,6 +828,10 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
 // 금액 포맷터 (천 단위 구분)
 class _AmountInputFormatter extends TextInputFormatter {
+  final String locale;
+
+  _AmountInputFormatter(this.locale);
+
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -816,7 +842,7 @@ class _AmountInputFormatter extends TextInputFormatter {
     final number = int.tryParse(newValue.text.replaceAll(',', ''));
     if (number == null) return oldValue;
 
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final formatter = NumberFormat('#,###', locale == 'ko' ? 'ko_KR' : 'en_US');
     final formatted = formatter.format(number);
 
     return TextEditingValue(

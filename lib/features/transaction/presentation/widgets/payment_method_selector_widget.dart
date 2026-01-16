@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../payment_method/domain/entities/payment_method.dart';
 import '../../../payment_method/presentation/providers/payment_method_provider.dart';
 
@@ -52,19 +53,20 @@ class _PaymentMethodSelectorWidgetState
 
   /// 결제수단 추가 다이얼로그 표시
   void _showAddPaymentMethodDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final nameController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('결제수단 추가'),
+        title: Text(l10n.paymentMethodAdd),
         content: TextField(
           controller: nameController,
           autofocus: true,
-          decoration: const InputDecoration(
-            labelText: '결제수단 이름',
-            hintText: '예: 신용카드, 현금',
-            border: OutlineInputBorder(),
+          decoration: InputDecoration(
+            labelText: l10n.paymentMethodName,
+            hintText: l10n.paymentMethodNameHintExample,
+            border: const OutlineInputBorder(),
           ),
           onSubmitted: (_) =>
               _submitPaymentMethod(dialogContext, nameController),
@@ -72,12 +74,12 @@ class _PaymentMethodSelectorWidgetState
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () =>
                 _submitPaymentMethod(dialogContext, nameController),
-            child: const Text('추가'),
+            child: Text(l10n.commonAdd),
           ),
         ],
       ),
@@ -89,11 +91,12 @@ class _PaymentMethodSelectorWidgetState
     BuildContext dialogContext,
     TextEditingController nameController,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     if (nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('결제수단 이름을 입력해주세요'),
-          duration: Duration(seconds: 1),
+        SnackBar(
+          content: Text(l10n.paymentMethodNameRequired),
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -113,9 +116,9 @@ class _PaymentMethodSelectorWidgetState
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('결제수단이 추가되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.paymentMethodAdded),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -125,7 +128,7 @@ class _PaymentMethodSelectorWidgetState
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -135,19 +138,20 @@ class _PaymentMethodSelectorWidgetState
 
   /// 결제수단 삭제
   Future<void> _deletePaymentMethod(PaymentMethod method) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('결제수단 삭제'),
-        content: Text('\'${method.name}\' 결제수단을 삭제하시겠습니까?'),
+        title: Text(l10n.paymentMethodDeleteConfirmTitle),
+        content: Text(l10n.paymentMethodDeleteConfirm(method.name)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -167,9 +171,9 @@ class _PaymentMethodSelectorWidgetState
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('결제수단이 삭제되었습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.paymentMethodDeleted),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -179,7 +183,7 @@ class _PaymentMethodSelectorWidgetState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -192,13 +196,18 @@ class _PaymentMethodSelectorWidgetState
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
 
     return paymentMethodsAsync.when(
-      data: (paymentMethods) => _buildPaymentMethodChips(paymentMethods),
+      data: (paymentMethods) =>
+          _buildPaymentMethodChips(context, paymentMethods),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Text('오류: $e'),
+      error: (e, _) => Text('${AppLocalizations.of(context)!.commonError}: $e'),
     );
   }
 
-  Widget _buildPaymentMethodChips(List<PaymentMethod> paymentMethods) {
+  Widget _buildPaymentMethodChips(
+    BuildContext context,
+    List<PaymentMethod> paymentMethods,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
     return Wrap(
       spacing: 8,
       runSpacing: 8,
@@ -207,7 +216,7 @@ class _PaymentMethodSelectorWidgetState
         FilterChip(
           selected: widget.selectedPaymentMethod == null,
           showCheckmark: false,
-          label: const Text('선택 안함'),
+          label: Text(l10n.transactionNone),
           onSelected: widget.enabled
               ? (_) => widget.onPaymentMethodSelected(null)
               : null,
@@ -230,7 +239,7 @@ class _PaymentMethodSelectorWidgetState
         // 결제수단 추가 버튼
         ActionChip(
           avatar: const Icon(Icons.add, size: 18),
-          label: const Text('추가'),
+          label: Text(l10n.commonAdd),
           onPressed: widget.enabled ? _showAddPaymentMethodDialog : null,
         ),
       ],

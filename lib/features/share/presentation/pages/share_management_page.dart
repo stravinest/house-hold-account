@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/router.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
@@ -16,12 +17,13 @@ class ShareManagementPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final ownedLedgersAsync = ref.watch(myOwnedLedgersWithInvitesProvider);
     final receivedInvitesAsync = ref.watch(receivedInvitesProvider);
     final selectedLedgerId = ref.watch(selectedLedgerIdProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('가계부 및 공유 관리')),
+      appBar: AppBar(title: Text(l10n.shareManagementTitle)),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(myOwnedLedgersWithInvitesProvider);
@@ -75,13 +77,14 @@ class ShareManagementPage extends ConsumerWidget {
       return _buildEmptyState(context);
     }
 
+    final l10n = AppLocalizations.of(context)!;
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       children: [
         // 내 가계부 섹션
         if (ownedLedgers.isNotEmpty) ...[
-          const SectionHeader(
-            title: '내 가계부',
+          SectionHeader(
+            title: l10n.shareMyLedgers,
             icon: Icons.account_balance_wallet,
           ),
           ...ownedLedgers.map(
@@ -108,7 +111,10 @@ class ShareManagementPage extends ConsumerWidget {
         // 초대받은 가계부 섹션
         if (receivedInvites.isNotEmpty) ...[
           if (ownedLedgers.isNotEmpty) const SizedBox(height: 24),
-          const SectionHeader(title: '초대받은 가계부', icon: Icons.mail_outline),
+          SectionHeader(
+            title: l10n.shareInvitedLedgers,
+            icon: Icons.mail_outline,
+          ),
           ...receivedInvites.map(
             (invite) => InvitedLedgerCard(
               invite: invite,
@@ -128,7 +134,7 @@ class ShareManagementPage extends ConsumerWidget {
                       context,
                       ref,
                       invite.ledgerId,
-                      invite.ledgerName ?? '가계부',
+                      invite.ledgerName ?? l10n.ledgerTitle,
                     )
                   : null,
             ),
@@ -152,25 +158,27 @@ class ShareManagementPage extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return _buildScrollableCenter(
       child: EmptyState(
         icon: Icons.account_balance_wallet_outlined,
-        message: '가계부가 없습니다',
-        subtitle: '가계부를 생성하여 시작하세요',
+        message: l10n.shareLedgerEmpty,
+        subtitle: l10n.shareLedgerEmptySubtitle,
         action: ElevatedButton.icon(
           onPressed: () => context.push(Routes.ledgerManage),
           icon: const Icon(Icons.add),
-          label: const Text('가계부 생성하기'),
+          label: Text(l10n.shareCreateLedger),
         ),
       ),
     );
   }
 
   Widget _buildErrorWidget(BuildContext context, WidgetRef ref, String error) {
+    final l10n = AppLocalizations.of(context)!;
     return _buildScrollableCenter(
       child: EmptyState(
         icon: Icons.error_outline,
-        message: '오류가 발생했습니다',
+        message: l10n.shareErrorOccurred,
         subtitle: error,
         action: ElevatedButton.icon(
           onPressed: () {
@@ -178,7 +186,7 @@ class ShareManagementPage extends ConsumerWidget {
             ref.invalidate(receivedInvitesProvider);
           },
           icon: const Icon(Icons.refresh),
-          label: const Text('다시 시도'),
+          label: Text(l10n.commonRetry),
         ),
       ),
     );
@@ -197,19 +205,20 @@ class ShareManagementPage extends ConsumerWidget {
     String ledgerId,
     String ledgerName,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('가계부 변경'),
-        content: Text('\'$ledgerName\' 가계부를 사용하시겠습니까?'),
+        title: Text(l10n.ledgerChangeConfirmTitle),
+        content: Text(l10n.ledgerChangeConfirmMessage(ledgerName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('사용'),
+            child: Text(l10n.ledgerUse),
           ),
         ],
       ),
@@ -220,7 +229,7 @@ class ShareManagementPage extends ConsumerWidget {
       ref.invalidate(myOwnedLedgersWithInvitesProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('\'$ledgerName\' 가계부로 변경했습니다'),
+          content: Text(l10n.shareLedgerChanged(ledgerName)),
           duration: const Duration(seconds: 1),
         ),
       );
@@ -232,25 +241,25 @@ class ShareManagementPage extends ConsumerWidget {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('가계부 탈퇴'),
+        title: Text(l10n.shareLeaveConfirmTitle),
         content: Text(
-          '\'${invite.ledgerName ?? '가계부'}\'에서 탈퇴하시겠습니까?\n'
-          '탈퇴하면 해당 가계부의 데이터에 더 이상 접근할 수 없습니다.',
+          l10n.shareLeaveConfirmMessage(invite.ledgerName ?? l10n.ledgerTitle),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('탈퇴'),
+            child: Text(l10n.shareLeave),
           ),
         ],
       ),
@@ -266,15 +275,16 @@ class ShareManagementPage extends ConsumerWidget {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref
           .read(shareNotifierProvider.notifier)
           .leaveLedger(invite.ledgerId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('가계부에서 탈퇴했습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.shareLedgerLeft),
+            duration: const Duration(seconds: 1),
           ),
         );
         ref.invalidate(receivedInvitesProvider);
@@ -284,7 +294,7 @@ class ShareManagementPage extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -297,25 +307,28 @@ class ShareManagementPage extends ConsumerWidget {
     WidgetRef ref,
     LedgerWithInviteInfo ledgerInfo,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final invite = ledgerInfo.sentInvite;
     if (invite == null) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('초대 취소'),
-        content: Text('\'${invite.inviteeEmail}\'님에게 보낸 초대를 취소하시겠습니까?'),
+        title: Text(l10n.shareInviteCancelConfirmTitle),
+        content: Text(
+          l10n.shareInviteCancelConfirmMessage(invite.inviteeEmail),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('아니오'),
+            child: Text(l10n.commonNo),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('초대취소'),
+            child: Text(l10n.shareInviteCancelText),
           ),
         ],
       ),
@@ -332,15 +345,16 @@ class ShareManagementPage extends ConsumerWidget {
     String inviteId,
     String ledgerId,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref
           .read(shareNotifierProvider.notifier)
           .cancelInvite(inviteId: inviteId, ledgerId: ledgerId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('초대를 취소했습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.shareInviteCancelledMessage),
+            duration: const Duration(seconds: 1),
           ),
         );
         ref.invalidate(myOwnedLedgersWithInvitesProvider);
@@ -349,7 +363,7 @@ class ShareManagementPage extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -362,13 +376,14 @@ class ShareManagementPage extends ConsumerWidget {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref.read(shareNotifierProvider.notifier).acceptInvite(invite.id);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('초대를 수락했습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.shareInviteAcceptedMessage),
+            duration: const Duration(seconds: 1),
           ),
         );
         ref.invalidate(myOwnedLedgersWithInvitesProvider);
@@ -377,7 +392,7 @@ class ShareManagementPage extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -390,25 +405,27 @@ class ShareManagementPage extends ConsumerWidget {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('초대 거부'),
+        title: Text(l10n.shareInviteRejectConfirmTitle),
         content: Text(
-          '\'${invite.ledgerName ?? '가계부'}\' 초대를 거부하시겠습니까?\n'
-          '거부하면 목록에서 사라집니다.',
+          l10n.shareInviteRejectConfirmMessage(
+            invite.ledgerName ?? l10n.ledgerTitle,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('거부'),
+            child: Text(l10n.shareReject),
           ),
         ],
       ),
@@ -424,13 +441,14 @@ class ShareManagementPage extends ConsumerWidget {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       await ref.read(shareNotifierProvider.notifier).rejectInvite(invite.id);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('초대를 거부했습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.shareInviteRejectedMessage),
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -438,7 +456,7 @@ class ShareManagementPage extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );
@@ -471,8 +489,9 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
-      title: const Text('멤버 초대'),
+      title: Text(l10n.shareMemberInvite),
       content: Form(
         key: _formKey,
         child: Column(
@@ -480,18 +499,18 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
           children: [
             TextFormField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: '이메일',
-                hintText: 'example@email.com',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.authEmail,
+                hintText: l10n.shareEmailHint,
+                border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return '이메일을 입력해주세요';
+                  return l10n.validationEmailRequired;
                 }
                 if (!value.contains('@')) {
-                  return '올바른 이메일 형식이 아닙니다';
+                  return l10n.validationEmailInvalid;
                 }
                 return null;
               },
@@ -499,33 +518,36 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: _selectedRole,
-              decoration: const InputDecoration(
-                labelText: '역할',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.shareRole,
+                border: const OutlineInputBorder(),
               ),
               isExpanded: true,
               itemHeight: 60,
-              items: const [
+              items: [
                 DropdownMenuItem(
                   value: 'member',
                   child: _RoleDropdownItem(
-                    title: '멤버',
-                    description: '거래 내역 조회/추가/수정/삭제',
+                    title: l10n.shareRoleMember,
+                    description: l10n.shareRoleMemberDescription,
                   ),
                 ),
                 DropdownMenuItem(
                   value: 'admin',
                   child: _RoleDropdownItem(
-                    title: '관리자',
-                    description: '거래 + 카테고리/예산 관리 + 멤버 초대',
+                    title: l10n.shareRoleAdmin,
+                    description: l10n.shareRoleAdminDescription,
                   ),
                 ),
               ],
               selectedItemBuilder: (context) => [
-                const Align(alignment: Alignment.centerLeft, child: Text('멤버')),
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
-                  child: Text('관리자'),
+                  child: Text(l10n.shareRoleMember),
+                ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(l10n.shareRoleAdmin),
                 ),
               ],
               onChanged: (value) {
@@ -540,7 +562,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
+          child: Text(l10n.commonCancel),
         ),
         FilledButton(
           onPressed: _isLoading ? null : _sendInvite,
@@ -550,7 +572,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : const Text('초대'),
+              : Text(l10n.shareInvite),
         ),
       ],
     );
@@ -559,6 +581,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
   Future<void> _sendInvite() async {
     if (!_formKey.currentState!.validate()) return;
 
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
 
     try {
@@ -573,9 +596,9 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('초대를 보냈습니다'),
-            duration: Duration(seconds: 1),
+          SnackBar(
+            content: Text(l10n.shareInviteSentMessage),
+            duration: const Duration(seconds: 1),
           ),
         );
         ref.invalidate(myOwnedLedgersWithInvitesProvider);
@@ -584,7 +607,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('오류: $e'),
+            content: Text(l10n.errorWithMessage(e.toString())),
             duration: const Duration(seconds: 1),
           ),
         );

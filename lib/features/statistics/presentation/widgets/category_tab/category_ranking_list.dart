@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/utils/category_l10n_helper.dart';
+import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../providers/statistics_provider.dart';
 
@@ -10,6 +12,7 @@ class CategoryRankingList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final statisticsAsync = ref.watch(categoryStatisticsProvider);
     final numberFormat = NumberFormat('#,###');
 
@@ -41,12 +44,14 @@ class CategoryRankingList extends ConsumerWidget {
               percentage: percentage,
               totalAmount: totalAmount,
               numberFormat: numberFormat,
+              l10n: l10n,
             );
           },
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('오류: $error')),
+      error: (error, _) =>
+          Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
   }
 }
@@ -57,6 +62,7 @@ class _CategoryRankingItem extends StatelessWidget {
   final double percentage;
   final int totalAmount;
   final NumberFormat numberFormat;
+  final AppLocalizations l10n;
 
   const _CategoryRankingItem({
     required this.rank,
@@ -64,6 +70,7 @@ class _CategoryRankingItem extends StatelessWidget {
     required this.percentage,
     required this.totalAmount,
     required this.numberFormat,
+    required this.l10n,
   });
 
   Color _parseColor(String colorString) {
@@ -103,7 +110,7 @@ class _CategoryRankingItem extends StatelessWidget {
               // 카테고리명
               Expanded(
                 child: Text(
-                  category.categoryName,
+                  CategoryL10nHelper.translate(category.categoryName, l10n),
                   style: theme.textTheme.bodyLarge,
                 ),
               ),
@@ -117,7 +124,7 @@ class _CategoryRankingItem extends StatelessWidget {
               const SizedBox(width: 12),
               // 금액
               Text(
-                '${numberFormat.format(category.amount)}원',
+                '${numberFormat.format(category.amount)}${l10n.transactionAmountUnit}',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),

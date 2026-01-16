@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../../share/presentation/providers/share_provider.dart';
 import '../../../../core/utils/color_utils.dart';
@@ -33,6 +34,7 @@ class CalendarMonthSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
     // 실제 데이터 연동
@@ -57,7 +59,7 @@ class CalendarMonthSummary extends StatelessWidget {
         if (!enrichedUsers.containsKey(member.userId)) {
           // 거래가 없는 멤버 기본값 추가
           enrichedUsers[member.userId] = {
-            'displayName': member.displayName ?? '사용자',
+            'displayName': member.displayName ?? l10n.user,
             'income': 0,
             'expense': 0,
             'asset': 0,
@@ -75,7 +77,7 @@ class CalendarMonthSummary extends StatelessWidget {
           children: [
             Expanded(
               child: _SummaryColumn(
-                label: '수입',
+                label: l10n.transactionIncome,
                 totalAmount: income,
                 color: colorScheme.primary,
                 users: enrichedUsers,
@@ -86,7 +88,7 @@ class CalendarMonthSummary extends StatelessWidget {
             Container(width: 1, color: colorScheme.outlineVariant),
             Expanded(
               child: _SummaryColumn(
-                label: '지출',
+                label: l10n.transactionExpense,
                 totalAmount: expense,
                 color: colorScheme.error,
                 users: enrichedUsers,
@@ -97,7 +99,7 @@ class CalendarMonthSummary extends StatelessWidget {
             Container(width: 1, color: colorScheme.outlineVariant),
             Expanded(
               child: _SummaryColumn(
-                label: '합계',
+                label: l10n.summaryBalance,
                 totalAmount: balance,
                 color: colorScheme.onSurface,
                 users: enrichedUsers,

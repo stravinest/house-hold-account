@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/category_l10n_helper.dart';
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/asset_statistics.dart';
 
 class AssetCategoryList extends StatelessWidget {
@@ -20,6 +22,7 @@ class AssetCategoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final numberFormat = NumberFormat('#,###');
 
@@ -29,7 +32,7 @@ class AssetCategoryList extends StatelessWidget {
         padding: const EdgeInsets.all(32),
         child: Center(
           child: Text(
-            '자산이 없습니다',
+            l10n.assetNoAsset,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -78,7 +81,10 @@ class AssetCategoryList extends StatelessWidget {
                     // 카테고리명
                     Expanded(
                       child: Text(
-                        category.categoryName,
+                        CategoryL10nHelper.translate(
+                          category.categoryName,
+                          l10n,
+                        ),
                         style: theme.textTheme.bodyLarge,
                       ),
                     ),
@@ -92,7 +98,7 @@ class AssetCategoryList extends StatelessWidget {
                     const SizedBox(width: 12),
                     // 금액
                     Text(
-                      '${numberFormat.format(category.amount)}원',
+                      '${numberFormat.format(category.amount)}${l10n.transactionAmountUnit}',
                       style: theme.textTheme.bodyLarge?.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
@@ -121,7 +127,7 @@ class AssetCategoryList extends StatelessWidget {
               ),
               title: Text(item.title),
               trailing: Text(
-                '${numberFormat.format(item.amount)}원',
+                '${numberFormat.format(item.amount)}${l10n.transactionAmountUnit}',
                 style: theme.textTheme.bodyMedium,
               ),
             );

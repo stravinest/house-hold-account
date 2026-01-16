@@ -1,0 +1,977 @@
+{
+  "@@locale": "ko",
+
+  "appTitle": "공유 가계부",
+  "@appTitle": {
+    "description": "앱 제목"
+  },
+  "appSubtitle": "가족, 커플, 룸메이트와 함께\n가계부를 관리하세요",
+  "@appSubtitle": {
+    "description": "앱 부제목"
+  },
+
+  "commonCancel": "취소",
+  "commonSave": "저장",
+  "commonDelete": "삭제",
+  "commonConfirm": "확인",
+  "commonEdit": "수정",
+  "commonAdd": "추가",
+  "commonClose": "닫기",
+  "commonRetry": "다시 시도",
+  "commonYes": "예",
+  "commonNo": "아니오",
+  "commonOk": "확인",
+  "commonBack": "뒤로",
+  "commonNext": "다음",
+  "commonDone": "완료",
+  "commonSearch": "검색",
+  "commonLoading": "로딩 중...",
+  "commonError": "오류",
+  "commonSuccess": "성공",
+
+  "authLogin": "로그인",
+  "authSignup": "회원가입",
+  "authLogout": "로그아웃",
+  "authEmail": "이메일",
+  "authPassword": "비밀번호",
+  "authPasswordConfirm": "비밀번호 확인",
+  "authName": "이름",
+  "authForgotPassword": "비밀번호를 잊으셨나요?",
+  "authOr": "또는",
+  "authNoAccount": "계정이 없으신가요?",
+  "authHaveAccount": "이미 계정이 있으신가요?",
+  "authLoginError": "로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.",
+  "authInvalidCredentials": "이메일 또는 비밀번호가 틀렸습니다.",
+  "authEmailNotVerified": "이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.",
+  "authSignupTitle": "새 계정 만들기",
+  "authSignupSubtitle": "공유 가계부를 시작하려면\n계정을 만들어주세요",
+  "authTermsAgreement": "회원가입 시 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.",
+
+  "validationEmailRequired": "이메일을 입력해주세요",
+  "validationEmailInvalid": "올바른 이메일 형식이 아닙니다",
+  "validationPasswordRequired": "비밀번호를 입력해주세요",
+  "validationPasswordTooShort": "비밀번호는 6자 이상이어야 합니다",
+  "validationPasswordMismatch": "비밀번호가 일치하지 않습니다",
+  "validationNameRequired": "이름을 입력해주세요",
+  "validationNameTooShort": "이름은 2자 이상이어야 합니다",
+  "validationPasswordConfirmRequired": "비밀번호를 다시 입력해주세요",
+
+  "emailVerificationTitle": "이메일 인증",
+  "emailVerificationWaiting": "이메일 인증 대기 중",
+  "emailVerificationComplete": "이메일 인증 완료!",
+  "emailVerificationSent": "위 이메일로 인증 메일을 보냈습니다.\n메일함을 확인하고 인증 링크를 클릭해주세요.",
+  "emailVerificationDone": "인증이 완료되었습니다.\n잠시 후 홈 화면으로 이동합니다.",
+  "emailVerificationResent": "인증 메일을 다시 보냈습니다. 메일함을 확인해주세요.",
+  "emailVerificationResendFailed": "인증 메일 전송에 실패했습니다: {error}",
+  "@emailVerificationResendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "emailVerificationCheckStatus": "인증 상태 확인",
+  "emailVerificationResendButton": "인증 메일 다시 보내기",
+  "emailVerificationResendCooldown": "재전송 ({seconds}초 후 가능)",
+  "@emailVerificationResendCooldown": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "emailVerificationVerified": "인증 완료",
+  "emailVerificationNotVerified": "미인증",
+  "emailVerificationChecking": "확인 중...",
+
+  "settingsTitle": "설정",
+  "settingsAppSettings": "앱 설정",
+  "settingsTheme": "테마",
+  "settingsLanguage": "언어",
+  "settingsNotification": "알림",
+  "settingsNotificationDescription": "공유 변경, 초대 등 알림 받기",
+  "settingsNotificationSettings": "알림 설정",
+  "settingsNotificationSettingsDescription": "알림 유형별 설정",
+  "settingsAccount": "계정",
+  "settingsProfile": "프로필",
+  "settingsMyColor": "내 색상",
+  "settingsColorChanged": "색상이 변경되었습니다",
+  "settingsColorChangeFailed": "색상 변경 실패: {error}",
+  "@settingsColorChangeFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsPasswordChange": "비밀번호 변경",
+  "settingsData": "데이터",
+  "settingsDataExport": "데이터 내보내기",
+  "settingsDataExportDescription": "거래 내역을 CSV로 내보내기",
+  "settingsInfo": "정보",
+  "settingsAppInfo": "앱 정보",
+  "settingsVersion": "버전 {version}",
+  "@settingsVersion": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTerms": "이용약관",
+  "settingsPrivacy": "개인정보처리방침",
+  "settingsDeleteAccount": "회원 탈퇴",
+  "settingsThemeLight": "라이트 모드",
+  "settingsThemeDark": "다크 모드",
+  "settingsThemeSystem": "시스템 설정",
+  "settingsThemeSaveFailed": "테마 저장 실패: {error}",
+  "@settingsThemeSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsLogoutConfirm": "정말 로그아웃하시겠습니까?",
+  "settingsDeleteAccountConfirm": "정말 탈퇴하시겠습니까?\n\n모든 데이터가 삭제되며 복구할 수 없습니다.",
+  "settingsDeleteAccountFailed": "회원 탈퇴 실패: {error}",
+  "@settingsDeleteAccountFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDisplayNameChanged": "표시 이름이 변경되었습니다",
+  "settingsDisplayNameChangeFailed": "표시 이름 변경 실패: {error}",
+  "@settingsDisplayNameChangeFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsDisplayName": "표시 이름",
+  "settingsPasswordChanged": "비밀번호가 변경되었습니다",
+  "settingsCurrentPassword": "현재 비밀번호",
+  "settingsCurrentPasswordHint": "현재 비밀번호를 입력하세요",
+  "settingsNewPassword": "새 비밀번호",
+  "settingsNewPasswordHint": "새 비밀번호를 입력하세요",
+  "settingsNewPasswordConfirm": "새 비밀번호 확인",
+  "settingsNewPasswordConfirmHint": "새 비밀번호를 다시 입력하세요",
+  "settingsNewPasswordMismatch": "새 비밀번호가 일치하지 않습니다",
+  "settingsChange": "변경",
+  "settingsLanguageKorean": "한국어",
+  "settingsLanguageEnglish": "English",
+  "settingsLanguageChanged": "언어가 변경되었습니다",
+  "settingsFeaturePreparing": "준비 중인 기능입니다",
+  "settingsAboutAppName": "공유 가계부",
+  "settingsAboutAppDescription": "Flutter + Supabase로 만든 공유 가계부 앱입니다.",
+  "settingsAboutAppSubDescription": "가족, 연인, 룸메이트와 함께 지출을 관리하세요.",
+
+  "ledgerTitle": "가계부",
+  "ledgerManagement": "가계부 관리",
+  "ledgerShareManagement": "가계부 및 공유 관리",
+  "ledgerCreate": "가계부 생성하기",
+  "ledgerNew": "새 가계부",
+  "ledgerName": "가계부 이름",
+  "ledgerNameHint": "가계부 이름을 입력하세요",
+  "ledgerDescription": "설명 (선택)",
+  "ledgerCurrency": "통화",
+  "ledgerShared": "공유 가계부",
+  "ledgerPersonal": "개인 가계부",
+  "ledgerInUse": "사용중",
+  "ledgerEmpty": "가계부가 없습니다",
+  "ledgerEmptySubtitle": "가계부를 생성하여 시작하세요",
+  "ledgerCreated": "가계부가 생성되었습니다",
+  "ledgerUpdated": "가계부가 수정되었습니다",
+  "ledgerDeleted": "가계부가 삭제되었습니다",
+  "ledgerDeleteFailed": "삭제 실패: {error}",
+  "@ledgerDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerDeleteConfirmTitle": "가계부 삭제",
+  "ledgerDeleteConfirmMessage": "현재 사용 중인 가계부입니다.\n삭제 후 다른 가계부로 자동 전환됩니다.\n\n이 가계부에 기록된 모든 거래, 카테고리, 예산이 함께 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.",
+  "ledgerDeleteNotAllowed": "삭제 불가",
+  "ledgerDeleteNotAllowedMessage": "최소 1개의 가계부가 필요합니다.\n다른 가계부를 먼저 생성해주세요.",
+  "ledgerChangeConfirmTitle": "가계부 변경",
+  "ledgerChangeConfirmMessage": "'{name}' 가계부를 사용하시겠습니까?",
+  "@ledgerChangeConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerUse": "사용",
+  "ledgerMyLedgers": "내 가계부",
+  "ledgerInvitedLedgers": "초대받은 가계부",
+
+  "shareInvite": "초대",
+  "shareMemberInvite": "멤버 초대",
+  "shareRole": "역할",
+  "shareRoleMember": "멤버",
+  "shareRoleMemberDescription": "거래 내역 조회/추가/수정/삭제",
+  "shareRoleAdmin": "관리자",
+  "shareRoleAdminDescription": "거래 + 카테고리/예산 관리 + 멤버 초대",
+  "shareInviteSent": "초대를 보냈습니다",
+  "shareInviteAccepted": "초대를 수락했습니다",
+  "shareInviteRejected": "초대를 거부했습니다",
+  "shareInviteCancelled": "초대를 취소했습니다",
+  "shareInviteCancelConfirmTitle": "초대 취소",
+  "shareInviteCancelConfirmMessage": "'{email}'님에게 보낸 초대를 취소하시겠습니까?",
+  "@shareInviteCancelConfirmMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "shareInviteRejectConfirmTitle": "초대 거부",
+  "shareInviteRejectConfirmMessage": "'{name}' 초대를 거부하시겠습니까?\n거부하면 목록에서 사라집니다.",
+  "@shareInviteRejectConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLeaveConfirmTitle": "가계부 탈퇴",
+  "shareLeaveConfirmMessage": "'{name}'에서 탈퇴하시겠습니까?\n탈퇴하면 해당 가계부의 데이터에 더 이상 접근할 수 없습니다.",
+  "@shareLeaveConfirmMessage": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLeave": "탈퇴",
+  "shareReject": "거부",
+
+  "categoryTitle": "카테고리",
+  "categoryManagement": "카테고리 관리",
+  "categoryAdd": "카테고리 추가",
+  "categoryEdit": "카테고리 수정",
+  "categoryName": "카테고리 이름",
+  "categoryNameHint": "카테고리 이름을 입력하세요",
+  "categoryNameRequired": "카테고리 이름을 입력해주세요",
+  "categoryDeleted": "카테고리가 삭제되었습니다",
+  "categoryDeleteFailed": "삭제 실패: {error}",
+  "@categoryDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryDeleteConfirmTitle": "카테고리 삭제",
+  "categoryDeleteConfirmMessage": "이 카테고리로 기록된 거래는 삭제되지 않습니다.",
+  "categoryAdded": "카테고리가 추가되었습니다",
+  "categoryEmpty": "등록된 {type} 카테고리가 없습니다",
+  "@categoryEmpty": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+
+  "transactionExpense": "지출",
+  "transactionIncome": "수입",
+  "transactionAsset": "자산",
+  "transactionTitle": "제목",
+  "transactionAmount": "금액",
+  "transactionAmountUnit": "원",
+  "transactionCategory": "카테고리",
+  "transactionPaymentMethod": "결제수단",
+  "transactionPaymentMethodOptional": "결제수단 (선택)",
+  "transactionMemo": "메모",
+  "transactionMemoOptional": "메모 (선택)",
+  "transactionMemoHint": "추가 메모를 입력하세요",
+  "transactionAdded": "거래가 추가되었습니다",
+  "transactionUpdated": "거래가 수정되었습니다",
+  "transactionNone": "선택 안함",
+  "transactionQuickExpense": "빠른 지출 추가",
+  "transactionExpenseAdded": "지출이 추가되었습니다",
+  "transactionAmountRequired": "금액을 입력해주세요",
+  "transactionTitleRequired": "제목을 입력해주세요",
+  "transactionCategoryLoadError": "카테고리를 불러올 수 없습니다",
+  "transactionNoTitle": "제목 없음",
+  "transactionDeleted": "거래가 삭제되었습니다",
+  "transactionDeleteFailed": "삭제 실패: {error}",
+  "@transactionDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "transactionDeleteConfirmTitle": "거래 삭제",
+  "transactionDeleteConfirmMessage": "이 거래를 삭제하시겠습니까?",
+  "labelTitle": "제목",
+  "labelMemo": "메모",
+  "labelAmount": "금액",
+  "labelDate": "날짜",
+  "labelCategory": "카테고리",
+  "labelPaymentMethod": "결제수단",
+  "labelAuthor": "작성자",
+  "maturityDateSelect": "만기일 선택",
+  "installmentInfoRequired": "할부 정보를 입력해주세요",
+  "installmentLabel": "할부",
+  "installmentRegistered": "{months}개월 할부가 등록되었습니다",
+  "@installmentRegistered": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "recurringRegistered": "반복 거래가 등록되었습니다 ({endText})",
+  "@recurringRegistered": {
+    "placeholders": {
+      "endText": {
+        "type": "String"
+      }
+    }
+  },
+  "recurringUntil": "{year}년 {month}월까지",
+  "@recurringUntil": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "recurringContinue": "계속",
+  "summaryBalance": "합계",
+  "maturityDateSelectOptional": "만기일 선택 (선택사항)",
+  "recurringPeriod": "반복 주기",
+  "recurringNone": "없음",
+  "recurringDaily": "일",
+  "recurringMonthly": "월",
+  "recurringYearly": "년",
+  "recurringEndDate": "종료일",
+  "recurringEndMonth": "종료월",
+  "recurringEndYear": "종료년",
+  "recurringContinueRepeat": "계속 반복",
+  "recurringClearEndDate": "종료일 해제",
+  "recurringTransactionCount": "총 {count}건의 거래가 생성됩니다",
+  "@recurringTransactionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "recurringDailyAutoCreate": "계속 반복 (매일 자동 생성)",
+  "fixedExpenseRegister": "고정비로 등록",
+  "fixedExpenseDescription": "월세, 보험료 등 정기적으로 지출되는 금액",
+  "yearLabel": "년도",
+  "monthLabel": "월",
+  "yearFormat": "{year}년",
+  "@yearFormat": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "monthFormat": "{month}월",
+  "@monthFormat": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "installmentInput": "할부로 입력",
+  "installmentInputDescription": "총금액을 여러 달에 나눠서 기록합니다",
+  "installmentApplied": "할부 적용됨",
+  "installmentTotalAmount": "총 금액",
+  "installmentMonthlyPayment": "월 납입금",
+  "installmentFirstMonth": "첫 달",
+  "installmentPeriod": "할부 기간",
+  "installmentMonths": "{months}개월",
+  "@installmentMonths": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "installmentEndMonth": "종료월",
+  "installmentModify": "수정하기",
+  "installmentTotalAmountHint": "할부 총 금액을 입력하세요",
+  "installmentMonthsLabel": "개월 수",
+  "installmentMonthsHint": "1-60개월",
+  "installmentPreview": "할부 계산 미리보기",
+  "installmentApply": "할부 적용",
+  "installmentAmountError": "금액이 개월 수보다 커야 합니다",
+  "categoryAddType": "{type} 카테고리 추가",
+  "@categoryAddType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "categoryNameHintExample": "예: 식비, 교통비",
+  "categoryDeleteConfirm": "'{name}' 카테고리를 삭제하시겠습니까?",
+  "@categoryDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentMethodNameHintExample": "예: 신용카드, 현금",
+  "paymentMethodDeleteConfirm": "'{name}' 결제수단을 삭제하시겠습니까?",
+  "@paymentMethodDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+
+  "paymentMethodTitle": "결제수단",
+  "paymentMethodManagement": "결제수단 관리",
+  "paymentMethodAdd": "결제수단 추가",
+  "paymentMethodEdit": "결제수단 수정",
+  "paymentMethodName": "결제수단 이름",
+  "paymentMethodNameHint": "결제수단 이름을 입력하세요",
+  "paymentMethodNameRequired": "결제수단 이름을 입력해주세요",
+  "paymentMethodDeleted": "결제수단이 삭제되었습니다",
+  "paymentMethodDeleteFailed": "삭제 실패: {error}",
+  "@paymentMethodDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "paymentMethodDeleteConfirmTitle": "결제수단 삭제",
+  "paymentMethodDeleteConfirmMessage": "이 결제수단으로 기록된 거래의 결제수단 정보가 삭제됩니다.",
+  "paymentMethodAdded": "결제수단이 추가되었습니다",
+  "paymentMethodUpdated": "결제수단이 수정되었습니다",
+  "paymentMethodEmpty": "등록된 결제수단이 없습니다",
+  "paymentMethodDefault": "기본 결제수단",
+
+  "errorGeneric": "오류가 발생했습니다",
+  "errorNetwork": "네트워크 연결을 확인해주세요.",
+  "errorSessionExpired": "로그인이 만료되었습니다. 다시 로그인해주세요.",
+  "errorNotFound": "페이지를 찾을 수 없습니다",
+  "errorWithMessage": "오류: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+
+  "user": "사용자",
+  "homeTitle": "홈",
+
+  "moreMenuShareManagement": "가계부 및 공유 관리",
+  "moreMenuCategoryManagement": "카테고리 관리",
+  "moreMenuPaymentMethodManagement": "결제수단 관리",
+  "moreMenuFixedExpenseManagement": "고정비 관리",
+  "noHistory": "내역 없음",
+
+  "statisticsCategory": "카테고리",
+  "statisticsTrend": "추이",
+  "statisticsPaymentMethod": "결제수단",
+  "statisticsCategoryDistribution": "카테고리별 분포",
+  "statisticsCategoryRanking": "카테고리별 순위",
+  "statisticsNoData": "데이터가 없습니다",
+  "statisticsOther": "기타",
+  "statisticsTotalIncome": "총 수입",
+  "statisticsTotalExpense": "총 지출",
+  "statisticsTotalAsset": "총 자산",
+  "statisticsTotal": "총 {type}",
+  "@statisticsTotal": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "statisticsNoPreviousData": "지난달 데이터 없음",
+  "statisticsIncrease": "증가",
+  "statisticsDecrease": "감소",
+  "statisticsSame": "동일",
+  "statisticsVsLastMonth": "(지난달 대비 {percent}% {change})",
+  "@statisticsVsLastMonth": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      },
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "statisticsFixed": "고정비",
+  "statisticsVariable": "변동비",
+  "statisticsAverage": "평균",
+  "statisticsDetail": "상세 내역",
+  "statisticsYearMonth": "{year}년 {month}월",
+  "@statisticsYearMonth": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "statisticsYear": "{year}년",
+  "@statisticsYear": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "statisticsPaymentDistribution": "결제수단별 분포",
+  "statisticsPaymentRanking": "결제수단별 순위",
+  "statisticsPaymentNotice": "결제수단 통계는 지출 내역만 표시됩니다.",
+
+  "assetTitle": "자산",
+  "assetTotal": "총 자산",
+  "assetChange": "자산 변화",
+  "assetCategoryDistribution": "카테고리별 분포",
+  "assetList": "자산 목록",
+  "assetThisMonth": "이번 달 {change}원",
+  "@assetThisMonth": {
+    "placeholders": {
+      "change": {
+        "type": "String"
+      }
+    }
+  },
+  "assetGoalTitle": "목표",
+  "assetGoalSet": "목표 설정",
+  "assetGoalDelete": "목표 삭제",
+  "assetGoalDeleteConfirm": "'{title}' 목표를 삭제하시겠습니까?",
+  "@assetGoalDeleteConfirm": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "assetGoalDeleted": "목표가 삭제되었습니다",
+  "assetGoalDeleteFailed": "삭제 실패: {error}",
+  "@assetGoalDeleteFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "assetGoalEmpty": "목표를 설정하고\n자산을 계획적으로 관리하세요",
+  "assetGoalCurrent": "현재",
+  "assetGoalTarget": "목표",
+  "assetGoalRemaining": "{amount}원 남음",
+  "@assetGoalRemaining": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "assetGoalAchieved": "목표 달성 완료!",
+  "assetGoalTapForDetails": "탭하여 상세 금액 보기",
+  "assetGoalLoadError": "목표 정보를 불러올 수 없습니다",
+
+  "fixedExpenseTitle": "고정비",
+  "fixedExpenseManagement": "고정비 관리",
+  "fixedExpenseCategoryTitle": "고정비 카테고리",
+  "fixedExpenseIncludeInExpense": "고정비를 지출에 편입",
+  "fixedExpenseIncludeInExpenseOn": "고정비가 달력과 통계의 지출에 포함됩니다",
+  "fixedExpenseIncludeInExpenseOff": "고정비가 달력과 통계의 지출에서 제외됩니다",
+  "fixedExpenseIncludedSnackbar": "고정비가 지출에 포함됩니다",
+  "fixedExpenseExcludedSnackbar": "고정비가 지출에서 제외됩니다",
+  "fixedExpenseSettingsFailed": "설정 변경 실패: {error}",
+  "@fixedExpenseSettingsFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "fixedExpenseSettingsLoadFailed": "설정 로드 실패",
+  "fixedExpenseCategoryEmpty": "등록된 고정비 카테고리가 없습니다",
+  "fixedExpenseCategoryEmptySubtitle": "+ 버튼을 눌러 카테고리를 추가하세요",
+  "fixedExpenseCategoryDelete": "고정비 카테고리 삭제",
+  "fixedExpenseCategoryDeleteConfirm": "'{name}' 카테고리를 삭제하시겠습니까?\n\n이 카테고리로 기록된 거래는 삭제되지 않습니다.",
+  "@fixedExpenseCategoryDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fixedExpenseCategoryAdd": "고정비 카테고리 추가",
+  "fixedExpenseCategoryEdit": "고정비 카테고리 수정",
+  "fixedExpenseCategoryNameHint": "예: 월세, 보험료, 구독료",
+
+  "categoryUpdated": "카테고리가 수정되었습니다",
+
+  "notificationSettingsTitle": "알림 설정",
+  "notificationSettingsDescription": "받고 싶은 알림을 선택하세요",
+  "notificationSettingsSaveFailed": "설정 저장 실패: {error}",
+  "@notificationSettingsSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "notificationSettingsLoadFailed": "알림 설정을 불러올 수 없습니다",
+  "notificationSectionSharedLedger": "공유 가계부",
+  "notificationSharedLedgerChange": "공유 가계부 변경",
+  "notificationSharedLedgerChangeDesc": "다른 멤버가 거래를 추가/수정/삭제했을 때 알림",
+  "notificationSectionInvite": "초대",
+  "notificationInviteReceived": "가계부 초대 받음",
+  "notificationInviteReceivedDesc": "다른 사용자가 가계부에 초대했을 때 알림",
+  "notificationInviteAccepted": "초대 수락됨",
+  "notificationInviteAcceptedDesc": "내가 보낸 초대를 다른 사용자가 수락했을 때 알림",
+
+  "searchTitle": "검색",
+  "searchHint": "제목/메모로 검색...",
+  "searchEmpty": "제목/메모로 거래 내역을 검색하세요",
+  "searchNoResults": "검색 결과가 없습니다",
+  "searchUncategorized": "미분류",
+
+  "shareManagementTitle": "가계부 및 공유 관리",
+  "shareMyLedgers": "내 가계부",
+  "shareInvitedLedgers": "초대받은 가계부",
+  "shareLedgerEmpty": "가계부가 없습니다",
+  "shareLedgerEmptySubtitle": "가계부를 생성하여 시작하세요",
+  "shareCreateLedger": "가계부 생성하기",
+  "shareErrorOccurred": "오류가 발생했습니다",
+  "shareLedgerChanged": "'{name}' 가계부로 변경했습니다",
+  "@shareLedgerChanged": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareLedgerLeft": "가계부에서 탈퇴했습니다",
+  "shareInviteCancelText": "초대취소",
+  "shareInviteSentMessage": "초대를 보냈습니다",
+  "shareInviteCancelledMessage": "초대를 취소했습니다",
+  "shareInviteAcceptedMessage": "초대를 수락했습니다",
+  "shareInviteRejectedMessage": "초대를 거부했습니다",
+  "shareEmailHint": "example@email.com",
+  "shareInUse": "사용 중",
+  "shareUse": "사용",
+  "shareUnknown": "알 수 없음",
+  "shareMemberParticipating": "멤버로 참여 중",
+  "shareAccept": "수락",
+  "shareMe": "나",
+  "shareMemberCount": "멤버 {current}/{max}명",
+  "@shareMemberCount": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "shareMemberFull": "멤버 가득 참",
+  "sharePendingAccept": "수락 대기중",
+  "shareAccepted": "수락됨",
+  "shareRejected": "수락 거부됨",
+  "shareInviterLedger": "{email}님의 가계부",
+  "@shareInviterLedger": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "shareSharingWith": "{name}님과 공유 중",
+  "@shareSharingWith": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareSharingWithMultiple": "{name1}, {name2}님과 공유 중",
+  "@shareSharingWithMultiple": {
+    "placeholders": {
+      "name1": {
+        "type": "String"
+      },
+      "name2": {
+        "type": "String"
+      }
+    }
+  },
+  "shareSharingWithMore": "{name1}, {name2} 외 {count}명과 공유 중",
+  "@shareSharingWithMore": {
+    "placeholders": {
+      "name1": {
+        "type": "String"
+      },
+      "name2": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "ledgerNewTitle": "새 가계부",
+  "ledgerEditTitle": "가계부 수정",
+  "ledgerNoLedgers": "등록된 가계부가 없습니다",
+  "ledgerCreateButton": "가계부 만들기",
+  "ledgerNameLabel": "가계부 이름",
+  "ledgerNameRequired": "가계부 이름을 입력하세요",
+  "ledgerDescriptionLabel": "설명 (선택)",
+  "ledgerCurrencyLabel": "통화",
+  "ledgerDeleteNotAllowedTitle": "삭제 불가",
+  "ledgerDeleteNotAllowedContent": "최소 1개의 가계부가 필요합니다.\n다른 가계부를 먼저 생성해주세요.",
+  "ledgerMemberLoading": "멤버 정보 로딩 중...",
+  "ledgerDeleteConfirmWithName": "'{name}' 가계부를 삭제하시겠습니까?\n\n이 가계부에 기록된 모든 거래, 카테고리, 예산이 함께 삭제됩니다.\n이 작업은 되돌릴 수 없습니다.",
+  "@ledgerDeleteConfirmWithName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerDeleteCurrentInUseWarning": "현재 사용 중인 가계부입니다.\n삭제 후 다른 가계부로 자동 전환됩니다.\n\n",
+  "ledgerSharedWithOne": "{name}님과 공유 중",
+  "@ledgerSharedWithOne": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerSharedWithTwo": "{name1}, {name2}님과 공유 중",
+  "@ledgerSharedWithTwo": {
+    "placeholders": {
+      "name1": {
+        "type": "String"
+      },
+      "name2": {
+        "type": "String"
+      }
+    }
+  },
+  "ledgerSharedWithMany": "{name1}, {name2} 외 {count}명과 공유 중",
+  "@ledgerSharedWithMany": {
+    "placeholders": {
+      "name1": {
+        "type": "String"
+      },
+      "name2": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ledgerUser": "사용자",
+
+  "calendarDaySun": "일",
+  "calendarDayMon": "월",
+  "calendarDayTue": "화",
+  "calendarDayWed": "수",
+  "calendarDayThu": "목",
+  "calendarDayFri": "금",
+  "calendarDaySat": "토",
+  "calendarToday": "오늘",
+  "calendarYearMonth": "{year}년 {month}월",
+  "@calendarYearMonth": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarCategoryBreakdown": "카테고리별 상세내역",
+  "calendarNoRecords": "기록된 내역이 없습니다",
+  "calendarTransactionCount": "{count}건",
+  "@calendarTransactionCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarNewTransaction": "새 거래",
+  "calendarTransactionDelete": "거래 삭제",
+  "calendarTransactionDeleteConfirm": "이 거래를 삭제하시겠습니까?",
+
+  "assetNoData": "데이터가 없습니다",
+  "assetOther": "기타",
+  "assetNoAsset": "자산이 없습니다",
+  "assetNoAssetData": "자산 데이터가 없습니다",
+  "assetGoalNew": "새 목표 설정",
+  "assetGoalEdit": "목표 수정",
+  "assetGoalAmount": "목표 금액",
+  "assetGoalAmountRequired": "목표 금액을 입력하세요",
+  "assetGoalAmountInvalid": "올바른 금액을 입력하세요",
+  "assetGoalDateOptional": "목표 날짜 (선택)",
+  "assetGoalDateHint": "목표 달성 날짜를 선택하세요",
+  "assetGoalCreate": "목표 생성",
+  "assetGoalCreated": "목표가 생성되었습니다",
+  "assetGoalUpdated": "목표가 수정되었습니다",
+  "assetLedgerRequired": "가계부를 선택하세요",
+  "assetGoalAchievementRate": "달성률",
+  "assetGoalCurrentAmount": "현재",
+  "assetGoalTargetAmount": "목표",
+  "assetGoalDaysPassed": "{days}일 경과",
+  "@assetGoalDaysPassed": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "assetGoalDaysRemaining": "D-{days}",
+  "@assetGoalDaysRemaining": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "assetGoalCompleted": "달성 완료",
+  "assetGoalNone": "설정된 목표가 없습니다",
+  "assetGoalDeleteTitle": "목표 삭제",
+  "assetGoalDeleteMessage": "{title} 목표를 삭제하시겠습니까?",
+  "@assetGoalDeleteMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "assetMonth": "{month}월",
+  "@assetMonth": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+
+  "fixedExpenseCategoryAdd": "고정비 카테고리 추가",
+  "fixedExpenseCategoryName": "카테고리 이름",
+  "fixedExpenseCategoryNameHint": "예: 월세, 통신비",
+  "fixedExpenseCategoryNameRequired": "카테고리 이름을 입력해주세요",
+  "fixedExpenseCategoryAdded": "고정비 카테고리가 추가되었습니다",
+  "fixedExpenseCategoryDelete": "고정비 카테고리 삭제",
+  "fixedExpenseCategoryDeleteConfirm": "'{name}' 카테고리를 삭제하시겠습니까?",
+  "@fixedExpenseCategoryDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "fixedExpenseCategoryDeleted": "고정비 카테고리가 삭제되었습니다",
+  "fixedExpenseCategoryNone": "선택 안함",
+  "paymentMethodOptional": "결제수단 (선택)",
+
+  "statisticsPeriodMonthly": "월별",
+  "statisticsPeriodYearly": "연별",
+  "statisticsTypeIncome": "수입",
+  "statisticsTypeExpense": "지출",
+  "statisticsTypeAsset": "자산",
+  "statisticsExpenseAll": "전체",
+  "statisticsExpenseFixed": "고정비",
+  "statisticsExpenseVariable": "변동비",
+  "statisticsExpenseAllDesc": "모든 지출",
+  "statisticsExpenseFixedDesc": "월세, 보험료 등 정기 지출",
+  "statisticsExpenseVariableDesc": "고정비 제외 지출",
+  "statisticsDateSelect": "날짜 선택",
+  "statisticsToday": "오늘",
+  "statisticsYearLabel": "{year}년",
+  "@statisticsYearLabel": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "statisticsMonthLabel": "{month}월",
+  "@statisticsMonthLabel": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "statisticsYearMonthFormat": "{year}년 {month}월",
+  "@statisticsYearMonthFormat": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+
+  "categoryUncategorized": "미지정",
+  "categoryFixedExpense": "고정비",
+  "categoryUnknown": "미분류",
+
+  "defaultCategoryFood": "식비",
+  "defaultCategoryTransport": "교통",
+  "defaultCategoryShopping": "쇼핑",
+  "defaultCategoryLiving": "생활",
+  "defaultCategoryTelecom": "통신",
+  "defaultCategoryMedical": "의료",
+  "defaultCategoryCulture": "문화",
+  "defaultCategoryEducation": "교육",
+  "defaultCategoryOtherExpense": "기타 지출",
+  "defaultCategorySalary": "급여",
+  "defaultCategorySideJob": "부업",
+  "defaultCategoryAllowance": "용돈",
+  "defaultCategoryInterest": "이자",
+  "defaultCategoryOtherIncome": "기타 수입",
+  "defaultCategoryFixedDeposit": "정기예금",
+  "defaultCategorySavings": "적금",
+  "defaultCategoryStock": "주식",
+  "defaultCategoryFund": "펀드",
+  "defaultCategoryRealEstate": "부동산",
+  "defaultCategoryCrypto": "암호화폐",
+  "defaultCategoryOtherAsset": "기타 자산",
+
+  "errorWithMessage": "오류: {message}",
+  "@errorWithMessage": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  }
+}
