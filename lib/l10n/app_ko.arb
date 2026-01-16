@@ -47,6 +47,11 @@
   "tooltipSort": "정렬",
   "tooltipInfo": "정보",
 
+  "navTabCalendar": "캘린더",
+  "navTabStatistics": "통계",
+  "navTabAsset": "자산",
+  "navTabMore": "더보기",
+
   "authLogin": "로그인",
   "authSignup": "회원가입",
   "authLogout": "로그아웃",
