@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/color_utils.dart';
+import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/ledger.dart';
 
@@ -448,7 +449,7 @@ class _UserAmountRow extends StatelessWidget {
             SizedBox(width: CalendarConstants.dotSpacing),
             Flexible(
               child: Text(
-                NumberFormat('#,###').format(amount),
+                NumberFormatUtils.currency.format(amount),
                 style: TextStyle(
                   fontSize: CalendarConstants.amountFontSize,
                   color: isSelected
