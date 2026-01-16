@@ -89,7 +89,7 @@ class _LedgerCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final currentUserId = ref.watch(currentUserProvider)?.id;
+    final currentUserId = ref.watch(currentUserProvider).id;
     final isOwner = ledger.ownerId == currentUserId;
     final membersAsync = ref.watch(ledgerMembersProvider(ledger.id));
 

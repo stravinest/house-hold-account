@@ -56,7 +56,7 @@ class StatisticsRepository {
 
     for (final row in response as List) {
       final rowMap = row as Map<String, dynamic>;
-      final amount = (rowMap['amount'] as num?)?.toInt() ?? 0;
+      final amount = (rowMap['amount'] as num?).toInt() ?? 0;
       final isFixedExpense = rowMap['is_fixed_expense'] == true;
 
       // 고정비 필터일 때는 fixed_expense_category_id 사용
@@ -318,7 +318,7 @@ class StatisticsRepository {
     for (final row in response as List) {
       final rowMap = row as Map<String, dynamic>;
       final paymentMethodId = rowMap['payment_method_id']?.toString();
-      final amount = (rowMap['amount'] as num?)?.toInt() ?? 0;
+      final amount = (rowMap['amount'] as num?).toInt() ?? 0;
       final paymentMethod = rowMap['payment_methods'] as Map<String, dynamic>?;
 
       totalAmount += amount;

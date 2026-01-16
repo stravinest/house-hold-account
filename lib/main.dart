@@ -213,7 +213,7 @@ class _SharedHouseholdAccountAppState
 
     return MaterialApp.router(
       onGenerateTitle: (context) =>
-          AppLocalizations.of(context)?.appTitle ?? 'Shared Household Account',
+          AppLocalizations.of(context).appTitle ?? 'Shared Household Account',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
