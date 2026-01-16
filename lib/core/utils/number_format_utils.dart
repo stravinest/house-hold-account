@@ -12,9 +12,12 @@ class NumberFormatUtils {
   // 인스턴스 생성 방지를 위한 private 생성자
   NumberFormatUtils._();
 
+  // 천 단위 구분 기호 패턴
+  static const _currencyPattern = '#,###';
+
   /// 천 단위 구분 기호가 있는 숫자 포맷터
   ///
   /// 패턴: #,### (예: 1234567 → 1,234,567)
   /// 캘린더 셀, 통계 위젯, 검색 결과 등에서 금액 표시에 사용
-  static final NumberFormat currency = NumberFormat('#,###');
+  static final NumberFormat currency = NumberFormat(_currencyPattern);
 }
