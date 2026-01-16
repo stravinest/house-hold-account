@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
 
@@ -233,8 +234,22 @@ class _CategorySelectorWidgetState
 
     return categoriesAsync.when(
       data: (categories) => _buildCategoryGrid(context, categories),
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => _buildSkeletonChips(),
       error: (e, _) => Text('${AppLocalizations.of(context)!.commonError}: $e'),
+    );
+  }
+
+  Widget _buildSkeletonChips() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        SkeletonBox(width: 80, height: 32, borderRadius: 16),
+        SkeletonBox(width: 100, height: 32, borderRadius: 16),
+        SkeletonBox(width: 90, height: 32, borderRadius: 16),
+        SkeletonBox(width: 70, height: 32, borderRadius: 16),
+        SkeletonBox(width: 85, height: 32, borderRadius: 16),
+      ],
     );
   }
 
