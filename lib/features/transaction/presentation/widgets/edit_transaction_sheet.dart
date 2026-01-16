@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -240,32 +239,10 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                         const SizedBox(height: 16),
 
                         // 금액 입력
-                        TextFormField(
+                        AmountInputField(
                           controller: _amountController,
                           focusNode: _amountFocusNode,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            _AmountInputFormatter(locale),
-                          ],
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                          decoration: InputDecoration(
-                            suffixText: l10n.transactionAmountUnit,
-                            suffixStyle: const TextStyle(fontSize: 18),
-                            border: InputBorder.none,
-                          ),
-                          validator: (value) {
-                            if (value == null ||
-                                value.isEmpty ||
-                                value == '0') {
-                              return l10n.transactionAmountRequired;
-                            }
-                            return null;
-                          },
+                          isInstallmentMode: false,
                         ),
 
                         const Divider(),
@@ -753,31 +730,5 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         );
       }
     }
-  }
-}
-
-// 금액 포맷터 (천 단위 구분)
-class _AmountInputFormatter extends TextInputFormatter {
-  final String locale;
-
-  _AmountInputFormatter(this.locale);
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    if (newValue.text.isEmpty) return newValue;
-
-    final number = int.tryParse(newValue.text.replaceAll(',', ''));
-    if (number == null) return oldValue;
-
-    final formatter = NumberFormat('#,###', locale == 'ko' ? 'ko_KR' : 'en_US');
-    final formatted = formatter.format(number);
-
-    return TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
   }
 }
