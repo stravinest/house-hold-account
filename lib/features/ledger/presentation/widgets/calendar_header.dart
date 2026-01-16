@@ -56,6 +56,7 @@ class CalendarHeader extends StatelessWidget {
               size: 18,
               color: Theme.of(context).colorScheme.onSurface,
             ),
+            tooltip: l10n.tooltipRefresh,
             onPressed: () async {
               await onRefresh();
             },
@@ -66,6 +67,7 @@ class CalendarHeader extends StatelessWidget {
           // 이전 월 버튼
           IconButton(
             icon: const Icon(Icons.chevron_left),
+            tooltip: l10n.tooltipPreviousMonth,
             onPressed: onPreviousMonth,
           ),
           // 월 타이틀
@@ -78,6 +80,7 @@ class CalendarHeader extends StatelessWidget {
           // 다음 월 버튼
           IconButton(
             icon: const Icon(Icons.chevron_right),
+            tooltip: l10n.tooltipNextMonth,
             onPressed: onNextMonth,
           ),
         ],

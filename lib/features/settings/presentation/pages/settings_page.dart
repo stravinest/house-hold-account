@@ -759,6 +759,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                         _obscureCurrentPassword = !_obscureCurrentPassword;
                       });
                     },
+                    tooltip: l10n.tooltipTogglePassword,
                   ),
                 ),
                 validator: (value) {
@@ -786,6 +787,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                         _obscureNewPassword = !_obscureNewPassword;
                       });
                     },
+                    tooltip: l10n.tooltipTogglePassword,
                   ),
                 ),
                 validator: (value) {
@@ -816,6 +818,7 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
                         _obscureConfirmPassword = !_obscureConfirmPassword;
                       });
                     },
+                    tooltip: l10n.tooltipTogglePassword,
                   ),
                 ),
                 validator: (value) {

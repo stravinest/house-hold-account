@@ -171,6 +171,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     labelText: l10n.authPassword,
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
+                      tooltip: _obscurePassword
+                          ? l10n.authPasswordShow
+                          : l10n.authPasswordHide,
                       icon: Icon(
                         _obscurePassword
                             ? Icons.visibility_outlined
@@ -203,6 +206,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     labelText: l10n.authPasswordConfirm,
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
+                      tooltip: _obscureConfirmPassword
+                          ? l10n.authPasswordShow
+                          : l10n.authPasswordHide,
                       icon: Icon(
                         _obscureConfirmPassword
                             ? Icons.visibility_outlined

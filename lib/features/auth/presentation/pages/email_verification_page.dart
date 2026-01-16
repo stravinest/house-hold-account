@@ -212,6 +212,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
       appBar: AppBar(
         title: Text(l10n.emailVerificationTitle),
         leading: IconButton(
+          tooltip: l10n.commonBack,
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go(Routes.login),
         ),

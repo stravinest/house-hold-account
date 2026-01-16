@@ -163,7 +163,11 @@ class MaturityDateTile extends StatelessWidget {
       ),
       trailing: maturityDate == null
           ? const Icon(Icons.chevron_right)
-          : IconButton(icon: const Icon(Icons.clear), onPressed: onClear),
+          : IconButton(
+              icon: const Icon(Icons.clear),
+              onPressed: onClear,
+              tooltip: l10n.tooltipClear,
+            ),
       onTap: onTap,
     );
   }

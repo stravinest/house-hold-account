@@ -238,6 +238,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       visualDensity: VisualDensity.compact,
+                      tooltip: l10n.tooltipClear,
                     )
                   else
                     Icon(
