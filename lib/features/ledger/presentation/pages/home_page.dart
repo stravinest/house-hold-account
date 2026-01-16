@@ -694,7 +694,7 @@ class _DailyUserSummary extends ConsumerWidget {
                       const SizedBox(width: 6),
                       Text(
                         userName,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        style: Theme.of(context).textTheme.bodySmall.copyWith(
                           fontWeight: FontWeight.w600,
                           fontSize: 12,
                         ),

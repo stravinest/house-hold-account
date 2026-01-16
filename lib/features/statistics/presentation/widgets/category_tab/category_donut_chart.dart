@@ -51,7 +51,7 @@ class CategoryDonutChart extends ConsumerWidget {
       child: Center(
         child: Text(
           l10n.statisticsNoData,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          style: Theme.of(context).textTheme.bodyLarge.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
@@ -167,14 +167,14 @@ class CategoryDonutChart extends ConsumerWidget {
       children: [
         Text(
           typeLabel,
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: theme.textTheme.bodySmall.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: theme.textTheme.titleMedium.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),

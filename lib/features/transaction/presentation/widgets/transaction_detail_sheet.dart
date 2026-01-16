@@ -194,14 +194,14 @@ class TransactionDetailSheet extends ConsumerWidget {
           const SizedBox(width: 12),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            style: Theme.of(context).textTheme.bodyMedium.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
           const Spacer(),
           Text(
             value,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            style: Theme.of(context).textTheme.bodyLarge.copyWith(
               fontWeight: FontWeight.w600,
               color: valueColor,
             ),

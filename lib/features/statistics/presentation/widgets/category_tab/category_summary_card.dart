@@ -90,14 +90,14 @@ class CategorySummaryCard extends ConsumerWidget {
       children: [
         Text(
           l10n.statisticsTotal(typeLabel),
-          style: theme.textTheme.titleMedium?.copyWith(
+          style: theme.textTheme.titleMedium.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           '${numberFormat.format(comparison.currentTotal)}${l10n.transactionAmountUnit}',
-          style: theme.textTheme.headlineMedium?.copyWith(
+          style: theme.textTheme.headlineMedium.copyWith(
             fontWeight: FontWeight.bold,
             color: typeColor,
           ),
@@ -119,7 +119,7 @@ class CategorySummaryCard extends ConsumerWidget {
     if (comparison.previousTotal == 0 && comparison.currentTotal == 0) {
       return Text(
         l10n.statisticsNoPreviousData,
-        style: theme.textTheme.bodyMedium?.copyWith(
+        style: theme.textTheme.bodyMedium.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
       );
@@ -144,7 +144,7 @@ class CategorySummaryCard extends ConsumerWidget {
         const SizedBox(width: 4),
         Text(
           '${numberFormat.format(comparison.difference.abs())}${l10n.transactionAmountUnit}',
-          style: theme.textTheme.bodyMedium?.copyWith(
+          style: theme.textTheme.bodyMedium.copyWith(
             color: arrowColor,
             fontWeight: FontWeight.w500,
           ),
@@ -155,7 +155,7 @@ class CategorySummaryCard extends ConsumerWidget {
             comparison.percentageChange.abs().toStringAsFixed(1),
             changeText,
           ),
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: theme.textTheme.bodySmall.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
         ),

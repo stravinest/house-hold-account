@@ -255,7 +255,7 @@ class _TransactionCard extends StatelessWidget {
                       : transaction.isAssetType
                       ? ''
                       : '-'}${formatter.format(transaction.amount)}${l10n.transactionAmountUnit}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  style: Theme.of(context).textTheme.titleMedium.copyWith(
                     color: amountColor,
                     fontWeight: FontWeight.bold,
                   ),

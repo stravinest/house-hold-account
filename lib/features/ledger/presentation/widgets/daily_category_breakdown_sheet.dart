@@ -48,7 +48,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         l10n.calendarCategoryBreakdown,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        style: Theme.of(context).textTheme.bodySmall.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
                       ),
@@ -181,14 +181,14 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          style: Theme.of(context).textTheme.bodySmall.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           '${formatter.format(amount)}${l10n.transactionAmountUnit}',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          style: Theme.of(context).textTheme.titleMedium.copyWith(
             color: color,
             fontWeight: FontWeight.bold,
           ),

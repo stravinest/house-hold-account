@@ -177,7 +177,7 @@ class _SummaryColumn extends StatelessWidget {
         // 라벨
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          style: Theme.of(context).textTheme.bodySmall.copyWith(
             color: colorScheme.onSurfaceVariant,
             fontSize: 11,
           ),
@@ -185,7 +185,7 @@ class _SummaryColumn extends StatelessWidget {
         // 총액
         Text(
           '${totalAmount < 0 ? '-' : ''}${formatter.format(totalAmount.abs())}',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          style: Theme.of(context).textTheme.titleMedium.copyWith(
             color: color,
             fontWeight: FontWeight.bold,
             fontSize: 14,
@@ -246,7 +246,7 @@ class _UserAmountIndicator extends StatelessWidget {
         const SizedBox(width: 2),
         Text(
           '${isNegative ? '-' : ''}${formatter.format(amount.abs())}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          style: Theme.of(context).textTheme.bodySmall.copyWith(
             fontSize: 9,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),

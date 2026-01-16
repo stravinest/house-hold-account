@@ -33,7 +33,7 @@ class AssetCategoryList extends StatelessWidget {
         child: Center(
           child: Text(
             l10n.assetNoAsset,
-            style: theme.textTheme.bodyLarge?.copyWith(
+            style: theme.textTheme.bodyLarge.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
@@ -69,7 +69,7 @@ class AssetCategoryList extends StatelessWidget {
                       width: 24,
                       child: Text(
                         '$rank',
-                        style: theme.textTheme.titleMedium?.copyWith(
+                        style: theme.textTheme.titleMedium.copyWith(
                           fontWeight: FontWeight.bold,
                           color: rank <= 3
                               ? theme.colorScheme.primary
@@ -91,7 +91,7 @@ class AssetCategoryList extends StatelessWidget {
                     // 백분율
                     Text(
                       '${percentage.toStringAsFixed(1)}%',
-                      style: theme.textTheme.bodyMedium?.copyWith(
+                      style: theme.textTheme.bodyMedium.copyWith(
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
@@ -99,7 +99,7 @@ class AssetCategoryList extends StatelessWidget {
                     // 금액
                     Text(
                       '${numberFormat.format(category.amount)}${l10n.transactionAmountUnit}',
-                      style: theme.textTheme.bodyLarge?.copyWith(
+                      style: theme.textTheme.bodyLarge.copyWith(
                         fontWeight: FontWeight.w500,
                       ),
                     ),

@@ -35,7 +35,7 @@ class PaymentMethodTabView extends StatelessWidget {
                 Expanded(
                   child: Text(
                     l10n.statisticsPaymentNotice,
-                    style: theme.textTheme.bodySmall?.copyWith(
+                    style: theme.textTheme.bodySmall.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
