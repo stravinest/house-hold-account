@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
+import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../domain/entities/asset_goal.dart';
 import '../providers/asset_provider.dart';
@@ -56,7 +57,104 @@ class AssetPage extends ConsumerWidget {
             ],
           ),
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Card(
+                margin: const EdgeInsets.all(16),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SkeletonLine(width: 80, height: 16),
+                      const SizedBox(height: 8),
+                      const SkeletonLine(width: 160, height: 32),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          SkeletonBox(
+                            width: 16,
+                            height: 16,
+                            borderRadius: BorderRadiusToken.xs,
+                          ),
+                          const SizedBox(width: 4),
+                          const SkeletonLine(width: 100, height: 14),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SkeletonLine(width: 100, height: 18),
+                      const SizedBox(height: 16),
+                      SkeletonBox(
+                        width: double.infinity,
+                        height: 200,
+                        borderRadius: BorderRadiusToken.md,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SkeletonLine(width: 120, height: 18),
+                      const SizedBox(height: 16),
+                      Center(
+                        child: SkeletonCircle(size: 180),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SkeletonLine(width: 80, height: 18),
+                      const SizedBox(height: 16),
+                      ...List.generate(
+                        3,
+                        (index) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            children: [
+                              const Expanded(child: SkeletonLine(height: 16)),
+                              const SizedBox(width: 16),
+                              const SkeletonLine(width: 80, height: 16),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 80),
+            ],
+          ),
+        ),
         error: (error, stackTrace) =>
             Center(child: Text(l10n.errorWithMessage(error.toString()))),
       ),

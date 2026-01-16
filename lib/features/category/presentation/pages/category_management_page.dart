@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../domain/entities/category.dart';
 import '../providers/category_provider.dart';
 
@@ -114,7 +115,35 @@ class _CategoryListView extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => ListView.builder(
+        padding: const EdgeInsets.all(Spacing.md),
+        itemCount: 5,
+        itemBuilder: (context, index) {
+          return Card(
+            margin: const EdgeInsets.only(bottom: 8),
+            child: Padding(
+              padding: const EdgeInsets.all(Spacing.md),
+              child: Row(
+                children: [
+                  const Expanded(child: SkeletonLine(height: 18)),
+                  const SizedBox(width: 8),
+                  SkeletonBox(
+                    width: 40,
+                    height: 40,
+                    borderRadius: BorderRadiusToken.md,
+                  ),
+                  const SizedBox(width: 8),
+                  SkeletonBox(
+                    width: 40,
+                    height: 40,
+                    borderRadius: BorderRadiusToken.md,
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
       error: (e, _) => Center(child: Text(l10n.errorWithMessage(e.toString()))),
     );
   }
