@@ -297,23 +297,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                           const Divider(),
                         ],
 
-                        // 메모 입력 (선택)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            l10n.transactionMemoOptional,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                        ),
-                        TextFormField(
-                          controller: _memoController,
-                          maxLines: 3,
-                          keyboardType: TextInputType.text,
-                          decoration: InputDecoration(
-                            hintText: l10n.transactionMemoHint,
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
+                        MemoInputSection(controller: _memoController),
 
                         const SizedBox(height: 100),
                       ],
