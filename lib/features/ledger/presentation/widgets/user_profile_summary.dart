@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/utils/color_utils.dart';
+import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 
@@ -68,8 +68,6 @@ class UserChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat('#,###');
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -91,7 +89,7 @@ class UserChip extends StatelessWidget {
             children: [
               Text(name, style: Theme.of(context).textTheme.labelSmall),
               Text(
-                '-${formatter.format(amount)}',
+                '-${NumberFormatUtils.currency.format(amount)}',
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
