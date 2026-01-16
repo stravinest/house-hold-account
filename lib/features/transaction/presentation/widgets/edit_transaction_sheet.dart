@@ -235,25 +235,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
                         const SizedBox(height: 24),
 
-                        // 제목 입력
-                        TextFormField(
-                          controller: _titleController,
-                          maxLines: 1,
-                          keyboardType: TextInputType.text,
-                          textInputAction: TextInputAction.next,
-                          decoration: InputDecoration(
-                            labelText: l10n.transactionTitle,
-                            hintText: l10n.categoryNameHintExample,
-                            prefixIcon: const Icon(Icons.edit),
-                            border: const OutlineInputBorder(),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return l10n.transactionTitleRequired;
-                            }
-                            return null;
-                          },
-                        ),
+                        TitleInputField(controller: _titleController),
 
                         const SizedBox(height: 16),
 
