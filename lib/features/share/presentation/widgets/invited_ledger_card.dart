@@ -129,7 +129,7 @@ class InvitedLedgerCard extends StatelessWidget {
                 Icon(
                   Icons.person_outline,
                   size: 16,
-                  color: colorScheme.onSurface.withOpacity(0.7),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -139,7 +139,7 @@ class InvitedLedgerCard extends StatelessWidget {
                     ),
                     style: TextStyle(
                       fontSize: 13,
-                      color: colorScheme.onSurface.withOpacity(0.7),
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -168,7 +168,7 @@ class InvitedLedgerCard extends StatelessWidget {
           OutlinedButton(
             onPressed: onReject,
             style: OutlinedButton.styleFrom(
-              foregroundColor: colorScheme.onSurface.withOpacity(0.7),
+              foregroundColor: colorScheme.onSurface.withValues(alpha: 0.7),
               side: BorderSide(color: colorScheme.onSurfaceVariant),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),

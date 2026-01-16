@@ -164,7 +164,7 @@ class _LedgerCard extends ConsumerWidget {
                             fontSize: 12,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withOpacity(0.7),
+                            ).colorScheme.onSurface.withValues(alpha:0.7),
                           ),
                         ),
                         if (ledger.isShared)
@@ -233,7 +233,7 @@ class _LedgerCard extends ConsumerWidget {
                     fontSize: 14,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.7),
+                    ).colorScheme.onSurface.withValues(alpha:0.7),
                   ),
                 ),
               ],
@@ -335,7 +335,7 @@ class _LedgerCard extends ConsumerWidget {
           Icon(
             Icons.people_outline,
             size: 14,
-            color: colorScheme.onSurface.withOpacity(0.7),
+            color: colorScheme.onSurface.withValues(alpha:0.7),
           ),
           const SizedBox(width: 4),
           Expanded(
@@ -343,7 +343,7 @@ class _LedgerCard extends ConsumerWidget {
               memberText,
               style: TextStyle(
                 fontSize: 12,
-                color: colorScheme.onSurface.withOpacity(0.7),
+                color: colorScheme.onSurface.withValues(alpha:0.7),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -664,7 +664,7 @@ class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
               l10n.ledgerMemberLoading,
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.7),
               ),
             ),
           ],

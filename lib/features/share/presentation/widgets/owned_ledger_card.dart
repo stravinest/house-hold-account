@@ -155,7 +155,7 @@ class OwnedLedgerCard extends ConsumerWidget {
         Icon(
           Icons.people_outline,
           size: 16,
-          color: colorScheme.onSurface.withOpacity(0.7),
+          color: colorScheme.onSurface.withValues(alpha: 0.7),
         ),
         const SizedBox(width: 4),
         Text(
@@ -165,7 +165,7 @@ class OwnedLedgerCard extends ConsumerWidget {
           ),
           style: TextStyle(
             fontSize: 13,
-            color: colorScheme.onSurface.withOpacity(0.7),
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         if (memberNames.isNotEmpty) ...[
@@ -205,14 +205,14 @@ class OwnedLedgerCard extends ConsumerWidget {
               Icon(
                 Icons.check_circle,
                 size: 14,
-                color: colorScheme.onSurface.withOpacity(0.7),
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               const SizedBox(width: 4),
               Text(
                 l10n.shareMemberFull,
                 style: TextStyle(
                   fontSize: 12,
-                  color: colorScheme.onSurface.withOpacity(0.7),
+                  color: colorScheme.onSurface.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -410,7 +410,7 @@ class OwnedLedgerCard extends ConsumerWidget {
               email,
               style: TextStyle(
                 fontSize: 12,
-                color: colorScheme.onSurface.withOpacity(0.8),
+                color: colorScheme.onSurface.withValues(alpha: 0.8),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

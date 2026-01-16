@@ -265,7 +265,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
         barRods: [
           BarChartRodData(
             toY: value.toDouble(),
-            color: isSelected ? barColor : barColor.withOpacity(0.5),
+            color: isSelected ? barColor : barColor.withValues(alpha: 0.5),
             width: 24,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           ),
@@ -527,7 +527,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
         barRods: [
           BarChartRodData(
             toY: value.toDouble(),
-            color: isSelected ? barColor : barColor.withOpacity(0.5),
+            color: isSelected ? barColor : barColor.withValues(alpha: 0.5),
             width: 32,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           ),

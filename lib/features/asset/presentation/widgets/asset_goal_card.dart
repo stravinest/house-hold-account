@@ -180,7 +180,7 @@ class AssetGoalCard extends ConsumerWidget {
             border: Border.all(
               color: isDark
                   ? Colors.white.withValues(alpha: 0.8)
-                  : colorScheme.onSurface.withOpacity(0.6),
+                  : colorScheme.onSurface.withValues(alpha: 0.6),
               width: 2.0,
             ),
           ),
