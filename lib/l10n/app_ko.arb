@@ -58,6 +58,8 @@
   "authEmail": "이메일",
   "authPassword": "비밀번호",
   "authPasswordConfirm": "비밀번호 확인",
+  "authPasswordShow": "비밀번호 표시",
+  "authPasswordHide": "비밀번호 숨기기",
   "authName": "이름",
   "authForgotPassword": "비밀번호를 잊으셨나요?",
   "authOr": "또는",

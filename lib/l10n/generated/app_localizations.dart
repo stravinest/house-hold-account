@@ -380,6 +380,18 @@ abstract class AppLocalizations {
   /// **'비밀번호 확인'**
   String get authPasswordConfirm;
 
+  /// No description provided for @authPasswordShow.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 표시'**
+  String get authPasswordShow;
+
+  /// No description provided for @authPasswordHide.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 숨기기'**
+  String get authPasswordHide;
+
   /// No description provided for @authName.
   ///
   /// In ko, this message translates to:

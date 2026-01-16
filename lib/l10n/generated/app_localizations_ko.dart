@@ -150,6 +150,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authPasswordConfirm => '비밀번호 확인';
 
   @override
+  String get authPasswordShow => '비밀번호 표시';
+
+  @override
+  String get authPasswordHide => '비밀번호 숨기기';
+
+  @override
   String get authName => '이름';
 
   @override

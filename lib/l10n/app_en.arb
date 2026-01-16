@@ -52,6 +52,8 @@
   "authEmail": "Email",
   "authPassword": "Password",
   "authPasswordConfirm": "Confirm Password",
+  "authPasswordShow": "Show password",
+  "authPasswordHide": "Hide password",
   "authName": "Name",
   "authForgotPassword": "Forgot password?",
   "authOr": "or",
