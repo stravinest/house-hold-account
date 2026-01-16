@@ -69,6 +69,69 @@ class AppLocalizationsKo extends AppLocalizations {
   String get commonSuccess => '성공';
 
   @override
+  String get tooltipSearch => '검색';
+
+  @override
+  String get tooltipSettings => '설정';
+
+  @override
+  String get tooltipBook => '가계부 관리';
+
+  @override
+  String get tooltipPreviousMonth => '이전 달';
+
+  @override
+  String get tooltipNextMonth => '다음 달';
+
+  @override
+  String get tooltipPreviousYear => '이전 년도';
+
+  @override
+  String get tooltipNextYear => '다음 년도';
+
+  @override
+  String get tooltipTogglePassword => '비밀번호 보기/숨기기';
+
+  @override
+  String get tooltipDelete => '삭제';
+
+  @override
+  String get tooltipEdit => '수정';
+
+  @override
+  String get tooltipClear => '지우기';
+
+  @override
+  String get tooltipEditProfile => '프로필 수정';
+
+  @override
+  String get tooltipClose => '닫기';
+
+  @override
+  String get tooltipRefresh => '새로고침';
+
+  @override
+  String get tooltipFilter => '필터';
+
+  @override
+  String get tooltipSort => '정렬';
+
+  @override
+  String get tooltipInfo => '정보';
+
+  @override
+  String get navTabCalendar => '캘린더';
+
+  @override
+  String get navTabStatistics => '통계';
+
+  @override
+  String get navTabAsset => '자산';
+
+  @override
+  String get navTabMore => '더보기';
+
+  @override
   String get authLogin => '로그인';
 
   @override

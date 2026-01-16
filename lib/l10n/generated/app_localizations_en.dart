@@ -70,6 +70,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonSuccess => 'Success';
 
   @override
+  String get tooltipSearch => 'Search';
+
+  @override
+  String get tooltipSettings => 'Settings';
+
+  @override
+  String get tooltipBook => 'Ledger Management';
+
+  @override
+  String get tooltipPreviousMonth => 'Previous Month';
+
+  @override
+  String get tooltipNextMonth => 'Next Month';
+
+  @override
+  String get tooltipPreviousYear => 'Previous Year';
+
+  @override
+  String get tooltipNextYear => 'Next Year';
+
+  @override
+  String get tooltipTogglePassword => 'Show/Hide Password';
+
+  @override
+  String get tooltipDelete => 'Delete';
+
+  @override
+  String get tooltipEdit => 'Edit';
+
+  @override
+  String get tooltipClear => 'Clear';
+
+  @override
+  String get tooltipEditProfile => 'Edit Profile';
+
+  @override
+  String get tooltipClose => 'Close';
+
+  @override
+  String get tooltipRefresh => 'Refresh';
+
+  @override
+  String get tooltipFilter => 'Filter';
+
+  @override
+  String get tooltipSort => 'Sort';
+
+  @override
+  String get tooltipInfo => 'Information';
+
+  @override
+  String get navTabCalendar => 'Calendar';
+
+  @override
+  String get navTabStatistics => 'Statistics';
+
+  @override
+  String get navTabAsset => 'Asset';
+
+  @override
+  String get navTabMore => 'More';
+
+  @override
   String get authLogin => 'Log In';
 
   @override

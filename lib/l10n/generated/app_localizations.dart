@@ -218,6 +218,132 @@ abstract class AppLocalizations {
   /// **'성공'**
   String get commonSuccess;
 
+  /// No description provided for @tooltipSearch.
+  ///
+  /// In ko, this message translates to:
+  /// **'검색'**
+  String get tooltipSearch;
+
+  /// No description provided for @tooltipSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정'**
+  String get tooltipSettings;
+
+  /// No description provided for @tooltipBook.
+  ///
+  /// In ko, this message translates to:
+  /// **'가계부 관리'**
+  String get tooltipBook;
+
+  /// No description provided for @tooltipPreviousMonth.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전 달'**
+  String get tooltipPreviousMonth;
+
+  /// No description provided for @tooltipNextMonth.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 달'**
+  String get tooltipNextMonth;
+
+  /// No description provided for @tooltipPreviousYear.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전 년도'**
+  String get tooltipPreviousYear;
+
+  /// No description provided for @tooltipNextYear.
+  ///
+  /// In ko, this message translates to:
+  /// **'다음 년도'**
+  String get tooltipNextYear;
+
+  /// No description provided for @tooltipTogglePassword.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 보기/숨기기'**
+  String get tooltipTogglePassword;
+
+  /// No description provided for @tooltipDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get tooltipDelete;
+
+  /// No description provided for @tooltipEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정'**
+  String get tooltipEdit;
+
+  /// No description provided for @tooltipClear.
+  ///
+  /// In ko, this message translates to:
+  /// **'지우기'**
+  String get tooltipClear;
+
+  /// No description provided for @tooltipEditProfile.
+  ///
+  /// In ko, this message translates to:
+  /// **'프로필 수정'**
+  String get tooltipEditProfile;
+
+  /// No description provided for @tooltipClose.
+  ///
+  /// In ko, this message translates to:
+  /// **'닫기'**
+  String get tooltipClose;
+
+  /// No description provided for @tooltipRefresh.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로고침'**
+  String get tooltipRefresh;
+
+  /// No description provided for @tooltipFilter.
+  ///
+  /// In ko, this message translates to:
+  /// **'필터'**
+  String get tooltipFilter;
+
+  /// No description provided for @tooltipSort.
+  ///
+  /// In ko, this message translates to:
+  /// **'정렬'**
+  String get tooltipSort;
+
+  /// No description provided for @tooltipInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'정보'**
+  String get tooltipInfo;
+
+  /// No description provided for @navTabCalendar.
+  ///
+  /// In ko, this message translates to:
+  /// **'캘린더'**
+  String get navTabCalendar;
+
+  /// No description provided for @navTabStatistics.
+  ///
+  /// In ko, this message translates to:
+  /// **'통계'**
+  String get navTabStatistics;
+
+  /// No description provided for @navTabAsset.
+  ///
+  /// In ko, this message translates to:
+  /// **'자산'**
+  String get navTabAsset;
+
+  /// No description provided for @navTabMore.
+  ///
+  /// In ko, this message translates to:
+  /// **'더보기'**
+  String get navTabMore;
+
   /// No description provided for @authLogin.
   ///
   /// In ko, this message translates to:
