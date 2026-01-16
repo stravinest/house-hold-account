@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../../transaction/presentation/widgets/add_transaction_sheet.dart';
@@ -44,11 +45,11 @@ class TransactionList extends ConsumerWidget {
           },
         );
       },
-      loading: () => ListView(
-        children: const [
-          SizedBox(height: 200),
-          Center(child: CircularProgressIndicator()),
-        ],
+      loading: () => ListView.separated(
+        padding: const EdgeInsets.all(Spacing.md),
+        itemCount: 5,
+        separatorBuilder: (context, index) => const SizedBox(height: 8),
+        itemBuilder: (context, index) => const SkeletonTransactionItem(),
       ),
       error: (e, _) {
         final l10n = AppLocalizations.of(context)!;
