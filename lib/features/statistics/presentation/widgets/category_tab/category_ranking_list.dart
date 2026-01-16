@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../../../core/utils/category_l10n_helper.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../../../shared/widgets/skeleton_loading.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../providers/statistics_provider.dart';
 
@@ -49,7 +50,13 @@ class CategoryRankingList extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: 5,
+        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemBuilder: (context, index) => const _CategoryRankingSkeleton(),
+      ),
       error: (error, _) =>
           Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
@@ -141,6 +148,59 @@ class _CategoryRankingItem extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(color),
               minHeight: 6,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 카테고리 랭킹 아이템 스켈레톤
+///
+/// 카테고리 랭킹 리스트의 로딩 상태를 표현합니다.
+class _CategoryRankingSkeleton extends StatelessWidget {
+  const _CategoryRankingSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              // 순위 스켈레톤
+              const SizedBox(
+                width: 24,
+                child: SkeletonLine(width: 20, height: 16),
+              ),
+              const SizedBox(width: 12),
+              // 카테고리명 스켈레톤
+              Expanded(
+                child: SkeletonLine(
+                  width: MediaQuery.of(context).size.width * 0.3,
+                  height: 16,
+                ),
+              ),
+              // 비율 스켈레톤
+              SkeletonLine(
+                width: MediaQuery.of(context).size.width * 0.12,
+                height: 14,
+              ),
+              const SizedBox(width: 12),
+              // 금액 스켈레톤
+              SkeletonLine(
+                width: MediaQuery.of(context).size.width * 0.2,
+                height: 16,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 진행 바 스켈레톤
+          const SkeletonBox(
+            width: double.infinity,
+            height: 6,
+            borderRadius: 4,
           ),
         ],
       ),

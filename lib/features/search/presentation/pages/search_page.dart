@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../config/supabase_config.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 
@@ -122,7 +123,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const SkeletonListView(itemCount: 5),
         error: (e, st) =>
             Center(child: Text(l10n.errorWithMessage(e.toString()))),
       ),

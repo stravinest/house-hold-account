@@ -4,8 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../config/router.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/section_header.dart';
+import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../domain/entities/ledger_invite.dart';
 import '../providers/share_provider.dart';
@@ -49,7 +51,7 @@ class ShareManagementPage extends ConsumerWidget {
   ) {
     // 로딩 상태
     if (ownedLedgersAsync.isLoading || receivedInvitesAsync.isLoading) {
-      return _buildScrollableCenter(child: const CircularProgressIndicator());
+      return _buildLoadingSkeleton();
     }
 
     // 에러 상태
@@ -462,6 +464,116 @@ class ShareManagementPage extends ConsumerWidget {
         );
       }
     }
+  }
+
+  Widget _buildLoadingSkeleton() {
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              SkeletonBox(width: 24, height: 24),
+              SizedBox(width: 8),
+              SkeletonLine(width: 100, height: 20),
+            ],
+          ),
+        ),
+        ...List.generate(
+          2,
+          (index) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(Spacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: SkeletonLine(height: 18),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          child: const SkeletonLine(width: 60, height: 16),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const SkeletonLine(width: 120, height: 14),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SkeletonBox(
+                          width: 80,
+                          height: 36,
+                          borderRadius: BorderRadiusToken.md,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              SkeletonBox(width: 24, height: 24),
+              SizedBox(width: 8),
+              SkeletonLine(width: 120, height: 20),
+            ],
+          ),
+        ),
+        ...List.generate(
+          1,
+          (index) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: const Card(
+              child: Padding(
+                padding: EdgeInsets.all(Spacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonLine(height: 18),
+                    SizedBox(height: 12),
+                    SkeletonLine(width: 100, height: 14),
+                    SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        SkeletonBox(
+                          width: 70,
+                          height: 36,
+                          borderRadius: BorderRadiusToken.md,
+                        ),
+                        SizedBox(width: 8),
+                        SkeletonBox(
+                          width: 70,
+                          height: 36,
+                          borderRadius: BorderRadiusToken.md,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

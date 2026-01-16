@@ -17,6 +17,7 @@ import '../../../transaction/presentation/widgets/add_transaction_sheet.dart';
 import '../../../transaction/presentation/widgets/quick_expense_sheet.dart';
 import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart';
 import '../../../widget/presentation/providers/widget_provider.dart';
+import '../../../../shared/widgets/skeleton_loading.dart';
 import '../providers/ledger_provider.dart';
 import '../widgets/calendar_view.dart';
 
@@ -398,7 +399,35 @@ class _HomePageState extends ConsumerState<HomePage> {
             );
           },
         ),
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView.builder(
+          shrinkWrap: true,
+          itemCount: 3,
+          itemBuilder: (context, index) => Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                const SkeletonCircle(size: 40),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SkeletonLine(
+                        width: MediaQuery.of(context).size.width * 0.4,
+                        height: 16,
+                      ),
+                      const SizedBox(height: 8),
+                      SkeletonLine(
+                        width: MediaQuery.of(context).size.width * 0.25,
+                        height: 12,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         error: (e, _) => Center(
           child: Text(l10n?.errorWithMessage(e.toString()) ?? 'Error: $e'),
         ),

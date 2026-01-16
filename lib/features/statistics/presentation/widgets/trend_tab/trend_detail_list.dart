@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../../../shared/themes/design_tokens.dart';
+import '../../../../../shared/widgets/skeleton_loading.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
@@ -66,7 +68,7 @@ class _MonthlyDetailList extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const _SkeletonTrendDetailList(),
       error: (error, _) =>
           Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
@@ -128,7 +130,7 @@ class _YearlyDetailList extends ConsumerWidget {
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const _SkeletonTrendDetailList(),
       error: (error, _) =>
           Center(child: Text(l10n.errorWithMessage(error.toString()))),
     );
@@ -229,6 +231,69 @@ class _TrendDetailItem extends StatelessWidget {
           style: theme.textTheme.bodySmall?.copyWith(color: color),
         ),
       ],
+    );
+  }
+}
+
+/// 트렌드 상세 리스트 스켈레톤 로딩
+class _SkeletonTrendDetailList extends StatelessWidget {
+  const _SkeletonTrendDetailList();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 5,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) => const _SkeletonTrendDetailItem(),
+    );
+  }
+}
+
+/// 트렌드 상세 아이템 스켈레톤
+class _SkeletonTrendDetailItem extends StatelessWidget {
+  const _SkeletonTrendDetailItem();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      child: Row(
+        children: [
+          // 기간 라벨
+          Expanded(
+            flex: 2,
+            child: SkeletonLine(
+              width: MediaQuery.of(context).size.width * 0.2,
+              height: 16,
+            ),
+          ),
+          // 금액
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: SkeletonLine(
+                width: MediaQuery.of(context).size.width * 0.25,
+                height: 16,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // 전월/전년 대비
+          Expanded(
+            flex: 2,
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: SkeletonLine(
+                width: MediaQuery.of(context).size.width * 0.2,
+                height: 14,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
