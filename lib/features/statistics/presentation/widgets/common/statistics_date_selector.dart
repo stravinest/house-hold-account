@@ -22,6 +22,7 @@ class StatisticsDateSelector extends ConsumerWidget {
           // 이전 월 버튼
           IconButton(
             icon: const Icon(Icons.chevron_left),
+            tooltip: l10n.tooltipPreviousMonth,
             onPressed: () => _goToPreviousMonth(ref),
             padding: const EdgeInsets.all(8),
             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
@@ -45,6 +46,7 @@ class StatisticsDateSelector extends ConsumerWidget {
           // 다음 월 버튼
           IconButton(
             icon: const Icon(Icons.chevron_right),
+            tooltip: l10n.tooltipNextMonth,
             onPressed: () => _goToNextMonth(ref),
             padding: const EdgeInsets.all(8),
             constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
@@ -151,6 +153,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
             children: [
               IconButton(
                 icon: const Icon(Icons.chevron_left),
+                tooltip: l10n.tooltipPreviousYear,
                 onPressed: () {
                   setState(() {
                     _selectedYear--;
@@ -165,6 +168,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
               ),
               IconButton(
                 icon: const Icon(Icons.chevron_right),
+                tooltip: l10n.tooltipNextYear,
                 onPressed: () {
                   setState(() {
                     _selectedYear++;

@@ -34,6 +34,8 @@
   "tooltipBook": "가계부 관리",
   "tooltipPreviousMonth": "이전 달",
   "tooltipNextMonth": "다음 달",
+  "tooltipPreviousYear": "이전 년도",
+  "tooltipNextYear": "다음 년도",
   "tooltipTogglePassword": "비밀번호 보기/숨기기",
   "tooltipDelete": "삭제",
   "tooltipEdit": "수정",

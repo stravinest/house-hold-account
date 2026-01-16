@@ -28,6 +28,8 @@
   "tooltipBook": "Ledger Management",
   "tooltipPreviousMonth": "Previous Month",
   "tooltipNextMonth": "Next Month",
+  "tooltipPreviousYear": "Previous Year",
+  "tooltipNextYear": "Next Year",
   "tooltipTogglePassword": "Show/Hide Password",
   "tooltipDelete": "Delete",
   "tooltipEdit": "Edit",
