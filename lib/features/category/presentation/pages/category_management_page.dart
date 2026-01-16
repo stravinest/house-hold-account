@@ -3,6 +3,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/dialog_utils.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -156,56 +158,36 @@ class _CategoryTile extends ConsumerWidget {
     );
   }
 
-  void _showDeleteConfirm(
+  Future<void> _showDeleteConfirm(
     BuildContext context,
     WidgetRef ref,
     Category category,
-  ) {
+  ) async {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.categoryDeleteConfirmTitle),
-        content: Text(
-          '\'${category.name}\'\n\n'
-          '${l10n.categoryDeleteConfirmMessage}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await ref
-                    .read(categoryNotifierProvider.notifier)
-                    .deleteCategory(category.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.categoryDeleted),
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.categoryDeleteFailed(e.toString())),
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
-                }
-              }
-            },
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
+    final confirmed = await DialogUtils.showConfirmation(
+      context,
+      title: l10n.categoryDeleteConfirmTitle,
+      message: '\'${category.name}\'\n\n${l10n.categoryDeleteConfirmMessage}',
+      confirmText: l10n.commonDelete,
     );
+
+    if (confirmed == true) {
+      try {
+        await ref
+            .read(categoryNotifierProvider.notifier)
+            .deleteCategory(category.id);
+        if (context.mounted) {
+          SnackBarUtils.showSuccess(context, l10n.categoryDeleted);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          SnackBarUtils.showError(
+            context,
+            l10n.categoryDeleteFailed(e.toString()),
+          );
+        }
+      }
+    }
   }
 }
 
@@ -322,24 +304,18 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.category != null
-                  ? l10n.categoryUpdated
-                  : l10n.categoryAdded,
-            ),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          widget.category != null
+              ? l10n.categoryUpdated
+              : l10n.categoryAdded,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     }
