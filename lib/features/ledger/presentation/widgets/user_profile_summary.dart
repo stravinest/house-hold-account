@@ -94,7 +94,7 @@ class UserChip extends StatelessWidget {
                 '-${formatter.format(amount)}',
                 style: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                ).textTheme.bodyMedium.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),

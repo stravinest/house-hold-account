@@ -42,7 +42,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
                     children: [
                       Text(
                         DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(date),
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.titleMedium.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(

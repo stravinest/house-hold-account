@@ -145,7 +145,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                 l10n.transactionQuickExpense,
                 style: Theme.of(
                   context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                ).textTheme.titleLarge.copyWith(fontWeight: FontWeight.bold),
               ),
               SizedBox(height: Spacing.lg),
 

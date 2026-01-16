@@ -258,7 +258,7 @@ class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(
-      text: widget.paymentMethod?.name ?? '',
+      text: widget.paymentMethod.name ?? '',
     );
   }
 

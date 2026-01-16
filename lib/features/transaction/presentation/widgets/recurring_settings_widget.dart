@@ -82,9 +82,9 @@ class _RecurringSettingsWidgetState
   @override
   void initState() {
     super.initState();
-    _selectedType = widget.initialSettings?.type ?? RecurringType.none;
-    _endDate = widget.initialSettings?.endDate;
-    _isFixedExpense = widget.initialSettings?.isFixedExpense ?? false;
+    _selectedType = widget.initialSettings.type ?? RecurringType.none;
+    _endDate = widget.initialSettings.endDate;
+    _isFixedExpense = widget.initialSettings.isFixedExpense ?? false;
   }
 
   @override
@@ -409,7 +409,7 @@ class _RecurringSettingsWidgetState
         l10n.fixedExpenseDescription,
         style: Theme.of(
           context,
-        ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+        ).textTheme.bodySmall.copyWith(color: colorScheme.onSurfaceVariant),
       ),
       value: _isFixedExpense,
       onChanged: widget.enabled

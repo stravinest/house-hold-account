@@ -171,7 +171,7 @@ class _FixedExpenseCategorySelectorWidgetState
           .deleteCategory(category.id);
 
       // 삭제된 카테고리가 선택되어 있었으면 선택 해제
-      if (widget.selectedCategory?.id == category.id) {
+      if (widget.selectedCategory.id == category.id) {
         widget.onCategorySelected(null);
       }
 
@@ -227,7 +227,7 @@ class _FixedExpenseCategorySelectorWidgetState
               : null,
         ),
         ...categories.map((category) {
-          final isSelected = widget.selectedCategory?.id == category.id;
+          final isSelected = widget.selectedCategory.id == category.id;
           return FilterChip(
             selected: isSelected,
             showCheckmark: false,

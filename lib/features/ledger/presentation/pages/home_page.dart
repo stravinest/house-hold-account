@@ -703,7 +703,7 @@ class _DailyUserSummary extends ConsumerWidget {
                       Flexible(
                         child: Text(
                           description,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall.copyWith(
                                 fontSize: 11,
                                 color: colorScheme.onSurfaceVariant,
                               ),

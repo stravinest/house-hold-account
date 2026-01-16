@@ -166,7 +166,7 @@ class _PaymentMethodSelectorWidgetState
           .deletePaymentMethod(method.id);
 
       // 삭제된 결제수단이 선택되어 있었으면 선택 해제
-      if (widget.selectedPaymentMethod?.id == method.id) {
+      if (widget.selectedPaymentMethod.id == method.id) {
         widget.onPaymentMethodSelected(null);
       }
 
@@ -237,7 +237,7 @@ class _PaymentMethodSelectorWidgetState
               : null,
         ),
         ...paymentMethods.map((method) {
-          final isSelected = widget.selectedPaymentMethod?.id == method.id;
+          final isSelected = widget.selectedPaymentMethod.id == method.id;
           return FilterChip(
             selected: isSelected,
             showCheckmark: false,

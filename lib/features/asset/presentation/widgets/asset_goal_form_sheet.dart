@@ -27,11 +27,11 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
   @override
   void initState() {
     super.initState();
-    final amount = widget.goal?.targetAmount;
+    final amount = widget.goal.targetAmount;
     _amountController = TextEditingController(
       text: amount != null ? NumberFormat('#,###', 'ko_KR').format(amount) : '',
     );
-    _targetDate = widget.goal?.targetDate;
+    _targetDate = widget.goal.targetDate;
   }
 
   @override
@@ -120,7 +120,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
             isEditing ? l10n.assetGoalEdit : l10n.assetGoalNew,
             style: Theme.of(
               context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ).textTheme.titleMedium.copyWith(fontWeight: FontWeight.w600),
           ),
           TextButton(
             onPressed: () => _submit(context, isEditing),
@@ -153,7 +153,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
           ],
           style: Theme.of(
             context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          ).textTheme.headlineSmall.copyWith(fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             hintText: '0',
             prefixIcon: Icon(

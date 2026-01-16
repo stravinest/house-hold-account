@@ -458,11 +458,11 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.ledger?.name ?? '');
+    _nameController = TextEditingController(text: widget.ledger.name ?? '');
     _descriptionController = TextEditingController(
-      text: widget.ledger?.description ?? '',
+      text: widget.ledger.description ?? '',
     );
-    _selectedCurrency = widget.ledger?.currency ?? 'KRW';
+    _selectedCurrency = widget.ledger.currency ?? 'KRW';
   }
 
   @override

@@ -263,7 +263,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.category?.name ?? '');
+    _nameController = TextEditingController(text: widget.category.name ?? '');
   }
 
   @override
