@@ -251,7 +251,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                 _isVerified
                     ? l10n.emailVerificationComplete
                     : l10n.emailVerificationWaiting,
-                style: textTheme.headlineSmall.copyWith(
+                style: textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: _isVerified ? colorScheme.primary : null,
                 ),
@@ -271,7 +271,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                 ),
                 child: Text(
                   widget.email,
-                  style: textTheme.titleMedium.copyWith(
+                  style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
                 ),

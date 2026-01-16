@@ -27,11 +27,11 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
   @override
   void initState() {
     super.initState();
-    final amount = widget.goal.targetAmount;
+    final amount = widget.goal?.targetAmount;
     _amountController = TextEditingController(
       text: amount != null ? NumberFormat('#,###', 'ko_KR').format(amount) : '',
     );
-    _targetDate = widget.goal.targetDate;
+    _targetDate = widget.goal?.targetDate;
   }
 
   @override

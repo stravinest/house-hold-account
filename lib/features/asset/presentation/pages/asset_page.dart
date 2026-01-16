@@ -189,7 +189,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
     final goalsAsync = widget.ledgerId != null
         ? ref.watch(assetGoalNotifierProvider(widget.ledgerId!))
         : null;
-    final hasGoal = goalsAsync?.value.isNotEmpty ?? false;
+    final hasGoal = goalsAsync?.value?.isNotEmpty ?? false;
 
     return Card(
       margin: const EdgeInsets.all(16),

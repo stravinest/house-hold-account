@@ -126,7 +126,7 @@ class AssetGoalCard extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: Theme.of(context).textTheme.bodySmall.color,
+                  color: Theme.of(context).textTheme.bodySmall?.color,
                 ),
               ),
               // 퍼센트 강조 표시
@@ -345,7 +345,7 @@ class AssetGoalCard extends ConsumerWidget {
               l10n.assetGoalCurrentAmount,
               style: TextStyle(
                 fontSize: 11,
-                color: Theme.of(context).textTheme.bodySmall.color,
+                color: Theme.of(context).textTheme.bodySmall?.color,
               ),
             ),
             Text(
@@ -357,7 +357,7 @@ class AssetGoalCard extends ConsumerWidget {
         Icon(
           Icons.arrow_forward,
           size: 16,
-          color: Theme.of(context).textTheme.bodySmall.color,
+          color: Theme.of(context).textTheme.bodySmall?.color,
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.end,
@@ -366,7 +366,7 @@ class AssetGoalCard extends ConsumerWidget {
               l10n.assetGoalTargetAmount,
               style: TextStyle(
                 fontSize: 11,
-                color: Theme.of(context).textTheme.bodySmall.color,
+                color: Theme.of(context).textTheme.bodySmall?.color,
               ),
             ),
             Text(
@@ -424,7 +424,7 @@ class AssetGoalCard extends ConsumerWidget {
     required String label,
     Color? color,
   }) {
-    final chipColor = color ?? Theme.of(context).textTheme.bodySmall.color;
+    final chipColor = color ?? Theme.of(context).textTheme.bodySmall?.color;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
