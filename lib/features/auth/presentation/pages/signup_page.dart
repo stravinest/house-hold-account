@@ -35,7 +35,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   Future<void> _handleSignup() async {
     debugPrint('[SignupPage] signup started');
     debugPrint('[SignupPage] name: ${_nameController.text.trim()}');
-    debugPrint('[SignupPage] email: ${_emailController.text.trim()}');
     debugPrint(
       '[SignupPage] password length: ${_passwordController.text.length}',
     );
