@@ -207,7 +207,7 @@ class StatisticsRepository {
     return results;
   }
 
-  // 월 비교 데이터 (현재 월 vs 지난 월)
+  // 월 비교 데이터 (현재 월 vs 지난 월) - 단일 쿼리로 최적화
   Future<MonthComparisonData> getMonthComparison({
     required String ledgerId,
     required int year,
@@ -232,24 +232,24 @@ class StatisticsRepository {
       0,
     );
 
-    // 현재 월 데이터 조회
-    var currentQuery = _client
+    // 단일 쿼리로 양쪽 월 데이터 조회
+    var query = _client
         .schema('house')
         .from('transactions')
-        .select('amount, is_fixed_expense')
+        .select('amount, is_fixed_expense, date')
         .eq('ledger_id', ledgerId)
         .eq('type', type)
-        .gte('date', currentStartDate.toIso8601String().split('T').first)
+        .gte('date', previousStartDate.toIso8601String().split('T').first)
         .lte('date', currentEndDate.toIso8601String().split('T').first);
 
     // 지출일 경우에만 고정비/변동비 필터 적용
     if (type == 'expense' && expenseTypeFilter != null) {
       switch (expenseTypeFilter) {
         case ExpenseTypeFilter.fixed:
-          currentQuery = currentQuery.eq('is_fixed_expense', true);
+          query = query.eq('is_fixed_expense', true);
           break;
         case ExpenseTypeFilter.variable:
-          currentQuery = currentQuery.eq('is_fixed_expense', false);
+          query = query.eq('is_fixed_expense', false);
           break;
         case ExpenseTypeFilter.all:
           // 필터 없음
@@ -257,43 +257,26 @@ class StatisticsRepository {
       }
     }
 
-    // 지난 월 데이터 조회
-    var previousQuery = _client
-        .schema('house')
-        .from('transactions')
-        .select('amount, is_fixed_expense')
-        .eq('ledger_id', ledgerId)
-        .eq('type', type)
-        .gte('date', previousStartDate.toIso8601String().split('T').first)
-        .lte('date', previousEndDate.toIso8601String().split('T').first);
-
-    // 지출일 경우에만 고정비/변동비 필터 적용
-    if (type == 'expense' && expenseTypeFilter != null) {
-      switch (expenseTypeFilter) {
-        case ExpenseTypeFilter.fixed:
-          previousQuery = previousQuery.eq('is_fixed_expense', true);
-          break;
-        case ExpenseTypeFilter.variable:
-          previousQuery = previousQuery.eq('is_fixed_expense', false);
-          break;
-        case ExpenseTypeFilter.all:
-          // 필터 없음
-          break;
-      }
-    }
-
-    final currentResponse = await currentQuery;
-    final previousResponse = await previousQuery;
+    final response = await query;
 
     int currentTotal = 0;
     int previousTotal = 0;
 
-    for (final row in currentResponse as List) {
-      currentTotal += (row['amount'] as num).toInt();
-    }
+    // 클라이언트 측에서 월별로 그룹화
+    for (final row in response as List) {
+      final amount = (row['amount'] as num).toInt();
+      final date = DateTime.parse(row['date'] as String);
 
-    for (final row in previousResponse as List) {
-      previousTotal += (row['amount'] as num).toInt();
+      // 현재 월에 속하는지 확인
+      if (date.year == currentStartDate.year &&
+          date.month == currentStartDate.month) {
+        currentTotal += amount;
+      }
+      // 이전 월에 속하는지 확인
+      else if (date.year == previousStartDate.year &&
+          date.month == previousStartDate.month) {
+        previousTotal += amount;
+      }
     }
 
     final difference = currentTotal - previousTotal;
