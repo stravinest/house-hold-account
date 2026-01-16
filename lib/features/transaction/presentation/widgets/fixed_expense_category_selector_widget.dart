@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../fixed_expense/domain/entities/fixed_expense_category.dart';
 import '../../../fixed_expense/presentation/providers/fixed_expense_category_provider.dart';
@@ -94,12 +95,7 @@ class _FixedExpenseCategorySelectorWidgetState
     final l10n = AppLocalizations.of(context)!;
 
     if (nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.fixedExpenseCategoryNameRequired),
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      SnackBarUtils.showError(context, l10n.fixedExpenseCategoryNameRequired);
       return;
     }
 
@@ -117,25 +113,12 @@ class _FixedExpenseCategorySelectorWidgetState
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
       }
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.fixedExpenseCategoryAdded),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+
+      SnackBarUtils.showSuccess(context, l10n.fixedExpenseCategoryAdded);
 
       ref.invalidate(fixedExpenseCategoriesProvider);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     }
   }
 
@@ -175,25 +158,11 @@ class _FixedExpenseCategorySelectorWidgetState
         widget.onCategorySelected(null);
       }
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.fixedExpenseCategoryDeleted),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      SnackBarUtils.showSuccess(context, l10n.fixedExpenseCategoryDeleted);
 
       ref.invalidate(fixedExpenseCategoriesProvider);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     }
   }
 

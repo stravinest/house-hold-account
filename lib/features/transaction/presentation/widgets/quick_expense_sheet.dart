@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../category/domain/entities/category.dart';
@@ -91,27 +92,17 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
 
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        final scaffoldMessenger = ScaffoldMessenger.of(context);
         final navigator = Navigator.of(context);
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           navigator.pop();
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: Text(l10n.transactionExpenseAdded),
-              duration: const Duration(seconds: 1),
-            ),
-          );
+          SnackBarUtils.showSuccess(context, l10n.transactionExpenseAdded);
         });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('오류: $e'),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        final l10n = AppLocalizations.of(context)!;
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     } finally {
       if (mounted) {

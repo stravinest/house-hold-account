@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/section_header.dart';
@@ -91,26 +92,18 @@ class _SettingsCard extends ConsumerWidget {
                         .read(fixedExpenseSettingsNotifierProvider.notifier)
                         .updateIncludeInExpense(value);
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            value
-                                ? l10n.fixedExpenseIncludedSnackbar
-                                : l10n.fixedExpenseExcludedSnackbar,
-                          ),
-                          duration: const Duration(seconds: 1),
-                        ),
+                      SnackBarUtils.showSuccess(
+                        context,
+                        value
+                            ? l10n.fixedExpenseIncludedSnackbar
+                            : l10n.fixedExpenseExcludedSnackbar,
                       );
                     }
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            l10n.fixedExpenseSettingsFailed(e.toString()),
-                          ),
-                          duration: const Duration(seconds: 1),
-                        ),
+                      SnackBarUtils.showError(
+                        context,
+                        l10n.fixedExpenseSettingsFailed(e.toString()),
                       );
                     }
                   }
@@ -248,20 +241,16 @@ class _CategoryTile extends ConsumerWidget {
                     .read(fixedExpenseCategoryNotifierProvider.notifier)
                     .deleteCategory(category.id);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.categoryDeleted),
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showSuccess(
+                    context,
+                    l10n.categoryDeleted,
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.categoryDeleteFailed(e.toString())),
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showError(
+                    context,
+                    l10n.categoryDeleteFailed(e.toString()),
                   );
                 }
               }
@@ -387,24 +376,18 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.category != null
-                  ? l10n.categoryUpdated
-                  : l10n.categoryAdded,
-            ),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          widget.category != null
+              ? l10n.categoryUpdated
+              : l10n.categoryAdded,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     }

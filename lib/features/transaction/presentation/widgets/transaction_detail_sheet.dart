@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -254,20 +255,13 @@ class TransactionDetailSheet extends ConsumerWidget {
             .deleteTransaction(transaction.id);
         if (context.mounted) {
           Navigator.pop(context); // 상세 시트 닫기
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.transactionDeleted),
-              duration: const Duration(seconds: 1),
-            ),
-          );
+          SnackBarUtils.showSuccess(context, l10n.transactionDeleted);
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.transactionDeleteFailed(e.toString())),
-              duration: const Duration(seconds: 1),
-            ),
+          SnackBarUtils.showError(
+            context,
+            l10n.transactionDeleteFailed(e.toString()),
           );
         }
       }

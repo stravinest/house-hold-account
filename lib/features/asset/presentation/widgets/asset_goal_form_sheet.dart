@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../domain/entities/asset_goal.dart';
@@ -300,9 +301,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
 
     final ledgerId = ref.read(selectedLedgerIdProvider);
     if (ledgerId == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l10n.assetLedgerRequired)));
+      SnackBarUtils.showError(context, l10n.assetLedgerRequired);
       return;
     }
 
@@ -335,18 +334,16 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
       if (context.mounted) {
         ref.invalidate(assetGoalsProvider);
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              isEditing ? l10n.assetGoalUpdated : l10n.assetGoalCreated,
-            ),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          isEditing ? l10n.assetGoalUpdated : l10n.assetGoalCreated,
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     }

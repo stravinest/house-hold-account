@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 
@@ -160,11 +161,9 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
 
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.emailVerificationResent),
-            duration: const Duration(seconds: 3),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          l10n.emailVerificationResent,
         );
 
         // Start 60 second cooldown
@@ -177,11 +176,9 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
       );
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.emailVerificationResendFailed(e.toString())),
-            duration: const Duration(seconds: 3),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.emailVerificationResendFailed(e.toString()),
         );
       }
     } finally {

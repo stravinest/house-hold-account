@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -408,21 +409,13 @@ class _LedgerCard extends ConsumerWidget {
                     .deleteLedger(ledger.id);
 
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.ledgerDeleted),
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
+                  SnackBarUtils.showSuccess(context, l10n.ledgerDeleted);
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.ledgerDeleteFailed(e.toString())),
-                      backgroundColor: Theme.of(context).colorScheme.error,
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showError(
+                    context,
+                    l10n.ledgerDeleteFailed(e.toString()),
                   );
                 }
               }
@@ -571,22 +564,16 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.ledger != null ? l10n.ledgerUpdated : l10n.ledgerCreated,
-            ),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          widget.ledger != null ? l10n.ledgerUpdated : l10n.ledgerCreated,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     }

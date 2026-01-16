@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../providers/auth_provider.dart';
 
@@ -56,11 +57,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // 3초 후에도 auth state가 업데이트되지 않으면 에러 표시
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.authLoginError),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.authLoginError,
         );
       }
     } catch (e) {
@@ -81,11 +80,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         } else {
           errorMessage = l10n.errorWithMessage(e.toString());
         }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          errorMessage,
         );
       }
     } finally {
@@ -103,11 +100,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     } finally {
@@ -266,10 +261,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 // Google 로그인
                 OutlinedButton.icon(
                   onPressed: _isLoading ? null : _handleGoogleLogin,
-                  icon: Image.asset(
-                    'assets/images/google_logo.png',
+                  icon: Image.network(
+                    'https://www.google.com/favicon.ico',
                     width: 20,
                     height: 20,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.g_mobiledata, size: 20);
+                    },
                   ),
                   label: const Text('Google'),
                 ),

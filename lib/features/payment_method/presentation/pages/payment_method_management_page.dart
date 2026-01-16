@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -189,22 +190,16 @@ class _PaymentMethodTile extends ConsumerWidget {
                     .read(paymentMethodNotifierProvider.notifier)
                     .deletePaymentMethod(paymentMethod.id);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.paymentMethodDeleted),
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showSuccess(
+                    context,
+                    l10n.paymentMethodDeleted,
                   );
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        l10n.paymentMethodDeleteFailed(e.toString()),
-                      ),
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showError(
+                    context,
+                    l10n.paymentMethodDeleteFailed(e.toString()),
                   );
                 }
               }
@@ -331,24 +326,18 @@ class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              widget.paymentMethod != null
-                  ? l10n.paymentMethodUpdated
-                  : l10n.paymentMethodAdded,
-            ),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          widget.paymentMethod != null
+              ? l10n.paymentMethodUpdated
+              : l10n.paymentMethodAdded,
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart' as tokens;
 import '../../../../shared/widgets/empty_state.dart';
@@ -541,9 +542,7 @@ class AssetGoalListView extends ConsumerWidget {
       await notifier.deleteGoal(goal.id);
 
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(l10n.assetGoalDeleted)));
+        SnackBarUtils.showSuccess(context, l10n.assetGoalDeleted);
       }
     }
   }

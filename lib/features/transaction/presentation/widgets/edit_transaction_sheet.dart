@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../category/domain/entities/category.dart';
@@ -154,22 +155,12 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.transactionUpdated),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        SnackBarUtils.showSuccess(context, l10n.transactionUpdated);
       }
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -267,7 +258,9 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                       // 결제수단 선택 (지출일 때만)
                       if (_type == 'expense') ...[
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: Spacing.sm,
+                          ),
                           child: Text(
                             l10n.transactionPaymentMethodOptional,
                             style: Theme.of(context).textTheme.titleMedium,

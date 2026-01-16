@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/router.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -229,11 +230,9 @@ class ShareManagementPage extends ConsumerWidget {
     if (confirmed == true && context.mounted) {
       ref.read(ledgerNotifierProvider.notifier).selectLedger(ledgerId);
       ref.invalidate(myOwnedLedgersWithInvitesProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.shareLedgerChanged(ledgerName)),
-          duration: const Duration(seconds: 1),
-        ),
+      SnackBarUtils.showSuccess(
+        context,
+        l10n.shareLedgerChanged(ledgerName),
       );
     }
   }
@@ -283,22 +282,18 @@ class ShareManagementPage extends ConsumerWidget {
           .read(shareNotifierProvider.notifier)
           .leaveLedger(invite.ledgerId);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.shareLedgerLeft),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          l10n.shareLedgerLeft,
         );
         ref.invalidate(receivedInvitesProvider);
         ref.invalidate(myOwnedLedgersWithInvitesProvider);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     }
@@ -353,21 +348,17 @@ class ShareManagementPage extends ConsumerWidget {
           .read(shareNotifierProvider.notifier)
           .cancelInvite(inviteId: inviteId, ledgerId: ledgerId);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.shareInviteCancelledMessage),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          l10n.shareInviteCancelledMessage,
         );
         ref.invalidate(myOwnedLedgersWithInvitesProvider);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     }
@@ -382,21 +373,17 @@ class ShareManagementPage extends ConsumerWidget {
     try {
       await ref.read(shareNotifierProvider.notifier).acceptInvite(invite.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.shareInviteAcceptedMessage),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          l10n.shareInviteAcceptedMessage,
         );
         ref.invalidate(myOwnedLedgersWithInvitesProvider);
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     }
@@ -447,20 +434,16 @@ class ShareManagementPage extends ConsumerWidget {
     try {
       await ref.read(shareNotifierProvider.notifier).rejectInvite(invite.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.shareInviteRejectedMessage),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          l10n.shareInviteRejectedMessage,
         );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     }
@@ -707,21 +690,17 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.shareInviteSentMessage),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showSuccess(
+          context,
+          l10n.shareInviteSentMessage,
         );
         ref.invalidate(myOwnedLedgersWithInvitesProvider);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
         );
       }
     } finally {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../category/domain/entities/category.dart';
@@ -110,12 +111,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (_isInstallmentMode && _installmentResult == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.installmentInfoRequired),
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      SnackBarUtils.showError(context, l10n.installmentInfoRequired);
       return;
     }
     setState(() => _isLoading = true);
@@ -191,27 +187,14 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       }
 
       if (mounted) {
-        final scaffoldMessenger = ScaffoldMessenger.of(context);
         final navigator = Navigator.of(context);
         WidgetsBinding.instance.addPostFrameCallback((_) {
           navigator.pop();
-          scaffoldMessenger.showSnackBar(
-            SnackBar(
-              content: Text(successMessage),
-              duration: const Duration(seconds: 1),
-            ),
-          );
+          SnackBarUtils.showSuccess(context, successMessage);
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

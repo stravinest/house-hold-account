@@ -7,7 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../asset/presentation/pages/asset_page.dart';
 import '../../../statistics/presentation/pages/statistics_page.dart';
@@ -90,10 +92,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (ledgers.isEmpty) {
         await ref
             .read(ledgerNotifierProvider.notifier)
-            .createLedger(
-              name: l10n?.ledgerMyLedgers ?? 'My Ledger',
-              currency: 'KRW',
-            );
+            .createLedger(name: l10n.ledgerMyLedgers, currency: 'KRW');
       }
 
       // 가계부 초기화 후 데이터 새로고침
@@ -172,15 +171,10 @@ class _HomePageState extends ConsumerState<HomePage> {
         errorMessage.contains('refresh') ||
         errorMessage.contains('invalid') ||
         error.statusCode == '401') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n?.errorSessionExpired ??
-                'Session expired. Please log in again.',
-          ),
-          duration: const Duration(seconds: 4),
-          behavior: SnackBarBehavior.floating,
-        ),
+      SnackBarUtils.showError(
+        context,
+        l10n.errorSessionExpired,
+        duration: SnackBarDuration.medium,
       );
 
       Future.delayed(const Duration(seconds: 1), () async {
@@ -191,15 +185,10 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _showNetworkError() {
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          l10n?.errorNetwork ?? 'Please check your network connection.',
-        ),
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: Colors.orange,
-      ),
+    SnackBarUtils.showError(
+      context,
+      l10n.errorNetwork,
+      duration: SnackBarDuration.short,
     );
   }
 
@@ -215,7 +204,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     final l10n = AppLocalizations.of(context);
     final selectedDate = ref.watch(selectedDateProvider);
     final ledgersAsync = ref.watch(ledgersProvider);
-    final currentLedgerAsync = ref.watch(currentLedgerProvider);
 
     // 위젯 데이터 자동 업데이트 (월별 합계 변경 시)
     ref.watch(widgetDataUpdaterProvider);
@@ -229,7 +217,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             data: (ledgers) => ledgers.length > 1
                 ? IconButton(
                     icon: const Icon(Icons.book),
-                    tooltip: l10n?.tooltipBook ?? 'Ledger Management',
+                    tooltip: l10n.tooltipBook,
                     onPressed: () => _showLedgerSelector(context),
                     visualDensity: VisualDensity.compact,
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -240,7 +228,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           IconButton(
             icon: const Icon(Icons.search),
-            tooltip: l10n?.tooltipSearch ?? 'Search',
+            tooltip: l10n.tooltipSearch,
             onPressed: () {
               context.push(Routes.search);
             },
@@ -249,7 +237,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           IconButton(
             icon: const Icon(Icons.settings),
-            tooltip: l10n?.tooltipSettings ?? 'Settings',
+            tooltip: l10n.tooltipSettings,
             onPressed: () {
               context.push(Routes.settings);
             },
@@ -321,26 +309,26 @@ class _HomePageState extends ConsumerState<HomePage> {
             _refreshCalendarData();
           }
         },
-        destinations: [
+        destinations: const [
           NavigationDestination(
-            icon: const Icon(Icons.calendar_today_outlined),
-            selectedIcon: const Icon(Icons.calendar_today),
-            label: l10n?.navTabCalendar ?? 'Calendar',
+            icon: Icon(Icons.calendar_today_outlined),
+            selectedIcon: Icon(Icons.calendar_today),
+            label: '', // 라벨 숨김
           ),
           NavigationDestination(
-            icon: const Icon(Icons.pie_chart_outline),
-            selectedIcon: const Icon(Icons.pie_chart),
-            label: l10n?.navTabStatistics ?? 'Statistics',
+            icon: Icon(Icons.pie_chart_outline),
+            selectedIcon: Icon(Icons.pie_chart),
+            label: '', // 라벨 숨김
           ),
           NavigationDestination(
-            icon: const Icon(Icons.account_balance_outlined),
-            selectedIcon: const Icon(Icons.account_balance),
-            label: l10n?.navTabAsset ?? 'Asset',
+            icon: Icon(Icons.account_balance_outlined),
+            selectedIcon: Icon(Icons.account_balance),
+            label: '', // 라벨 숨김
           ),
           NavigationDestination(
-            icon: const Icon(Icons.more_horiz),
-            selectedIcon: const Icon(Icons.more_horiz),
-            label: l10n?.navTabMore ?? 'More',
+            icon: Icon(Icons.more_horiz),
+            selectedIcon: Icon(Icons.more_horiz),
+            label: '', // 라벨 숨김
           ),
         ],
       ),
@@ -385,9 +373,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               title: Text(ledger.name),
               subtitle: Text(
-                ledger.isShared
-                    ? (l10n?.ledgerShared ?? 'Shared Ledger')
-                    : (l10n?.ledgerPersonal ?? 'Personal Ledger'),
+                ledger.isShared ? l10n.ledgerShared : l10n.ledgerPersonal,
               ),
               trailing: isSelected ? const Icon(Icons.check) : null,
               onTap: () {
@@ -428,9 +414,8 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
           ),
         ),
-        error: (e, _) => Center(
-          child: Text(l10n?.errorWithMessage(e.toString()) ?? 'Error: $e'),
-        ),
+        error: (e, _) =>
+            Center(child: Text(l10n.errorWithMessage(e.toString()))),
       ),
     );
   }
@@ -625,7 +610,6 @@ class _DailyUserSummary extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final dailyTransactionsAsync = ref.watch(dailyTransactionsProvider);
-    final colorScheme = Theme.of(context).colorScheme;
     final formatter = NumberFormat('#,###', 'ko_KR');
 
     return dailyTransactionsAsync.when(
@@ -703,7 +687,8 @@ class _DailyUserSummary extends ConsumerWidget {
                       Flexible(
                         child: Text(
                           description,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
                                 fontSize: 11,
                                 color: colorScheme.onSurfaceVariant,
                               ),

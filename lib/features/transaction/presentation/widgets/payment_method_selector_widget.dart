@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../payment_method/domain/entities/payment_method.dart';
@@ -94,12 +95,7 @@ class _PaymentMethodSelectorWidgetState
   ) async {
     final l10n = AppLocalizations.of(context)!;
     if (nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.paymentMethodNameRequired),
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      SnackBarUtils.showError(context, l10n.paymentMethodNameRequired);
       return;
     }
 
@@ -116,23 +112,13 @@ class _PaymentMethodSelectorWidgetState
 
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.paymentMethodAdded),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        SnackBarUtils.showSuccess(context, l10n.paymentMethodAdded);
       }
 
       ref.invalidate(paymentMethodsProvider);
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     }
   }
@@ -171,23 +157,13 @@ class _PaymentMethodSelectorWidgetState
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.paymentMethodDeleted),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        SnackBarUtils.showSuccess(context, l10n.paymentMethodDeleted);
       }
 
       ref.invalidate(paymentMethodsProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     }
   }

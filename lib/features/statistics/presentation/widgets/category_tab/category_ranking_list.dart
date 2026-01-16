@@ -54,7 +54,8 @@ class CategoryRankingList extends ConsumerWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: 5,
-        separatorBuilder: (context, index) => const _CategoryRankingSkeleton(),
+        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemBuilder: (context, index) => const _CategoryRankingSkeleton(),
       ),
       error: (error, _) =>
           Center(child: Text(l10n.errorWithMessage(error.toString()))),
@@ -196,11 +197,7 @@ class _CategoryRankingSkeleton extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           // 진행 바 스켈레톤
-          const SkeletonBox(
-            width: double.infinity,
-            height: 6,
-            borderRadius: 4,
-          ),
+          const SkeletonBox(width: double.infinity, height: 6, borderRadius: 4),
         ],
       ),
     );

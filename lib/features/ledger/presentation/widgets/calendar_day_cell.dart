@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../core/utils/color_utils.dart';
 import '../../../../core/utils/number_format_utils.dart';

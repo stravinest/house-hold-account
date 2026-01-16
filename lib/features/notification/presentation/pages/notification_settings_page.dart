@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -109,14 +110,9 @@ class NotificationSettingsPage extends ConsumerWidget {
               .updateNotificationSetting(type, value);
         } catch (e) {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  l10n.notificationSettingsSaveFailed(e.toString()),
-                ),
-                backgroundColor: Theme.of(context).colorScheme.error,
-                duration: const Duration(seconds: 1),
-              ),
+            SnackBarUtils.showError(
+              context,
+              l10n.notificationSettingsSaveFailed(e.toString()),
             );
           }
         }

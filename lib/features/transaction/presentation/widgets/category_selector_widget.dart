@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../category/domain/entities/category.dart';
@@ -119,12 +120,7 @@ class _CategorySelectorWidgetState
   ) async {
     final l10n = AppLocalizations.of(context)!;
     if (nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.categoryNameRequired),
-          duration: const Duration(seconds: 1),
-        ),
-      );
+      SnackBarUtils.showError(context, l10n.categoryNameRequired);
       return;
     }
 
@@ -142,27 +138,16 @@ class _CategorySelectorWidgetState
 
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.categoryAdded),
-            duration: const Duration(seconds: 1),
-          ),
-        );
       }
+
+      SnackBarUtils.showSuccess(context, l10n.categoryAdded);
 
       ref.invalidate(categoriesProvider);
       ref.invalidate(incomeCategoriesProvider);
       ref.invalidate(expenseCategoriesProvider);
       ref.invalidate(savingCategoriesProvider);
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     }
   }
 
@@ -199,28 +184,14 @@ class _CategorySelectorWidgetState
         widget.onCategorySelected(null);
       }
 
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.categoryDeleted),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      SnackBarUtils.showSuccess(context, l10n.categoryDeleted);
 
       ref.invalidate(categoriesProvider);
       ref.invalidate(incomeCategoriesProvider);
       ref.invalidate(expenseCategoriesProvider);
       ref.invalidate(savingCategoriesProvider);
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
+      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     }
   }
 

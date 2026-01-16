@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/themes/locale_provider.dart';
@@ -109,24 +110,16 @@ class SettingsPage extends ConsumerWidget {
                             await authService.updateProfile(color: color);
                             ref.invalidate(userProfileProvider);
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(l10n.settingsColorChanged),
-                                  duration: const Duration(seconds: 1),
-                                ),
+                              SnackBarUtils.showSuccess(
+                                context,
+                                l10n.settingsColorChanged,
                               );
                             }
                           } catch (e) {
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    l10n.settingsColorChangeFailed(
-                                      e.toString(),
-                                    ),
-                                  ),
-                                  duration: const Duration(seconds: 1),
-                                ),
+                              SnackBarUtils.showError(
+                                context,
+                                l10n.settingsColorChangeFailed(e.toString()),
                               );
                             }
                           }
@@ -270,11 +263,9 @@ class SettingsPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.settingsThemeSaveFailed(e.toString())),
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showError(
+                    context,
+                    l10n.settingsThemeSaveFailed(e.toString()),
                   );
                 }
               }
@@ -299,11 +290,9 @@ class SettingsPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.settingsThemeSaveFailed(e.toString())),
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showError(
+                    context,
+                    l10n.settingsThemeSaveFailed(e.toString()),
                   );
                 }
               }
@@ -328,11 +317,9 @@ class SettingsPage extends ConsumerWidget {
               } catch (e) {
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.settingsThemeSaveFailed(e.toString())),
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showError(
+                    context,
+                    l10n.settingsThemeSaveFailed(e.toString()),
                   );
                 }
               }
@@ -370,11 +357,9 @@ class SettingsPage extends ConsumerWidget {
                     .setLocale(SupportedLocales.korean);
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.settingsLanguageChanged),
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showSuccess(
+                    context,
+                    l10n.settingsLanguageChanged,
                   );
                 }
               } catch (e) {
@@ -399,11 +384,9 @@ class SettingsPage extends ConsumerWidget {
                     .setLocale(SupportedLocales.english);
                 if (context.mounted) {
                   Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(l10n.settingsLanguageChanged),
-                      duration: const Duration(seconds: 1),
-                    ),
+                  SnackBarUtils.showSuccess(
+                    context,
+                    l10n.settingsLanguageChanged,
                   );
                 }
               } catch (e) {
@@ -432,12 +415,7 @@ class SettingsPage extends ConsumerWidget {
 
   void _exportData(BuildContext context, AppLocalizations l10n) {
     // TODO: 데이터 내보내기 구현
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.settingsFeaturePreparing),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+    SnackBarUtils.showInfo(context, l10n.settingsFeaturePreparing);
   }
 
   void _showAboutDialog(BuildContext context, AppLocalizations l10n) {
@@ -517,11 +495,9 @@ class SettingsPage extends ConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(l10n.settingsDeleteAccountFailed(e.toString())),
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
+          SnackBarUtils.showError(
+            context,
+            l10n.settingsDeleteAccountFailed(e.toString()),
           );
         }
       }
@@ -586,20 +562,13 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
         _isChanged = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.settingsDisplayNameChanged),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        SnackBarUtils.showSuccess(context, l10n.settingsDisplayNameChanged);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.settingsDisplayNameChangeFailed(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
+        SnackBarUtils.showError(
+          context,
+          l10n.settingsDisplayNameChangeFailed(e.toString()),
         );
       }
     } finally {
@@ -710,18 +679,11 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.settingsPasswordChanged),
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        SnackBarUtils.showSuccess(context, l10n.settingsPasswordChanged);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e'), duration: const Duration(seconds: 1)),
-        );
+        SnackBarUtils.showError(context, '$e');
       }
     } finally {
       if (mounted) {
