@@ -180,11 +180,6 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final categoriesAsync = _type == 'expense'
-        ? ref.watch(expenseCategoriesProvider)
-        : _type == 'income'
-        ? ref.watch(incomeCategoriesProvider)
-        : ref.watch(savingCategoriesProvider);
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
 
     // 카테고리/결제수단 초기값 설정
@@ -255,25 +250,18 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
                         const Divider(),
 
-                        // 카테고리 선택
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            l10n.transactionCategory,
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
+                        CategorySectionWidget(
+                          isFixedExpense: false,
+                          selectedCategory: _selectedCategory,
+                          selectedFixedExpenseCategory: null,
+                          transactionType: _type,
+                          onCategorySelected: (c) =>
+                              setState(() => _selectedCategory = c),
+                          onFixedExpenseCategorySelected: (_) {},
+                          enabled: !_isLoading,
                         ),
 
-                        categoriesAsync.when(
-                          data: (categories) =>
-                              _buildCategoryChips(categories, l10n),
-                          loading: () =>
-                              const Center(child: CircularProgressIndicator()),
-                          error: (e, _) =>
-                              Text(l10n.errorWithMessage(e.toString())),
-                        ),
-
-                        const SizedBox(height: 16),
+                        const SizedBox(height: Spacing.md),
                         const Divider(),
 
                         // 결제수단 선택 (지출일 때만)
@@ -313,108 +301,6 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
     );
   }
 
-  Widget _buildCategoryChips(List<Category> categories, AppLocalizations l10n) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        // 선택 안함 옵션
-        FilterChip(
-          selected: _selectedCategory == null,
-          showCheckmark: false,
-          label: Text(l10n.transactionNone),
-          onSelected: (_) {
-            setState(() => _selectedCategory = null);
-          },
-        ),
-        ...categories.map((category) {
-          final isSelected = _selectedCategory?.id == category.id;
-          return FilterChip(
-            selected: isSelected,
-            showCheckmark: false,
-            label: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (category.icon.isNotEmpty) ...[
-                  Text(category.icon),
-                  const SizedBox(width: 4),
-                ],
-                Text(category.name),
-              ],
-            ),
-            onSelected: (_) {
-              setState(() => _selectedCategory = category);
-            },
-            onDeleted: () => _deleteCategory(category),
-            deleteIcon: const Icon(Icons.close, size: 18),
-          );
-        }),
-        // 카테고리 추가 버튼
-        ActionChip(
-          avatar: const Icon(Icons.add, size: 18),
-          label: Text(l10n.commonAdd),
-          onPressed: () => _showAddCategoryDialog(),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _deleteCategory(Category category) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.categoryDeleteConfirmTitle),
-        content: Text(l10n.categoryDeleteConfirm(category.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    try {
-      await ref
-          .read(categoryNotifierProvider.notifier)
-          .deleteCategory(category.id);
-
-      if (_selectedCategory?.id == category.id) {
-        setState(() => _selectedCategory = null);
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.categoryDeleted),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-
-      ref.invalidate(categoriesProvider);
-      ref.invalidate(incomeCategoriesProvider);
-      ref.invalidate(expenseCategoriesProvider);
-      ref.invalidate(savingCategoriesProvider);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-    }
-  }
-
   // 랜덤 색상 생성
   String _generateRandomColor() {
     final colors = [
@@ -432,98 +318,6 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       '#CDDC39',
     ];
     return colors[(DateTime.now().millisecondsSinceEpoch % colors.length)];
-  }
-
-  // 카테고리 추가 다이얼로그
-  void _showAddCategoryDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
-
-    final typeLabel = _type == 'expense'
-        ? l10n.transactionExpense
-        : _type == 'income'
-        ? l10n.transactionIncome
-        : l10n.transactionAsset;
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.categoryAddType(typeLabel)),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.categoryName,
-            hintText: l10n.categoryNameHintExample,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) => _submitCategory(dialogContext, nameController),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => _submitCategory(dialogContext, nameController),
-            child: Text(l10n.commonAdd),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _submitCategory(
-    BuildContext dialogContext,
-    TextEditingController nameController,
-  ) async {
-    final l10n = AppLocalizations.of(context)!;
-    if (nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.categoryNameRequired),
-          duration: const Duration(seconds: 1),
-        ),
-      );
-      return;
-    }
-
-    try {
-      final newCategory = await ref
-          .read(categoryNotifierProvider.notifier)
-          .createCategory(
-            name: nameController.text.trim(),
-            icon: '',
-            color: _generateRandomColor(),
-            type: _type,
-          );
-
-      setState(() => _selectedCategory = newCategory);
-
-      if (dialogContext.mounted) {
-        Navigator.pop(dialogContext);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.categoryAdded),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-
-      ref.invalidate(categoriesProvider);
-      ref.invalidate(incomeCategoriesProvider);
-      ref.invalidate(expenseCategoriesProvider);
-      ref.invalidate(savingCategoriesProvider);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-    }
   }
 
   Widget _buildPaymentMethodChips(
