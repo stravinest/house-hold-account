@@ -22,7 +22,7 @@ class AssetLineChart extends StatelessWidget {
           padding: const EdgeInsets.all(32),
           child: Text(
             l10n.assetNoAssetData,
-            style: theme.textTheme.bodyMedium.copyWith(
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
@@ -98,7 +98,7 @@ class AssetLineChart extends StatelessWidget {
                     if (value == maxY || value == 0) {
                       return Text(
                         numberFormat.format(value.toInt()),
-                        style: theme.textTheme.bodySmall.copyWith(
+                        style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: 10,
                         ),
                       );

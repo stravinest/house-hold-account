@@ -203,7 +203,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
               children: [
                 Text(
                   l10n.assetTotal,
-                  style: theme.textTheme.titleMedium.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -226,7 +226,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
             const SizedBox(height: 8),
             Text(
               '${numberFormat.format(widget.totalAmount)}${l10n.transactionAmountUnit}',
-              style: theme.textTheme.headlineMedium.copyWith(
+              style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
               ),
@@ -246,7 +246,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                   l10n.assetThisMonth(
                     '${isPositive ? '+' : ''}${numberFormat.format(widget.monthlyChange)}',
                   ),
-                  style: theme.textTheme.bodyMedium.copyWith(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     color: isPositive
                         ? theme.colorScheme.tertiary
                         : theme.colorScheme.error,
@@ -371,7 +371,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                 const SizedBox(height: 16),
                 Text(
                   l10n.assetGoalEmpty,
-                  style: theme.textTheme.bodyMedium.copyWith(
+                  style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                     height: 1.5,
                   ),
@@ -430,7 +430,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                         const SizedBox(width: 8),
                         Text(
                           l10n.assetGoalTitle,
-                          style: theme.textTheme.labelLarge.copyWith(
+                          style: theme.textTheme.labelLarge?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
                           ),
@@ -449,7 +449,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                     Expanded(
                       child: Text(
                         '${numberFormat.format(nearestGoal.targetAmount)}${l10n.transactionAmountUnit}',
-                        style: theme.textTheme.titleMedium.copyWith(
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                           letterSpacing: -0.3,
                         ),
@@ -521,7 +521,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                                         ),
                                         child: Text(
                                           percentText,
-                                          style: theme.textTheme.labelSmall.copyWith(
+                                          style: theme.textTheme.labelSmall?.copyWith(
                                                 fontWeight: FontWeight.bold,
                                                 color: progressColor,
                                                 fontSize: 11,
@@ -587,7 +587,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                               children: [
                                 Text(
                                   '0%',
-                                  style: theme.textTheme.labelSmall.copyWith(
+                                  style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant
                                         .withValues(alpha: 0.6),
                                     fontSize: 10,
@@ -595,7 +595,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                                 ),
                                 Text(
                                   '100%',
-                                  style: theme.textTheme.labelSmall.copyWith(
+                                  style: theme.textTheme.labelSmall?.copyWith(
                                     color: theme.colorScheme.onSurfaceVariant
                                         .withValues(alpha: 0.6),
                                     fontSize: 10,
@@ -629,7 +629,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                             children: [
                               Text(
                                 l10n.assetGoalCurrent,
-                                style: theme.textTheme.labelSmall.copyWith(
+                                style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -637,7 +637,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                               const SizedBox(height: 4),
                               Text(
                                 '${numberFormat.format(currentAmount)}${l10n.transactionAmountUnit}',
-                                style: theme.textTheme.titleMedium.copyWith(
+                                style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.primary,
                                 ),
@@ -667,7 +667,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                             children: [
                               Text(
                                 l10n.assetGoalTarget,
-                                style: theme.textTheme.labelSmall.copyWith(
+                                style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -675,7 +675,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                               const SizedBox(height: 4),
                               Text(
                                 '${numberFormat.format(nearestGoal.targetAmount)}${l10n.transactionAmountUnit}',
-                                style: theme.textTheme.titleMedium.copyWith(
+                                style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: theme.colorScheme.onSurface,
                                 ),
@@ -697,7 +697,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                             nearestGoal.targetAmount - currentAmount,
                           ),
                         ),
-                        style: theme.textTheme.bodySmall.copyWith(
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
@@ -725,7 +725,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                           const SizedBox(width: 6),
                           Text(
                             l10n.assetGoalAchieved,
-                            style: theme.textTheme.labelLarge.copyWith(
+                            style: theme.textTheme.labelLarge?.copyWith(
                               color: theme.colorScheme.primary,
                               fontWeight: FontWeight.bold,
                             ),
@@ -738,7 +738,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                   Center(
                     child: Text(
                       l10n.assetGoalTapForDetails,
-                      style: theme.textTheme.bodySmall.copyWith(
+                      style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.colorScheme.onSurfaceVariant.withValues(
                           alpha: 0.6,
                         ),
@@ -778,7 +778,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
                 Expanded(
                   child: Text(
                     l10n.assetGoalLoadError,
-                    style: theme.textTheme.bodySmall.copyWith(
+                    style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.error,
                     ),
                   ),
@@ -840,7 +840,7 @@ class _AssetSummaryCardState extends ConsumerState<_AssetSummaryCard> {
             isOverdue
                 ? 'D+${(-remainingDays).toString()}'
                 : 'D-${remainingDays.toString()}',
-            style: theme.textTheme.labelMedium.copyWith(
+            style: theme.textTheme.labelMedium?.copyWith(
               color: badgeColor,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
@@ -902,7 +902,7 @@ class _SectionCard extends StatelessWidget {
           children: [
             Text(
               title,
-              style: theme.textTheme.titleMedium.copyWith(
+              style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),

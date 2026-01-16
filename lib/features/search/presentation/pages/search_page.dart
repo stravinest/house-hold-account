@@ -180,7 +180,7 @@ class _SearchResultItem extends StatelessWidget {
             ),
           Text(
             dateFormat.format(transaction.date),
-            style: Theme.of(context).textTheme.bodySmall.copyWith(
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),

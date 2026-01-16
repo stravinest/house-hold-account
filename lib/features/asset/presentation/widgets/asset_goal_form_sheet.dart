@@ -120,7 +120,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
             isEditing ? l10n.assetGoalEdit : l10n.assetGoalNew,
             style: Theme.of(
               context,
-            ).textTheme.titleMedium.copyWith(fontWeight: FontWeight.w600),
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           TextButton(
             onPressed: () => _submit(context, isEditing),
@@ -137,7 +137,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
       children: [
         Text(
           l10n.assetGoalAmount,
-          style: Theme.of(context).textTheme.titleSmall.copyWith(
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
@@ -153,7 +153,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
           ],
           style: Theme.of(
             context,
-          ).textTheme.headlineSmall.copyWith(fontWeight: FontWeight.bold),
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           decoration: InputDecoration(
             hintText: '0',
             prefixIcon: Icon(
@@ -187,7 +187,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
       children: [
         Text(
           l10n.assetGoalDateOptional,
-          style: Theme.of(context).textTheme.titleSmall.copyWith(
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.w600,
             color: colorScheme.onSurfaceVariant,
           ),
@@ -216,7 +216,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                               'ko_KR',
                             ).format(_targetDate!)
                           : l10n.assetGoalDateHint,
-                      style: Theme.of(context).textTheme.bodyLarge.copyWith(
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: _targetDate != null
                             ? colorScheme.onSurface
                             : colorScheme.onSurfaceVariant,

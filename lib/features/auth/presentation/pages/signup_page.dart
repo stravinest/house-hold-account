@@ -103,14 +103,14 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 // 안내 문구
                 Text(
                   l10n.authSignupTitle,
-                  style: Theme.of(context).textTheme.headlineSmall.copyWith(
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.authSignupSubtitle,
-                  style: Theme.of(context).textTheme.bodyLarge.copyWith(
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -252,7 +252,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 // 이용약관 안내
                 Text(
                   l10n.authTermsAgreement,
-                  style: Theme.of(context).textTheme.bodySmall.copyWith(
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                   textAlign: TextAlign.center,

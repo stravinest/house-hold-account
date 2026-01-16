@@ -183,7 +183,7 @@ class _TrendDetailItem extends StatelessWidget {
             flex: 2,
             child: Text(
               '${numberFormat.format(amount)}${l10n.transactionAmountUnit}',
-              style: theme.textTheme.bodyLarge.copyWith(
+              style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w500,
               ),
               textAlign: TextAlign.end,
@@ -203,7 +203,7 @@ class _TrendDetailItem extends StatelessWidget {
     if (previousAmount == null) {
       return Text(
         '-',
-        style: theme.textTheme.bodyMedium.copyWith(
+        style: theme.textTheme.bodyMedium?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),
         textAlign: TextAlign.end,
@@ -228,7 +228,7 @@ class _TrendDetailItem extends StatelessWidget {
         const SizedBox(width: 2),
         Text(
           '${numberFormat.format(difference.abs())}${l10n.transactionAmountUnit}',
-          style: theme.textTheme.bodySmall.copyWith(color: color),
+          style: theme.textTheme.bodySmall?.copyWith(color: color),
         ),
       ],
     );

@@ -105,7 +105,7 @@ class _CategoryRankingItem extends StatelessWidget {
                 width: 24,
                 child: Text(
                   '$rank',
-                  style: theme.textTheme.titleMedium.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: rank <= 3
                         ? theme.colorScheme.primary
@@ -124,7 +124,7 @@ class _CategoryRankingItem extends StatelessWidget {
               // 비율
               Text(
                 '${percentage.toStringAsFixed(1)}%',
-                style: theme.textTheme.bodyMedium.copyWith(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
@@ -132,7 +132,7 @@ class _CategoryRankingItem extends StatelessWidget {
               // 금액
               Text(
                 '${numberFormat.format(category.amount)}${l10n.transactionAmountUnit}',
-                style: theme.textTheme.bodyLarge.copyWith(
+                style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
               ),

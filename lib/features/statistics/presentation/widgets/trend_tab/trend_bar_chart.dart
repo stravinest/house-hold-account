@@ -114,7 +114,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
       child: Center(
         child: Text(
           l10n.statisticsNoData,
-          style: Theme.of(context).textTheme.bodyLarge.copyWith(
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
@@ -187,7 +187,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               '${item.year % 100}.${item.month.toString().padLeft(2, '0')}',
-                              style: theme.textTheme.bodySmall.copyWith(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: isSelected
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -234,7 +234,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
                         show: true,
                         alignment: Alignment.topRight,
                         labelResolver: (_) => l10n.statisticsAverage,
-                        style: theme.textTheme.bodySmall.copyWith(
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.outline,
                         ),
                       ),
@@ -379,7 +379,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
       child: Center(
         child: Text(
           l10n.statisticsNoData,
-          style: Theme.of(context).textTheme.bodyLarge.copyWith(
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
@@ -450,7 +450,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               l10n.statisticsYear(item.year),
-                              style: theme.textTheme.bodySmall.copyWith(
+                              style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: isSelected
                                     ? FontWeight.bold
                                     : FontWeight.normal,
@@ -497,7 +497,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
                         show: true,
                         alignment: Alignment.topRight,
                         labelResolver: (_) => l10n.statisticsAverage,
-                        style: theme.textTheme.bodySmall.copyWith(
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.outline,
                         ),
                       ),

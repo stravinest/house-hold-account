@@ -150,7 +150,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 // 타이틀
                 Text(
                   l10n.appTitle,
-                  style: Theme.of(context).textTheme.headlineMedium.copyWith(
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                   textAlign: TextAlign.center,
@@ -158,7 +158,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 8),
                 Text(
                   l10n.appSubtitle,
-                  style: Theme.of(context).textTheme.bodyLarge.copyWith(
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
                   textAlign: TextAlign.center,

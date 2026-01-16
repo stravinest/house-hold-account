@@ -409,7 +409,7 @@ class _RecurringSettingsWidgetState
         l10n.fixedExpenseDescription,
         style: Theme.of(
           context,
-        ).textTheme.bodySmall.copyWith(color: colorScheme.onSurfaceVariant),
+        ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
       ),
       value: _isFixedExpense,
       onChanged: widget.enabled

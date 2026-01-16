@@ -221,14 +221,14 @@ class _TransactionCard extends StatelessWidget {
                           transaction.title!.isNotEmpty) ...[
                         Text(
                           transaction.title!,
-                          style: Theme.of(context).textTheme.titleSmall.copyWith(fontWeight: FontWeight.w600),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ] else ...[
                         Text(
                           l10n.transactionNoTitle,
-                          style: Theme.of(context).textTheme.titleSmall.copyWith(
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: colorScheme.onSurfaceVariant,
                               ),
@@ -238,7 +238,7 @@ class _TransactionCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           transaction.userName!,
-                          style: Theme.of(context).textTheme.bodySmall.copyWith(color: colorScheme.outline),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.outline),
                         ),
                       ],
                     ],
@@ -252,7 +252,7 @@ class _TransactionCard extends StatelessWidget {
                       : transaction.isAssetType
                       ? ''
                       : '-'}${formatter.format(transaction.amount)}${l10n.transactionAmountUnit}',
-                  style: Theme.of(context).textTheme.titleMedium.copyWith(
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: amountColor,
                     fontWeight: FontWeight.bold,
                   ),

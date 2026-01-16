@@ -42,7 +42,7 @@ class NotificationSettingsPage extends ConsumerWidget {
           padding: const EdgeInsets.all(Spacing.md),
           child: Text(
             l10n.notificationSettingsDescription,
-            style: Theme.of(context).textTheme.bodyMedium.copyWith(
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),

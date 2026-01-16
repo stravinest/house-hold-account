@@ -37,7 +37,7 @@ class StatisticsDateSelector extends ConsumerWidget {
                   selectedDate.year,
                   selectedDate.month,
                 ),
-                style: theme.textTheme.titleMedium.copyWith(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -134,7 +134,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
             children: [
               Text(
                 l10n.statisticsDateSelect,
-                style: theme.textTheme.titleLarge.copyWith(
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -162,7 +162,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
               ),
               Text(
                 l10n.statisticsYearLabel(_selectedYear),
-                style: theme.textTheme.titleMedium.copyWith(
+                style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -216,7 +216,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                   alignment: Alignment.center,
                   child: Text(
                     l10n.statisticsMonthLabel(month),
-                    style: theme.textTheme.bodyMedium.copyWith(
+                    style: theme.textTheme.bodyMedium?.copyWith(
                       color: isSelected
                           ? theme.colorScheme.onPrimary
                           : isCurrent

@@ -32,7 +32,7 @@ class AssetDonutChart extends StatelessWidget {
         child: Center(
           child: Text(
             l10n.assetNoData,
-            style: theme.textTheme.bodyLarge.copyWith(
+            style: theme.textTheme.bodyLarge?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
@@ -63,14 +63,14 @@ class AssetDonutChart extends StatelessWidget {
             children: [
               Text(
                 l10n.assetTotal,
-                style: theme.textTheme.bodyMedium.copyWith(
+                style: theme.textTheme.bodyMedium?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
-                style: theme.textTheme.titleLarge.copyWith(
+                style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
