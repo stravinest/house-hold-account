@@ -181,7 +181,6 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
 
     // 카테고리/결제수단 초기값 설정
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -268,22 +267,19 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                       // 결제수단 선택 (지출일 때만)
                       if (_type == 'expense') ...[
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
                           child: Text(
-                            l10n.transactionPaymentMethod,
+                            l10n.transactionPaymentMethodOptional,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),
-                        paymentMethodsAsync.when(
-                          data: (paymentMethods) =>
-                              _buildPaymentMethodChips(paymentMethods, l10n),
-                          loading: () => const Center(
-                            child: CircularProgressIndicator(),
-                          ),
-                          error: (e, _) =>
-                              Text(l10n.errorWithMessage(e.toString())),
+                        PaymentMethodSelectorWidget(
+                          selectedPaymentMethod: _selectedPaymentMethod,
+                          onPaymentMethodSelected: (m) =>
+                              setState(() => _selectedPaymentMethod = m),
+                          enabled: !_isLoading,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: Spacing.md),
                         const Divider(),
                       ],
 
@@ -299,201 +295,5 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
         ),
       ),
     );
-  }
-
-  // 랜덤 색상 생성
-  String _generateRandomColor() {
-    final colors = [
-      '#4CAF50',
-      '#2196F3',
-      '#F44336',
-      '#FF9800',
-      '#9C27B0',
-      '#00BCD4',
-      '#E91E63',
-      '#795548',
-      '#607D8B',
-      '#3F51B5',
-      '#009688',
-      '#CDDC39',
-    ];
-    return colors[(DateTime.now().millisecondsSinceEpoch % colors.length)];
-  }
-
-  Widget _buildPaymentMethodChips(
-    List<PaymentMethod> paymentMethods,
-    AppLocalizations l10n,
-  ) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        // 선택 해제 옵션
-        FilterChip(
-          selected: _selectedPaymentMethod == null,
-          showCheckmark: false,
-          label: Text(l10n.transactionNone),
-          onSelected: (_) {
-            setState(() => _selectedPaymentMethod = null);
-          },
-        ),
-        ...paymentMethods.map((method) {
-          final isSelected = _selectedPaymentMethod?.id == method.id;
-          return FilterChip(
-            selected: isSelected,
-            showCheckmark: false,
-            label: Text(method.name),
-            onSelected: (_) {
-              setState(() => _selectedPaymentMethod = method);
-            },
-            onDeleted: () => _deletePaymentMethod(method),
-            deleteIcon: const Icon(Icons.close, size: 18),
-          );
-        }),
-        // 결제수단 추가 버튼
-        ActionChip(
-          avatar: const Icon(Icons.add, size: 18),
-          label: Text(l10n.commonAdd),
-          onPressed: () => _showAddPaymentMethodDialog(),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _deletePaymentMethod(PaymentMethod method) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.paymentMethodDeleteConfirmTitle),
-        content: Text(l10n.paymentMethodDeleteConfirm(method.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    try {
-      await ref
-          .read(paymentMethodNotifierProvider.notifier)
-          .deletePaymentMethod(method.id);
-
-      if (_selectedPaymentMethod?.id == method.id) {
-        setState(() => _selectedPaymentMethod = null);
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.paymentMethodDeleted),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-
-      ref.invalidate(paymentMethodsProvider);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-    }
-  }
-
-  // 결제수단 추가 다이얼로그
-  void _showAddPaymentMethodDialog() {
-    final l10n = AppLocalizations.of(context)!;
-    final nameController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.paymentMethodAdd),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.paymentMethodName,
-            hintText: l10n.paymentMethodNameHintExample,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) =>
-              _submitPaymentMethod(dialogContext, nameController),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                _submitPaymentMethod(dialogContext, nameController),
-            child: Text(l10n.commonAdd),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _submitPaymentMethod(
-    BuildContext dialogContext,
-    TextEditingController nameController,
-  ) async {
-    final l10n = AppLocalizations.of(context)!;
-    if (nameController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(l10n.paymentMethodNameRequired),
-          duration: const Duration(seconds: 1),
-        ),
-      );
-      return;
-    }
-
-    try {
-      final newPaymentMethod = await ref
-          .read(paymentMethodNotifierProvider.notifier)
-          .createPaymentMethod(
-            name: nameController.text.trim(),
-            icon: '',
-            color: _generateRandomColor(),
-          );
-
-      setState(() => _selectedPaymentMethod = newPaymentMethod);
-
-      if (dialogContext.mounted) {
-        Navigator.pop(dialogContext);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.paymentMethodAdded),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-
-      ref.invalidate(paymentMethodsProvider);
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(l10n.errorWithMessage(e.toString())),
-            duration: const Duration(seconds: 1),
-          ),
-        );
-      }
-    }
   }
 }
