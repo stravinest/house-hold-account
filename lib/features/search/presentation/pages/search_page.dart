@@ -97,6 +97,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 _searchController.clear();
                 ref.read(searchQueryProvider.notifier).state = '';
               },
+              tooltip: l10n.tooltipClear,
             ),
         ],
       ),
