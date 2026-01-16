@@ -53,6 +53,7 @@ class AssetGoalCard extends ConsumerWidget {
                       onPressed: onDelete,
                       icon: const Icon(Icons.delete_outline),
                       iconSize: 20,
+                      tooltip: l10n.tooltipDelete,
                     ),
                 ],
               ),
