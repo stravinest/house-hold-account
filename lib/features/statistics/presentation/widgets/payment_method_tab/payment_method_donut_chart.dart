@@ -1,8 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
+import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
@@ -23,14 +23,13 @@ class PaymentMethodDonutChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final statisticsAsync = ref.watch(paymentMethodStatisticsProvider);
-    final numberFormat = NumberFormat('#,###');
 
     return statisticsAsync.when(
       data: (statistics) {
         if (statistics.isEmpty) {
           return _buildEmptyState(context, l10n);
         }
-        return _buildChart(context, l10n, statistics, numberFormat);
+        return _buildChart(context, l10n, statistics);
       },
       loading: () => const SizedBox(
         height: 250,
@@ -59,7 +58,6 @@ class PaymentMethodDonutChart extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     List<PaymentMethodStatistics> statistics,
-    NumberFormat numberFormat,
   ) {
     final totalAmount = statistics.fold(0, (sum, item) => sum + item.amount);
 
@@ -79,7 +77,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
             ),
           ),
           // 중앙 총금액 표시
-          _buildCenterText(context, l10n, totalAmount, numberFormat),
+          _buildCenterText(context, l10n, totalAmount),
         ],
       ),
     );
@@ -111,7 +109,6 @@ class PaymentMethodDonutChart extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     int totalAmount,
-    NumberFormat numberFormat,
   ) {
     final theme = Theme.of(context);
 
@@ -126,7 +123,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
+          '${NumberFormatUtils.currency.format(totalAmount)}${l10n.transactionAmountUnit}',
           style: theme.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
           ),

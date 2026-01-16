@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
+import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../../shared/themes/design_tokens.dart';
 import '../../../../../shared/widgets/skeleton_loading.dart';
@@ -15,7 +15,6 @@ class PaymentMethodList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final statisticsAsync = ref.watch(paymentMethodStatisticsProvider);
-    final numberFormat = NumberFormat('#,###');
 
     return statisticsAsync.when(
       data: (statistics) {
@@ -33,7 +32,6 @@ class PaymentMethodList extends ConsumerWidget {
             return _PaymentMethodItem(
               rank: index + 1,
               item: item,
-              numberFormat: numberFormat,
               l10n: l10n,
             );
           },
@@ -49,13 +47,11 @@ class PaymentMethodList extends ConsumerWidget {
 class _PaymentMethodItem extends StatelessWidget {
   final int rank;
   final PaymentMethodStatistics item;
-  final NumberFormat numberFormat;
   final AppLocalizations l10n;
 
   const _PaymentMethodItem({
     required this.rank,
     required this.item,
-    required this.numberFormat,
     required this.l10n,
   });
 
@@ -110,7 +106,7 @@ class _PaymentMethodItem extends StatelessWidget {
               const SizedBox(width: 12),
               // 금액
               Text(
-                '${numberFormat.format(item.amount)}${l10n.transactionAmountUnit}',
+                '${NumberFormatUtils.currency.format(item.amount)}${l10n.transactionAmountUnit}',
                 style: theme.textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
