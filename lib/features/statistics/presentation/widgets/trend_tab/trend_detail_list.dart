@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
+import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../../shared/themes/design_tokens.dart';
 import '../../../../../shared/widgets/skeleton_loading.dart';
@@ -32,7 +32,6 @@ class _MonthlyDetailList extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final trendAsync = ref.watch(monthlyTrendWithAverageProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
-    final numberFormat = NumberFormat('#,###');
 
     return trendAsync.when(
       data: (trendData) {
@@ -62,7 +61,6 @@ class _MonthlyDetailList extends ConsumerWidget {
                   ? _getValueByType(previousItem, selectedType)
                   : null,
               type: selectedType,
-              numberFormat: numberFormat,
               l10n: l10n,
             );
           },
@@ -94,7 +92,6 @@ class _YearlyDetailList extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final trendAsync = ref.watch(yearlyTrendWithAverageProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
-    final numberFormat = NumberFormat('#,###');
 
     return trendAsync.when(
       data: (trendData) {
@@ -124,7 +121,6 @@ class _YearlyDetailList extends ConsumerWidget {
                   ? _getValueByType(previousItem, selectedType)
                   : null,
               type: selectedType,
-              numberFormat: numberFormat,
               l10n: l10n,
             );
           },
@@ -153,7 +149,6 @@ class _TrendDetailItem extends StatelessWidget {
   final int amount;
   final int? previousAmount;
   final String type;
-  final NumberFormat numberFormat;
   final AppLocalizations l10n;
 
   const _TrendDetailItem({
@@ -161,7 +156,6 @@ class _TrendDetailItem extends StatelessWidget {
     required this.amount,
     this.previousAmount,
     required this.type,
-    required this.numberFormat,
     required this.l10n,
   });
 
@@ -182,7 +176,7 @@ class _TrendDetailItem extends StatelessWidget {
           Expanded(
             flex: 2,
             child: Text(
-              '${numberFormat.format(amount)}${l10n.transactionAmountUnit}',
+              '${NumberFormatUtils.currency.format(amount)}${l10n.transactionAmountUnit}',
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w500,
               ),
@@ -227,7 +221,7 @@ class _TrendDetailItem extends StatelessWidget {
         Icon(arrow, size: 14, color: color),
         const SizedBox(width: 2),
         Text(
-          '${numberFormat.format(difference.abs())}${l10n.transactionAmountUnit}',
+          '${NumberFormatUtils.currency.format(difference.abs())}${l10n.transactionAmountUnit}',
           style: theme.textTheme.bodySmall?.copyWith(color: color),
         ),
       ],

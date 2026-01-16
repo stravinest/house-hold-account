@@ -1,8 +1,8 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
+import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../../domain/entities/statistics_entities.dart';
@@ -74,7 +74,6 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
     final l10n = AppLocalizations.of(context)!;
     final trendAsync = ref.watch(monthlyTrendWithAverageProvider);
     final selectedDate = ref.watch(statisticsSelectedDateProvider);
-    final numberFormat = NumberFormat('#,###');
 
     return trendAsync.when(
       data: (trendData) {
@@ -96,7 +95,6 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
           l10n,
           trendData,
           selectedDate,
-          numberFormat,
         );
       },
       loading: () => const SizedBox(
@@ -127,7 +125,6 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
     AppLocalizations l10n,
     TrendStatisticsData trendData,
     DateTime selectedDate,
-    NumberFormat numberFormat,
   ) {
     final data = trendData.data.cast<MonthlyStatistics>();
     final average = trendData.getAverageByType(widget.selectedType);
@@ -165,7 +162,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final item = data[group.x.toInt()];
                       return BarTooltipItem(
-                        '${item.year}.${item.month.toString().padLeft(2, '0')}\n${numberFormat.format(rod.toY.toInt())}${l10n.transactionAmountUnit}',
+                        '${item.year}.${item.month.toString().padLeft(2, '0')}\n${NumberFormatUtils.currency.format(rod.toY.toInt())}${l10n.transactionAmountUnit}',
                         TextStyle(color: theme.colorScheme.onSurface),
                       );
                     },
@@ -340,7 +337,6 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
     final l10n = AppLocalizations.of(context)!;
     final trendAsync = ref.watch(yearlyTrendWithAverageProvider);
     final selectedDate = ref.watch(statisticsSelectedDateProvider);
-    final numberFormat = NumberFormat('#,###');
 
     return trendAsync.when(
       data: (trendData) {
@@ -361,7 +357,6 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
           l10n,
           trendData,
           selectedDate,
-          numberFormat,
         );
       },
       loading: () => const SizedBox(
@@ -392,7 +387,6 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
     AppLocalizations l10n,
     TrendStatisticsData trendData,
     DateTime selectedDate,
-    NumberFormat numberFormat,
   ) {
     final data = trendData.data.cast<YearlyStatistics>();
     final average = trendData.getAverageByType(widget.selectedType);
@@ -430,7 +424,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
                     getTooltipItem: (group, groupIndex, rod, rodIndex) {
                       final item = data[group.x.toInt()];
                       return BarTooltipItem(
-                        '${l10n.statisticsYear(item.year)}\n${numberFormat.format(rod.toY.toInt())}${l10n.transactionAmountUnit}',
+                        '${l10n.statisticsYear(item.year)}\n${NumberFormatUtils.currency.format(rod.toY.toInt())}${l10n.transactionAmountUnit}',
                         TextStyle(color: theme.colorScheme.onSurface),
                       );
                     },
