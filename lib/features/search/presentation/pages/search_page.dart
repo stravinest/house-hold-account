@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
@@ -140,7 +141,6 @@ class _SearchResultItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    final numberFormat = NumberFormat('#,###');
     final dateFormat = DateFormat('yyyy.MM.dd');
     final amountColor = transaction.isIncome
         ? colorScheme.primary
@@ -187,7 +187,7 @@ class _SearchResultItem extends StatelessWidget {
         ],
       ),
       trailing: Text(
-        '$amountPrefix${numberFormat.format(transaction.amount)}${l10n.transactionAmountUnit}',
+        '$amountPrefix${NumberFormatUtils.currency.format(transaction.amount)}${l10n.transactionAmountUnit}',
         style: TextStyle(fontWeight: FontWeight.bold, color: amountColor),
       ),
     );
