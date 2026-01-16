@@ -49,7 +49,6 @@ class AuthService {
     String? displayName,
   }) async {
     debugPrint('[AuthService] signUpWithEmail 시작');
-    debugPrint('[AuthService] 비밀번호 길이: ${password.length}');
     debugPrint('[AuthService] 표시 이름: $displayName');
     debugPrint('[AuthService] Supabase URL: ${SupabaseConfig.supabaseUrl}');
 
@@ -64,9 +63,6 @@ class AuthService {
       debugPrint('[AuthService] signUp 응답 받음');
       debugPrint('[AuthService] user id: ${response.user?.id}');
       debugPrint('[AuthService] session 존재: ${response.session != null}');
-      debugPrint(
-        '[AuthService] session access_token: ${response.session?.accessToken?.substring(0, 20)}...',
-      );
 
       // 트리거가 자동으로 profiles 테이블에 데이터를 생성하므로
       // 여기서는 추가 작업 불필요 (handle_new_user 트리거)
@@ -142,7 +138,6 @@ class AuthService {
     required String password,
   }) async {
     debugPrint('[AuthService] signInWithEmail 시작');
-    debugPrint('[AuthService] 비밀번호 길이: ${password.length}');
     debugPrint('[AuthService] Supabase URL: ${SupabaseConfig.supabaseUrl}');
     try {
       final response = await _auth.signInWithPassword(
