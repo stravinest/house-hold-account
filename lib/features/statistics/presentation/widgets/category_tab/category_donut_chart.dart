@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../providers/statistics_provider.dart';
@@ -24,7 +25,6 @@ class CategoryDonutChart extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final statisticsAsync = ref.watch(categoryStatisticsProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
-    final numberFormat = NumberFormat('#,###');
 
     return statisticsAsync.when(
       data: (statistics) {
@@ -36,7 +36,7 @@ class CategoryDonutChart extends ConsumerWidget {
           l10n,
           statistics,
           selectedType,
-          numberFormat,
+          NumberFormatUtils.currency,
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),

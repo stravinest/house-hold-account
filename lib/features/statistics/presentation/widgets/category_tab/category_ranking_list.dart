@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../../core/utils/category_l10n_helper.dart';
+import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../../shared/widgets/skeleton_loading.dart';
 import '../../../data/repositories/statistics_repository.dart';
@@ -15,7 +16,6 @@ class CategoryRankingList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final statisticsAsync = ref.watch(categoryStatisticsProvider);
-    final numberFormat = NumberFormat('#,###');
 
     return statisticsAsync.when(
       data: (statistics) {
@@ -44,7 +44,7 @@ class CategoryRankingList extends ConsumerWidget {
               category: item,
               percentage: percentage,
               totalAmount: totalAmount,
-              numberFormat: numberFormat,
+              numberFormat: NumberFormatUtils.currency,
               l10n: l10n,
             );
           },
@@ -54,8 +54,7 @@ class CategoryRankingList extends ConsumerWidget {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: 5,
-        separatorBuilder: (context, index) => const Divider(height: 1),
-        itemBuilder: (context, index) => const _CategoryRankingSkeleton(),
+        separatorBuilder: (context, index) => const _CategoryRankingSkeleton(),
       ),
       error: (error, _) =>
           Center(child: Text(l10n.errorWithMessage(error.toString()))),

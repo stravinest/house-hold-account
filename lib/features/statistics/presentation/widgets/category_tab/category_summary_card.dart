@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
@@ -51,7 +52,6 @@ class CategorySummaryCard extends ConsumerWidget {
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final expenseFilter = ref.watch(selectedExpenseTypeFilterProvider);
     final comparisonAsync = ref.watch(monthComparisonProvider);
-    final numberFormat = NumberFormat('#,###');
 
     return Card(
       child: Padding(
@@ -63,7 +63,7 @@ class CategorySummaryCard extends ConsumerWidget {
             selectedType,
             expenseFilter,
             comparison,
-            numberFormat,
+            NumberFormatUtils.currency,
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) =>
