@@ -1,22 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../providers/statistics_provider.dart';
 import 'payment_method_donut_chart.dart';
 import 'payment_method_list.dart';
 
-class PaymentMethodTabView extends StatelessWidget {
+class PaymentMethodTabView extends ConsumerWidget {
   const PaymentMethodTabView({super.key});
 
+  Future<void> _onRefresh(WidgetRef ref) async {
+    ref.invalidate(paymentMethodStatisticsProvider);
+    await ref.read(paymentMethodStatisticsProvider.future);
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return RefreshIndicator(
+      onRefresh: () => _onRefresh(ref),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           // 안내 메시지 (지출만 표시)
           Container(
             padding: const EdgeInsets.all(12),
@@ -81,6 +91,7 @@ class PaymentMethodTabView extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }
