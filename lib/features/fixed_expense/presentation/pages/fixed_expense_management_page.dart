@@ -50,6 +50,7 @@ class _FixedExpenseManagementPageState
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context),
+        tooltip: l10n.fixedExpenseCategoryAdd,
         child: const Icon(Icons.add),
       ),
     );
@@ -192,6 +193,7 @@ class _CategoryTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -201,10 +203,12 @@ class _CategoryTile extends ConsumerWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.edit),
+              tooltip: l10n.commonEdit,
               onPressed: () => _showEditDialog(context, category),
             ),
             IconButton(
               icon: const Icon(Icons.delete),
+              tooltip: l10n.commonDelete,
               onPressed: () => _showDeleteConfirm(context, ref, category),
             ),
           ],

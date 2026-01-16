@@ -67,6 +67,7 @@ class _PaymentMethodManagementPageState
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context),
+        tooltip: l10n.paymentMethodAdd,
         child: const Icon(Icons.add),
       ),
     );
@@ -100,10 +101,12 @@ class _PaymentMethodTile extends ConsumerWidget {
           children: [
             IconButton(
               icon: const Icon(Icons.edit),
+              tooltip: l10n.commonEdit,
               onPressed: () => _showEditDialog(context, paymentMethod),
             ),
             IconButton(
               icon: const Icon(Icons.delete),
+              tooltip: l10n.commonDelete,
               onPressed: () => _showDeleteConfirm(context, ref, paymentMethod),
             ),
           ],
