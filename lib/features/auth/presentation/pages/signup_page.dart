@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
 import '../../../../core/utils/snackbar_utils.dart';
@@ -65,11 +66,35 @@ class _SignupPageState extends ConsumerState<SignupPage> {
       debugPrint('[SignupPage] signup failed: $e');
       debugPrint('[SignupPage] stack trace: $st');
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        SnackBarUtils.showError(
-          context,
-          l10n.errorWithMessage(e.toString()),
-        );
+        final l10n = AppLocalizations.of(context);
+        String errorMessage;
+        if (e is AuthApiException) {
+          switch (e.code) {
+            case 'user_already_exists':
+              errorMessage = l10n.authEmailAlreadyRegistered;
+              break;
+            case 'email_not_confirmed':
+              errorMessage = l10n.authEmailNotVerified;
+              break;
+            default:
+              // 영어 메시지를 한글로 변환
+              if (e.message.contains('already registered') ||
+                  e.message.contains('User already registered')) {
+                errorMessage = l10n.authEmailAlreadyRegistered;
+              } else {
+                errorMessage = l10n.errorWithMessage(e.message);
+              }
+          }
+        } else {
+          final errorStr = e.toString();
+          if (errorStr.contains('already registered') ||
+              errorStr.contains('User already registered')) {
+            errorMessage = l10n.authEmailAlreadyRegistered;
+          } else {
+            errorMessage = l10n.errorWithMessage(errorStr);
+          }
+        }
+        SnackBarUtils.showError(context, errorMessage);
       }
     } finally {
       if (mounted) {

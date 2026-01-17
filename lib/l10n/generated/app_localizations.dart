@@ -440,6 +440,12 @@ abstract class AppLocalizations {
   /// **'이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.'**
   String get authEmailNotVerified;
 
+  /// No description provided for @authEmailAlreadyRegistered.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 가입된 이메일입니다.'**
+  String get authEmailAlreadyRegistered;
+
   /// No description provided for @authSignupTitle.
   ///
   /// In ko, this message translates to:

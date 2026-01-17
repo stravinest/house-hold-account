@@ -180,6 +180,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authEmailNotVerified => '이메일 인증이 완료되지 않았습니다. 메일함을 확인해주세요.';
 
   @override
+  String get authEmailAlreadyRegistered => '이미 가입된 이메일입니다.';
+
+  @override
   String get authSignupTitle => '새 계정 만들기';
 
   @override

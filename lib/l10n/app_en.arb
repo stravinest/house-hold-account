@@ -62,6 +62,7 @@
   "authLoginError": "An error occurred during login. Please try again.",
   "authInvalidCredentials": "Invalid email or password.",
   "authEmailNotVerified": "Email not verified. Please check your inbox.",
+  "authEmailAlreadyRegistered": "This email is already registered.",
   "authSignupTitle": "Create Account",
   "authSignupSubtitle": "Create an account to start\nusing Shared Household",
   "authTermsAgreement": "By signing up, you agree to our\nTerms of Service and Privacy Policy.",

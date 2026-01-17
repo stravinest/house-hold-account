@@ -183,6 +183,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Email not verified. Please check your inbox.';
 
   @override
+  String get authEmailAlreadyRegistered => 'This email is already registered.';
+
+  @override
   String get authSignupTitle => 'Create Account';
 
   @override
