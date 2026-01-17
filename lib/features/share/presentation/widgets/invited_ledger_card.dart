@@ -161,8 +161,8 @@ class InvitedLedgerCard extends StatelessWidget {
     // pending 상태: 수락/거부 버튼
     if (invite.isPending) {
       return Row(
-        mainAxisAlignment: MainAxisAlignment.end,
         children: [
+          const Spacer(),
           // 거부 버튼
           OutlinedButton(
             onPressed: onReject,
@@ -170,6 +170,8 @@ class InvitedLedgerCard extends StatelessWidget {
               foregroundColor: colorScheme.onSurface.withValues(alpha: 0.7),
               side: BorderSide(color: colorScheme.onSurfaceVariant),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              minimumSize: const Size(0, 36),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(l10n.shareReject),
           ),
@@ -181,6 +183,8 @@ class InvitedLedgerCard extends StatelessWidget {
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              minimumSize: const Size(0, 36),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(l10n.shareAccept),
           ),
