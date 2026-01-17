@@ -19,6 +19,7 @@ import '../../../transaction/presentation/widgets/add_transaction_sheet.dart';
 import '../../../transaction/presentation/widgets/quick_expense_sheet.dart';
 import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart';
 import '../../../widget/presentation/providers/widget_provider.dart';
+import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../providers/ledger_provider.dart';
 import '../widgets/calendar_view.dart';
@@ -219,8 +220,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                     icon: const Icon(Icons.book),
                     tooltip: l10n.tooltipBook,
                     onPressed: () => _showLedgerSelector(context),
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
                   )
                 : const SizedBox.shrink(),
             loading: () => const SizedBox.shrink(),
@@ -232,8 +231,6 @@ class _HomePageState extends ConsumerState<HomePage> {
             onPressed: () {
               context.push(Routes.search);
             },
-            visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
           ),
           IconButton(
             icon: const Icon(Icons.settings),
@@ -241,45 +238,40 @@ class _HomePageState extends ConsumerState<HomePage> {
             onPressed: () {
               context.push(Routes.settings);
             },
-            visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: Spacing.xs),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          // 캘린더 탭
-          CalendarTabView(
-            selectedDate: selectedDate,
-            focusedDate: selectedDate,
-            showUserSummary: _showUserSummary,
-            onDateSelected: (date) {
-              ref.read(selectedDateProvider.notifier).state = date;
-              _handleDateSelected(date);
-            },
-            onPageChanged: (focusedDate) {
-              // 월이 변경되면 선택 날짜도 업데이트
-              final currentDate = ref.read(selectedDateProvider);
-              if (currentDate.year != focusedDate.year ||
-                  currentDate.month != focusedDate.month) {
-                ref.read(selectedDateProvider.notifier).state = focusedDate;
-                // 월 변경 시 사용자 요약 숨김
-                setState(() {
-                  _showUserSummary = false;
-                });
-              }
-            },
-            onRefresh: _refreshCalendarData,
-          ),
-          // 통계 탭
-          const StatisticsTabView(),
-          // 자산 탭
-          const AssetTabView(),
-          // 더보기 탭
-          const MoreTabView(),
-        ],
+      body: CenteredContent(
+        maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
+        child: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            CalendarTabView(
+              selectedDate: selectedDate,
+              focusedDate: selectedDate,
+              showUserSummary: _showUserSummary,
+              onDateSelected: (date) {
+                ref.read(selectedDateProvider.notifier).state = date;
+                _handleDateSelected(date);
+              },
+              onPageChanged: (focusedDate) {
+                final currentDate = ref.read(selectedDateProvider);
+                if (currentDate.year != focusedDate.year ||
+                    currentDate.month != focusedDate.month) {
+                  ref.read(selectedDateProvider.notifier).state = focusedDate;
+                  setState(() {
+                    _showUserSummary = false;
+                  });
+                }
+              },
+              onRefresh: _refreshCalendarData,
+            ),
+            const StatisticsTabView(),
+            const AssetTabView(),
+            const MoreTabView(),
+          ],
+        ),
       ),
       floatingActionButton: _selectedIndex == 1
           ? null
@@ -290,8 +282,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
-        height: 56, // 라벨 제거로 높이 축소
-        labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
+        labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           // 다른 탭에서 캘린더 탭으로 돌아올 때만 새로고침
@@ -309,26 +300,26 @@ class _HomePageState extends ConsumerState<HomePage> {
             _refreshCalendarData();
           }
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.calendar_today_outlined),
-            selectedIcon: Icon(Icons.calendar_today),
-            label: '', // 라벨 숨김
+            icon: const Icon(Icons.calendar_today_outlined),
+            selectedIcon: const Icon(Icons.calendar_today),
+            label: l10n.navTabCalendar,
           ),
           NavigationDestination(
-            icon: Icon(Icons.pie_chart_outline),
-            selectedIcon: Icon(Icons.pie_chart),
-            label: '', // 라벨 숨김
+            icon: const Icon(Icons.pie_chart_outline),
+            selectedIcon: const Icon(Icons.pie_chart),
+            label: l10n.navTabStatistics,
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_balance_outlined),
-            selectedIcon: Icon(Icons.account_balance),
-            label: '', // 라벨 숨김
+            icon: const Icon(Icons.account_balance_outlined),
+            selectedIcon: const Icon(Icons.account_balance),
+            label: l10n.navTabAsset,
           ),
           NavigationDestination(
-            icon: Icon(Icons.more_horiz),
-            selectedIcon: Icon(Icons.more_horiz),
-            label: '', // 라벨 숨김
+            icon: const Icon(Icons.more_horiz),
+            selectedIcon: const Icon(Icons.more_horiz),
+            label: l10n.navTabMore,
           ),
         ],
       ),
@@ -653,58 +644,65 @@ class _DailyUserSummary extends ConsumerWidget {
             }
 
             transactionRows.add(
-              GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    useSafeArea: true,
-                    builder: (context) =>
-                        TransactionDetailSheet(transaction: tx),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: userColor,
-                          shape: BoxShape.circle,
-                        ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: Spacing.xs),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      showModalBottomSheet(
+                        context: context,
+                        isScrollControlled: true,
+                        useSafeArea: true,
+                        builder: (context) =>
+                            TransactionDetailSheet(transaction: tx),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: Spacing.sm,
+                        horizontal: Spacing.xs,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        userName,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: userColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: Spacing.sm),
+                          Text(
+                            userName,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(width: Spacing.xs),
+                          Flexible(
+                            child: Text(
+                              description,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: Spacing.sm),
+                          Text(
+                            '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: amountColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          description,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontSize: 11,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: amountColor,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -713,7 +711,10 @@ class _DailyUserSummary extends ConsumerWidget {
         }
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.md,
+            vertical: Spacing.sm,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

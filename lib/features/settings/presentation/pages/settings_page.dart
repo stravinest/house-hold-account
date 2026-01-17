@@ -6,6 +6,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/themes/locale_provider.dart';
 import '../../../../shared/themes/theme_provider.dart';
+import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/color_picker.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -26,190 +27,193 @@ class SettingsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settingsTitle)),
-      body: ListView(
-        children: [
-          // 앱 설정 섹션
-          SectionHeader(title: l10n.settingsAppSettings),
-          ListTile(
-            leading: const Icon(Icons.palette_outlined),
-            title: Text(l10n.settingsTheme),
-            subtitle: Text(_getThemeModeLabel(themeMode, l10n)),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showThemeSelector(context, ref, themeMode, l10n),
-          ),
-          ListTile(
-            leading: const Icon(Icons.language_outlined),
-            title: Text(l10n.settingsLanguage),
-            subtitle: Text(_getLocaleLabel(locale, l10n)),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showLanguageSelector(context, ref, locale, l10n),
-          ),
-          SwitchListTile(
-            secondary: const Icon(Icons.notifications_outlined),
-            title: Text(l10n.settingsNotification),
-            subtitle: Text(l10n.settingsNotificationDescription),
-            value: notificationEnabled,
-            onChanged: (value) {
-              ref.read(notificationEnabledProvider.notifier).state = value;
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.notifications_active),
-            title: Text(l10n.settingsNotificationSettings),
-            subtitle: Text(l10n.settingsNotificationSettingsDescription),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const NotificationSettingsPage(),
-                ),
-              );
-            },
-          ),
-
-          const Divider(),
-
-          // 계정 섹션
-          SectionHeader(title: l10n.settingsAccount),
-
-          // 프로필 편집 섹션
-          Card(
-            margin: const EdgeInsets.symmetric(
-              horizontal: Spacing.md,
-              vertical: Spacing.sm,
+      body: CenteredContent(
+        maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
+        child: ListView(
+          children: [
+            // 앱 설정 섹션
+            SectionHeader(title: l10n.settingsAppSettings),
+            ListTile(
+              leading: const Icon(Icons.palette_outlined),
+              title: Text(l10n.settingsTheme),
+              subtitle: Text(_getThemeModeLabel(themeMode, l10n)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showThemeSelector(context, ref, themeMode, l10n),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(Spacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.settingsProfile,
-                    style: Theme.of(context).textTheme.titleMedium,
+            ListTile(
+              leading: const Icon(Icons.language_outlined),
+              title: Text(l10n.settingsLanguage),
+              subtitle: Text(_getLocaleLabel(locale, l10n)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showLanguageSelector(context, ref, locale, l10n),
+            ),
+            SwitchListTile(
+              secondary: const Icon(Icons.notifications_outlined),
+              title: Text(l10n.settingsNotification),
+              subtitle: Text(l10n.settingsNotificationDescription),
+              value: notificationEnabled,
+              onChanged: (value) {
+                ref.read(notificationEnabledProvider.notifier).state = value;
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.notifications_active),
+              title: Text(l10n.settingsNotificationSettings),
+              subtitle: Text(l10n.settingsNotificationSettingsDescription),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NotificationSettingsPage(),
                   ),
-                  const SizedBox(height: 16),
-                  // 표시 이름
-                  _DisplayNameEditor(l10n: l10n),
-                  const SizedBox(height: 24),
-                  // 색상 선택
-                  Text(
-                    l10n.settingsMyColor,
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 12),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final currentColor = ref.watch(userColorProvider);
+                );
+              },
+            ),
 
-                      return ColorPicker(
-                        selectedColor: currentColor,
-                        onColorSelected: (color) async {
-                          final authService = ref.read(authServiceProvider);
-                          try {
-                            await authService.updateProfile(color: color);
-                            ref.invalidate(userProfileProvider);
-                            if (context.mounted) {
-                              SnackBarUtils.showSuccess(
-                                context,
-                                l10n.settingsColorChanged,
-                              );
+            const Divider(),
+
+            // 계정 섹션
+            SectionHeader(title: l10n.settingsAccount),
+
+            // 프로필 편집 섹션
+            Card(
+              margin: const EdgeInsets.symmetric(
+                horizontal: Spacing.md,
+                vertical: Spacing.sm,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(Spacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.settingsProfile,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: Spacing.md),
+                    // 표시 이름
+                    _DisplayNameEditor(l10n: l10n),
+                    const SizedBox(height: Spacing.lg),
+                    // 색상 선택
+                    Text(
+                      l10n.settingsMyColor,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: Spacing.sm + Spacing.xs),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final currentColor = ref.watch(userColorProvider);
+
+                        return ColorPicker(
+                          selectedColor: currentColor,
+                          onColorSelected: (color) async {
+                            final authService = ref.read(authServiceProvider);
+                            try {
+                              await authService.updateProfile(color: color);
+                              ref.invalidate(userProfileProvider);
+                              if (context.mounted) {
+                                SnackBarUtils.showSuccess(
+                                  context,
+                                  l10n.settingsColorChanged,
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                SnackBarUtils.showError(
+                                  context,
+                                  l10n.settingsColorChangeFailed(e.toString()),
+                                );
+                              }
                             }
-                          } catch (e) {
-                            if (context.mounted) {
-                              SnackBarUtils.showError(
-                                context,
-                                l10n.settingsColorChangeFailed(e.toString()),
-                              );
-                            }
-                          }
-                        },
-                      );
-                    },
-                  ),
-                ],
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          const SizedBox(height: 8),
-          ListTile(
-            leading: const Icon(Icons.lock_outline),
-            title: Text(l10n.settingsPasswordChange),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showPasswordChangeDialog(context, ref, l10n),
-          ),
+            const SizedBox(height: Spacing.sm),
+            ListTile(
+              leading: const Icon(Icons.lock_outline),
+              title: Text(l10n.settingsPasswordChange),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _showPasswordChangeDialog(context, ref, l10n),
+            ),
 
-          const Divider(),
+            const Divider(),
 
-          // 데이터 섹션
-          SectionHeader(title: l10n.settingsData),
-          ListTile(
-            leading: const Icon(Icons.download_outlined),
-            title: Text(l10n.settingsDataExport),
-            subtitle: Text(l10n.settingsDataExportDescription),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _exportData(context, l10n),
-          ),
+            // 데이터 섹션
+            SectionHeader(title: l10n.settingsData),
+            ListTile(
+              leading: const Icon(Icons.download_outlined),
+              title: Text(l10n.settingsDataExport),
+              subtitle: Text(l10n.settingsDataExportDescription),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _exportData(context, l10n),
+            ),
 
-          const Divider(),
+            const Divider(),
 
-          // 정보 섹션
-          SectionHeader(title: l10n.settingsInfo),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: Text(l10n.settingsAppInfo),
-            subtitle: Text(l10n.settingsVersion('1.0.0')),
-            onTap: () => _showAboutDialog(context, l10n),
-          ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: Text(l10n.settingsTerms),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO: 이용약관 페이지로 이동
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.privacy_tip_outlined),
-            title: Text(l10n.settingsPrivacy),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () {
-              // TODO: 개인정보처리방침 페이지로 이동
-            },
-          ),
+            // 정보 섹션
+            SectionHeader(title: l10n.settingsInfo),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: Text(l10n.settingsAppInfo),
+              subtitle: Text(l10n.settingsVersion('1.0.0')),
+              onTap: () => _showAboutDialog(context, l10n),
+            ),
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
+              title: Text(l10n.settingsTerms),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                // TODO: 이용약관 페이지로 이동
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: Text(l10n.settingsPrivacy),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                // TODO: 개인정보처리방침 페이지로 이동
+              },
+            ),
 
-          const Divider(),
+            const Divider(),
 
-          // 로그아웃/탈퇴
-          Builder(
-            builder: (context) {
-              final errorColor = Theme.of(context).colorScheme.error;
-              return Column(
-                children: [
-                  ListTile(
-                    leading: Icon(Icons.logout, color: errorColor),
-                    title: Text(
-                      l10n.authLogout,
-                      style: TextStyle(color: errorColor),
+            // 로그아웃/탈퇴
+            Builder(
+              builder: (context) {
+                final errorColor = Theme.of(context).colorScheme.error;
+                return Column(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.logout, color: errorColor),
+                      title: Text(
+                        l10n.authLogout,
+                        style: TextStyle(color: errorColor),
+                      ),
+                      onTap: () => _logout(context, ref, l10n),
                     ),
-                    onTap: () => _logout(context, ref, l10n),
-                  ),
-                  ListTile(
-                    leading: Icon(Icons.delete_forever, color: errorColor),
-                    title: Text(
-                      l10n.settingsDeleteAccount,
-                      style: TextStyle(color: errorColor),
+                    ListTile(
+                      leading: Icon(Icons.delete_forever, color: errorColor),
+                      title: Text(
+                        l10n.settingsDeleteAccount,
+                        style: TextStyle(color: errorColor),
+                      ),
+                      onTap: () => _deleteAccount(context, ref, l10n),
                     ),
-                    onTap: () => _deleteAccount(context, ref, l10n),
-                  ),
-                ],
-              );
-            },
-          ),
+                  ],
+                );
+              },
+            ),
 
-          const SizedBox(height: 32),
-        ],
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
   }

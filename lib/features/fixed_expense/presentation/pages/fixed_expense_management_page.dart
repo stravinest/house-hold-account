@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../domain/entities/fixed_expense_category.dart';
@@ -37,17 +38,20 @@ class _FixedExpenseManagementPageState
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(l10n.fixedExpenseManagement)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          // 고정비 설정 카드
-          const _SettingsCard(),
-          const SizedBox(height: 24),
-          // 고정비 카테고리 섹션
-          SectionHeader(title: l10n.fixedExpenseCategoryTitle),
-          const SizedBox(height: 8),
-          const _CategoryListView(),
-        ],
+      body: CenteredContent(
+        maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // 고정비 설정 카드
+            const _SettingsCard(),
+            const SizedBox(height: 24),
+            // 고정비 카테고리 섹션
+            SectionHeader(title: l10n.fixedExpenseCategoryTitle),
+            const SizedBox(height: 8),
+            const _CategoryListView(),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context),
@@ -241,10 +245,7 @@ class _CategoryTile extends ConsumerWidget {
                     .read(fixedExpenseCategoryNotifierProvider.notifier)
                     .deleteCategory(category.id);
                 if (context.mounted) {
-                  SnackBarUtils.showSuccess(
-                    context,
-                    l10n.categoryDeleted,
-                  );
+                  SnackBarUtils.showSuccess(context, l10n.categoryDeleted);
                 }
               } catch (e) {
                 if (context.mounted) {
@@ -378,17 +379,12 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
         Navigator.pop(context);
         SnackBarUtils.showSuccess(
           context,
-          widget.category != null
-              ? l10n.categoryUpdated
-              : l10n.categoryAdded,
+          widget.category != null ? l10n.categoryUpdated : l10n.categoryAdded,
         );
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(
-          context,
-          l10n.errorWithMessage(e.toString()),
-        );
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     }
   }

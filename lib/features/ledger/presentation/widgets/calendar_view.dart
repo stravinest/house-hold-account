@@ -33,6 +33,8 @@ class CalendarView extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final dailyTotalsAsync = ref.watch(dailyTotalsProvider);
     final dailyTotals = dailyTotalsAsync.valueOrNull ?? {};
+
+    // CalendarDayCell에 currentLedger 전체가 필요하므로 전체 watch
     final currentLedgerAsync = ref.watch(currentLedgerProvider);
     final currentLedger = currentLedgerAsync.valueOrNull;
 

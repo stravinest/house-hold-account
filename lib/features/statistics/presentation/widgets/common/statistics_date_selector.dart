@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../../../shared/themes/design_tokens.dart';
 import '../../providers/statistics_provider.dart';
 
 // 통계 페이지 날짜 선택 위젯
@@ -15,7 +16,10 @@ class StatisticsDateSelector extends ConsumerWidget {
     final theme = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.md,
+        vertical: Spacing.sm,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -24,14 +28,16 @@ class StatisticsDateSelector extends ConsumerWidget {
             icon: const Icon(Icons.chevron_left),
             tooltip: l10n.tooltipPreviousMonth,
             onPressed: () => _goToPreviousMonth(ref),
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
           ),
           // 월 표시
-          GestureDetector(
+          InkWell(
             onTap: () => _showMonthPicker(context, ref, selectedDate),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md,
+                vertical: Spacing.sm,
+              ),
               child: Text(
                 l10n.statisticsYearMonthFormat(
                   selectedDate.year,
@@ -48,8 +54,6 @@ class StatisticsDateSelector extends ConsumerWidget {
             icon: const Icon(Icons.chevron_right),
             tooltip: l10n.tooltipNextMonth,
             onPressed: () => _goToNextMonth(ref),
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
           ),
         ],
       ),
@@ -124,7 +128,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
     final now = DateTime.now();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(Spacing.md),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -146,7 +150,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Spacing.md),
           // 연도 선택
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -177,7 +181,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Spacing.md),
           // 월 그리드
           GridView.builder(
             shrinkWrap: true,
@@ -185,8 +189,8 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
               childAspectRatio: 2,
-              crossAxisSpacing: 8,
-              mainAxisSpacing: 8,
+              crossAxisSpacing: Spacing.sm,
+              mainAxisSpacing: Spacing.sm,
             ),
             itemCount: 12,
             itemBuilder: (context, index) {
@@ -200,7 +204,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                 onTap: () {
                   widget.onDateSelected(DateTime(_selectedYear, month, 1));
                 },
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
                 child: Container(
                   decoration: BoxDecoration(
                     color: isSelected
@@ -208,7 +212,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
                         : isCurrent
                         ? theme.colorScheme.primaryContainer
                         : null,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
                     border: isCurrent && !isSelected
                         ? Border.all(color: theme.colorScheme.primary)
                         : null,
@@ -231,7 +235,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
               );
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Spacing.md),
         ],
       ),
     );

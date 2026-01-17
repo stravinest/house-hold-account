@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/themes/design_tokens.dart';
+import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
@@ -103,30 +105,34 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             ),
         ],
       ),
-      body: resultsAsync.when(
-        data: (results) {
-          if (ref.watch(searchQueryProvider).isEmpty) {
-            return EmptyState(icon: Icons.search, message: l10n.searchEmpty);
-          }
+      body: CenteredContent(
+        maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
+        child: resultsAsync.when(
+          data: (results) {
+            if (ref.watch(searchQueryProvider).isEmpty) {
+              return EmptyState(icon: Icons.search, message: l10n.searchEmpty);
+            }
 
-          if (results.isEmpty) {
-            return EmptyState(
-              icon: Icons.search_off,
-              message: l10n.searchNoResults,
+            if (results.isEmpty) {
+              return EmptyState(
+                icon: Icons.search_off,
+                message: l10n.searchNoResults,
+              );
+            }
+
+            return ListView.builder(
+              cacheExtent: 500, // 성능 최적화: 스크롤 시 미리 렌더링
+              itemCount: results.length,
+              itemBuilder: (context, index) {
+                final transaction = results[index];
+                return _SearchResultItem(transaction: transaction);
+              },
             );
-          }
-
-          return ListView.builder(
-            itemCount: results.length,
-            itemBuilder: (context, index) {
-              final transaction = results[index];
-              return _SearchResultItem(transaction: transaction);
-            },
-          );
-        },
-        loading: () => const SkeletonListView(itemCount: 5),
-        error: (e, st) =>
-            Center(child: Text(l10n.errorWithMessage(e.toString()))),
+          },
+          loading: () => const SkeletonListView(itemCount: 5),
+          error: (e, st) =>
+              Center(child: Text(l10n.errorWithMessage(e.toString()))),
+        ),
       ),
     );
   }
@@ -159,7 +165,7 @@ class _SearchResultItem extends StatelessWidget {
         height: 40,
         decoration: BoxDecoration(
           color: _parseColor(transaction.categoryColor).withAlpha(51),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
         ),
         child: Center(
           child: Text(

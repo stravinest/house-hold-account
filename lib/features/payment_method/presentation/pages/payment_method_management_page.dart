@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
+import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../domain/entities/payment_method.dart';
@@ -37,74 +38,78 @@ class _PaymentMethodManagementPageState
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.paymentMethodManagement)),
-      body: paymentMethodsAsync.when(
-        data: (paymentMethods) {
-          if (paymentMethods.isEmpty) {
-            return EmptyState(
-              icon: Icons.credit_card_outlined,
-              message: l10n.paymentMethodEmpty,
-              action: ElevatedButton.icon(
-                onPressed: () => _showAddDialog(context),
-                icon: const Icon(Icons.add),
-                label: Text(l10n.paymentMethodAdd),
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(Spacing.md),
-            itemCount: paymentMethods.length,
-            itemBuilder: (context, index) {
-              final paymentMethod = paymentMethods[index];
-              return _PaymentMethodTile(
-                key: ValueKey(paymentMethod.id),
-                paymentMethod: paymentMethod,
-              );
-            },
-          );
-        },
-        loading: () => ListView.builder(
-          padding: const EdgeInsets.all(Spacing.md),
-          itemCount: 5,
-          itemBuilder: (context, index) {
-            return Card(
-              margin: const EdgeInsets.only(bottom: 8),
-              child: Padding(
-                padding: const EdgeInsets.all(Spacing.md),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SkeletonLine(height: 18),
-                          if (index == 0) ...[
-                            const SizedBox(height: 8),
-                            const SkeletonLine(width: 60, height: 14),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    SkeletonBox(
-                      width: 40,
-                      height: 40,
-                      borderRadius: BorderRadiusToken.md,
-                    ),
-                    const SizedBox(width: 8),
-                    SkeletonBox(
-                      width: 40,
-                      height: 40,
-                      borderRadius: BorderRadiusToken.md,
-                    ),
-                  ],
+      body: CenteredContent(
+        maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
+        child: paymentMethodsAsync.when(
+          data: (paymentMethods) {
+            if (paymentMethods.isEmpty) {
+              return EmptyState(
+                icon: Icons.credit_card_outlined,
+                message: l10n.paymentMethodEmpty,
+                action: ElevatedButton.icon(
+                  onPressed: () => _showAddDialog(context),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.paymentMethodAdd),
                 ),
-              ),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(Spacing.md),
+              cacheExtent: 500, // 성능 최적화: 스크롤 시 미리 렌더링
+              itemCount: paymentMethods.length,
+              itemBuilder: (context, index) {
+                final paymentMethod = paymentMethods[index];
+                return _PaymentMethodTile(
+                  key: ValueKey(paymentMethod.id),
+                  paymentMethod: paymentMethod,
+                );
+              },
             );
           },
+          loading: () => ListView.builder(
+            padding: const EdgeInsets.all(Spacing.md),
+            itemCount: 5,
+            itemBuilder: (context, index) {
+              return Card(
+                margin: const EdgeInsets.only(bottom: 8),
+                child: Padding(
+                  padding: const EdgeInsets.all(Spacing.md),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SkeletonLine(height: 18),
+                            if (index == 0) ...[
+                              const SizedBox(height: 8),
+                              const SkeletonLine(width: 60, height: 14),
+                            ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      SkeletonBox(
+                        width: 40,
+                        height: 40,
+                        borderRadius: BorderRadiusToken.md,
+                      ),
+                      const SizedBox(width: 8),
+                      SkeletonBox(
+                        width: 40,
+                        height: 40,
+                        borderRadius: BorderRadiusToken.md,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          error: (e, _) =>
+              Center(child: Text(l10n.errorWithMessage(e.toString()))),
         ),
-        error: (e, _) =>
-            Center(child: Text(l10n.errorWithMessage(e.toString()))),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddDialog(context),
@@ -190,10 +195,7 @@ class _PaymentMethodTile extends ConsumerWidget {
                     .read(paymentMethodNotifierProvider.notifier)
                     .deletePaymentMethod(paymentMethod.id);
                 if (context.mounted) {
-                  SnackBarUtils.showSuccess(
-                    context,
-                    l10n.paymentMethodDeleted,
-                  );
+                  SnackBarUtils.showSuccess(context, l10n.paymentMethodDeleted);
                 }
               } catch (e) {
                 if (context.mounted) {
@@ -335,10 +337,7 @@ class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(
-          context,
-          l10n.errorWithMessage(e.toString()),
-        );
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     }
   }

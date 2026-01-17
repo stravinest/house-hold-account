@@ -15,6 +15,7 @@ import '../features/payment_method/presentation/pages/payment_method_management_
 import '../features/search/presentation/pages/search_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/share/presentation/pages/share_management_page.dart';
+import 'page_transitions.dart';
 
 // 라우트 이름 상수
 class Routes {
@@ -101,113 +102,154 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // 스플래시
+      // 스플래시 - 페이드 전환
       GoRoute(
         path: Routes.splash,
-        builder: (context, state) => const SplashPage(),
+        pageBuilder: (context, state) =>
+            fadeTransition(key: state.pageKey, child: const SplashPage()),
       ),
 
-      // 인증
+      // 인증 - 페이드 전환
       GoRoute(
         path: Routes.login,
-        builder: (context, state) => const LoginPage(),
+        pageBuilder: (context, state) =>
+            fadeTransition(key: state.pageKey, child: const LoginPage()),
       ),
       GoRoute(
         path: Routes.signup,
-        builder: (context, state) => const SignupPage(),
+        pageBuilder: (context, state) =>
+            fadeTransition(key: state.pageKey, child: const SignupPage()),
       ),
       GoRoute(
         path: Routes.emailVerification,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final email = state.uri.queryParameters['email'] ?? '';
-          return EmailVerificationPage(email: email);
+          return fadeTransition(
+            key: state.pageKey,
+            child: EmailVerificationPage(email: email),
+          );
         },
       ),
 
-      // 메인
+      // 메인 - 페이드 전환
       GoRoute(
         path: Routes.home,
-        builder: (context, state) =>
-            HomePage(key: ValueKey(state.matchedLocation)),
+        pageBuilder: (context, state) => fadeTransition(
+          key: state.pageKey,
+          child: HomePage(key: ValueKey(state.matchedLocation)),
+        ),
       ),
 
-      // 통계
+      // 통계 - 슬라이드 전환
       GoRoute(
         path: Routes.statistics,
-        builder: (context, state) => const Placeholder(), // TODO: 구현 예정
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const Placeholder(), // TODO: 구현 예정
+        ),
       ),
 
-      // 예산
+      // 예산 - 슬라이드 전환
       GoRoute(
         path: Routes.budget,
-        builder: (context, state) => const Placeholder(), // TODO: 구현 예정
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const Placeholder(), // TODO: 구현 예정
+        ),
       ),
 
-      // 공유 관리
+      // 공유 관리 - 슬라이드 전환
       GoRoute(
         path: Routes.share,
-        builder: (context, state) => const ShareManagementPage(),
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const ShareManagementPage(),
+        ),
       ),
 
-      // 설정
+      // 설정 - 슬라이드 전환
       GoRoute(
         path: Routes.settings,
-        builder: (context, state) => const SettingsPage(),
+        pageBuilder: (context, state) =>
+            slideTransition(key: state.pageKey, child: const SettingsPage()),
       ),
 
-      // 검색
+      // 검색 - 페이드 스케일 전환 (강조)
       GoRoute(
         path: Routes.search,
-        builder: (context, state) => const SearchPage(),
+        pageBuilder: (context, state) =>
+            fadeScaleTransition(key: state.pageKey, child: const SearchPage()),
       ),
 
-      // 카테고리 관리
+      // 카테고리 관리 - 슬라이드 전환
       GoRoute(
         path: Routes.category,
-        builder: (context, state) => const CategoryManagementPage(),
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const CategoryManagementPage(),
+        ),
       ),
 
-      // 결제수단 관리
+      // 결제수단 관리 - 슬라이드 전환
       GoRoute(
         path: Routes.paymentMethod,
-        builder: (context, state) => const PaymentMethodManagementPage(),
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const PaymentMethodManagementPage(),
+        ),
       ),
 
-      // 가계부 관리
+      // 가계부 관리 - 슬라이드 전환
       GoRoute(
         path: Routes.ledgerManage,
-        builder: (context, state) => const LedgerManagementPage(),
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const LedgerManagementPage(),
+        ),
       ),
 
-      // 고정비 관리
+      // 고정비 관리 - 슬라이드 전환
       GoRoute(
         path: Routes.fixedExpense,
-        builder: (context, state) => const FixedExpenseManagementPage(),
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const FixedExpenseManagementPage(),
+        ),
       ),
 
-      // 위젯 딥링크 - 지출 추가
+      // 위젯 딥링크 - 지출 추가 (페이드 전환)
       GoRoute(
         path: Routes.addExpense,
-        builder: (context, state) => HomePage(
-          key: ValueKey(state.matchedLocation),
-          initialTransactionType: 'expense',
+        pageBuilder: (context, state) => fadeTransition(
+          key: state.pageKey,
+          child: HomePage(
+            key: ValueKey(state.matchedLocation),
+            initialTransactionType: 'expense',
+          ),
         ),
       ),
 
-      // 위젯 딥링크 - 수입 추가
+      // 위젯 딥링크 - 수입 추가 (페이드 전환)
       GoRoute(
         path: Routes.addIncome,
-        builder: (context, state) => HomePage(
-          key: ValueKey(state.matchedLocation),
-          initialTransactionType: 'income',
+        pageBuilder: (context, state) => fadeTransition(
+          key: state.pageKey,
+          child: HomePage(
+            key: ValueKey(state.matchedLocation),
+            initialTransactionType: 'income',
+          ),
         ),
       ),
 
+      // 위젯 딥링크 - 빠른 지출 (페이드 전환)
       GoRoute(
         path: Routes.quickExpense,
-        builder: (context, state) => HomePage(
-          key: ValueKey(state.matchedLocation),
-          showQuickExpense: true,
+        pageBuilder: (context, state) => fadeTransition(
+          key: state.pageKey,
+          child: HomePage(
+            key: ValueKey(state.matchedLocation),
+            showQuickExpense: true,
+          ),
         ),
       ),
     ],

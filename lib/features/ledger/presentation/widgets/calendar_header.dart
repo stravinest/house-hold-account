@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/themes/design_tokens.dart';
 
 /// 커스텀 캘린더 헤더
 ///
@@ -31,19 +32,22 @@ class CalendarHeader extends StatelessWidget {
     final isToday = isSameDay(selectedDate, now);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.sm,
+        vertical: Spacing.xs,
+      ),
       child: Row(
         children: [
           // 오늘 버튼
           TextButton.icon(
             onPressed: isToday ? null : onTodayPressed,
-            icon: const Icon(Icons.today, size: 18),
+            icon: const Icon(Icons.today, size: IconSize.sm),
             label: Text(l10n.calendarToday),
             style: TextButton.styleFrom(
               padding: const EdgeInsets.only(
-                left: 8,
-                top: 4,
-                bottom: 4,
+                left: Spacing.sm,
+                top: Spacing.xs,
+                bottom: Spacing.xs,
                 right: 0,
               ),
             ),
@@ -52,15 +56,13 @@ class CalendarHeader extends StatelessWidget {
           IconButton(
             icon: Icon(
               Icons.refresh,
-              size: 18,
+              size: IconSize.sm,
               color: Theme.of(context).colorScheme.onSurface,
             ),
             tooltip: l10n.tooltipRefresh,
             onPressed: () async {
               await onRefresh();
             },
-            padding: const EdgeInsets.all(4),
-            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
           ),
           const Spacer(),
           // 이전 월 버튼

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/utils/color_utils.dart';
+import '../themes/design_tokens.dart';
 
 class ColorPicker extends StatelessWidget {
   final String selectedColor;
@@ -36,38 +37,53 @@ class ColorPicker extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: colors.sublist(0, 6).map((color) {
-            return _buildColorCircle(color);
+            return _buildColorCircle(context, color);
           }).toList(),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: Spacing.sm),
         // 두 번째 줄 (6개)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: colors.sublist(6, 12).map((color) {
-            return _buildColorCircle(color);
+            return _buildColorCircle(context, color);
           }).toList(),
         ),
       ],
     );
   }
 
-  Widget _buildColorCircle(String color) {
+  Widget _buildColorCircle(BuildContext context, String color) {
     final isSelected = color == selectedColor;
-    return GestureDetector(
-      onTap: () => onColorSelected(color),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: ColorUtils.parseHexColor(color),
-          shape: BoxShape.circle,
-          border: isSelected
-              ? Border.all(color: Colors.black, width: 2)
-              : null,
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => onColorSelected(color),
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: TouchTarget.minimum,
+          height: TouchTarget.minimum,
+          alignment: Alignment.center,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: ColorUtils.parseHexColor(color),
+              shape: BoxShape.circle,
+              border: isSelected
+                  ? Border.all(color: colorScheme.onSurface, width: 2)
+                  : null,
+            ),
+            child: isSelected
+                ? Icon(
+                    Icons.check,
+                    color: colorScheme.onSurface,
+                    size: IconSize.sm,
+                  )
+                : null,
+          ),
         ),
-        child: isSelected
-            ? const Icon(Icons.check, color: Colors.white, size: 18)
-            : null,
       ),
     );
   }

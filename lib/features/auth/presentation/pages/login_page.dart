@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -274,13 +275,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 // Google 로그인
                 ElevatedButton.icon(
                   onPressed: _isLoading ? null : _handleGoogleLogin,
-                  icon: Image.network(
-                    'https://www.google.com/favicon.ico',
+                  icon: CachedNetworkImage(
+                    imageUrl: 'https://www.google.com/favicon.ico',
                     width: 20,
                     height: 20,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const Icon(Icons.g_mobiledata, size: 20);
-                    },
+                    placeholder: (context, url) => const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    errorWidget: (context, url, error) =>
+                        const Icon(Icons.g_mobiledata, size: 20),
                   ),
                   label: const Text('Google'),
                 ),

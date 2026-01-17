@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/ledger.dart';
@@ -39,7 +40,8 @@ class LedgerManagementPage extends ConsumerWidget {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(Spacing.md),
+            cacheExtent: 500, // 성능 최적화: 스크롤 시 미리 렌더링
             itemCount: ledgers.length,
             itemBuilder: (context, index) {
               final ledger = ledgers[index];
@@ -104,9 +106,9 @@ class _LedgerCard extends ConsumerWidget {
       ),
       child: InkWell(
         onTap: onSelect,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(BorderRadiusToken.md),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(Spacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -165,7 +167,7 @@ class _LedgerCard extends ConsumerWidget {
                             fontSize: 12,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withValues(alpha:0.7),
+                            ).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                         if (ledger.isShared)
@@ -234,7 +236,7 @@ class _LedgerCard extends ConsumerWidget {
                     fontSize: 14,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withValues(alpha:0.7),
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ],
@@ -336,7 +338,7 @@ class _LedgerCard extends ConsumerWidget {
           Icon(
             Icons.people_outline,
             size: 14,
-            color: colorScheme.onSurface.withValues(alpha:0.7),
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
           ),
           const SizedBox(width: 4),
           Expanded(
@@ -344,7 +346,7 @@ class _LedgerCard extends ConsumerWidget {
               memberText,
               style: TextStyle(
                 fontSize: 12,
-                color: colorScheme.onSurface.withValues(alpha:0.7),
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -571,10 +573,7 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(
-          context,
-          l10n.errorWithMessage(e.toString()),
-        );
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     }
   }
@@ -651,7 +650,9 @@ class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
               l10n.ledgerMemberLoading,
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ],
