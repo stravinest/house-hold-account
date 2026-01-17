@@ -212,6 +212,8 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
+        // 스크롤 시 앱바 배경색 변경 방지 (캘린더 배경과 일치)
+        scrolledUnderElevation: 0,
         actions: [
           const Spacer(),
           ledgersAsync.when(
@@ -413,7 +415,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 }
 
 // 캘린더 탭 뷰
-class CalendarTabView extends StatelessWidget {
+class CalendarTabView extends StatefulWidget {
   final DateTime selectedDate;
   final DateTime focusedDate;
   final bool showUserSummary;
@@ -432,28 +434,107 @@ class CalendarTabView extends StatelessWidget {
   });
 
   @override
+  State<CalendarTabView> createState() => _CalendarTabViewState();
+}
+
+class _CalendarTabViewState extends State<CalendarTabView> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _calendarKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToTransactionList() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+
+      final calendarContext = _calendarKey.currentContext;
+      if (calendarContext == null) return;
+
+      final calendarBox = calendarContext.findRenderObject() as RenderBox?;
+      if (calendarBox == null) return;
+
+      final calendarHeight = calendarBox.size.height;
+
+      _scrollController.animateTo(
+        calendarHeight,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void didUpdateWidget(CalendarTabView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 날짜가 변경되고 사용자 요약이 표시되는 경우 스크롤
+    if (widget.showUserSummary &&
+        (oldWidget.selectedDate != widget.selectedDate ||
+            !oldWidget.showUserSummary)) {
+      _scrollToTransactionList();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      onRefresh: onRefresh,
+      onRefresh: widget.onRefresh,
       child: SingleChildScrollView(
+        controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         child: Column(
           children: [
             CalendarView(
-              selectedDate: selectedDate,
-              focusedDate: focusedDate,
-              onDateSelected: onDateSelected,
-              onPageChanged: onPageChanged,
-              onRefresh: onRefresh,
+              key: _calendarKey,
+              selectedDate: widget.selectedDate,
+              focusedDate: widget.focusedDate,
+              onDateSelected: widget.onDateSelected,
+              onPageChanged: widget.onPageChanged,
+              onRefresh: widget.onRefresh,
             ),
             // 일일 요약
-            if (showUserSummary) ...[
+            if (widget.showUserSummary) ...[
               const Divider(height: 1),
-              _DailyUserSummary(date: selectedDate),
+              _DailyDateHeader(date: widget.selectedDate),
+              _DailyUserSummary(date: widget.selectedDate),
             ],
             // FAB가 겹치지 않도록 하단 여백 추가
             const SizedBox(height: 80),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// 날짜 헤더 위젯
+class _DailyDateHeader extends StatelessWidget {
+  final DateTime date;
+
+  const _DailyDateHeader({required this.date});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // 포맷: "2026년 1월 17일 토요일"
+    final dateFormatter = DateFormat('yyyy년 M월 d일 EEEE', 'ko_KR');
+    final dateText = dateFormatter.format(date);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: Spacing.md,
+        vertical: Spacing.sm,
+      ),
+      child: Text(
+        dateText,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: colorScheme.onSurface,
         ),
       ),
     );
@@ -606,7 +687,20 @@ class _DailyUserSummary extends ConsumerWidget {
     return dailyTransactionsAsync.when(
       data: (transactions) {
         if (transactions.isEmpty) {
-          return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.md,
+              vertical: Spacing.lg,
+            ),
+            child: Center(
+              child: Text(
+                l10n.calendarNoRecords,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          );
         }
 
         final Map<String, List<Transaction>> transactionsByUser = {};
@@ -625,7 +719,14 @@ class _DailyUserSummary extends ConsumerWidget {
             final userName = tx.userName ?? l10n.user;
             final colorHex = tx.userColor ?? '#A8D8EA';
             final userColor = _parseColor(colorHex);
-            final description = tx.title ?? tx.categoryName ?? l10n.noHistory;
+            final categoryDisplay =
+                tx.categoryName ?? l10n.categoryUncategorized;
+            final String description;
+            if (tx.title != null && tx.title!.isNotEmpty) {
+              description = '$categoryDisplay · ${tx.title}';
+            } else {
+              description = categoryDisplay;
+            }
             final isIncome = tx.type == 'income';
             final isAssetType = tx.type == 'asset';
 
@@ -677,14 +778,14 @@ class _DailyUserSummary extends ConsumerWidget {
                           const SizedBox(width: Spacing.sm),
                           Text(
                             userName,
-                            style: Theme.of(context).textTheme.bodySmall
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(width: Spacing.xs),
                           Flexible(
                             child: Text(
                               description,
-                              style: Theme.of(context).textTheme.bodySmall
+                              style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -694,10 +795,10 @@ class _DailyUserSummary extends ConsumerWidget {
                           const SizedBox(width: Spacing.sm),
                           Text(
                             '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
-                            style: Theme.of(context).textTheme.bodySmall
+                            style: Theme.of(context).textTheme.bodyLarge
                                 ?.copyWith(
                                   color: amountColor,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.bold,
                                 ),
                           ),
                         ],
