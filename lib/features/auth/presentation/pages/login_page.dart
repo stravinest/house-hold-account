@@ -57,10 +57,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       // 3초 후에도 auth state가 업데이트되지 않으면 에러 표시
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
-        SnackBarUtils.showError(
-          context,
-          l10n.authLoginError,
-        );
+        SnackBarUtils.showError(context, l10n.authLoginError);
       }
     } catch (e) {
       if (mounted) {
@@ -80,10 +77,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         } else {
           errorMessage = l10n.errorWithMessage(e.toString());
         }
-        SnackBarUtils.showError(
-          context,
-          errorMessage,
-        );
+        SnackBarUtils.showError(context, errorMessage);
       }
     } finally {
       if (mounted) {
@@ -97,13 +91,32 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     try {
       await ref.read(authNotifierProvider.notifier).signInWithGoogle();
+
+      // 로그인 성공 시 홈으로 이동
+      if (!mounted) return;
+
+      // auth state stream이 업데이트될 때까지 대기 (최대 3초)
+      for (int i = 0; i < 30; i++) {
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+
+        final authState = ref.read(authStateProvider);
+        if (authState.valueOrNull != null) {
+          context.go(Routes.home);
+          return;
+        }
+      }
     } catch (e) {
       if (mounted) {
+        // 사용자 취소는 에러 메시지 표시하지 않음
+        if (e.toString().contains('취소') ||
+            e.toString().contains('canceled') ||
+            e.toString().contains('CANCELED')) {
+          return;
+        }
+
         final l10n = AppLocalizations.of(context)!;
-        SnackBarUtils.showError(
-          context,
-          l10n.errorWithMessage(e.toString()),
-        );
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     } finally {
       if (mounted) {

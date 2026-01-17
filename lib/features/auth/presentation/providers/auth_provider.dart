@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../config/supabase_config.dart';
 import '../../../ledger/data/repositories/ledger_repository.dart';
 import '../../../notification/services/firebase_messaging_service.dart';
+import '../../data/services/google_sign_in_service.dart';
 
 // 현재 인증 상태를 관찰하는 프로바이더
 final authStateProvider = StreamProvider<User?>((ref) {
@@ -36,6 +37,7 @@ class AuthService {
   final LedgerRepository _ledgerRepository;
   final FirebaseMessagingService _firebaseMessaging =
       FirebaseMessagingService();
+  final GoogleSignInService _googleSignInService = GoogleSignInService();
 
   AuthService(this._ledgerRepository);
 
@@ -88,6 +90,42 @@ class AuthService {
     } catch (e, st) {
       debugPrint('[AuthService] signUpWithEmail 에러: $e');
       debugPrint('[AuthService] 에러 타입: ${e.runtimeType}');
+      debugPrint('[AuthService] 스택 트레이스: $st');
+      rethrow;
+    }
+  }
+
+  // 백업 안전장치: 프로필이 없으면 생성 (Google 로그인 시 트리거 실패 대비)
+  Future<void> _ensureProfileExists(User user) async {
+    debugPrint('[AuthService] 프로필 존재 여부 확인 중...');
+
+    try {
+      final profile = await _client
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (profile != null) {
+        debugPrint('[AuthService] 프로필 존재 확인됨');
+        return;
+      }
+
+      // 프로필이 없으면 생성
+      debugPrint('[AuthService] 프로필 없음, 새로 생성 시작');
+      final displayName = user.userMetadata?['full_name'] ??
+          user.userMetadata?['name'] ??
+          user.email?.split('@').first ??
+          'User';
+
+      await _client.from('profiles').insert({
+        'id': user.id,
+        'email': user.email,
+        'display_name': displayName,
+      });
+      debugPrint('[AuthService] 프로필 생성 완료: $displayName');
+    } catch (e, st) {
+      debugPrint('[AuthService] 프로필 생성 실패: $e');
       debugPrint('[AuthService] 스택 트레이스: $st');
       rethrow;
     }
@@ -179,12 +217,41 @@ class AuthService {
     }
   }
 
-  // Google 로그인
-  Future<bool> signInWithGoogle() async {
-    return await _auth.signInWithOAuth(
-      OAuthProvider.google,
-      redirectTo: 'io.supabase.sharedaccount://login-callback/',
-    );
+  // Google 로그인 (Native)
+  //
+  // google_sign_in 패키지를 사용하여 네이티브 Google 로그인 후
+  // Supabase signInWithIdToken으로 인증을 완료합니다.
+  Future<AuthResponse> signInWithGoogle() async {
+    debugPrint('[AuthService] signInWithGoogle 시작');
+
+    try {
+      // 1. Native Google Sign-In + Supabase 인증
+      final response = await _googleSignInService.signIn();
+      debugPrint('[AuthService] Google 로그인 성공: ${response.user?.email}');
+
+      // 2. 로그인 성공 시 프로필/가계부 확인 및 FCM 초기화
+      if (response.session != null && response.user != null) {
+        // 백업 안전장치: DB 트리거가 실패했을 경우를 대비
+        // 프로필 먼저 확인 (가계부의 owner_id가 profiles를 참조하므로)
+        await _ensureProfileExists(response.user!);
+        // 가계부 확인 및 생성
+        await _ensureDefaultLedgerExists();
+
+        // FCM 토큰 등록
+        try {
+          await _firebaseMessaging.initialize(response.user!.id);
+          debugPrint('[AuthService] FCM 초기화 성공');
+        } catch (e) {
+          debugPrint('[AuthService] FCM 초기화 실패 (무시됨): $e');
+        }
+      }
+
+      return response;
+    } catch (e, st) {
+      debugPrint('[AuthService] Google 로그인 실패: $e');
+      debugPrint('[AuthService] 스택 트레이스: $st');
+      rethrow;
+    }
   }
 
   // 로그아웃
@@ -199,6 +266,13 @@ class AuthService {
       } catch (e) {
         debugPrint('[AuthService] FCM 토큰 삭제 실패 (무시됨): $e');
       }
+    }
+
+    // Google 로그아웃도 함께 처리
+    try {
+      await _googleSignInService.signOut();
+    } catch (e) {
+      debugPrint('[AuthService] Google 로그아웃 실패 (무시됨): $e');
     }
 
     await _auth.signOut();
@@ -340,11 +414,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   Future<void> signInWithGoogle() async {
     state = const AsyncValue.loading();
     try {
-      await _authService.signInWithGoogle();
-      // OAuth 로그인은 리다이렉트 방식으로 처리됨
-      // 인증 상태는 authStateProvider에서 자동으로 업데이트됨
+      final response = await _authService.signInWithGoogle();
+      state = AsyncValue.data(response.user);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 
