@@ -133,7 +133,38 @@ class ShareRepository {
         )
         .single();
 
-    return LedgerInvite.fromJson(response);
+    final invite = LedgerInvite.fromJson(response);
+
+    // 초대받은 사용자에게 푸시 알림 전송 (비동기, 실패해도 초대는 성공)
+    _sendInviteNotification(
+      inviteeUserId: targetUser['id'] as String,
+      inviterName: _client.auth.currentUser?.email ?? 'Unknown',
+      ledgerName: invite.ledgerName ?? 'Ledger',
+    );
+
+    return invite;
+  }
+
+  // 초대 알림 전송 (Edge Function 호출)
+  Future<void> _sendInviteNotification({
+    required String inviteeUserId,
+    required String inviterName,
+    required String ledgerName,
+  }) async {
+    try {
+      await _client.functions.invoke(
+        'send-invite-notification',
+        body: {
+          'invitee_user_id': inviteeUserId,
+          'inviter_name': inviterName,
+          'ledger_name': ledgerName,
+        },
+      );
+    } catch (e) {
+      // 알림 전송 실패해도 초대는 성공으로 처리
+      // ignore: avoid_print
+      print('Failed to send invite notification: $e');
+    }
   }
 
   // 받은 초대 목록 조회 (pending, accepted, rejected 모두 포함)

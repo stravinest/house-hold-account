@@ -194,6 +194,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'By signing up, you agree to our\nTerms of Service and Privacy Policy.';
 
   @override
+  String get authForgotPasswordTitle => 'Reset Password';
+
+  @override
+  String get authForgotPasswordSubtitle =>
+      'Enter your email address and we\'ll send you\na link to reset your password.';
+
+  @override
+  String get authForgotPasswordSend => 'Send Reset Link';
+
+  @override
+  String get authForgotPasswordSent => 'Password reset email sent';
+
+  @override
+  String get authForgotPasswordSentSubtitle =>
+      'Check your email and click the link\nto reset your password.';
+
+  @override
+  String get authForgotPasswordBackToLogin => 'Back to Login';
+
+  @override
+  String authForgotPasswordSendFailed(String error) {
+    return 'Failed to send email: $error';
+  }
+
+  @override
   String get validationEmailRequired => 'Please enter your email';
 
   @override
@@ -1323,6 +1348,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get shareRejected => 'Rejected';
+
+  @override
+  String get shareExpired => 'Invite expired';
 
   @override
   String shareInviterLedger(String email) {

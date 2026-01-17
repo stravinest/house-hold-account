@@ -172,6 +172,8 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    // 시스템 네비게이션 바 높이를 고려한 하단 패딩
+    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 
     // 카테고리/결제수단 초기값 설정
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -278,7 +280,8 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
                       MemoInputSection(controller: _memoController),
 
-                      const SizedBox(height: 100),
+                      // 시스템 네비게이션 바 높이 + 여유 공간
+                      SizedBox(height: bottomPadding + Spacing.xxl),
                     ],
                   ),
                 ),

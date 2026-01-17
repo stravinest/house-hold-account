@@ -22,30 +22,29 @@ class InvitedLedgerCard extends StatelessWidget {
     this.onSelectLedger,
   });
 
-  // 사용중인 가계부 (녹색)
-  static const _activeBorderColor = Color(0xFF4CAF50);
-  static const _activeBackgroundColor = Color(0xFFE8F5E9);
-  // 사용중이 아닌 가계부 (회색)
-  static const _inactiveBorderColor = Color(0xFFBDBDBD);
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isAccepted = invite.isAccepted;
     final colorScheme = Theme.of(context).colorScheme;
 
+    // 다크모드 대응: colorScheme 기반 색상
+    final activeBorderColor = colorScheme.primary;
+    final activeBackgroundColor = colorScheme.primaryContainer;
+    final inactiveBorderColor = colorScheme.outlineVariant;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isCurrentLedger ? _activeBackgroundColor : colorScheme.surface,
+        color: isCurrentLedger ? activeBackgroundColor : colorScheme.surface,
         borderRadius: BorderRadius.circular(BorderRadiusToken.md),
         border: Border.all(
-          color: isCurrentLedger ? _activeBorderColor : _inactiveBorderColor,
+          color: isCurrentLedger ? activeBorderColor : inactiveBorderColor,
           width: isCurrentLedger ? 2.5 : 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: colorScheme.shadow.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -66,8 +65,8 @@ class InvitedLedgerCard extends StatelessWidget {
                         Icons.account_balance_wallet,
                         size: 20,
                         color: isCurrentLedger
-                            ? _activeBorderColor
-                            : _inactiveBorderColor,
+                            ? activeBorderColor
+                            : inactiveBorderColor,
                       ),
                       const SizedBox(width: 8),
                       Flexible(
@@ -89,7 +88,7 @@ class InvitedLedgerCard extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: _activeBorderColor,
+                            color: activeBorderColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -110,7 +109,7 @@ class InvitedLedgerCard extends StatelessWidget {
                   TextButton(
                     onPressed: onSelectLedger,
                     style: TextButton.styleFrom(
-                      foregroundColor: _activeBorderColor,
+                      foregroundColor: activeBorderColor,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 4,
@@ -179,7 +178,7 @@ class InvitedLedgerCard extends StatelessWidget {
           ElevatedButton(
             onPressed: onAccept,
             style: ElevatedButton.styleFrom(
-              backgroundColor: _activeBorderColor,
+              backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             ),
@@ -218,6 +217,46 @@ class InvitedLedgerCard extends StatelessWidget {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(l10n.shareLeave),
+          ),
+        ],
+      );
+    }
+
+    // rejected 상태: 거부됨 표시
+    if (invite.isRejected) {
+      return Row(
+        children: [
+          Icon(Icons.cancel_outlined, size: 16, color: colorScheme.error),
+          const SizedBox(width: 6),
+          Text(
+            l10n.shareRejected,
+            style: TextStyle(
+              fontSize: 13,
+              color: colorScheme.error,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      );
+    }
+
+    // expired 상태: 만료됨 표시
+    if (invite.isExpired) {
+      return Row(
+        children: [
+          Icon(
+            Icons.schedule_outlined,
+            size: 16,
+            color: colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l10n.shareExpired,
+            style: TextStyle(
+              fontSize: 13,
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       );

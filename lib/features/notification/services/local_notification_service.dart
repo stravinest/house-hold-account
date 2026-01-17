@@ -1,6 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+/// 알림 탭 시 호출되는 콜백 타입
+typedef NotificationTapCallback =
+    void Function(String? type, Map<String, dynamic>? data);
 
 class LocalNotificationService {
   static final LocalNotificationService _instance =
@@ -14,6 +19,9 @@ class LocalNotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
+
+  /// 알림 탭 콜백 (외부에서 설정)
+  NotificationTapCallback? onNotificationTap;
 
   /// 로컬 알림 초기화
   ///
@@ -76,7 +84,8 @@ class LocalNotificationService {
       await _notificationsPlugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
-          >()?.createNotificationChannel(androidChannel);
+          >()
+          ?.createNotificationChannel(androidChannel);
     } catch (e) {
       if (kDebugMode) {
         print('Android 알림 채널 생성 중 에러 발생: $e');
@@ -158,12 +167,18 @@ class LocalNotificationService {
         iOS: iosDetails,
       );
 
+      // payload에 전체 data를 JSON으로 저장
+      String? payload;
+      if (data != null) {
+        payload = jsonEncode(data);
+      }
+
       await _notificationsPlugin.show(
         notificationId,
         title,
         body,
         notificationDetails,
-        payload: data != null ? '${data['type']}' : null,
+        payload: payload,
       );
 
       if (kDebugMode) {
@@ -213,9 +228,39 @@ class LocalNotificationService {
 
   void _onNotificationTapped(NotificationResponse response) {
     final payload = response.payload;
-    if (payload != null) {
+    if (kDebugMode) {
+      print('알림 탭됨: $payload');
+    }
+
+    if (payload != null && onNotificationTap != null) {
+      try {
+        final data = jsonDecode(payload) as Map<String, dynamic>;
+        final type = data['type'] as String?;
+        onNotificationTap!(type, data);
+      } catch (e) {
+        // payload가 JSON이 아닌 경우 (이전 버전 호환)
+        onNotificationTap!(payload, null);
+      }
+    }
+  }
+
+  /// 앱이 종료된 상태에서 알림 탭으로 실행된 경우 처리
+  ///
+  /// 앱 시작 시 한 번 호출해야 합니다.
+  Future<void> checkInitialNotification() async {
+    if (!_isInitialized) return;
+
+    try {
+      final details = await _notificationsPlugin
+          .getNotificationAppLaunchDetails();
+      if (details != null &&
+          details.didNotificationLaunchApp &&
+          details.notificationResponse != null) {
+        _onNotificationTapped(details.notificationResponse!);
+      }
+    } catch (e) {
       if (kDebugMode) {
-        print('알림 탭됨: $payload');
+        print('초기 알림 확인 중 에러 발생: $e');
       }
     }
   }

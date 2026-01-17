@@ -1,9 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
 import '../../../ledger/data/repositories/ledger_repository.dart';
+import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../notification/services/firebase_messaging_service.dart';
 import '../../data/services/google_sign_in_service.dart';
 
@@ -113,7 +115,8 @@ class AuthService {
 
       // 프로필이 없으면 생성
       debugPrint('[AuthService] 프로필 없음, 새로 생성 시작');
-      final displayName = user.userMetadata?['full_name'] ??
+      final displayName =
+          user.userMetadata?['full_name'] ??
           user.userMetadata?['name'] ??
           user.email?.split('@').first ??
           'User';
@@ -275,6 +278,15 @@ class AuthService {
       debugPrint('[AuthService] Google 로그아웃 실패 (무시됨): $e');
     }
 
+    // SharedPreferences에서 저장된 가계부 ID 삭제 (다른 사용자 로그인 시 RLS 위반 방지)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('flutter.current_ledger_id');
+      debugPrint('[AuthService] 저장된 가계부 ID 삭제 성공');
+    } catch (e) {
+      debugPrint('[AuthService] 저장된 가계부 ID 삭제 실패 (무시됨): $e');
+    }
+
     await _auth.signOut();
   }
 
@@ -366,8 +378,10 @@ class AuthService {
 // 인증 상태 노티파이어 (로그인/회원가입/로그아웃 액션용)
 class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   final AuthService _authService;
+  final Ref _ref;
 
-  AuthNotifier(this._authService) : super(const AsyncValue.loading()) {
+  AuthNotifier(this._authService, this._ref)
+    : super(const AsyncValue.loading()) {
     _init();
   }
 
@@ -426,6 +440,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     state = const AsyncValue.loading();
     try {
       await _authService.signOut();
+
+      // 선택된 가계부 ID 초기화 (다른 사용자 로그인 시 RLS 위반 방지)
+      _ref.read(selectedLedgerIdProvider.notifier).state = null;
+      debugPrint('[AuthNotifier] selectedLedgerIdProvider 초기화 완료');
+
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -447,7 +466,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 final authNotifierProvider =
     StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
       final authService = ref.watch(authServiceProvider);
-      return AuthNotifier(authService);
+      return AuthNotifier(authService, ref);
     });
 
 // 사용자 프로필을 실시간으로 스트리밍하는 프로바이더

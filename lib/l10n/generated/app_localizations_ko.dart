@@ -189,6 +189,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authTermsAgreement => '회원가입 시 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.';
 
   @override
+  String get authForgotPasswordTitle => '비밀번호 재설정';
+
+  @override
+  String get authForgotPasswordSubtitle =>
+      '가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 링크를 보내드립니다.';
+
+  @override
+  String get authForgotPasswordSend => '재설정 링크 보내기';
+
+  @override
+  String get authForgotPasswordSent => '비밀번호 재설정 이메일을 보냈습니다';
+
+  @override
+  String get authForgotPasswordSentSubtitle =>
+      '이메일을 확인하고 링크를 클릭하여\n비밀번호를 재설정하세요.';
+
+  @override
+  String get authForgotPasswordBackToLogin => '로그인으로 돌아가기';
+
+  @override
+  String authForgotPasswordSendFailed(String error) {
+    return '이메일 전송 실패: $error';
+  }
+
+  @override
   String get validationEmailRequired => '이메일을 입력해주세요';
 
   @override
@@ -1296,6 +1321,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get shareRejected => '수락 거부됨';
+
+  @override
+  String get shareExpired => '초대 만료됨';
 
   @override
   String shareInviterLedger(String email) {

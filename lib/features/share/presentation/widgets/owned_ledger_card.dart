@@ -21,34 +21,33 @@ class OwnedLedgerCard extends ConsumerWidget {
     this.onSelectLedger,
   });
 
-  // 사용중인 가계부 (녹색)
-  static const _activeBorderColor = Color(0xFF4CAF50);
-  static const _activeBackgroundColor = Color(0xFFE8F5E9);
-  // 사용중이 아닌 가계부 (회색)
-  static const _inactiveBorderColor = Color(0xFFBDBDBD);
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final currentUserId = SupabaseConfig.auth.currentUser?.id;
     final colorScheme = Theme.of(context).colorScheme;
 
+    // 다크모드 대응: colorScheme 기반 색상
+    final activeBorderColor = colorScheme.primary;
+    final activeBackgroundColor = colorScheme.primaryContainer;
+    final inactiveBorderColor = colorScheme.outlineVariant;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: ledgerInfo.isCurrentLedger
-            ? _activeBackgroundColor
+            ? activeBackgroundColor
             : colorScheme.surface,
         borderRadius: BorderRadius.circular(BorderRadiusToken.md),
         border: Border.all(
           color: ledgerInfo.isCurrentLedger
-              ? _activeBorderColor
-              : _inactiveBorderColor,
+              ? activeBorderColor
+              : inactiveBorderColor,
           width: ledgerInfo.isCurrentLedger ? 2.5 : 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: colorScheme.shadow.withValues(alpha: 0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -69,8 +68,8 @@ class OwnedLedgerCard extends ConsumerWidget {
                         Icons.account_balance_wallet,
                         size: 20,
                         color: ledgerInfo.isCurrentLedger
-                            ? _activeBorderColor
-                            : _inactiveBorderColor,
+                            ? activeBorderColor
+                            : inactiveBorderColor,
                       ),
                       const SizedBox(width: 8),
                       Flexible(
@@ -92,7 +91,7 @@ class OwnedLedgerCard extends ConsumerWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: _activeBorderColor,
+                            color: activeBorderColor,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -113,7 +112,7 @@ class OwnedLedgerCard extends ConsumerWidget {
                   TextButton(
                     onPressed: onSelectLedger,
                     style: TextButton.styleFrom(
-                      foregroundColor: _activeBorderColor,
+                      foregroundColor: activeBorderColor,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 4,
@@ -245,8 +244,8 @@ class OwnedLedgerCard extends ConsumerWidget {
           context,
           l10n.sharePendingAccept,
           invite.inviteeEmail,
-          Colors.orange,
-          Colors.orange[50]!,
+          colorScheme.tertiary,
+          colorScheme.tertiaryContainer,
         ),
       );
     }
@@ -338,7 +337,7 @@ class OwnedLedgerCard extends ConsumerWidget {
             label: Text(l10n.shareInvite),
             style: ElevatedButton.styleFrom(
               backgroundColor: inviteEnabled
-                  ? _activeBorderColor
+                  ? colorScheme.primary
                   : colorScheme.surfaceContainerHighest,
               foregroundColor: inviteEnabled
                   ? colorScheme.onPrimary

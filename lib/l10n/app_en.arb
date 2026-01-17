@@ -66,6 +66,14 @@
   "authSignupSubtitle": "Create an account to start\nusing Shared Household",
   "authTermsAgreement": "By signing up, you agree to our\nTerms of Service and Privacy Policy.",
 
+  "authForgotPasswordTitle": "Reset Password",
+  "authForgotPasswordSubtitle": "Enter your email address and we'll send you\na link to reset your password.",
+  "authForgotPasswordSend": "Send Reset Link",
+  "authForgotPasswordSent": "Password reset email sent",
+  "authForgotPasswordSentSubtitle": "Check your email and click the link\nto reset your password.",
+  "authForgotPasswordBackToLogin": "Back to Login",
+  "authForgotPasswordSendFailed": "Failed to send email: {error}",
+
   "validationEmailRequired": "Please enter your email",
   "validationEmailInvalid": "Please enter a valid email address",
   "validationPasswordRequired": "Please enter your password",
@@ -424,6 +432,7 @@
   "sharePendingAccept": "Pending",
   "shareAccepted": "Accepted",
   "shareRejected": "Rejected",
+  "shareExpired": "Invite expired",
   "shareInviterLedger": "{email}'s ledger",
   "shareSharingWith": "Sharing with {name}",
   "shareSharingWithMultiple": "Sharing with {name1}, {name2}",

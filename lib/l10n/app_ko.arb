@@ -72,6 +72,21 @@
   "authSignupSubtitle": "공유 가계부를 시작하려면\n계정을 만들어주세요",
   "authTermsAgreement": "회원가입 시 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.",
 
+  "authForgotPasswordTitle": "비밀번호 재설정",
+  "authForgotPasswordSubtitle": "가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 링크를 보내드립니다.",
+  "authForgotPasswordSend": "재설정 링크 보내기",
+  "authForgotPasswordSent": "비밀번호 재설정 이메일을 보냈습니다",
+  "authForgotPasswordSentSubtitle": "이메일을 확인하고 링크를 클릭하여\n비밀번호를 재설정하세요.",
+  "authForgotPasswordBackToLogin": "로그인으로 돌아가기",
+  "authForgotPasswordSendFailed": "이메일 전송 실패: {error}",
+  "@authForgotPasswordSendFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+
   "validationEmailRequired": "이메일을 입력해주세요",
   "validationEmailInvalid": "올바른 이메일 형식이 아닙니다",
   "validationPasswordRequired": "비밀번호를 입력해주세요",
@@ -722,6 +737,7 @@
   "sharePendingAccept": "수락 대기중",
   "shareAccepted": "수락됨",
   "shareRejected": "수락 거부됨",
+  "shareExpired": "초대 만료됨",
   "shareInviterLedger": "{email}님의 가계부",
   "@shareInviterLedger": {
     "placeholders": {

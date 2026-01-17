@@ -16,11 +16,27 @@ import '../providers/share_provider.dart';
 import '../widgets/invited_ledger_card.dart';
 import '../widgets/owned_ledger_card.dart';
 
-class ShareManagementPage extends ConsumerWidget {
+class ShareManagementPage extends ConsumerStatefulWidget {
   const ShareManagementPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ShareManagementPage> createState() =>
+      _ShareManagementPageState();
+}
+
+class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
+  @override
+  void initState() {
+    super.initState();
+    // 페이지 진입 시 항상 최신 데이터 로드
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(myOwnedLedgersWithInvitesProvider);
+      ref.invalidate(receivedInvitesProvider);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final ownedLedgersAsync = ref.watch(myOwnedLedgersWithInvitesProvider);
     final receivedInvitesAsync = ref.watch(receivedInvitesProvider);
@@ -37,7 +53,6 @@ class ShareManagementPage extends ConsumerWidget {
           },
           child: _buildBody(
             context,
-            ref,
             ownedLedgersAsync,
             receivedInvitesAsync,
             selectedLedgerId,
@@ -49,7 +64,6 @@ class ShareManagementPage extends ConsumerWidget {
 
   Widget _buildBody(
     BuildContext context,
-    WidgetRef ref,
     AsyncValue<List<LedgerWithInviteInfo>> ownedLedgersAsync,
     AsyncValue<List<LedgerInvite>> receivedInvitesAsync,
     String? selectedLedgerId,

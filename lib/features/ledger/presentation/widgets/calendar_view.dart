@@ -94,6 +94,8 @@ class CalendarView extends ConsumerWidget {
           daysOfWeekHeight: CalendarConstants.daysOfWeekHeight,
           daysOfWeekVisible: false,
           sixWeekMonthsEnforced: true,
+          // 수평 스와이프로 월 이동 활성화 (세로 스크롤과 충돌 방지)
+          availableGestures: AvailableGestures.horizontalSwipe,
           calendarStyle: CalendarStyle(
             outsideDaysVisible: true,
             cellMargin: EdgeInsets.zero,

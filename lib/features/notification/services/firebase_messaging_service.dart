@@ -7,6 +7,10 @@ import '../data/repositories/fcm_token_repository.dart';
 import '../../../config/firebase_config.dart';
 import 'local_notification_service.dart';
 
+/// 알림 탭 시 호출되는 콜백 타입
+typedef FcmNotificationTapCallback =
+    void Function(String? type, Map<String, dynamic>? data);
+
 /// FCM 토큰 관리 서비스
 /// Firebase Cloud Messaging을 통해 푸시 알림 토큰을 관리합니다.
 /// 싱글톤 패턴으로 구현되어 앱 전체에서 하나의 인스턴스만 사용합니다.
@@ -25,6 +29,9 @@ class FirebaseMessagingService {
 
   // 토큰 갱신 리스너 구독
   StreamSubscription? _tokenRefreshSubscription;
+
+  /// 알림 탭 콜백 (외부에서 설정)
+  FcmNotificationTapCallback? onNotificationTap;
 
   /// FCM 초기화
   ///
@@ -256,8 +263,44 @@ class FirebaseMessagingService {
       }
     });
 
+    // 백그라운드에서 알림 탭하여 앱 열린 경우
+    FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+
     // 백그라운드 메시지 핸들러
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  }
+
+  /// 알림 탭 처리
+  void _handleNotificationTap(RemoteMessage message) {
+    if (kDebugMode) {
+      print('FCM 알림 탭됨: ${message.data}');
+    }
+
+    if (onNotificationTap != null) {
+      final type = message.data['type'] as String?;
+      onNotificationTap!(type, message.data.cast<String, dynamic>());
+    }
+  }
+
+  /// 앱이 종료된 상태에서 알림 탭으로 실행된 경우 확인
+  ///
+  /// 앱 시작 시 한 번 호출해야 합니다.
+  Future<void> checkInitialMessage() async {
+    if (_messaging == null) return;
+
+    try {
+      final message = await _messaging!.getInitialMessage();
+      if (message != null) {
+        if (kDebugMode) {
+          print('앱 시작 시 초기 FCM 메시지 발견: ${message.data}');
+        }
+        _handleNotificationTap(message);
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('초기 FCM 메시지 확인 중 에러 발생: $e');
+      }
+    }
   }
 
   /// 서비스 정리 (앱 종료 시 호출)

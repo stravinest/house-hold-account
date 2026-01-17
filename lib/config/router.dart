@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../features/auth/presentation/pages/email_verification_page.dart';
+import '../features/auth/presentation/pages/forgot_password_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
@@ -24,6 +25,7 @@ class Routes {
   static const String splash = '/';
   static const String login = '/login';
   static const String signup = '/signup';
+  static const String forgotPassword = '/forgot-password';
   static const String emailVerification = '/email-verification';
   static const String home = '/home';
   static const String ledgerDetail = '/ledger/:id';
@@ -74,6 +76,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isAuthRoute =
           state.matchedLocation == Routes.login ||
           state.matchedLocation == Routes.signup ||
+          state.matchedLocation == Routes.forgotPassword ||
           state.matchedLocation == Routes.emailVerification;
       final isSplash = state.matchedLocation == Routes.splash;
       final isDeepLinkRoute =
@@ -119,6 +122,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: Routes.signup,
         pageBuilder: (context, state) =>
             fadeTransition(key: state.pageKey, child: const SignupPage()),
+      ),
+      GoRoute(
+        path: Routes.forgotPassword,
+        pageBuilder: (context, state) => fadeTransition(
+          key: state.pageKey,
+          child: const ForgotPasswordPage(),
+        ),
       ),
       GoRoute(
         path: Routes.emailVerification,

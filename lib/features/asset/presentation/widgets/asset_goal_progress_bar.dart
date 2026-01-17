@@ -86,16 +86,12 @@ class AssetGoalProgressBar extends StatelessWidget {
                     height: 10,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: theme.brightness == Brightness.dark
-                            ? Colors.white.withValues(alpha: 0.15)
-                            : theme.colorScheme.surfaceContainerHighest,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(
                           BorderRadiusToken.xs,
                         ),
                         border: Border.all(
-                          color: theme.brightness == Brightness.dark
-                              ? Colors.white.withValues(alpha: 0.6)
-                              : theme.colorScheme.onSurfaceVariant,
+                          color: theme.colorScheme.outline,
                           width: 1,
                         ),
                       ),

@@ -620,12 +620,12 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
             ),
             child: _isLoading
-                ? const SizedBox(
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   )
                 : Text(l10n.commonEdit),
@@ -809,12 +809,12 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
         FilledButton(
           onPressed: _isLoading ? null : _changePassword,
           child: _isLoading
-              ? const SizedBox(
+              ? SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onPrimary,
                   ),
                 )
               : Text(l10n.settingsChange),

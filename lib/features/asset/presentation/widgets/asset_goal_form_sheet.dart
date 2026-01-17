@@ -90,7 +90,12 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                         _buildTargetDateField(context, l10n),
                         const SizedBox(height: 32),
                         _buildSubmitButton(context, l10n, isEditing),
-                        const SizedBox(height: 32),
+                        // 시스템 네비게이션 바 높이 + 여유 공간
+                        SizedBox(
+                          height:
+                              MediaQuery.of(context).viewPadding.bottom +
+                              Spacing.lg,
+                        ),
                       ],
                     ),
                   ),
@@ -341,10 +346,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
       }
     } catch (e) {
       if (context.mounted) {
-        SnackBarUtils.showError(
-          context,
-          l10n.errorWithMessage(e.toString()),
-        );
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     }
   }

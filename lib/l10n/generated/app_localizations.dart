@@ -458,6 +458,48 @@ abstract class AppLocalizations {
   /// **'회원가입 시 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.'**
   String get authTermsAgreement;
 
+  /// No description provided for @authForgotPasswordTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 재설정'**
+  String get authForgotPasswordTitle;
+
+  /// No description provided for @authForgotPasswordSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 링크를 보내드립니다.'**
+  String get authForgotPasswordSubtitle;
+
+  /// No description provided for @authForgotPasswordSend.
+  ///
+  /// In ko, this message translates to:
+  /// **'재설정 링크 보내기'**
+  String get authForgotPasswordSend;
+
+  /// No description provided for @authForgotPasswordSent.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 재설정 이메일을 보냈습니다'**
+  String get authForgotPasswordSent;
+
+  /// No description provided for @authForgotPasswordSentSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일을 확인하고 링크를 클릭하여\n비밀번호를 재설정하세요.'**
+  String get authForgotPasswordSentSubtitle;
+
+  /// No description provided for @authForgotPasswordBackToLogin.
+  ///
+  /// In ko, this message translates to:
+  /// **'로그인으로 돌아가기'**
+  String get authForgotPasswordBackToLogin;
+
+  /// No description provided for @authForgotPasswordSendFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'이메일 전송 실패: {error}'**
+  String authForgotPasswordSendFailed(String error);
+
   /// No description provided for @validationEmailRequired.
   ///
   /// In ko, this message translates to:
@@ -2503,6 +2545,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'수락 거부됨'**
   String get shareRejected;
+
+  /// No description provided for @shareExpired.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대 만료됨'**
+  String get shareExpired;
 
   /// No description provided for @shareInviterLedger.
   ///

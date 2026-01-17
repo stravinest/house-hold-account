@@ -17,6 +17,7 @@ import 'config/router.dart';
 import 'config/supabase_config.dart';
 import 'features/ledger/presentation/providers/ledger_provider.dart';
 import 'features/notification/presentation/providers/notification_provider.dart';
+import 'features/notification/services/firebase_messaging_service.dart';
 import 'features/notification/services/local_notification_service.dart';
 import 'features/widget/data/services/widget_data_service.dart';
 import 'shared/themes/app_theme.dart';
@@ -95,10 +96,49 @@ class _SharedHouseholdAccountAppState
   void initState() {
     super.initState();
     _initDeepLinks();
+    _setupNotificationTapHandlers();
 
     Future.microtask(() {
       ref.read(ledgerIdPersistenceProvider);
     });
+  }
+
+  /// 알림 탭 핸들러 설정
+  void _setupNotificationTapHandlers() {
+    // 로컬 알림 탭 핸들러
+    LocalNotificationService().onNotificationTap = _handleNotificationTap;
+
+    // FCM 알림 탭 핸들러
+    FirebaseMessagingService().onNotificationTap = _handleNotificationTap;
+
+    // 앱 시작 시 초기 알림 확인 (지연 실행)
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      LocalNotificationService().checkInitialNotification();
+      FirebaseMessagingService().checkInitialMessage();
+    });
+  }
+
+  /// 알림 탭 시 라우팅 처리
+  void _handleNotificationTap(String? type, Map<String, dynamic>? data) {
+    debugPrint('알림 탭 처리: type=$type, data=$data');
+
+    final router = ref.read(routerProvider);
+
+    switch (type) {
+      case 'invite_received':
+      case 'invite_accepted':
+        // 초대 관련 알림 -> 공유 관리 화면으로 이동
+        router.go(Routes.share);
+        break;
+      case 'shared_ledger_change':
+        // 공유 가계부 변경 알림 -> 홈 화면으로 이동
+        router.go(Routes.home);
+        break;
+      default:
+        // 기타 알림 -> 홈 화면으로 이동
+        router.go(Routes.home);
+        break;
+    }
   }
 
   @override

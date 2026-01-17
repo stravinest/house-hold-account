@@ -104,13 +104,13 @@ class AssetGoalCard extends ConsumerWidget {
     // 배경 트랙 색상 - 미달성 영역을 명확하게 표시
     final colorScheme = Theme.of(context).colorScheme;
     final trackColor = isDark
-        ? Colors.white.withValues(alpha: 0.15)
+        ? colorScheme.surfaceContainerHighest
         : colorScheme.surfaceContainerHighest;
 
     // 내부 그림자 색상
-    final innerShadowColor = isDark
-        ? Colors.black.withValues(alpha: 0.4)
-        : Colors.black.withValues(alpha: 0.1);
+    final innerShadowColor = colorScheme.shadow.withValues(
+      alpha: isDark ? 0.4 : 0.1,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,12 +178,7 @@ class AssetGoalCard extends ConsumerWidget {
               ),
             ],
             // 전체 목표 범위(0%~100%)를 명확히 표시하는 강화된 테두리
-            border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.8)
-                  : colorScheme.onSurface.withValues(alpha: 0.6),
-              width: 2.0,
-            ),
+            border: Border.all(color: colorScheme.outline, width: 2.0),
           ),
           child: ClipRRect(
             // 테두리 두께(2px)를 고려하여 내부 borderRadius 조정
@@ -194,9 +189,9 @@ class AssetGoalCard extends ConsumerWidget {
                 Positioned.fill(
                   child: CustomPaint(
                     painter: _ProgressTrackPainter(
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: isDark ? 0.2 : 0.5,
+                      ),
                     ),
                   ),
                 ),
@@ -247,8 +242,8 @@ class AssetGoalCard extends ConsumerWidget {
                               ),
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white.withValues(alpha: 0.35),
-                                  Colors.white.withValues(alpha: 0.0),
+                                  colorScheme.onPrimary.withValues(alpha: 0.35),
+                                  colorScheme.onPrimary.withValues(alpha: 0.0),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
@@ -269,9 +264,9 @@ class AssetGoalCard extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                         gradient: LinearGradient(
                           colors: [
-                            Colors.white.withValues(alpha: 0.0),
-                            Colors.white.withValues(alpha: 0.15),
-                            Colors.white.withValues(alpha: 0.0),
+                            colorScheme.onPrimary.withValues(alpha: 0.0),
+                            colorScheme.onPrimary.withValues(alpha: 0.15),
+                            colorScheme.onPrimary.withValues(alpha: 0.0),
                           ],
                           stops: const [0.0, 0.5, 1.0],
                           begin: Alignment.centerLeft,
@@ -312,6 +307,7 @@ class AssetGoalCard extends ConsumerWidget {
         ? '50%'
         : '100%';
 
+    final colorScheme = Theme.of(context).colorScheme;
     return Text(
       label,
       style: TextStyle(
@@ -319,9 +315,7 @@ class AssetGoalCard extends ConsumerWidget {
         fontWeight: isPassed ? FontWeight.w600 : FontWeight.w400,
         color: isPassed
             ? _getProgressColor(progress).withValues(alpha: 0.8)
-            : (isDark
-                  ? Colors.white.withValues(alpha: 0.3)
-                  : Colors.black.withValues(alpha: 0.3)),
+            : colorScheme.onSurface.withValues(alpha: 0.3),
       ),
     );
   }

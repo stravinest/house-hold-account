@@ -126,16 +126,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
-  // 스플래시 배경색 (연한 연두색)
-  static const Color _splashBackgroundColor = Color(0xFFE9F1E6);
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      backgroundColor: _splashBackgroundColor,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -232,9 +229,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {
-                      // TODO: 비밀번호 재설정 페이지로 이동
-                    },
+                    onPressed: () => context.push(Routes.forgotPassword),
                     child: Text(l10n.authForgotPassword),
                   ),
                 ),

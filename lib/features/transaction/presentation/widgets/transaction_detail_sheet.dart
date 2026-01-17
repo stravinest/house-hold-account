@@ -168,7 +168,11 @@ class TransactionDetailSheet extends ConsumerWidget {
                       value: transaction.userName!,
                     ),
 
-                  const SizedBox(height: 24),
+                  // 시스템 네비게이션 바 높이 + 여유 공간
+                  SizedBox(
+                    height:
+                        MediaQuery.of(context).viewPadding.bottom + Spacing.lg,
+                  ),
                 ],
               ),
             ),
