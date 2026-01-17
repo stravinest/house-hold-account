@@ -272,7 +272,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 24),
 
                 // Google 로그인
-                OutlinedButton.icon(
+                ElevatedButton.icon(
                   onPressed: _isLoading ? null : _handleGoogleLogin,
                   icon: Image.network(
                     'https://www.google.com/favicon.ico',
