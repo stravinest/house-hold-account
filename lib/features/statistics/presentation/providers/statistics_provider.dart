@@ -110,19 +110,13 @@ final categoryStatisticsProvider = FutureProvider<List<CategoryStatistics>>((
 
 // 총 지출/수입 계산
 final totalStatisticsProvider = Provider<Map<String, int>>((ref) {
-  final expenseAsync = ref.watch(categoryExpenseStatisticsProvider);
-  final incomeAsync = ref.watch(categoryIncomeStatisticsProvider);
+  final expenseData = ref.watch(categoryExpenseStatisticsProvider).valueOrNull;
+  final incomeData = ref.watch(categoryIncomeStatisticsProvider).valueOrNull;
 
-  int totalExpense = 0;
-  int totalIncome = 0;
-
-  expenseAsync.whenData((data) {
-    totalExpense = data.fold(0, (sum, item) => sum + item.amount);
-  });
-
-  incomeAsync.whenData((data) {
-    totalIncome = data.fold(0, (sum, item) => sum + item.amount);
-  });
+  final totalExpense =
+      expenseData?.fold(0, (sum, item) => sum + item.amount) ?? 0;
+  final totalIncome =
+      incomeData?.fold(0, (sum, item) => sum + item.amount) ?? 0;
 
   return {
     'expense': totalExpense,
