@@ -11,24 +11,37 @@ import '../../domain/entities/ledger_invite.dart';
 class LedgerWithInviteInfo {
   final Ledger ledger;
   final List<LedgerMember> members;
-  final LedgerInvite? sentInvite;
+  final List<LedgerInvite> sentInvites;
   final bool canInvite;
   final bool isCurrentLedger;
 
   const LedgerWithInviteInfo({
     required this.ledger,
     required this.members,
-    this.sentInvite,
+    this.sentInvites = const [],
     required this.canInvite,
     this.isCurrentLedger = false,
   });
 
   // 초대 상태 확인 헬퍼
-  bool get hasNoInvite => sentInvite == null;
-  bool get hasPendingInvite => sentInvite?.isPending ?? false;
-  bool get hasAcceptedInvite => sentInvite?.isAccepted ?? false;
-  bool get hasRejectedInvite => sentInvite?.isRejected ?? false;
+  bool get hasNoInvite => sentInvites.isEmpty;
+  bool get hasPendingInvite => pendingInvites.isNotEmpty;
+  bool get hasAcceptedInvite => acceptedInvites.isNotEmpty;
+  bool get hasRejectedInvite => rejectedInvites.isNotEmpty;
   bool get isMemberFull => members.length >= AppConstants.maxMembersPerLedger;
+
+  // 상태별 초대 목록
+  List<LedgerInvite> get pendingInvites =>
+      sentInvites.where((i) => i.isPending && !i.isExpired).toList();
+  List<LedgerInvite> get acceptedInvites =>
+      sentInvites.where((i) => i.isAccepted).toList();
+  List<LedgerInvite> get rejectedInvites =>
+      sentInvites.where((i) => i.isRejected).toList();
+
+  // 표시할 초대 목록 (pending, accepted, rejected 순서)
+  List<LedgerInvite> get displayableInvites {
+    return [...pendingInvites, ...acceptedInvites, ...rejectedInvites];
+  }
 }
 
 // Repository 프로바이더
@@ -45,12 +58,15 @@ final receivedInvitesProvider = FutureProvider<List<LedgerInvite>>((ref) async {
 // 받은 초대 개수 (pending 상태만)
 final pendingInviteCountProvider = Provider<int>((ref) {
   final invitesAsync = ref.watch(receivedInvitesProvider);
-  return invitesAsync.valueOrNull?.where((invite) => invite.isPending).length ?? 0;
+  return invitesAsync.valueOrNull?.where((invite) => invite.isPending).length ??
+      0;
 });
 
 // 보낸 초대 목록
-final sentInvitesProvider =
-    FutureProvider.family<List<LedgerInvite>, String>((ref, ledgerId) async {
+final sentInvitesProvider = FutureProvider.family<List<LedgerInvite>, String>((
+  ref,
+  ledgerId,
+) async {
   final repository = ref.watch(shareRepositoryProvider);
   return repository.getSentInvites(ledgerId);
 });
@@ -58,12 +74,14 @@ final sentInvitesProvider =
 // 현재 가계부의 멤버 목록
 final ledgerMembersListProvider =
     FutureProvider.family<List<LedgerMember>, String>((ref, ledgerId) async {
-  final repository = ref.watch(shareRepositoryProvider);
-  return repository.getMembers(ledgerId);
-});
+      final repository = ref.watch(shareRepositoryProvider);
+      return repository.getMembers(ledgerId);
+    });
 
 // 현재 선택된 가계부의 멤버 목록
-final currentLedgerMembersProvider = FutureProvider<List<LedgerMember>>((ref) async {
+final currentLedgerMembersProvider = FutureProvider<List<LedgerMember>>((
+  ref,
+) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return [];
 
@@ -88,7 +106,8 @@ class ShareNotifier extends StateNotifier<AsyncValue<void>> {
   final ShareRepository _repository;
   final Ref _ref;
 
-  ShareNotifier(this._repository, this._ref) : super(const AsyncValue.data(null));
+  ShareNotifier(this._repository, this._ref)
+    : super(const AsyncValue.data(null));
 
   // 초대 보내기
   Future<void> sendInvite({
@@ -183,10 +202,7 @@ class ShareNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncValue.loading();
     try {
-      await _repository.removeMember(
-        ledgerId: ledgerId,
-        userId: userId,
-      );
+      await _repository.removeMember(ledgerId: ledgerId, userId: userId);
       _ref.invalidate(ledgerMembersListProvider(ledgerId));
       _ref.invalidate(currentLedgerMembersProvider);
       state = const AsyncValue.data(null);
@@ -202,6 +218,7 @@ class ShareNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       await _repository.leaveLedger(ledgerId);
       _ref.invalidate(ledgersProvider);
+      _ref.invalidate(receivedInvitesProvider);
       _ref.read(selectedLedgerIdProvider.notifier).state = null;
       state = const AsyncValue.data(null);
     } catch (e, st) {
@@ -213,71 +230,78 @@ class ShareNotifier extends StateNotifier<AsyncValue<void>> {
 
 final shareNotifierProvider =
     StateNotifierProvider<ShareNotifier, AsyncValue<void>>((ref) {
-  final repository = ref.watch(shareRepositoryProvider);
-  return ShareNotifier(repository, ref);
-});
+      final repository = ref.watch(shareRepositoryProvider);
+      return ShareNotifier(repository, ref);
+    });
 
 // 내가 owner인 가계부 목록 (+ 각 가계부의 초대/멤버 정보 포함)
 final myOwnedLedgersWithInvitesProvider =
     FutureProvider<List<LedgerWithInviteInfo>>((ref) async {
-  final currentUserId = SupabaseConfig.auth.currentUser?.id;
-  if (currentUserId == null) return [];
+      final currentUserId = SupabaseConfig.auth.currentUser?.id;
+      if (currentUserId == null) return [];
 
-  final ledgersAsync = ref.watch(ledgersProvider);
-  final selectedLedgerId = ref.watch(selectedLedgerIdProvider);
-  final repository = ref.watch(shareRepositoryProvider);
+      final ledgersAsync = ref.watch(ledgersProvider);
+      final selectedLedgerId = ref.watch(selectedLedgerIdProvider);
+      final repository = ref.watch(shareRepositoryProvider);
 
-  // ledgersProvider가 아직 데이터를 가지고 있지 않으면 빈 리스트 반환
-  // isLoading/hasError는 FutureProvider가 자동으로 처리
-  final ledgers = ledgersAsync.valueOrNull;
-  if (ledgers == null) return [];
+      // ledgersProvider가 아직 데이터를 가지고 있지 않으면 빈 리스트 반환
+      // isLoading/hasError는 FutureProvider가 자동으로 처리
+      final ledgers = ledgersAsync.valueOrNull;
+      if (ledgers == null) return [];
 
-  // owner인 가계부만 필터링 (ownerId 사용)
-  final ownedLedgers = ledgers.where((ledger) {
-    return ledger.ownerId == currentUserId;
-  }).toList();
+      // owner인 가계부만 필터링 (ownerId 사용)
+      final ownedLedgers = ledgers.where((ledger) {
+        return ledger.ownerId == currentUserId;
+      }).toList();
 
-  // 각 가계부에 대해 초대/멤버 정보 조회
-  final result = <LedgerWithInviteInfo>[];
+      // 모든 가계부의 멤버/초대 정보를 병렬로 조회 (N+1 쿼리 방지)
+      final futures = ownedLedgers.map((ledger) async {
+        final results = await Future.wait([
+          repository.getMembers(ledger.id),
+          repository.getSentInvites(ledger.id),
+        ]);
+        return (
+          ledger,
+          results[0] as List<LedgerMember>,
+          results[1] as List<LedgerInvite>,
+        );
+      });
 
-  for (final ledger in ownedLedgers) {
-    final members = await repository.getMembers(ledger.id);
-    final sentInvites = await repository.getSentInvites(ledger.id);
+      final allData = await Future.wait(futures);
 
-    // 가장 최근 초대 (pending 우선, 그 다음 최신순)
-    LedgerInvite? latestInvite;
-    if (sentInvites.isNotEmpty) {
-      // pending 상태가 있으면 우선
-      final pendingInvites =
-          sentInvites.where((i) => i.isPending && !i.isExpired).toList();
-      if (pendingInvites.isNotEmpty) {
-        latestInvite = pendingInvites.first;
-      } else {
-        // 그 외 최신 초대
-        latestInvite = sentInvites.first;
+      final result = <LedgerWithInviteInfo>[];
+      for (final (ledger, members, sentInvites) in allData) {
+        // 표시할 초대 필터링 (pending, accepted, rejected - expired/left 제외)
+        final displayableInvites = sentInvites.where((i) {
+          if (i.isExpired || i.isLeft) return false;
+          return i.isPending || i.isAccepted || i.isRejected;
+        }).toList();
+
+        // pending 초대가 없어야 새 초대 가능
+        final hasPendingInvite = displayableInvites.any(
+          (i) => i.isPending && !i.isExpired,
+        );
+        final canInvite =
+            members.length < AppConstants.maxMembersPerLedger &&
+            !hasPendingInvite;
+
+        result.add(
+          LedgerWithInviteInfo(
+            ledger: ledger,
+            members: members,
+            sentInvites: displayableInvites,
+            canInvite: canInvite,
+            isCurrentLedger: ledger.id == selectedLedgerId,
+          ),
+        );
       }
-    }
 
-    final canInvite = members.length < AppConstants.maxMembersPerLedger &&
-        (latestInvite == null ||
-            latestInvite.isRejected ||
-            latestInvite.isExpired);
+      // 정렬: 현재 사용 중인 가계부 먼저, 그 다음 생성일 역순
+      result.sort((a, b) {
+        if (a.isCurrentLedger && !b.isCurrentLedger) return -1;
+        if (!a.isCurrentLedger && b.isCurrentLedger) return 1;
+        return b.ledger.createdAt.compareTo(a.ledger.createdAt);
+      });
 
-    result.add(LedgerWithInviteInfo(
-      ledger: ledger,
-      members: members,
-      sentInvite: latestInvite,
-      canInvite: canInvite,
-      isCurrentLedger: ledger.id == selectedLedgerId,
-    ));
-  }
-
-  // 정렬: 현재 사용 중인 가계부 먼저, 그 다음 생성일 역순
-  result.sort((a, b) {
-    if (a.isCurrentLedger && !b.isCurrentLedger) return -1;
-    if (!a.isCurrentLedger && b.isCurrentLedger) return 1;
-    return b.ledger.createdAt.compareTo(a.ledger.createdAt);
-  });
-
-  return result;
-});
+      return result;
+    });
