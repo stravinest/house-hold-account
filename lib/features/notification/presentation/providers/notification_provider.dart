@@ -26,7 +26,9 @@ class Notification extends _$Notification {
 
     if (kDebugMode) {
       debugPrint('[NotificationProvider] build() called');
-      debugPrint('[NotificationProvider] user: ${user?.id ?? "null"}');
+      debugPrint(
+        '[NotificationProvider] user: ${user != null ? "logged in" : "null"}',
+      );
     }
 
     if (user == null) {
@@ -55,16 +57,14 @@ class Notification extends _$Notification {
       try {
         if (kDebugMode) {
           debugPrint(
-            '[NotificationProvider] FCM init attempt $attempt/$maxRetries for user: $userId',
+            '[NotificationProvider] FCM init attempt $attempt/$maxRetries',
           );
         }
 
         await service.initialize(userId);
 
         if (kDebugMode) {
-          debugPrint(
-            '[NotificationProvider] FCM init SUCCESS for user: $userId',
-          );
+          debugPrint('[NotificationProvider] FCM init SUCCESS');
         }
         return; // 성공하면 종료
       } catch (e, st) {

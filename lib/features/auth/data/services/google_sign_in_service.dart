@@ -56,7 +56,7 @@ class GoogleSignInService {
         throw const AuthException('Google 로그인이 취소되었습니다.');
       }
 
-      debugPrint('[GoogleSignInService] Google 사용자: ${googleUser.email}');
+      debugPrint('[GoogleSignInService] Google 사용자 인증됨');
 
       // 2. Authentication 정보 획득
       final googleAuth = await googleUser.authentication;
@@ -80,16 +80,13 @@ class GoogleSignInService {
         accessToken: accessToken,
       );
 
-      debugPrint(
-        '[GoogleSignInService] Supabase 인증 성공: ${response.user?.email}',
-      );
+      debugPrint('[GoogleSignInService] Supabase 인증 성공');
 
       return response;
     } on AuthException {
       rethrow;
     } catch (e, st) {
-      debugPrint('[GoogleSignInService] 로그인 실패: $e');
-      debugPrint('[GoogleSignInService] 스택 트레이스: $st');
+      debugPrint('[GoogleSignInService] 로그인 실패: ${e.runtimeType}');
 
       if (e.toString().contains('sign_in_canceled') ||
           e.toString().contains('canceled') ||

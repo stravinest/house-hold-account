@@ -36,7 +36,6 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   Future<void> _handleSignup() async {
     debugPrint('[SignupPage] signup started');
-    debugPrint('[SignupPage] name: ${_nameController.text.trim()}');
 
     if (!_formKey.currentState!.validate()) {
       debugPrint('[SignupPage] form validation failed');
@@ -63,8 +62,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         context.go(Routes.home);
       }
     } catch (e, st) {
-      debugPrint('[SignupPage] signup failed: $e');
-      debugPrint('[SignupPage] stack trace: $st');
+      debugPrint('[SignupPage] signup failed: ${e.runtimeType}');
       if (mounted) {
         final l10n = AppLocalizations.of(context);
         String errorMessage;

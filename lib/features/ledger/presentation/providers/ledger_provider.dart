@@ -20,7 +20,7 @@ final ledgerIdPersistenceProvider = Provider<void>((ref) {
     if (next != null) {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('flutter.current_ledger_id', next);
-      debugPrint('Saved current ledger ID to SharedPreferences: $next');
+      debugPrint('Saved current ledger ID to SharedPreferences');
     }
   });
 });
@@ -29,7 +29,9 @@ final ledgerIdPersistenceProvider = Provider<void>((ref) {
 final restoreLedgerIdProvider = FutureProvider<String?>((ref) async {
   final prefs = await SharedPreferences.getInstance();
   final savedId = prefs.getString('flutter.current_ledger_id');
-  debugPrint('Restored ledger ID from SharedPreferences: $savedId');
+  debugPrint(
+    'Restored ledger ID from SharedPreferences: ${savedId != null ? "found" : "null"}',
+  );
   return savedId;
 });
 
@@ -54,7 +56,7 @@ final ledgersProvider = FutureProvider<List<Ledger>>((ref) async {
     } else {
       // 저장된 ID가 없거나 유효하지 않으면 첫 번째 가계부 선택
       ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
-      debugPrint('No valid saved ledger, selecting first: ${ledgers.first.id}');
+      debugPrint('No valid saved ledger, selecting first available');
     }
   }
 
@@ -144,13 +146,11 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
 
         if (isValidSavedId) {
           _ref.read(selectedLedgerIdProvider.notifier).state = savedId;
-          debugPrint('Restored to saved ledger: $savedId');
+          debugPrint('Ledger restored from saved ID');
         } else {
           // 저장된 ID가 없거나 유효하지 않으면 첫 번째 가계부 선택
           _ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
-          debugPrint(
-            'No valid saved ledger, selecting first: ${ledgers.first.id}',
-          );
+          debugPrint('No valid saved ledger, selecting first available');
         }
       }
     } catch (e, st) {
