@@ -1,4 +1,5 @@
 import '../../../../config/supabase_config.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../ledger/domain/entities/ledger.dart';
 import '../../domain/entities/ledger_invite.dart';
@@ -9,7 +10,6 @@ class ShareRepository {
   // 이메일로 사용자 조회 (가입 여부 확인)
   Future<Map<String, dynamic>?> findUserByEmail(String email) async {
     final response = await _client
-        .schema('house')
         .from('profiles')
         .select('id, email, display_name')
         .eq('email', email.toLowerCase().trim())
@@ -31,7 +31,6 @@ class ShareRepository {
     // ledger_members 테이블에서 소유자(role='owner') 또는 일반 멤버 확인
     // RLS 정책을 우회하지 않고 ledger_members 테이블만 사용
     final member = await _client
-        .schema('house')
         .from('ledger_members')
         .select('id, role')
         .eq('ledger_id', ledgerId)
@@ -47,7 +46,6 @@ class ShareRepository {
     required String email,
   }) async {
     final invite = await _client
-        .schema('house')
         .from('ledger_invites')
         .select('id')
         .eq('ledger_id', ledgerId)
@@ -62,7 +60,6 @@ class ShareRepository {
   // 현재 멤버 수 확인
   Future<int> getMemberCount(String ledgerId) async {
     final response = await _client
-        .schema('house')
         .from('ledger_members')
         .select('id')
         .eq('ledger_id', ledgerId);
@@ -119,7 +116,6 @@ class ShareRepository {
     final expiresAt = DateTime.now().add(const Duration(days: 7));
 
     final response = await _client
-        .schema('house')
         .from('ledger_invites')
         .insert({
           'ledger_id': ledgerId,
@@ -135,39 +131,39 @@ class ShareRepository {
 
     final invite = LedgerInvite.fromJson(response);
 
-    // 초대받은 사용자에게 푸시 알림 전송 (비동기, 실패해도 초대는 성공)
     _sendInviteNotification(
-      inviteeUserId: targetUser['id'] as String,
-      inviterName: _client.auth.currentUser?.email ?? 'Unknown',
+      type: 'invite_received',
+      targetUserId: targetUser['id'] as String,
+      actorName: _client.auth.currentUser?.email ?? 'Unknown',
       ledgerName: invite.ledgerName ?? 'Ledger',
     );
 
     return invite;
   }
 
-  // 초대 알림 전송 (Edge Function 호출)
   Future<void> _sendInviteNotification({
-    required String inviteeUserId,
-    required String inviterName,
+    required String type,
+    required String targetUserId,
+    required String actorName,
     required String ledgerName,
   }) async {
     try {
       await _client.functions.invoke(
         'send-invite-notification',
         body: {
-          'invitee_user_id': inviteeUserId,
-          'inviter_name': inviterName,
+          'type': type,
+          'target_user_id': targetUserId,
+          'actor_name': actorName,
           'ledger_name': ledgerName,
         },
       );
     } catch (e) {
-      // 알림 전송 실패해도 초대는 성공으로 처리
-      // ignore: avoid_print
-      print('Failed to send invite notification: $e');
+      if (kDebugMode) {
+        print('Failed to send invite notification: $e');
+      }
     }
   }
 
-  // 받은 초대 목록 조회 (pending, accepted, rejected 모두 포함)
   Future<List<LedgerInvite>> getReceivedInvites() async {
     final user = _client.auth.currentUser;
     if (user == null) return [];
@@ -175,17 +171,13 @@ class ShareRepository {
     final userEmail = user.email?.toLowerCase().trim() ?? '';
     if (userEmail.isEmpty) return [];
 
-    // RLS 정책으로 초대받은 사용자도 ledgers 테이블 조회 가능
-    // 조인 쿼리로 가계부 이름과 초대자 정보를 한 번에 조회
-    // pending, accepted, rejected 모두 표시 (만료되지 않은 것만)
     final response = await _client
-        .schema('house')
         .from('ledger_invites')
         .select(
           '*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)',
         )
         .eq('invitee_email', userEmail)
-        .inFilter('status', ['pending', 'accepted', 'rejected'])
+        .inFilter('status', ['pending', 'accepted'])
         .order('created_at', ascending: false);
 
     return (response as List)
@@ -196,7 +188,6 @@ class ShareRepository {
   // 보낸 초대 목록 조회
   Future<List<LedgerInvite>> getSentInvites(String ledgerId) async {
     final response = await _client
-        .schema('house')
         .from('ledger_invites')
         .select(
           '*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)',
@@ -209,68 +200,81 @@ class ShareRepository {
         .toList();
   }
 
-  // 초대 수락
   Future<void> acceptInvite(String inviteId) async {
     final invite = await _client
-        .schema('house')
         .from('ledger_invites')
-        .select()
+        .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name)')
         .eq('id', inviteId)
         .single();
 
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
 
-    // 동시성 문제 방지: 멤버 수 재확인
     final ledgerId = invite['ledger_id'] as String;
     if (await isMemberLimitReached(ledgerId)) {
       throw Exception('이 가계부는 이미 멤버가 가득 찼습니다.');
     }
 
-    // 중요: 멤버로 먼저 추가 (RLS 정책이 pending 상태 초대를 확인하므로)
     await _client.from('ledger_members').insert({
       'ledger_id': invite['ledger_id'],
       'user_id': userId,
       'role': invite['role'],
     });
 
-    // 초대 상태 업데이트
     await _client
-        .schema('house')
         .from('ledger_invites')
         .update({'status': 'accepted'})
         .eq('id', inviteId);
 
-    // 가계부를 공유 상태로 변경
     await _client
-        .schema('house')
         .from('ledgers')
         .update({'is_shared': true})
         .eq('id', invite['ledger_id']);
+
+    final inviterUserId = invite['inviter_user_id'] as String;
+    final ledgerData = invite['ledger'] as Map<String, dynamic>?;
+    final ledgerName = ledgerData?['name'] as String? ?? 'Ledger';
+
+    _sendInviteNotification(
+      type: 'invite_accepted',
+      targetUserId: inviterUserId,
+      actorName: _client.auth.currentUser?.email ?? 'Unknown',
+      ledgerName: ledgerName,
+    );
   }
 
-  // 초대 거절
   Future<void> rejectInvite(String inviteId) async {
+    final invite = await _client
+        .from('ledger_invites')
+        .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name)')
+        .eq('id', inviteId)
+        .single();
+
     await _client
-        .schema('house')
         .from('ledger_invites')
         .update({'status': 'rejected'})
         .eq('id', inviteId);
+
+    final inviterUserId = invite['inviter_user_id'] as String;
+    final ledgerData = invite['ledger'] as Map<String, dynamic>?;
+    final ledgerName = ledgerData?['name'] as String? ?? 'Ledger';
+
+    _sendInviteNotification(
+      type: 'invite_rejected',
+      targetUserId: inviterUserId,
+      actorName: _client.auth.currentUser?.email ?? 'Unknown',
+      ledgerName: ledgerName,
+    );
   }
 
   // 초대 취소
   Future<void> cancelInvite(String inviteId) async {
-    await _client
-        .schema('house')
-        .from('ledger_invites')
-        .delete()
-        .eq('id', inviteId);
+    await _client.from('ledger_invites').delete().eq('id', inviteId);
   }
 
   // 멤버 목록 조회
   Future<List<LedgerMember>> getMembers(String ledgerId) async {
     final response = await _client
-        .schema('house')
         .from('ledger_members')
         .select('*, profiles(email, display_name, avatar_url, color)')
         .eq('ledger_id', ledgerId)
@@ -288,7 +292,6 @@ class ShareRepository {
     required String role,
   }) async {
     await _client
-        .schema('house')
         .from('ledger_members')
         .update({'role': role})
         .eq('ledger_id', ledgerId)
@@ -301,20 +304,17 @@ class ShareRepository {
     required String userId,
   }) async {
     await _client
-        .schema('house')
         .from('ledger_members')
         .delete()
         .eq('ledger_id', ledgerId)
         .eq('user_id', userId);
 
-    // 남은 멤버 수 확인
+    // 남은 멤버 수 확인 (count만 필요하므로 id만 조회)
     final remainingMembers = await _client
-        .schema('house')
         .from('ledger_members')
-        .select()
+        .select('id')
         .eq('ledger_id', ledgerId);
 
-    // 멤버가 1명(소유자)만 남으면 공유 상태 해제
     if ((remainingMembers as List).length <= 1) {
       await _client
           .from('ledgers')
@@ -328,6 +328,19 @@ class ShareRepository {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
 
+    final userEmail = _client.auth.currentUser?.email?.toLowerCase().trim();
+
+    // 멤버에서 제거
     await removeMember(ledgerId: ledgerId, userId: userId);
+
+    // 초대 상태를 'left'로 변경 (기록 유지, 다시 초대 가능)
+    if (userEmail != null) {
+      await _client
+          .from('ledger_invites')
+          .update({'status': 'left'})
+          .eq('ledger_id', ledgerId)
+          .eq('invitee_email', userEmail)
+          .eq('status', 'accepted');
+    }
   }
 }

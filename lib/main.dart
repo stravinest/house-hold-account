@@ -127,8 +127,10 @@ class _SharedHouseholdAccountAppState
     switch (type) {
       case 'invite_received':
       case 'invite_accepted':
-        // 초대 관련 알림 -> 공유 관리 화면으로 이동
-        router.go(Routes.share);
+        // 초대 관련 알림 -> 홈 화면으로 이동 후 공유 관리 화면으로 push
+        // go() 대신 push()를 사용하여 뒤로가기 버튼이 표시되도록 함
+        router.go(Routes.home);
+        Future.microtask(() => router.push(Routes.share));
         break;
       case 'shared_ledger_change':
         // 공유 가계부 변경 알림 -> 홈 화면으로 이동
@@ -171,6 +173,14 @@ class _SharedHouseholdAccountAppState
     );
   }
 
+  // 허용된 딥링크 호스트 목록 (보안: 화이트리스트 방식)
+  static const _allowedHosts = {
+    'auth-callback', // Supabase 인증 콜백
+    'add-expense', // 지출 추가
+    'add-income', // 수입 추가
+    'quick-expense', // 빠른 지출 추가
+  };
+
   void _handleDeepLink(Uri uri) {
     debugPrint('딥링크 수신: $uri');
 
@@ -180,9 +190,16 @@ class _SharedHouseholdAccountAppState
       return;
     }
 
+    // 보안: 허용된 호스트만 처리 (화이트리스트 방식)
+    if (uri.host.isNotEmpty && !_allowedHosts.contains(uri.host)) {
+      debugPrint('허용되지 않은 호스트: ${uri.host}');
+      return;
+    }
+
     // Supabase 인증 콜백 처리 (이메일 인증, 비밀번호 재설정 등)
     // sharedhousehold://auth-callback?... 형태로 들어옴
-    if (uri.host == 'auth-callback' || uri.hasFragment) {
+    // 보안: uri.hasFragment 조건 제거 (너무 광범위하여 악의적 URI 허용 가능)
+    if (uri.host == 'auth-callback') {
       debugPrint('Supabase 인증 콜백 감지');
       // Supabase SDK가 자동으로 세션을 처리함
       // 세션 복구 후 홈으로 이동

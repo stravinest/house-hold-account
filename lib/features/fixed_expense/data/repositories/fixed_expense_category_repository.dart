@@ -95,24 +95,19 @@ class FixedExpenseCategoryRepository {
   // 고정비 카테고리 삭제
   Future<void> deleteCategory(String id) async {
     try {
-      await _client
-          .from('fixed_expense_categories')
-          .delete()
-          .eq('id', id);
+      await _client.from('fixed_expense_categories').delete().eq('id', id);
     } catch (e) {
       rethrow;
     }
   }
 
-  // 고정비 카테고리 순서 변경
+  // 고정비 카테고리 순서 변경 (배치 RPC 사용)
   Future<void> reorderCategories(List<String> categoryIds) async {
     try {
-      for (int i = 0; i < categoryIds.length; i++) {
-        await _client
-            .from('fixed_expense_categories')
-            .update({'sort_order': i})
-            .eq('id', categoryIds[i]);
-      }
+      await _client.rpc(
+        'batch_reorder_fixed_expense_categories',
+        params: {'p_category_ids': categoryIds},
+      );
     } catch (e) {
       rethrow;
     }

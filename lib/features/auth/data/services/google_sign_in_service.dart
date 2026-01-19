@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -9,21 +10,27 @@ import '../../../../config/supabase_config.dart';
 /// google_sign_in 패키지를 사용하여 네이티브 Google 로그인을 처리하고,
 /// Supabase의 signInWithIdToken을 통해 인증을 완료합니다.
 class GoogleSignInService {
-  // Web Client ID - Supabase에서 ID Token 검증에 사용
-  static const String _webClientId =
-      '350322816600-an3dr24hmkha8q7tcouchu0t6kut6gm3.apps.googleusercontent.com';
+  // Web Client ID - .env에서 로드 (보안)
+  static String get _webClientId => dotenv.env['GOOGLE_WEB_CLIENT_ID'] ?? '';
 
   // Google Sign-In 인스턴스
-  late final GoogleSignIn _googleSignIn;
+  late GoogleSignIn _googleSignIn;
 
   // 싱글톤 패턴
   static final GoogleSignInService _instance = GoogleSignInService._internal();
   factory GoogleSignInService() => _instance;
 
   GoogleSignInService._internal() {
+    _initializeGoogleSignIn();
+  }
+
+  void _initializeGoogleSignIn() {
+    final clientId = _webClientId;
+    if (clientId.isEmpty && kDebugMode) {
+      debugPrint('[GoogleSignInService] GOOGLE_WEB_CLIENT_ID not set in .env');
+    }
     _googleSignIn = GoogleSignIn(
-      // serverClientId: ID Token 발급에 필수 (Web Client ID)
-      serverClientId: _webClientId,
+      serverClientId: clientId.isNotEmpty ? clientId : null,
       scopes: ['email', 'profile'],
     );
   }

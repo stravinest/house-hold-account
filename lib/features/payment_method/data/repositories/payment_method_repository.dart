@@ -91,14 +91,12 @@ class PaymentMethodRepository {
     }
   }
 
-  // 결제수단 순서 변경
+  // 결제수단 순서 변경 (배치 RPC 사용)
   Future<void> reorderPaymentMethods(List<String> paymentMethodIds) async {
-    for (int i = 0; i < paymentMethodIds.length; i++) {
-      await _client
-          .from('payment_methods')
-          .update({'sort_order': i})
-          .eq('id', paymentMethodIds[i]);
-    }
+    await _client.rpc(
+      'batch_reorder_payment_methods',
+      params: {'p_payment_method_ids': paymentMethodIds},
+    );
   }
 
   // 실시간 구독 - payment_methods 테이블

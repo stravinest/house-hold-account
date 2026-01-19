@@ -10,6 +10,7 @@ import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/color_picker.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../ledger/presentation/providers/calendar_view_provider.dart';
 import '../../../notification/presentation/pages/notification_settings_page.dart';
 
 // 알림 설정 프로바이더
@@ -26,7 +27,10 @@ class SettingsPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.settingsTitle)),
+      appBar: AppBar(
+        title: Text(l10n.settingsTitle),
+        scrolledUnderElevation: 0,
+      ),
       body: CenteredContent(
         maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
         child: ListView(
@@ -66,6 +70,28 @@ class SettingsPage extends ConsumerWidget {
                   context,
                   MaterialPageRoute(
                     builder: (context) => const NotificationSettingsPage(),
+                  ),
+                );
+              },
+            ),
+            // 주 시작일 설정
+            Consumer(
+              builder: (context, ref, child) {
+                final weekStartDay = ref.watch(weekStartDayProvider);
+                return ListTile(
+                  leading: const Icon(Icons.calendar_today_outlined),
+                  title: Text(l10n.settingsWeekStartDay),
+                  subtitle: Text(
+                    weekStartDay == WeekStartDay.sunday
+                        ? l10n.settingsWeekStartSunday
+                        : l10n.settingsWeekStartMonday,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _showWeekStartDaySelector(
+                    context,
+                    ref,
+                    weekStartDay,
+                    l10n,
                   ),
                 );
               },
@@ -221,11 +247,11 @@ class SettingsPage extends ConsumerWidget {
   String _getThemeModeLabel(ThemeMode mode, AppLocalizations l10n) {
     switch (mode) {
       case ThemeMode.light:
+      case ThemeMode.system:
+        // 시스템 설정은 더 이상 사용하지 않음 (라이트 모드로 표시)
         return l10n.settingsThemeLight;
       case ThemeMode.dark:
         return l10n.settingsThemeDark;
-      case ThemeMode.system:
-        return l10n.settingsThemeSystem;
     }
   }
 
@@ -243,95 +269,76 @@ class SettingsPage extends ConsumerWidget {
     ThemeMode current,
     AppLocalizations l10n,
   ) {
+    // 시스템 설정이 선택되어 있으면 라이트 모드로 표시
+    final effectiveCurrent = current == ThemeMode.system
+        ? ThemeMode.light
+        : current;
+
     showModalBottomSheet(
       context: context,
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: Icon(
-              Icons.check,
-              color: current == ThemeMode.system
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
+      builder: (context) {
+        final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(
+                Icons.check,
+                color: effectiveCurrent == ThemeMode.light
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.transparent,
+              ),
+              title: Text(l10n.settingsThemeLight),
+              onTap: () async {
+                try {
+                  await ref
+                      .read(themeModeProvider.notifier)
+                      .setThemeMode(ThemeMode.light);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    SnackBarUtils.showError(
+                      context,
+                      l10n.settingsThemeSaveFailed(e.toString()),
+                    );
+                  }
+                }
+              },
             ),
-            title: Text(l10n.settingsThemeSystem),
-            onTap: () async {
-              try {
-                await ref
-                    .read(themeModeProvider.notifier)
-                    .setThemeMode(ThemeMode.system);
-                if (context.mounted) {
-                  Navigator.pop(context);
+            ListTile(
+              leading: Icon(
+                Icons.check,
+                color: effectiveCurrent == ThemeMode.dark
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.transparent,
+              ),
+              title: Text(l10n.settingsThemeDark),
+              onTap: () async {
+                try {
+                  await ref
+                      .read(themeModeProvider.notifier)
+                      .setThemeMode(ThemeMode.dark);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    SnackBarUtils.showError(
+                      context,
+                      l10n.settingsThemeSaveFailed(e.toString()),
+                    );
+                  }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  SnackBarUtils.showError(
-                    context,
-                    l10n.settingsThemeSaveFailed(e.toString()),
-                  );
-                }
-              }
-            },
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.check,
-              color: current == ThemeMode.light
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
+              },
             ),
-            title: Text(l10n.settingsThemeLight),
-            onTap: () async {
-              try {
-                await ref
-                    .read(themeModeProvider.notifier)
-                    .setThemeMode(ThemeMode.light);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  SnackBarUtils.showError(
-                    context,
-                    l10n.settingsThemeSaveFailed(e.toString()),
-                  );
-                }
-              }
-            },
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.check,
-              color: current == ThemeMode.dark
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
-            ),
-            title: Text(l10n.settingsThemeDark),
-            onTap: () async {
-              try {
-                await ref
-                    .read(themeModeProvider.notifier)
-                    .setThemeMode(ThemeMode.dark);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  SnackBarUtils.showError(
-                    context,
-                    l10n.settingsThemeSaveFailed(e.toString()),
-                  );
-                }
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
+            SizedBox(height: Spacing.md + bottomPadding),
+          ],
+        );
+      },
     );
   }
 
@@ -343,66 +350,135 @@ class SettingsPage extends ConsumerWidget {
   ) {
     showModalBottomSheet(
       context: context,
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(
-            leading: Icon(
-              Icons.check,
-              color: current.languageCode == 'ko'
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
+      builder: (context) {
+        final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(
+                Icons.check,
+                color: current.languageCode == 'ko'
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.transparent,
+              ),
+              title: Text(l10n.settingsLanguageKorean),
+              onTap: () async {
+                try {
+                  await ref
+                      .read(localeProvider.notifier)
+                      .setLocale(SupportedLocales.korean);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    SnackBarUtils.showSuccess(
+                      context,
+                      l10n.settingsLanguageChanged,
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                }
+              },
             ),
-            title: Text(l10n.settingsLanguageKorean),
-            onTap: () async {
-              try {
-                await ref
-                    .read(localeProvider.notifier)
-                    .setLocale(SupportedLocales.korean);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  SnackBarUtils.showSuccess(
-                    context,
-                    l10n.settingsLanguageChanged,
-                  );
+            ListTile(
+              leading: Icon(
+                Icons.check,
+                color: current.languageCode == 'en'
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.transparent,
+              ),
+              title: Text(l10n.settingsLanguageEnglish),
+              onTap: () async {
+                try {
+                  await ref
+                      .read(localeProvider.notifier)
+                      .setLocale(SupportedLocales.english);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                    SnackBarUtils.showSuccess(
+                      context,
+                      l10n.settingsLanguageChanged,
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              }
-            },
-          ),
-          ListTile(
-            leading: Icon(
-              Icons.check,
-              color: current.languageCode == 'en'
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
+              },
             ),
-            title: Text(l10n.settingsLanguageEnglish),
-            onTap: () async {
-              try {
-                await ref
-                    .read(localeProvider.notifier)
-                    .setLocale(SupportedLocales.english);
-                if (context.mounted) {
-                  Navigator.pop(context);
-                  SnackBarUtils.showSuccess(
-                    context,
-                    l10n.settingsLanguageChanged,
-                  );
+            SizedBox(height: Spacing.md + bottomPadding),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showWeekStartDaySelector(
+    BuildContext context,
+    WidgetRef ref,
+    WeekStartDay current,
+    AppLocalizations l10n,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(
+                Icons.check,
+                color: current == WeekStartDay.sunday
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.transparent,
+              ),
+              title: Text(l10n.settingsWeekStartSunday),
+              onTap: () async {
+                try {
+                  await ref
+                      .read(weekStartDayProvider.notifier)
+                      .setWeekStartDay(WeekStartDay.sunday);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
                 }
-              } catch (e) {
-                if (context.mounted) {
-                  Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: Icon(
+                Icons.check,
+                color: current == WeekStartDay.monday
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.transparent,
+              ),
+              title: Text(l10n.settingsWeekStartMonday),
+              onTap: () async {
+                try {
+                  await ref
+                      .read(weekStartDayProvider.notifier)
+                      .setWeekStartDay(WeekStartDay.monday);
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
                 }
-              }
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
+              },
+            ),
+            SizedBox(height: Spacing.md + bottomPadding),
+          ],
+        );
+      },
     );
   }
 
@@ -687,7 +763,11 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(context, '$e');
+        // 보안: 에러 원본 노출 방지 - 일반화된 메시지 사용
+        final errorMessage = e.toString().contains('현재 비밀번호')
+            ? '현재 비밀번호가 올바르지 않습니다'
+            : '비밀번호 변경에 실패했습니다';
+        SnackBarUtils.showError(context, errorMessage);
       }
     } finally {
       if (mounted) {
