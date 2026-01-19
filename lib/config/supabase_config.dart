@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseConfig {
@@ -7,10 +8,8 @@ class SupabaseConfig {
 
   static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
 
-  // 앱 딥링크 스킴
   static const String appScheme = 'sharedhousehold';
 
-  // 사용하는 스키마
   static const String schema = 'house';
 
   static Future<void> initialize() async {
@@ -30,6 +29,14 @@ class SupabaseConfig {
       postgrestOptions: PostgrestClientOptions(schema: schema),
       debug: kDebugMode,
     );
+
+    await _saveConfigForWidget();
+  }
+
+  static Future<void> _saveConfigForWidget() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('flutter.supabase_url', supabaseUrl);
+    await prefs.setString('flutter.supabase_anon_key', supabaseAnonKey);
   }
 
   static SupabaseClient get client => Supabase.instance.client;

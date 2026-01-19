@@ -36,8 +36,8 @@ class SupabaseHelper(private val context: Context) {
 
     init {
         val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        supabaseUrl = prefs.getString("flutter.flutter.supabase_url", null)
-        anonKey = prefs.getString("flutter.flutter.supabase_anon_key", null)
+        supabaseUrl = prefs.getString("flutter.supabase_url", null)
+        anonKey = prefs.getString("flutter.supabase_anon_key", null)
         
         if (supabaseUrl == null || anonKey == null) {
             Log.w(TAG, "Supabase credentials not found. Please open the app first.")
@@ -86,7 +86,7 @@ class SupabaseHelper(private val context: Context) {
 
     fun getCurrentLedgerId(): String? {
         val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        return prefs.getString("flutter.flutter.current_ledger_id", null)
+        return prefs.getString("flutter.current_ledger_id", null)
     }
 
     suspend fun getExpenseCategories(ledgerId: String): List<Category> = withContext(Dispatchers.IO) {
