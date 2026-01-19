@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../config/router.dart';
+import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
@@ -114,9 +115,14 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
               onInviteTap: ledgerInfo.canInvite
                   ? () => _showInviteDialog(context, ref, ledgerInfo.ledger.id)
                   : null,
-              onCancelInvite: ledgerInfo.hasPendingInvite
-                  ? () => _showCancelInviteDialog(context, ref, ledgerInfo)
-                  : null,
+              onCancelInvite: (inviteId) => _showCancelInviteDialog(
+                context,
+                ref,
+                inviteId,
+                ledgerInfo.ledger.id,
+              ),
+              onDeleteInvite: (inviteId) =>
+                  _deleteInvite(context, ref, inviteId, ledgerInfo.ledger.id),
               onSelectLedger: !ledgerInfo.isCurrentLedger
                   ? () => _showSelectLedgerDialog(
                       context,
@@ -124,6 +130,15 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
                       ledgerInfo.ledger.id,
                       ledgerInfo.ledger.name,
                     )
+                  : null,
+              onEdit: () => _showEditLedgerDialog(
+                context,
+                ref,
+                ledgerInfo.ledger.id,
+                ledgerInfo.ledger.name,
+              ),
+              onMemberTap: ledgerInfo.members.length > 1
+                  ? () => _showMemberManagementSheet(context, ref, ledgerInfo)
                   : null,
             ),
           ),
@@ -220,6 +235,298 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     );
   }
 
+  void _showMemberManagementSheet(
+    BuildContext context,
+    WidgetRef ref,
+    LedgerWithInviteInfo ledgerInfo,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final currentUserId = SupabaseConfig.auth.currentUser?.id;
+    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        // 네비게이션 바 높이 + 시스템 패딩 고려
+        final safeBottomPadding =
+            bottomPadding + kBottomNavigationBarHeight + Spacing.sm;
+        return Padding(
+          padding: EdgeInsets.only(bottom: safeBottomPadding),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 헤더
+              Padding(
+                padding: const EdgeInsets.all(Spacing.md),
+                child: Row(
+                  children: [
+                    const Icon(Icons.people),
+                    const SizedBox(width: Spacing.sm),
+                    Text(
+                      l10n.shareMemberManagement,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // 멤버 목록
+              ...ledgerInfo.members.map((member) {
+                final isCurrentUser = member.userId == currentUserId;
+                final isOwner = member.role == 'owner';
+                final displayName =
+                    member.displayName ?? member.email ?? l10n.shareUnknown;
+
+                // 권한 텍스트
+                String roleText;
+                if (member.role == 'owner') {
+                  roleText = l10n.shareMemberRoleOwner;
+                } else if (member.role == 'admin') {
+                  roleText = l10n.shareMemberRoleAdmin;
+                } else {
+                  roleText = l10n.shareMemberRoleMember;
+                }
+
+                // 멤버 색상
+                final memberColor = member.color != null
+                    ? Color(int.parse(member.color!.replaceFirst('#', '0xFF')))
+                    : colorScheme.primary;
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Spacing.md,
+                    vertical: Spacing.sm,
+                  ),
+                  child: Row(
+                    children: [
+                      // 색상 점
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: memberColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: Spacing.sm),
+                      // 멤버 정보
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  displayName,
+                                  style: Theme.of(context).textTheme.bodyLarge,
+                                ),
+                                if (isCurrentUser) ...[
+                                  const SizedBox(width: Spacing.xs),
+                                  Text(
+                                    '(${l10n.shareMe})',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            if (member.email != null)
+                              Text(
+                                member.email!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      // 권한 배지
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: Spacing.sm,
+                          vertical: Spacing.xs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(
+                            BorderRadiusToken.xs,
+                          ),
+                        ),
+                        child: Text(
+                          roleText,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                      // 방출 버튼 (소유자가 아닌 멤버만)
+                      if (!isOwner) ...[
+                        const SizedBox(width: Spacing.sm),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _showRemoveMemberDialog(
+                              context,
+                              ref,
+                              ledgerInfo.ledger.id,
+                              member.userId,
+                              displayName,
+                            );
+                          },
+                          style: TextButton.styleFrom(
+                            foregroundColor: colorScheme.error,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: Spacing.sm,
+                            ),
+                            minimumSize: const Size(0, 36),
+                          ),
+                          child: Text(l10n.shareMemberRemove),
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              }),
+              const SizedBox(height: Spacing.md),
+              // 닫기 버튼
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(l10n.commonClose),
+                  ),
+                ),
+              ),
+              const SizedBox(height: Spacing.md),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showRemoveMemberDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String ledgerId,
+    String userId,
+    String memberName,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.shareMemberRemoveTitle),
+        content: Text(l10n.shareMemberRemoveConfirm(memberName)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.commonCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(l10n.shareMemberRemove),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      await _removeMember(context, ref, ledgerId, userId);
+    }
+  }
+
+  Future<void> _removeMember(
+    BuildContext context,
+    WidgetRef ref,
+    String ledgerId,
+    String userId,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ref
+          .read(shareNotifierProvider.notifier)
+          .removeMember(ledgerId: ledgerId, userId: userId);
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(context, l10n.shareMemberRemoved);
+        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _showEditLedgerDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String ledgerId,
+    String currentName,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController(text: currentName);
+
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.ledgerEditTitle),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: l10n.ledgerNameLabel,
+            border: const OutlineInputBorder(),
+          ),
+          onSubmitted: (value) => Navigator.pop(context, value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.commonCancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text(l10n.commonSave),
+          ),
+        ],
+      ),
+    );
+
+    controller.dispose();
+
+    if (newName != null && newName.isNotEmpty && newName != currentName) {
+      try {
+        await ref
+            .read(ledgerNotifierProvider.notifier)
+            .updateLedger(id: ledgerId, name: newName);
+        if (context.mounted) {
+          SnackBarUtils.showSuccess(context, l10n.commonSuccess);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.invalidate(myOwnedLedgersWithInvitesProvider);
+          });
+        }
+      } catch (e) {
+        if (context.mounted) {
+          SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+        }
+      }
+    }
+  }
+
   Future<void> _showSelectLedgerDialog(
     BuildContext context,
     WidgetRef ref,
@@ -311,19 +618,16 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
   Future<void> _showCancelInviteDialog(
     BuildContext context,
     WidgetRef ref,
-    LedgerWithInviteInfo ledgerInfo,
+    String inviteId,
+    String ledgerId,
   ) async {
     final l10n = AppLocalizations.of(context)!;
-    final invite = ledgerInfo.sentInvite;
-    if (invite == null) return;
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(l10n.shareInviteCancelConfirmTitle),
-        content: Text(
-          l10n.shareInviteCancelConfirmMessage(invite.inviteeEmail),
-        ),
+        content: Text(l10n.shareInviteCancelConfirmTitle),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -341,7 +645,30 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     );
 
     if (confirmed == true && context.mounted) {
-      await _cancelInvite(context, ref, invite.id, ledgerInfo.ledger.id);
+      await _cancelInvite(context, ref, inviteId, ledgerId);
+    }
+  }
+
+  // 거부된 초대 삭제 (확인 없이 바로 삭제)
+  Future<void> _deleteInvite(
+    BuildContext context,
+    WidgetRef ref,
+    String inviteId,
+    String ledgerId,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ref
+          .read(shareNotifierProvider.notifier)
+          .cancelInvite(inviteId: inviteId, ledgerId: ledgerId);
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(context, l10n.shareInviteCancelledMessage);
+        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
     }
   }
 
@@ -377,7 +704,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
       await ref.read(shareNotifierProvider.notifier).acceptInvite(invite.id);
       if (context.mounted) {
         SnackBarUtils.showSuccess(context, l10n.shareInviteAcceptedMessage);
-        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+        // Provider 내부에서 receivedInvitesProvider, ledgersProvider 무효화됨
       }
     } catch (e) {
       if (context.mounted) {

@@ -543,6 +543,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledgerInvitedLedgers => 'Invited Ledgers';
 
   @override
+  String get ledgerSelectorMyLedgers => 'My Ledgers';
+
+  @override
+  String get ledgerSelectorSharedLedgers => 'Shared Ledgers';
+
+  @override
   String get shareInvite => 'Invite';
 
   @override
@@ -1376,6 +1382,32 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get shareMemberManagement => 'Manage Shared Members';
+
+  @override
+  String get shareMemberRoleOwner => 'Owner';
+
+  @override
+  String get shareMemberRoleAdmin => 'Admin';
+
+  @override
+  String get shareMemberRoleMember => 'Member';
+
+  @override
+  String get shareMemberRemove => 'Remove';
+
+  @override
+  String get shareMemberRemoveTitle => 'Remove Member';
+
+  @override
+  String shareMemberRemoveConfirm(String name) {
+    return 'Remove \'$name\' from this ledger?\n\nRemoved members will no longer have access to this ledger.';
+  }
+
+  @override
+  String get shareMemberRemoved => 'Member has been removed';
+
+  @override
   String get ledgerNewTitle => 'New Ledger';
 
   @override
@@ -1484,6 +1516,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarTransactionDeleteConfirm => 'Delete this transaction?';
+
+  @override
+  String get calendarViewDaily => 'Daily';
+
+  @override
+  String get calendarViewWeekly => 'Weekly';
+
+  @override
+  String get calendarViewMonthly => 'Monthly';
+
+  @override
+  String calendarDailyDate(int year, int month, int day) {
+    return '$month/$day/$year';
+  }
+
+  @override
+  String calendarWeeklyRange(
+    int startMonth,
+    int startDay,
+    int endMonth,
+    int endDay,
+  ) {
+    return '$startMonth/$startDay ~ $endMonth/$endDay';
+  }
+
+  @override
+  String get settingsWeekStartDay => 'Week Start Day';
+
+  @override
+  String get settingsWeekStartDayDescription =>
+      'Start day for calendar weekly view';
+
+  @override
+  String get settingsWeekStartSunday => 'Sunday';
+
+  @override
+  String get settingsWeekStartMonday => 'Monday';
 
   @override
   String get assetNoData => 'No data';

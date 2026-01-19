@@ -229,7 +229,7 @@ class LocalNotificationService {
   void _onNotificationTapped(NotificationResponse response) {
     final payload = response.payload;
     if (kDebugMode) {
-      print('알림 탭됨: $payload');
+      print('Notification tapped');
     }
 
     if (payload != null && onNotificationTap != null) {

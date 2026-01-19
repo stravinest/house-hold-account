@@ -24,8 +24,11 @@ data class Category(
 
 class SupabaseHelper(private val context: Context) {
     private val client = OkHttpClient()
-    private val supabaseUrl: String
-    private val anonKey: String
+    private val supabaseUrl: String?
+    private val anonKey: String?
+    
+    val isInitialized: Boolean
+        get() = supabaseUrl != null && anonKey != null
 
     companion object {
         private const val TAG = "SupabaseHelper"
@@ -34,9 +37,11 @@ class SupabaseHelper(private val context: Context) {
     init {
         val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
         supabaseUrl = prefs.getString("flutter.flutter.supabase_url", null)
-            ?: throw IllegalStateException("supabase_url not found. Please open the app first.")
         anonKey = prefs.getString("flutter.flutter.supabase_anon_key", null)
-            ?: throw IllegalStateException("supabase_anon_key not found. Please open the app first.")
+        
+        if (supabaseUrl == null || anonKey == null) {
+            Log.w(TAG, "Supabase credentials not found. Please open the app first.")
+        }
     }
 
     fun getAuthToken(): String? {
@@ -65,7 +70,6 @@ class SupabaseHelper(private val context: Context) {
         return null
     }
 
-    // JWT 토큰에서 사용자 ID 추출
     fun getUserIdFromToken(token: String): String? {
         return try {
             val parts = token.split(".")
@@ -85,18 +89,19 @@ class SupabaseHelper(private val context: Context) {
         return prefs.getString("flutter.flutter.current_ledger_id", null)
     }
 
-    // 지출 카테고리 목록 가져오기
     suspend fun getExpenseCategories(ledgerId: String): List<Category> = withContext(Dispatchers.IO) {
         try {
+            val baseUrl = supabaseUrl ?: return@withContext emptyList()
+            val apiKey = anonKey ?: return@withContext emptyList()
             val token = getAuthToken() ?: return@withContext emptyList()
             
-            val url = "$supabaseUrl/rest/v1/categories?ledger_id=eq.$ledgerId&type=eq.expense&select=id,name,icon,color&order=sort_order.asc"
+            val url = "$baseUrl/rest/v1/categories?ledger_id=eq.$ledgerId&type=eq.expense&select=id,name,icon,color&order=sort_order.asc"
             
             val request = Request.Builder()
                 .url(url)
                 .get()
                 .addHeader("Authorization", "Bearer $token")
-                .addHeader("apikey", anonKey)
+                .addHeader("apikey", apiKey)
                 .build()
             
             val response = client.newCall(request).execute()
@@ -130,7 +135,6 @@ class SupabaseHelper(private val context: Context) {
         }
     }
 
-    // 지출 거래 생성
     suspend fun createExpenseTransaction(
         ledgerId: String,
         userId: String,
@@ -140,6 +144,8 @@ class SupabaseHelper(private val context: Context) {
         date: String
     ): Boolean = withContext(Dispatchers.IO) {
         try {
+            val baseUrl = supabaseUrl ?: return@withContext false
+            val apiKey = anonKey ?: return@withContext false
             val token = getAuthToken() ?: return@withContext false
             
             val json = JSONObject().apply {
@@ -159,10 +165,10 @@ class SupabaseHelper(private val context: Context) {
             val requestBody = json.toString().toRequestBody("application/json".toMediaType())
             
             val request = Request.Builder()
-                .url("$supabaseUrl/rest/v1/transactions")
+                .url("$baseUrl/rest/v1/transactions")
                 .post(requestBody)
                 .addHeader("Authorization", "Bearer $token")
-                .addHeader("apikey", anonKey)
+                .addHeader("apikey", apiKey)
                 .addHeader("Content-Type", "application/json")
                 .addHeader("Prefer", "return=minimal")
                 .build()
@@ -183,14 +189,14 @@ class SupabaseHelper(private val context: Context) {
         }
     }
 
-    // 오늘 날짜 (YYYY-MM-DD 형식)
     fun getTodayDate(): String {
         return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
     }
 
-    // 현재 월의 수입/지출 합계 조회
     suspend fun getMonthlyTotal(ledgerId: String): Pair<Int, Int>? = withContext(Dispatchers.IO) {
         try {
+            val baseUrl = supabaseUrl ?: return@withContext null
+            val apiKey = anonKey ?: return@withContext null
             val token = getAuthToken() ?: return@withContext null
 
             val calendar = java.util.Calendar.getInstance()
@@ -201,13 +207,13 @@ class SupabaseHelper(private val context: Context) {
             val endDate = String.format("%04d-%02d-%02d", year, month, 
                 calendar.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
 
-            val url = "$supabaseUrl/rest/v1/transactions?ledger_id=eq.$ledgerId&date=gte.$startDate&date=lte.$endDate&select=amount,type"
+            val url = "$baseUrl/rest/v1/transactions?ledger_id=eq.$ledgerId&date=gte.$startDate&date=lte.$endDate&select=amount,type"
 
             val request = Request.Builder()
                 .url(url)
                 .get()
                 .addHeader("Authorization", "Bearer $token")
-                .addHeader("apikey", anonKey)
+                .addHeader("apikey", apiKey)
                 .build()
 
             val response = client.newCall(request).execute()

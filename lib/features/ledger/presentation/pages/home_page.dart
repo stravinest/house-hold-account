@@ -21,8 +21,14 @@ import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart'
 import '../../../widget/presentation/providers/widget_provider.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
+import '../../domain/entities/ledger.dart';
 import '../providers/ledger_provider.dart';
+import '../providers/calendar_view_provider.dart';
 import '../widgets/calendar_view.dart';
+import '../widgets/calendar_month_summary.dart';
+import '../widgets/calendar_view_mode_selector.dart';
+import '../widgets/daily_view.dart';
+import '../widgets/weekly_view.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   final String? initialTransactionType;
@@ -212,21 +218,35 @@ class _HomePageState extends ConsumerState<HomePage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        // 스크롤 시 앱바 배경색 변경 방지 (캘린더 배경과 일치)
         scrolledUnderElevation: 0,
+        titleSpacing: Spacing.sm,
+        leading: ledgersAsync.when(
+          data: (ledgers) => ledgers.length > 1
+              ? IconButton(
+                  icon: const Icon(Icons.book),
+                  tooltip: l10n.tooltipBook,
+                  onPressed: () => _showLedgerSelector(context),
+                )
+              : null,
+          loading: () => null,
+          error: (e, st) => null,
+        ),
+        title: _selectedIndex == 0
+            ? Consumer(
+                builder: (context, ref, _) {
+                  final viewMode = ref.watch(calendarViewModeProvider);
+                  return CalendarViewModeSelector(
+                    selectedMode: viewMode,
+                    onModeChanged: (mode) {
+                      ref
+                          .read(calendarViewModeProvider.notifier)
+                          .setViewMode(mode);
+                    },
+                  );
+                },
+              )
+            : null,
         actions: [
-          const Spacer(),
-          ledgersAsync.when(
-            data: (ledgers) => ledgers.length > 1
-                ? IconButton(
-                    icon: const Icon(Icons.book),
-                    tooltip: l10n.tooltipBook,
-                    onPressed: () => _showLedgerSelector(context),
-                  )
-                : const SizedBox.shrink(),
-            loading: () => const SizedBox.shrink(),
-            error: (e, st) => const SizedBox.shrink(),
-          ),
           IconButton(
             icon: const Icon(Icons.search),
             tooltip: l10n.tooltipSearch,
@@ -344,78 +364,275 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _showLedgerSelector(BuildContext context) {
     final ledgersAsync = ref.read(ledgersProvider);
-    final l10n = AppLocalizations.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final currentUserId = ref.read(currentUserProvider)?.id;
 
     showModalBottomSheet(
       context: context,
-      builder: (context) => ledgersAsync.when(
-        data: (ledgers) => ListView.builder(
-          shrinkWrap: true,
-          itemCount: ledgers.length,
-          itemBuilder: (context, index) {
-            final ledger = ledgers[index];
-            final selectedId = ref.read(selectedLedgerIdProvider);
-            final isSelected = ledger.id == selectedId;
+      builder: (context) {
+        final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+        final colorScheme = Theme.of(context).colorScheme;
+        // 네비게이션 바 높이 + 시스템 패딩 고려
+        final safeBottomPadding =
+            bottomPadding + kBottomNavigationBarHeight + Spacing.sm;
 
-            return ListTile(
-              leading: Icon(
-                ledger.isShared ? Icons.people : Icons.person,
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : null,
-              ),
-              title: Text(ledger.name),
-              subtitle: Text(
-                ledger.isShared ? l10n.ledgerShared : l10n.ledgerPersonal,
-              ),
-              trailing: isSelected ? const Icon(Icons.check) : null,
-              onTap: () {
+        return ledgersAsync.when(
+          data: (ledgers) {
+            final selectedId = ref.read(selectedLedgerIdProvider);
+
+            // 내 가계부 / 공유 가계부로 분류
+            // - 내 가계부: 내가 owner이고 isShared = false
+            // - 공유 가계부: 내가 owner가 아니거나 isShared = true
+            final myLedgers = ledgers
+                .where((l) => l.ownerId == currentUserId && !l.isShared)
+                .toList();
+            final sharedLedgers = ledgers
+                .where((l) => l.ownerId != currentUserId || l.isShared)
+                .toList();
+
+            Widget buildSectionHeader(String title) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  Spacing.md,
+                  Spacing.md,
+                  Spacing.md,
+                  Spacing.xs,
+                ),
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              );
+            }
+
+            // 가계부 변경 확인 다이얼로그
+            Future<void> showChangeConfirmDialog(Ledger ledger) async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(l10n.ledgerChangeConfirmTitle),
+                  content: Text(l10n.ledgerChangeConfirmMessage(ledger.name)),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: Text(l10n.commonNo),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: Text(l10n.commonYes),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true && context.mounted) {
                 ref
                     .read(ledgerNotifierProvider.notifier)
                     .selectLedger(ledger.id);
                 Navigator.pop(context);
-              },
+              }
+            }
+
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 내 가계부 섹션
+                if (myLedgers.isNotEmpty) ...[
+                  buildSectionHeader(l10n.ledgerSelectorMyLedgers),
+                  ...myLedgers.map(
+                    (ledger) => _buildLedgerTile(
+                      context,
+                      ledger: ledger,
+                      isSelected: ledger.id == selectedId,
+                      isShared: false,
+                      l10n: l10n,
+                      onTap: () {
+                        if (ledger.id == selectedId) {
+                          Navigator.pop(context);
+                        } else {
+                          showChangeConfirmDialog(ledger);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+
+                // 공유 가계부 섹션
+                if (sharedLedgers.isNotEmpty) ...[
+                  if (myLedgers.isNotEmpty) const Divider(height: 1),
+                  buildSectionHeader(l10n.ledgerSelectorSharedLedgers),
+                  ...sharedLedgers.map(
+                    (ledger) => Consumer(
+                      builder: (context, ref, _) {
+                        final membersAsync = ref.watch(
+                          ledgerMembersProvider(ledger.id),
+                        );
+                        final memberNames = membersAsync.maybeWhen(
+                          data: (members) => members
+                              .where((m) => m.userId != currentUserId)
+                              .map((m) => m.displayName ?? m.email ?? '')
+                              .where((name) => name.isNotEmpty)
+                              .toList(),
+                          orElse: () => <String>[],
+                        );
+
+                        return _buildLedgerTile(
+                          context,
+                          ledger: ledger,
+                          isSelected: ledger.id == selectedId,
+                          isShared: true,
+                          l10n: l10n,
+                          sharedMemberNames: memberNames,
+                          onTap: () {
+                            if (ledger.id == selectedId) {
+                              Navigator.pop(context);
+                            } else {
+                              showChangeConfirmDialog(ledger);
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+                SizedBox(height: safeBottomPadding),
+              ],
             );
           },
-        ),
-        loading: () => ListView.builder(
-          shrinkWrap: true,
-          itemCount: 3,
-          itemBuilder: (context, index) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                const SkeletonCircle(size: 40),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          loading: () => Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListView.builder(
+                shrinkWrap: true,
+                itemCount: 3,
+                itemBuilder: (context, index) => Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Spacing.md,
+                    vertical: Spacing.sm + Spacing.xs,
+                  ),
+                  child: Row(
                     children: [
-                      SkeletonLine(
-                        width: MediaQuery.of(context).size.width * 0.4,
-                        height: 16,
-                      ),
-                      const SizedBox(height: 8),
-                      SkeletonLine(
-                        width: MediaQuery.of(context).size.width * 0.25,
-                        height: 12,
+                      const SkeletonCircle(size: 40),
+                      const SizedBox(width: Spacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SkeletonLine(
+                              width: MediaQuery.of(context).size.width * 0.4,
+                              height: Spacing.md,
+                            ),
+                            const SizedBox(height: Spacing.sm),
+                            SkeletonLine(
+                              width: MediaQuery.of(context).size.width * 0.25,
+                              height: Spacing.sm + Spacing.xs,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              SizedBox(height: safeBottomPadding),
+            ],
           ),
+          error: (e, _) =>
+              Center(child: Text(l10n.errorWithMessage(e.toString()))),
+        );
+      },
+    );
+  }
+
+  Widget _buildLedgerTile(
+    BuildContext context, {
+    required Ledger ledger,
+    required bool isSelected,
+    required bool isShared,
+    required AppLocalizations l10n,
+    required VoidCallback onTap,
+    List<String>? sharedMemberNames,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // 아이콘 색상: 선택됨 = 컬러, 미선택 = 회색
+    final Color iconBackgroundColor;
+    final Color iconColor;
+
+    if (isSelected) {
+      // 선택됨: 내 가계부 = primary, 공유 가계부 = tertiary
+      iconBackgroundColor = isShared
+          ? colorScheme.tertiaryContainer
+          : colorScheme.primaryContainer;
+      iconColor = isShared
+          ? colorScheme.onTertiaryContainer
+          : colorScheme.onPrimaryContainer;
+    } else {
+      // 미선택: 회색
+      iconBackgroundColor = colorScheme.surfaceContainerHighest;
+      iconColor = colorScheme.onSurfaceVariant;
+    }
+
+    // 공유 가계부일 때 멤버 이름으로 subtitle 생성
+    String subtitle;
+    if (isShared && sharedMemberNames != null && sharedMemberNames.isNotEmpty) {
+      if (sharedMemberNames.length == 1) {
+        subtitle = l10n.ledgerSharedWithOne(sharedMemberNames[0]);
+      } else if (sharedMemberNames.length == 2) {
+        subtitle = l10n.ledgerSharedWithTwo(
+          sharedMemberNames[0],
+          sharedMemberNames[1],
+        );
+      } else {
+        subtitle = l10n.ledgerSharedWithMany(
+          sharedMemberNames[0],
+          sharedMemberNames[1],
+          sharedMemberNames.length - 2,
+        );
+      }
+    } else {
+      subtitle = isShared ? l10n.ledgerShared : l10n.ledgerPersonal;
+    }
+
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: iconBackgroundColor,
+          borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
         ),
-        error: (e, _) =>
-            Center(child: Text(l10n.errorWithMessage(e.toString()))),
+        child: Icon(
+          isShared ? Icons.people : Icons.person,
+          color: iconColor,
+          size: 20,
+        ),
       ),
+      title: Text(
+        ledger.name,
+        style: TextStyle(
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+      ),
+      trailing: isSelected
+          ? Icon(Icons.check, color: colorScheme.primary)
+          : null,
+      onTap: onTap,
     );
   }
 }
 
 // 캘린더 탭 뷰
-class CalendarTabView extends StatefulWidget {
+class CalendarTabView extends ConsumerStatefulWidget {
   final DateTime selectedDate;
   final DateTime focusedDate;
   final bool showUserSummary;
@@ -434,10 +651,10 @@ class CalendarTabView extends StatefulWidget {
   });
 
   @override
-  State<CalendarTabView> createState() => _CalendarTabViewState();
+  ConsumerState<CalendarTabView> createState() => _CalendarTabViewState();
 }
 
-class _CalendarTabViewState extends State<CalendarTabView> {
+class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _calendarKey = GlobalKey();
 
@@ -457,10 +674,13 @@ class _CalendarTabViewState extends State<CalendarTabView> {
       final calendarBox = calendarContext.findRenderObject() as RenderBox?;
       if (calendarBox == null) return;
 
+      // CalendarView 높이 + Divider(1px)만큼 스크롤하면
+      // DailyDateHeader가 고정된 Summary 바로 아래에 위치 (Divider 숨김)
       final calendarHeight = calendarBox.size.height;
+      const dividerHeight = 1.0;
 
       _scrollController.animateTo(
-        calendarHeight,
+        calendarHeight + dividerHeight,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
@@ -470,8 +690,10 @@ class _CalendarTabViewState extends State<CalendarTabView> {
   @override
   void didUpdateWidget(CalendarTabView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 날짜가 변경되고 사용자 요약이 표시되는 경우 스크롤
-    if (widget.showUserSummary &&
+    final viewMode = ref.read(calendarViewModeProvider);
+    // 월별 뷰에서만 날짜가 변경되고 사용자 요약이 표시되는 경우 스크롤
+    if (viewMode == CalendarViewMode.monthly &&
+        widget.showUserSummary &&
         (oldWidget.selectedDate != widget.selectedDate ||
             !oldWidget.showUserSummary)) {
       _scrollToTransactionList();
@@ -480,32 +702,125 @@ class _CalendarTabViewState extends State<CalendarTabView> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: widget.onRefresh,
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
-          children: [
-            CalendarView(
-              key: _calendarKey,
-              selectedDate: widget.selectedDate,
-              focusedDate: widget.focusedDate,
-              onDateSelected: widget.onDateSelected,
-              onPageChanged: widget.onPageChanged,
-              onRefresh: widget.onRefresh,
-            ),
-            // 일일 요약
-            if (widget.showUserSummary) ...[
-              const Divider(height: 1),
-              _DailyDateHeader(date: widget.selectedDate),
-              _DailyUserSummary(date: widget.selectedDate),
-            ],
-            // FAB가 겹치지 않도록 하단 여백 추가
-            const SizedBox(height: 80),
-          ],
+    final viewMode = ref.watch(calendarViewModeProvider);
+    // 뷰 모드 전환 시 날짜 변경 불필요
+    // - WeeklyView가 selectedDate로 주 범위를 자체 계산
+    // - 날짜 변경 시 Provider 연쇄 업데이트로 화면 흔들림 발생
+    return _buildViewContent(viewMode);
+  }
+
+  Widget _buildViewContent(CalendarViewMode viewMode) {
+    switch (viewMode) {
+      case CalendarViewMode.daily:
+        return DailyView(
+          selectedDate: widget.selectedDate,
+          onDateChanged: widget.onDateSelected,
+          onRefresh: widget.onRefresh,
+        );
+      case CalendarViewMode.weekly:
+        return WeeklyView(
+          selectedDate: widget.selectedDate,
+          onDateChanged: widget.onDateSelected,
+          onRefresh: widget.onRefresh,
+        );
+      case CalendarViewMode.monthly:
+        return _MonthlyViewContent(
+          selectedDate: widget.selectedDate,
+          focusedDate: widget.focusedDate,
+          showUserSummary: widget.showUserSummary,
+          onDateSelected: widget.onDateSelected,
+          onPageChanged: widget.onPageChanged,
+          onRefresh: widget.onRefresh,
+          scrollController: _scrollController,
+          calendarKey: _calendarKey,
+          scrollToTransactionList: _scrollToTransactionList,
+        );
+    }
+  }
+}
+
+// 월별 뷰 콘텐츠 (기존 CalendarTabView의 내용)
+class _MonthlyViewContent extends StatelessWidget {
+  final DateTime selectedDate;
+  final DateTime focusedDate;
+  final bool showUserSummary;
+  final ValueChanged<DateTime> onDateSelected;
+  final ValueChanged<DateTime> onPageChanged;
+  final Future<void> Function() onRefresh;
+  final ScrollController scrollController;
+  final GlobalKey calendarKey;
+  final VoidCallback scrollToTransactionList;
+
+  const _MonthlyViewContent({
+    required this.selectedDate,
+    required this.focusedDate,
+    required this.showUserSummary,
+    required this.onDateSelected,
+    required this.onPageChanged,
+    required this.onRefresh,
+    required this.scrollController,
+    required this.calendarKey,
+    required this.scrollToTransactionList,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        // 고정 헤더: 수입 | 지출 | 합계
+        Consumer(
+          builder: (context, ref, child) {
+            final currentLedgerAsync = ref.watch(currentLedgerProvider);
+            final currentLedger = currentLedgerAsync.valueOrNull;
+            final memberCount = currentLedger?.isShared == true ? 2 : 1;
+
+            return RepaintBoundary(
+              child: CalendarMonthSummary(
+                focusedDate: focusedDate,
+                ref: ref,
+                memberCount: memberCount,
+              ),
+            );
+          },
         ),
-      ),
+        // 스크롤 가능한 영역
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final scrollAreaHeight = constraints.maxHeight;
+
+              return RefreshIndicator(
+                onRefresh: onRefresh,
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Column(
+                    children: [
+                      CalendarView(
+                        key: calendarKey,
+                        selectedDate: selectedDate,
+                        focusedDate: focusedDate,
+                        onDateSelected: onDateSelected,
+                        onPageChanged: onPageChanged,
+                        onRefresh: onRefresh,
+                        showSummary: false,
+                      ),
+                      // 일일 요약
+                      if (showUserSummary) ...[
+                        const Divider(height: 1),
+                        _DailyDateHeader(date: selectedDate),
+                        _DailyUserSummary(date: selectedDate),
+                      ],
+                      // 스크롤 가능하도록 최소 높이 보장
+                      SizedBox(height: scrollAreaHeight - 80),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
@@ -526,9 +841,11 @@ class _DailyDateHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: Spacing.md,
-        vertical: Spacing.sm,
+      padding: const EdgeInsets.only(
+        left: Spacing.md,
+        right: Spacing.md,
+        top: Spacing.md, // 상단 간격 확대 (고정 헤더와의 간격)
+        bottom: Spacing.sm,
       ),
       child: Text(
         dateText,

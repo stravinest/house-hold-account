@@ -30,7 +30,8 @@ class InvitedLedgerCard extends StatelessWidget {
 
     // 다크모드 대응: colorScheme 기반 색상
     final activeBorderColor = colorScheme.primary;
-    final activeBackgroundColor = colorScheme.primaryContainer;
+    // 배경색을 더 연하게 (primary의 8% 투명도)
+    final activeBackgroundColor = colorScheme.primary.withValues(alpha: 0.08);
     final inactiveBorderColor = colorScheme.outlineVariant;
 
     return Container(
@@ -55,7 +56,7 @@ class InvitedLedgerCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 상단: 가계부 이름 + 사용중 배지 + 사용 버튼
+            // 상단: 가계부 이름 + 사용중 배지
             Row(
               children: [
                 Expanded(
@@ -104,21 +105,6 @@ class InvitedLedgerCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                // 사용 버튼 (수락함 상태이고 사용중이 아닌 경우에만)
-                if (isAccepted && !isCurrentLedger)
-                  TextButton(
-                    onPressed: onSelectLedger,
-                    style: TextButton.styleFrom(
-                      foregroundColor: activeBorderColor,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      minimumSize: const Size(0, 32),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(l10n.shareUse),
-                  ),
               ],
             ),
             const SizedBox(height: 8),
@@ -158,69 +144,106 @@ class InvitedLedgerCard extends StatelessWidget {
   Widget _buildActionRow(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
-    // pending 상태: 수락/거부 버튼
+    // pending 상태: 수락/거부 버튼 (동일한 스타일 + 아이콘 구분)
     if (invite.isPending) {
+      final buttonStyle = OutlinedButton.styleFrom(
+        foregroundColor: colorScheme.onSurfaceVariant,
+        side: BorderSide(color: colorScheme.outlineVariant),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        minimumSize: const Size(0, 36),
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      );
+
       return Row(
         children: [
           const Spacer(),
           // 거부 버튼
-          OutlinedButton(
+          OutlinedButton.icon(
             onPressed: onReject,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: colorScheme.onSurface.withValues(alpha: 0.7),
-              side: BorderSide(color: colorScheme.onSurfaceVariant),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              minimumSize: const Size(0, 36),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(l10n.shareReject),
+            style: buttonStyle,
+            icon: const Icon(Icons.close, size: 16),
+            label: Text(l10n.shareReject),
           ),
           const SizedBox(width: 8),
           // 수락 버튼
-          ElevatedButton(
+          OutlinedButton.icon(
             onPressed: onAccept,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              minimumSize: const Size(0, 36),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(l10n.shareAccept),
+            style: buttonStyle,
+            icon: const Icon(Icons.check, size: 16),
+            label: Text(l10n.shareAccept),
           ),
         ],
       );
     }
 
-    // accepted 상태: 멤버 참여중 표시 + 탈퇴 버튼
+    // accepted 상태: 멤버 참여중 표시 + 사용/탈퇴 버튼
     if (invite.isAccepted) {
-      return Row(
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.check_circle_outline,
-            size: 16,
-            color: colorScheme.tertiary,
+          Row(
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 16,
+                color: colorScheme.tertiary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                l10n.shareMemberParticipating,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.tertiary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 6),
-          Text(
-            l10n.shareMemberParticipating,
-            style: TextStyle(
-              fontSize: 13,
-              color: colorScheme.tertiary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const Spacer(),
-          // 탈퇴 버튼
-          TextButton(
-            onPressed: onLeave,
-            style: TextButton.styleFrom(
-              foregroundColor: colorScheme.error,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              minimumSize: const Size(0, 32),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(l10n.shareLeave),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              // 사용 버튼 (사용중이 아닌 경우에만)
+              if (!isCurrentLedger) ...[
+                OutlinedButton(
+                  onPressed: onSelectLedger,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: colorScheme.primary,
+                    side: BorderSide(color: colorScheme.primary),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textStyle: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  child: Text(l10n.shareUse),
+                ),
+                const SizedBox(width: 8),
+              ],
+              OutlinedButton(
+                onPressed: onLeave,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: colorScheme.error,
+                  side: BorderSide(color: colorScheme.error),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  minimumSize: const Size(0, 32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                child: Text(l10n.shareLeave),
+              ),
+            ],
           ),
         ],
       );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/color_utils.dart';
+import '../providers/calendar_view_provider.dart';
 import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/ledger.dart';
@@ -173,23 +175,41 @@ class CalendarEmptyCell extends StatelessWidget {
 }
 
 /// 요일 헤더 위젯
-class CalendarDaysOfWeekHeader extends StatelessWidget {
+class CalendarDaysOfWeekHeader extends ConsumerWidget {
   final ColorScheme colorScheme;
 
   const CalendarDaysOfWeekHeader({super.key, required this.colorScheme});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final days = [
-      l10n.calendarDaySun,
-      l10n.calendarDayMon,
-      l10n.calendarDayTue,
-      l10n.calendarDayWed,
-      l10n.calendarDayThu,
-      l10n.calendarDayFri,
-      l10n.calendarDaySat,
-    ];
+    final weekStartDay = ref.watch(weekStartDayProvider);
+
+    // 주 시작일에 따라 요일 배열 생성
+    final List<String> days;
+    if (weekStartDay == WeekStartDay.monday) {
+      // 월요일 시작: 월화수목금토일
+      days = [
+        l10n.calendarDayMon,
+        l10n.calendarDayTue,
+        l10n.calendarDayWed,
+        l10n.calendarDayThu,
+        l10n.calendarDayFri,
+        l10n.calendarDaySat,
+        l10n.calendarDaySun,
+      ];
+    } else {
+      // 일요일 시작: 일월화수목금토
+      days = [
+        l10n.calendarDaySun,
+        l10n.calendarDayMon,
+        l10n.calendarDayTue,
+        l10n.calendarDayWed,
+        l10n.calendarDayThu,
+        l10n.calendarDayFri,
+        l10n.calendarDaySat,
+      ];
+    }
 
     return Container(
       height: CalendarConstants.daysOfWeekHeight,
@@ -201,7 +221,15 @@ class CalendarDaysOfWeekHeader extends StatelessWidget {
       ),
       child: Row(
         children: List.generate(7, (index) {
-          final isWeekend = index == 0 || index == 6;
+          // 주 시작일에 따라 주말 인덱스 결정
+          final bool isWeekend;
+          if (weekStartDay == WeekStartDay.monday) {
+            // 월요일 시작: 인덱스 5(토), 6(일)이 주말
+            isWeekend = index == 5 || index == 6;
+          } else {
+            // 일요일 시작: 인덱스 0(일), 6(토)이 주말
+            isWeekend = index == 0 || index == 6;
+          }
           final isFirstColumn = index == 0;
 
           return Expanded(
@@ -399,9 +427,8 @@ class _MoreIndicator extends StatelessWidget {
           '+$count',
           style: TextStyle(
             fontSize: CalendarConstants.amountFontSize,
-            color: isSelected
-                ? colorScheme.onPrimary.withAlpha(179)
-                : colorScheme.onSurface.withAlpha(128),
+            // 선택 여부와 관계없이 동일한 색상 사용
+            color: colorScheme.onSurface.withAlpha(128),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -428,13 +455,11 @@ class _UserAmountRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayColor = isSelected ? colorScheme.onPrimary : color;
-
-    // 모든 인디케이터를 채워진 동그라미로 통일
+    // 선택 여부와 관계없이 항상 사용자 색상 사용
     final indicator = Container(
       width: CalendarConstants.dotSize,
       height: CalendarConstants.dotSize,
-      decoration: BoxDecoration(color: displayColor, shape: BoxShape.circle),
+      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
 
     return SizedBox(
@@ -451,9 +476,8 @@ class _UserAmountRow extends StatelessWidget {
                 NumberFormatUtils.currency.format(amount),
                 style: TextStyle(
                   fontSize: CalendarConstants.amountFontSize,
-                  color: isSelected
-                      ? colorScheme.onPrimary.withAlpha(204)
-                      : colorScheme.onSurface.withAlpha(179),
+                  // 선택 여부와 관계없이 동일한 색상 사용
+                  color: colorScheme.onSurface.withAlpha(179),
                   fontWeight: FontWeight.w500,
                 ),
                 overflow: TextOverflow.ellipsis,

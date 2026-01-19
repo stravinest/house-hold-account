@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../transaction/presentation/providers/transaction_provider.dart';
+import '../providers/calendar_view_provider.dart';
 import '../providers/ledger_provider.dart';
 import 'calendar_header.dart';
 import 'calendar_month_summary.dart';
@@ -12,12 +13,18 @@ import 'calendar_day_cell.dart';
 ///
 /// 월별 달력과 요약 정보를 표시하는 메인 캘린더 위젯입니다.
 /// 날짜 선택, 월 이동, 새로고침 기능을 제공합니다.
+///
+/// [showSummary]가 false이면 CalendarMonthSummary를 표시하지 않습니다.
+/// 이 경우 부모 위젯에서 CalendarMonthSummary를 별도로 고정 헤더로 표시할 수 있습니다.
 class CalendarView extends ConsumerWidget {
   final DateTime selectedDate;
   final DateTime focusedDate;
   final ValueChanged<DateTime> onDateSelected;
   final ValueChanged<DateTime> onPageChanged;
   final Future<void> Function() onRefresh;
+
+  /// true이면 CalendarMonthSummary를 내부에 표시, false이면 외부에서 별도 관리
+  final bool showSummary;
 
   const CalendarView({
     super.key,
@@ -26,6 +33,7 @@ class CalendarView extends ConsumerWidget {
     required this.onDateSelected,
     required this.onPageChanged,
     required this.onRefresh,
+    this.showSummary = true,
   });
 
   @override
@@ -43,16 +51,23 @@ class CalendarView extends ConsumerWidget {
     // isShared가 true면 2명, 아니면 1명 (개인 가계부)
     final memberCount = currentLedger?.isShared == true ? 2 : 1;
 
+    // 주 시작일 설정
+    final weekStartDay = ref.watch(weekStartDayProvider);
+    final startingDayOfWeek = weekStartDay == WeekStartDay.monday
+        ? StartingDayOfWeek.monday
+        : StartingDayOfWeek.sunday;
+
     return Column(
       children: [
-        // 월별 요약
-        RepaintBoundary(
-          child: CalendarMonthSummary(
-            focusedDate: focusedDate,
-            ref: ref,
-            memberCount: memberCount,
+        // 월별 요약 (showSummary가 true일 때만 표시)
+        if (showSummary)
+          RepaintBoundary(
+            child: CalendarMonthSummary(
+              focusedDate: focusedDate,
+              ref: ref,
+              memberCount: memberCount,
+            ),
           ),
-        ),
 
         // 커스텀 헤더
         CalendarHeader(
@@ -87,7 +102,7 @@ class CalendarView extends ConsumerWidget {
           focusedDay: focusedDate,
           selectedDayPredicate: (day) => isSameDay(selectedDate, day),
           calendarFormat: CalendarFormat.month,
-          startingDayOfWeek: StartingDayOfWeek.sunday,
+          startingDayOfWeek: startingDayOfWeek,
           locale: 'ko_KR',
           headerVisible: false,
           rowHeight: CalendarConstants.rowHeight,

@@ -42,7 +42,6 @@ class AssetRepository {
 
   Future<int> getTotalAssets({required String ledgerId}) async {
     final response = await _client
-        .schema('house')
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)
@@ -65,7 +64,6 @@ class AssetRepository {
     final endDate = DateTime(year, month + 1, 0);
 
     final response = await _client
-        .schema('house')
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)
@@ -91,7 +89,6 @@ class AssetRepository {
 
     // 단일 쿼리로 전체 자산 거래 조회 (현재 월까지)
     final response = await _client
-        .schema('house')
         .from('transactions')
         .select('amount, date')
         .eq('ledger_id', ledgerId)
@@ -141,7 +138,6 @@ class AssetRepository {
     required String ledgerId,
   }) async {
     final response = await _client
-        .schema('house')
         .from('transactions')
         .select('''
           id,
@@ -231,7 +227,6 @@ class AssetRepository {
   Future<List<AssetGoal>> getGoals({required String ledgerId}) async {
     try {
       final response = await _client
-          .schema('house')
           .from('asset_goals')
           .select()
           .eq('ledger_id', ledgerId)
@@ -261,7 +256,6 @@ class AssetRepository {
       );
 
       final response = await _client
-          .schema('house')
           .from('asset_goals')
           .insert(model.toInsertJson())
           .select()
@@ -289,7 +283,6 @@ class AssetRepository {
       );
 
       final response = await _client
-          .schema('house')
           .from('asset_goals')
           .update(model.toUpdateJson())
           .eq('id', goal.id)
@@ -304,11 +297,7 @@ class AssetRepository {
 
   Future<void> deleteGoal(String goalId) async {
     try {
-      await _client
-          .schema('house')
-          .from('asset_goals')
-          .delete()
-          .eq('id', goalId);
+      await _client.from('asset_goals').delete().eq('id', goalId);
     } catch (e, st) {
       Error.throwWithStackTrace(Exception('목표 삭제 실패: $e'), st);
     }
@@ -405,7 +394,6 @@ class AssetRepository {
     required DateTime date,
   }) async {
     final response = await _client
-        .schema('house')
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)

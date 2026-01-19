@@ -6,26 +6,28 @@ import '../models/ledger_model.dart';
 class LedgerRepository {
   final _client = SupabaseConfig.client;
 
-  // 사용자의 모든 가계부 조회
+  // 사용자의 모든 가계부 조회 (멤버로 등록된 가계부만)
   Future<List<LedgerModel>> getLedgers() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
 
+    // ledger_members를 통해 실제 멤버로 등록된 가계부만 조회
+    // pending 초대 상태는 제외됨
     final response = await _client
-        .schema('house')
-        .from('ledgers')
-        .select()
+        .from('ledger_members')
+        .select('ledger:ledgers(*)')
+        .eq('user_id', userId)
         .order('created_at', ascending: false);
 
     return (response as List)
-        .map((json) => LedgerModel.fromJson(json))
+        .where((item) => item['ledger'] != null)
+        .map((item) => LedgerModel.fromJson(item['ledger']))
         .toList();
   }
 
   // 가계부 상세 조회
   Future<LedgerModel?> getLedger(String id) async {
     final response = await _client
-        .schema('house')
         .from('ledgers')
         .select()
         .eq('id', id)
@@ -53,7 +55,6 @@ class LedgerRepository {
     );
 
     final response = await _client
-        .schema('house')
         .from('ledgers')
         .insert(data)
         .select()
@@ -79,7 +80,6 @@ class LedgerRepository {
     if (isShared != null) updates['is_shared'] = isShared;
 
     final response = await _client
-        .schema('house')
         .from('ledgers')
         .update(updates)
         .eq('id', id)
@@ -97,7 +97,6 @@ class LedgerRepository {
   // 가계부 멤버 조회
   Future<List<LedgerMemberModel>> getMembers(String ledgerId) async {
     final response = await _client
-        .schema('house')
         .from('ledger_members')
         .select('*, profiles(display_name, email, avatar_url)')
         .eq('ledger_id', ledgerId)
@@ -127,7 +126,6 @@ class LedgerRepository {
     required String role,
   }) async {
     await _client
-        .schema('house')
         .from('ledger_members')
         .update({'role': role})
         .eq('id', memberId);
@@ -135,11 +133,7 @@ class LedgerRepository {
 
   // 멤버 제거
   Future<void> removeMember(String memberId) async {
-    await _client
-        .schema('house')
-        .from('ledger_members')
-        .delete()
-        .eq('id', memberId);
+    await _client.from('ledger_members').delete().eq('id', memberId);
   }
 
   // 실시간 구독 - ledgers 테이블

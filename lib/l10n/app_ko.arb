@@ -251,6 +251,8 @@
   "ledgerUse": "사용",
   "ledgerMyLedgers": "내 가계부",
   "ledgerInvitedLedgers": "초대받은 가계부",
+  "ledgerSelectorMyLedgers": "내 가계부",
+  "ledgerSelectorSharedLedgers": "공유 가계부",
 
   "shareInvite": "초대",
   "shareMemberInvite": "멤버 초대",
@@ -780,6 +782,21 @@
       }
     }
   },
+  "shareMemberManagement": "공유 멤버 관리",
+  "shareMemberRoleOwner": "소유자",
+  "shareMemberRoleAdmin": "관리자",
+  "shareMemberRoleMember": "멤버",
+  "shareMemberRemove": "방출하기",
+  "shareMemberRemoveTitle": "멤버 방출",
+  "shareMemberRemoveConfirm": "'{name}'님을 가계부에서 방출하시겠습니까?\n\n방출된 멤버는 더 이상 이 가계부에 접근할 수 없습니다.",
+  "@shareMemberRemoveConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "shareMemberRemoved": "멤버가 방출되었습니다",
 
   "ledgerNewTitle": "새 가계부",
   "ledgerEditTitle": "가계부 수정",
@@ -868,6 +885,31 @@
   "calendarNewTransaction": "새 거래",
   "calendarTransactionDelete": "거래 삭제",
   "calendarTransactionDeleteConfirm": "이 거래를 삭제하시겠습니까?",
+
+  "calendarViewDaily": "일별",
+  "calendarViewWeekly": "주별",
+  "calendarViewMonthly": "월별",
+  "calendarDailyDate": "{year}년 {month}월 {day}일",
+  "@calendarDailyDate": {
+    "placeholders": {
+      "year": { "type": "int" },
+      "month": { "type": "int" },
+      "day": { "type": "int" }
+    }
+  },
+  "calendarWeeklyRange": "{startMonth}월 {startDay}일 ~ {endMonth}월 {endDay}일",
+  "@calendarWeeklyRange": {
+    "placeholders": {
+      "startMonth": { "type": "int" },
+      "startDay": { "type": "int" },
+      "endMonth": { "type": "int" },
+      "endDay": { "type": "int" }
+    }
+  },
+  "settingsWeekStartDay": "주 시작일",
+  "settingsWeekStartDayDescription": "캘린더 주별 보기의 시작 요일",
+  "settingsWeekStartSunday": "일요일",
+  "settingsWeekStartMonday": "월요일",
 
   "assetNoData": "데이터가 없습니다",
   "assetOther": "기타",

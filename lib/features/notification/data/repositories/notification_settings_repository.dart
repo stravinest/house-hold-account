@@ -25,7 +25,6 @@ class NotificationSettingsRepository {
   ) async {
     try {
       final response = await _client
-          .schema('house')
           .from('notification_settings')
           .select()
           .eq('user_id', userId)

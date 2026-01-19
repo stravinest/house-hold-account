@@ -3,6 +3,7 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
+import '../../../../shared/widgets/spinning_refresh_button.dart';
 
 /// 커스텀 캘린더 헤더
 ///
@@ -52,17 +53,10 @@ class CalendarHeader extends StatelessWidget {
               ),
             ),
           ),
-          // 새로고침 버튼
-          IconButton(
-            icon: Icon(
-              Icons.refresh,
-              size: IconSize.sm,
-              color: Theme.of(context).colorScheme.onSurface,
-            ),
+          // 새로고침 버튼 (스피닝 효과)
+          SpinningRefreshButton(
+            onRefresh: onRefresh,
             tooltip: l10n.tooltipRefresh,
-            onPressed: () async {
-              await onRefresh();
-            },
           ),
           const Spacer(),
           // 이전 월 버튼

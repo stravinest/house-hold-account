@@ -1088,6 +1088,18 @@ abstract class AppLocalizations {
   /// **'초대받은 가계부'**
   String get ledgerInvitedLedgers;
 
+  /// No description provided for @ledgerSelectorMyLedgers.
+  ///
+  /// In ko, this message translates to:
+  /// **'내 가계부'**
+  String get ledgerSelectorMyLedgers;
+
+  /// No description provided for @ledgerSelectorSharedLedgers.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유 가계부'**
+  String get ledgerSelectorSharedLedgers;
+
   /// No description provided for @shareInvite.
   ///
   /// In ko, this message translates to:
@@ -2582,6 +2594,54 @@ abstract class AppLocalizations {
   /// **'{name1}, {name2} 외 {count}명과 공유 중'**
   String shareSharingWithMore(String name1, String name2, int count);
 
+  /// No description provided for @shareMemberManagement.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유 멤버 관리'**
+  String get shareMemberManagement;
+
+  /// No description provided for @shareMemberRoleOwner.
+  ///
+  /// In ko, this message translates to:
+  /// **'소유자'**
+  String get shareMemberRoleOwner;
+
+  /// No description provided for @shareMemberRoleAdmin.
+  ///
+  /// In ko, this message translates to:
+  /// **'관리자'**
+  String get shareMemberRoleAdmin;
+
+  /// No description provided for @shareMemberRoleMember.
+  ///
+  /// In ko, this message translates to:
+  /// **'멤버'**
+  String get shareMemberRoleMember;
+
+  /// No description provided for @shareMemberRemove.
+  ///
+  /// In ko, this message translates to:
+  /// **'방출하기'**
+  String get shareMemberRemove;
+
+  /// No description provided for @shareMemberRemoveTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'멤버 방출'**
+  String get shareMemberRemoveTitle;
+
+  /// No description provided for @shareMemberRemoveConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'{name}\'님을 가계부에서 방출하시겠습니까?\n\n방출된 멤버는 더 이상 이 가계부에 접근할 수 없습니다.'**
+  String shareMemberRemoveConfirm(String name);
+
+  /// No description provided for @shareMemberRemoved.
+  ///
+  /// In ko, this message translates to:
+  /// **'멤버가 방출되었습니다'**
+  String get shareMemberRemoved;
+
   /// No description provided for @ledgerNewTitle.
   ///
   /// In ko, this message translates to:
@@ -2773,6 +2833,65 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'이 거래를 삭제하시겠습니까?'**
   String get calendarTransactionDeleteConfirm;
+
+  /// No description provided for @calendarViewDaily.
+  ///
+  /// In ko, this message translates to:
+  /// **'일별'**
+  String get calendarViewDaily;
+
+  /// No description provided for @calendarViewWeekly.
+  ///
+  /// In ko, this message translates to:
+  /// **'주별'**
+  String get calendarViewWeekly;
+
+  /// No description provided for @calendarViewMonthly.
+  ///
+  /// In ko, this message translates to:
+  /// **'월별'**
+  String get calendarViewMonthly;
+
+  /// No description provided for @calendarDailyDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'{year}년 {month}월 {day}일'**
+  String calendarDailyDate(int year, int month, int day);
+
+  /// No description provided for @calendarWeeklyRange.
+  ///
+  /// In ko, this message translates to:
+  /// **'{startMonth}월 {startDay}일 ~ {endMonth}월 {endDay}일'**
+  String calendarWeeklyRange(
+    int startMonth,
+    int startDay,
+    int endMonth,
+    int endDay,
+  );
+
+  /// No description provided for @settingsWeekStartDay.
+  ///
+  /// In ko, this message translates to:
+  /// **'주 시작일'**
+  String get settingsWeekStartDay;
+
+  /// No description provided for @settingsWeekStartDayDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'캘린더 주별 보기의 시작 요일'**
+  String get settingsWeekStartDayDescription;
+
+  /// No description provided for @settingsWeekStartSunday.
+  ///
+  /// In ko, this message translates to:
+  /// **'일요일'**
+  String get settingsWeekStartSunday;
+
+  /// No description provided for @settingsWeekStartMonday.
+  ///
+  /// In ko, this message translates to:
+  /// **'월요일'**
+  String get settingsWeekStartMonday;
 
   /// No description provided for @assetNoData.
   ///

@@ -11,4 +11,5 @@
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:previewLayout="@layout/widget_quick_add"
+    android:previewImage="@drawable/widget_icon"
     android:description="@string/widget_quick_add_description" />

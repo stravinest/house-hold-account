@@ -30,6 +30,10 @@ class FirebaseMessagingService {
   // 토큰 갱신 리스너 구독
   StreamSubscription? _tokenRefreshSubscription;
 
+  // 메시지 리스너 구독 (메모리 누수 방지)
+  StreamSubscription<RemoteMessage>? _onMessageSubscription;
+  StreamSubscription<RemoteMessage>? _onMessageOpenedAppSubscription;
+
   /// 알림 탭 콜백 (외부에서 설정)
   FcmNotificationTapCallback? onNotificationTap;
 
@@ -128,7 +132,7 @@ class FirebaseMessagingService {
 
       final token = await _messaging!.getToken();
       if (kDebugMode && token != null) {
-        print('FCM 토큰 획득 성공: ${token.substring(0, 20)}...');
+        print('FCM token retrieved successfully');
       }
       return token;
     } catch (e) {
@@ -156,9 +160,7 @@ class FirebaseMessagingService {
       }
 
       if (kDebugMode) {
-        print('[FCM] Saving token for user: $userId');
-        print('[FCM] Token prefix: ${token.substring(0, 20)}...');
-        print('[FCM] Device type: $deviceType');
+        print('[FCM] Saving token, device type: $deviceType');
       }
 
       await _tokenRepository.saveFcmToken(
@@ -168,13 +170,11 @@ class FirebaseMessagingService {
       );
 
       if (kDebugMode) {
-        print('[FCM] Token saved successfully for user: $userId');
+        print('[FCM] Token saved successfully');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('[FCM] Token save FAILED for user: $userId');
-        print('[FCM] Error: $e');
-        print('[FCM] Error type: ${e.runtimeType}');
+        print('[FCM] Token save FAILED: ${e.runtimeType}');
       }
       rethrow;
     }
@@ -234,8 +234,14 @@ class FirebaseMessagingService {
   void _setupMessageHandlers() {
     if (_messaging == null) return;
 
+    // 기존 구독 취소 (중복 방지)
+    _onMessageSubscription?.cancel();
+    _onMessageOpenedAppSubscription?.cancel();
+
     // 포그라운드 메시지 핸들러
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    _onMessageSubscription = FirebaseMessaging.onMessage.listen((
+      RemoteMessage message,
+    ) {
       if (kDebugMode) {
         print('포그라운드 메시지 수신: ${message.notification?.title}');
       }
@@ -248,7 +254,7 @@ class FirebaseMessagingService {
           currentUserId != null &&
           creatorUserId == currentUserId) {
         if (kDebugMode) {
-          print('본인이 생성한 거래 알림 무시: creator=$creatorUserId');
+          print('Ignoring self-created transaction notification');
         }
         return;
       }
@@ -264,7 +270,8 @@ class FirebaseMessagingService {
     });
 
     // 백그라운드에서 알림 탭하여 앱 열린 경우
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+    _onMessageOpenedAppSubscription = FirebaseMessaging.onMessageOpenedApp
+        .listen(_handleNotificationTap);
 
     // 백그라운드 메시지 핸들러
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -273,7 +280,7 @@ class FirebaseMessagingService {
   /// 알림 탭 처리
   void _handleNotificationTap(RemoteMessage message) {
     if (kDebugMode) {
-      print('FCM 알림 탭됨: ${message.data}');
+      print('FCM notification tapped');
     }
 
     if (onNotificationTap != null) {
@@ -292,7 +299,7 @@ class FirebaseMessagingService {
       final message = await _messaging!.getInitialMessage();
       if (message != null) {
         if (kDebugMode) {
-          print('앱 시작 시 초기 FCM 메시지 발견: ${message.data}');
+          print('Initial FCM message found on app start');
         }
         _handleNotificationTap(message);
       }
@@ -306,6 +313,11 @@ class FirebaseMessagingService {
   /// 서비스 정리 (앱 종료 시 호출)
   Future<void> dispose() async {
     await _tokenRefreshSubscription?.cancel();
+    await _onMessageSubscription?.cancel();
+    await _onMessageOpenedAppSubscription?.cancel();
+    _tokenRefreshSubscription = null;
+    _onMessageSubscription = null;
+    _onMessageOpenedAppSubscription = null;
   }
 }
 

@@ -305,6 +305,7 @@ Deno.serve(async (req: Request) => {
 
     // 1. 가계부가 공유 가계부인지 확인 (멤버가 2명 이상)
     const { data: members, error: membersError } = await supabase
+      .schema('house')
       .from('ledger_members')
       .select('user_id')
       .eq('ledger_id', record.ledger_id);
@@ -328,6 +329,7 @@ Deno.serve(async (req: Request) => {
 
     // 2. 트랜잭션 생성자 정보 가져오기
     const { data: creator, error: creatorError } = await supabase
+      .schema('house')
       .from('profiles')
       .select('display_name')
       .eq('id', record.user_id)
@@ -354,6 +356,7 @@ Deno.serve(async (req: Request) => {
 
     // 4. 알림 설정 확인 (shared_ledger_change_enabled = true인 사용자만)
     const { data: settings, error: settingsError } = await supabase
+      .schema('house')
       .from('notification_settings')
       .select('user_id, shared_ledger_change_enabled')
       .in('user_id', targetUserIds)
@@ -379,6 +382,7 @@ Deno.serve(async (req: Request) => {
 
     // 5. FCM 토큰 조회
     const { data: tokens, error: tokensError } = await supabase
+      .schema('house')
       .from('fcm_tokens')
       .select('token, user_id')
       .in('user_id', enabledUserIds);
@@ -440,6 +444,7 @@ Deno.serve(async (req: Request) => {
       console.log(`Deleting ${tokensToDelete.length} invalid token(s)`);
       for (const token of tokensToDelete) {
         const { error: deleteError } = await supabase
+          .schema('house')
           .from('fcm_tokens')
           .delete()
           .eq('token', token);
@@ -455,7 +460,7 @@ Deno.serve(async (req: Request) => {
     for (const tokenData of tokens) {
       const tokenResult = results.find(r => r.userId === tokenData.user_id);
       if (tokenResult?.success) {
-        await supabase.from('push_notifications').insert({
+        await supabase.schema('house').from('push_notifications').insert({
           user_id: tokenData.user_id,
           type: 'shared_ledger_change',
           title: title,

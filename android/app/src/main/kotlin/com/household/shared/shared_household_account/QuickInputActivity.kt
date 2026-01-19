@@ -35,6 +35,13 @@ class QuickInputActivity : Activity() {
         
         supabaseHelper = SupabaseHelper(this)
         
+        // 초기화 실패 시 앱을 먼저 실행하라는 메시지 표시
+        if (!supabaseHelper.isInitialized) {
+            Toast.makeText(this, "앱을 먼저 실행해주세요", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+        
         amountInput = findViewById(R.id.amountInput)
         titleInput = findViewById(R.id.titleInput)
         saveButton = findViewById(R.id.saveButton)

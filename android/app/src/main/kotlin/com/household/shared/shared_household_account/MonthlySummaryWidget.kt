@@ -7,6 +7,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.view.View
 import android.widget.RemoteViews
 import es.antonborri.home_widget.HomeWidgetPlugin
 import java.text.NumberFormat
@@ -18,11 +21,13 @@ class MonthlySummaryWidget : AppWidgetProvider() {
         private const val ACTION_REFRESH = "com.household.shared.ACTION_REFRESH_WIDGET"
         private const val SCHEME = "sharedhousehold"
         private val numberFormat = NumberFormat.getNumberInstance(Locale.KOREA)
+        private const val SPINNER_DURATION_MS = 1000L
 
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
-            appWidgetId: Int
+            appWidgetId: Int,
+            showSpinner: Boolean = false
         ) {
             val views = RemoteViews(context.packageName, R.layout.widget_monthly_summary)
 
@@ -30,10 +35,18 @@ class MonthlySummaryWidget : AppWidgetProvider() {
             val expense = widgetData.getInt("monthly_expense", 0)
             val income = widgetData.getInt("monthly_income", 0)
             
-            android.util.Log.d("MonthlySummaryWidget", "updateAppWidget - expense: $expense, income: $income")
+            android.util.Log.d("MonthlySummaryWidget", "updateAppWidget - expense: $expense, income: $income, showSpinner: $showSpinner")
 
             views.setTextViewText(R.id.text_expense, formatCurrency(expense))
             views.setTextViewText(R.id.text_income, formatCurrency(income))
+
+            if (showSpinner) {
+                views.setViewVisibility(R.id.btn_refresh, View.INVISIBLE)
+                views.setViewVisibility(R.id.progress_refresh, View.VISIBLE)
+            } else {
+                views.setViewVisibility(R.id.btn_refresh, View.VISIBLE)
+                views.setViewVisibility(R.id.progress_refresh, View.GONE)
+            }
 
             val homeIntent = createDeepLinkIntent(context, "home")
             val homePendingIntent = PendingIntent.getActivity(
@@ -96,11 +109,18 @@ class MonthlySummaryWidget : AppWidgetProvider() {
             val componentName = ComponentName(context, MonthlySummaryWidget::class.java)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
             
-            android.util.Log.d("MonthlySummaryWidget", "Updating ${appWidgetIds.size} widgets")
+            android.util.Log.d("MonthlySummaryWidget", "Updating ${appWidgetIds.size} widgets with spinner")
             
             for (appWidgetId in appWidgetIds) {
-                updateAppWidget(context, appWidgetManager, appWidgetId)
+                updateAppWidget(context, appWidgetManager, appWidgetId, showSpinner = true)
             }
+            
+            Handler(Looper.getMainLooper()).postDelayed({
+                android.util.Log.d("MonthlySummaryWidget", "Hiding spinner")
+                for (appWidgetId in appWidgetIds) {
+                    updateAppWidget(context, appWidgetManager, appWidgetId, showSpinner = false)
+                }
+            }, SPINNER_DURATION_MS)
         }
     }
 

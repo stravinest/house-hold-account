@@ -47,6 +47,7 @@ class LedgerInvite {
   bool get isPending => status == 'pending';
   bool get isAccepted => status == 'accepted';
   bool get isRejected => status == 'rejected';
+  bool get isLeft => status == 'left';
   bool get isExpired => DateTime.now().isAfter(expiresAt);
   bool get isValid => isPending && !isExpired;
 }

@@ -14,7 +14,6 @@ class TransactionRepository {
     final dateStr = date.toIso8601String().split('T').first;
 
     final response = await _client
-        .schema('house')
         .from('transactions')
         .select(
           '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
@@ -38,7 +37,6 @@ class TransactionRepository {
     final endStr = endDate.toIso8601String().split('T').first;
 
     final response = await _client
-        .schema('house')
         .from('transactions')
         .select(
           '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
@@ -113,7 +111,6 @@ class TransactionRepository {
     );
 
     final response = await _client
-        .schema('house')
         .from('transactions')
         .insert(data)
         .select(
@@ -166,7 +163,6 @@ class TransactionRepository {
     }
 
     final response = await _client
-        .schema('house')
         .from('transactions')
         .update(updates)
         .eq('id', id)
@@ -410,7 +406,6 @@ class TransactionRepository {
     };
 
     final response = await _client
-        .schema('house')
         .from('recurring_templates')
         .insert(data)
         .select()
@@ -429,7 +424,6 @@ class TransactionRepository {
     required String ledgerId,
   }) async {
     final response = await _client
-        .schema('house')
         .from('recurring_templates')
         .select(
           '*, categories(name, icon, color), payment_methods(name), fixed_expense_categories(name, color)',
@@ -444,7 +438,6 @@ class TransactionRepository {
   // 반복 거래 템플릿 삭제 (비활성화)
   Future<void> deleteRecurringTemplate(String templateId) async {
     await _client
-        .schema('house')
         .from('recurring_templates')
         .update({
           'is_active': false,

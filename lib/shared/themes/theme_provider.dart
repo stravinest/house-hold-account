@@ -31,7 +31,7 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
   static const String _storageKey = 'theme_mode';
   final SharedPreferences _prefs;
 
-  ThemeModeNotifier(this._prefs) : super(ThemeMode.system) {
+  ThemeModeNotifier(this._prefs) : super(ThemeMode.light) {
     _loadInitialTheme();
   }
 
@@ -67,7 +67,7 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
     }
   }
 
-  // String to ThemeMode 변환 (잘못된 값은 system으로 fallback)
+  // String to ThemeMode 변환 (잘못된 값은 light로 fallback)
   ThemeMode _stringToThemeMode(String value) {
     switch (value) {
       case 'light':
@@ -75,10 +75,11 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
       case 'dark':
         return ThemeMode.dark;
       case 'system':
-        return ThemeMode.system;
+        // 기존 시스템 설정 사용자는 라이트 모드로 마이그레이션
+        return ThemeMode.light;
       default:
         // 잘못된 값이 저장되어 있으면 기본값으로 fallback
-        return ThemeMode.system;
+        return ThemeMode.light;
     }
   }
 }
@@ -87,12 +88,14 @@ class ThemeModeNotifier extends StateNotifier<ThemeMode> {
 // main.dart에서 ProviderScope를 초기화할 때 override해서 사용
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError(
-      'sharedPreferencesProvider must be overridden in main.dart');
+    'sharedPreferencesProvider must be overridden in main.dart',
+  );
 });
 
 // ThemeMode Provider
-final themeModeProvider =
-    StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
+final themeModeProvider = StateNotifierProvider<ThemeModeNotifier, ThemeMode>((
+  ref,
+) {
   final prefs = ref.watch(sharedPreferencesProvider);
   return ThemeModeNotifier(prefs);
 });

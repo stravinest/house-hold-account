@@ -51,6 +51,7 @@
 - **생성 파일**: `.g.dart` 파일 수동 수정 금지
 - **환경변수**: `.env` 파일 커밋 금지
 - **디자인 시스템**: 디자인 토큰 필수 사용, 하드코딩 금지
+- **바텀시트 하단 패딩**: 네비게이션 바 고려하여 `MediaQuery.of(context).viewPadding.bottom` 추가 필수
 
 ## DATABASE MIGRATIONS
 - **자동 실행**: 마이그레이션 파일 생성 시 사용자에게 물어보지 말고 `mcp_supabase_apply_migration` 도구를 사용하여 즉시 적용
@@ -60,85 +61,28 @@
 
 ## SUPABASE CONFIGURATION
 
+> 상세 설정 가이드: [docs/supabase_guide.md](docs/supabase_guide.md)
+
 ### 프로젝트 정보
 - **Project ID**: qcpjxxgnqdbngyepevmt
 - **Dashboard**: https://supabase.com/dashboard/project/qcpjxxgnqdbngyepevmt
 - **API URL**: https://qcpjxxgnqdbngyepevmt.supabase.co
+- **Schema**: `house`
 
-### 대시보드 설정 (MCP 미지원)
-Supabase MCP는 DB/Edge Functions/브랜치만 지원. 아래 설정은 **대시보드에서 수동 설정 필요**.
+### Edge Functions
+| 함수명 | 용도 |
+|--------|------|
+| `send-invite-notification` | 가계부 초대 시 푸시 알림 발송 |
+| `send-push-notification` | 거래 변경 시 공유 멤버에게 푸시 알림 발송 |
 
-#### Authentication > URL Configuration
-| 설정 | 값 | 용도 |
-|------|-----|------|
-| Site URL | `https://your-production-url.com` | 기본 리다이렉트 URL |
-| Redirect URLs | `sharedhousehold://auth-callback` | 이메일 인증 딥링크 |
+### 필수 Secret
+- `FIREBASE_SERVICE_ACCOUNT`: Firebase Service Account JSON (Edge Function용)
 
-#### Authentication > Providers > Email
-| 설정 | 값 | 설명 |
-|------|-----|------|
-| Enable email signup | ON | 이메일 회원가입 허용 |
-| Confirm email | ON | 이메일 인증 필요 |
-
-### 테이블 구조
-| 테이블 | 용도 | 주요 컬럼 |
-|--------|------|----------|
-| `profiles` | 사용자 프로필 | id, email, display_name, color, avatar_url |
-| `ledgers` | 가계부 | id, name, owner_id, is_shared, currency |
-| `ledger_members` | 가계부 멤버 | ledger_id, user_id, role (owner/admin/member) |
-| `categories` | 카테고리 | ledger_id, name, type (income/expense/asset), color |
-| `transactions` | 거래 내역 | ledger_id, category_id, amount, type, date, title |
-| `budgets` | 예산 | ledger_id, category_id, amount, year, month |
-| `ledger_invites` | 초대 | ledger_id, invitee_email, status (pending/accepted/rejected) |
-| `fcm_tokens` | FCM 토큰 | user_id, token, device_type (android/ios/web) |
-| `notification_settings` | 알림 설정 | user_id, budget_warning_enabled 등 |
-| `push_notifications` | 알림 기록 | user_id, type, title, body, is_read |
-| `payment_methods` | 결제수단 | ledger_id, name, type (card/cash/account) |
-| `fixed_expenses` | 고정지출 | ledger_id, category_id, amount, day_of_month |
-| `assets` | 자산 | ledger_id, category_id, name, amount, type |
-| `asset_goals` | 자산 목표 | ledger_id, title, target_amount, current_amount |
-
-### 트리거 목록
-| 트리거 | 테이블 | 함수 | 동작 |
-|--------|--------|------|------|
-| `on_auth_user_created` | auth.users | `handle_new_user()` | 회원가입 시 profiles + 기본 가계부 자동 생성 |
-| `on_ledger_created` | ledgers | `handle_new_ledger()` | 가계부 생성 시 owner를 멤버로 등록 |
-| `on_ledger_created_categories` | ledgers | `handle_new_ledger_categories()` | 가계부 생성 시 기본 카테고리 생성 |
-| `on_auth_user_created_notification_settings` | auth.users | `handle_new_user_notification_settings()` | 회원가입 시 기본 알림 설정 생성 |
-| `enforce_member_limit` | ledger_members | `check_member_limit()` | 멤버 추가 시 최대 2명 제한 |
-| `cleanup_fcm_tokens_trigger` | fcm_tokens | `cleanup_duplicate_fcm_tokens()` | FCM 토큰 중복 방지 (다른 사용자 토큰 삭제) |
-
-### RLS 정책 요약
-| 테이블 | SELECT | INSERT | UPDATE | DELETE |
-|--------|--------|--------|--------|--------|
-| profiles | 모든 사용자 | 본인만 | 본인만 | - |
-| ledgers | 멤버만 | owner_id=본인 | 소유자만 | 소유자만 |
-| ledger_members | 같은 가계부 멤버 | 소유자/관리자/초대받은자 | 소유자만 | 소유자 or 본인 |
-| categories | 멤버만 | 소유자/관리자 | 소유자/관리자 | 소유자/관리자 (기본 제외) |
-| transactions | 멤버만 | 멤버 | 멤버 | 멤버 |
-| budgets | 멤버만 | 소유자/관리자 | 소유자/관리자 | 소유자/관리자 |
-| fcm_tokens | 본인만 | 본인만 | 본인만 | 본인만 |
-| notification_settings | 본인만 | 본인만 | 본인만 | - |
-
-### FCM 토큰 관리
-- **저장 위치**: `fcm_tokens` 테이블
-- **고유성**: 토큰은 기기에 고유, 같은 토큰이 다른 사용자에게 등록 시 기존 삭제
-- **갱신 시점**: 로그인 시 `FirebaseMessagingService.initialize()` 호출
-- **삭제 시점**: 로그아웃 시 `FirebaseMessagingService.deleteToken()` 호출
-- **디바이스 타입**: android, ios, web
-
-### Realtime 활성화 테이블
-- `transactions` - 거래 실시간 동기화
-- `categories` - 카테고리 변경 동기화
-- `ledger_members` - 멤버 변경 동기화
-
-### 기본 카테고리 (가계부 생성 시 자동 생성)
-**지출**: 식비, 교통, 쇼핑, 생활, 통신, 의료, 문화, 교육, 기타 지출
-**수입**: 급여, 부업, 용돈, 이자, 기타 수입
-**자산**: 정기예금, 적금, 주식, 펀드, 부동산, 암호화폐, 기타 자산
+### 핵심 테이블
+`profiles`, `ledgers`, `ledger_members`, `categories`, `transactions`, `budgets`, `ledger_invites`, `fcm_tokens`, `notification_settings`, `push_notifications`, `payment_methods`, `fixed_expenses`, `assets`, `asset_goals`
 
 ### 변경 시 문서화
-Supabase 설정 변경 시 이 섹션에 반드시 기록할 것.
+Supabase 설정 변경 시 `docs/supabase_guide.md`에 반드시 기록할 것.
 
 ## DESIGN SYSTEM
 

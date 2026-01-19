@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../asset/presentation/providers/asset_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
+import '../../../ledger/presentation/providers/calendar_view_provider.dart';
 import '../../../widget/presentation/providers/widget_provider.dart';
 import '../../data/repositories/transaction_repository.dart';
 import '../../domain/entities/transaction.dart';
@@ -25,6 +26,58 @@ final dailyTransactionsProvider = FutureProvider<List<Transaction>>((
   final repository = ref.watch(transactionRepositoryProvider);
 
   return repository.getTransactionsByDate(ledgerId: ledgerId, date: date);
+});
+
+// 일별 합계 (사용자별 데이터 포함)
+final dailyTotalProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final transactionsAsync = ref.watch(dailyTransactionsProvider);
+  final transactions = transactionsAsync.valueOrNull ?? [];
+
+  int income = 0;
+  int expense = 0;
+  int asset = 0;
+  final Map<String, Map<String, dynamic>> users = {};
+
+  for (final tx in transactions) {
+    final userId = tx.userId;
+    final userName = tx.userName ?? 'Unknown';
+    final userColor = tx.userColor ?? '#A8D8EA';
+
+    if (!users.containsKey(userId)) {
+      users[userId] = {
+        'displayName': userName,
+        'color': userColor,
+        'income': 0,
+        'expense': 0,
+        'asset': 0,
+      };
+    }
+
+    switch (tx.type) {
+      case 'income':
+        income += tx.amount;
+        users[userId]!['income'] =
+            (users[userId]!['income'] as int) + tx.amount;
+        break;
+      case 'expense':
+        expense += tx.amount;
+        users[userId]!['expense'] =
+            (users[userId]!['expense'] as int) + tx.amount;
+        break;
+      case 'asset':
+        asset += tx.amount;
+        users[userId]!['asset'] = (users[userId]!['asset'] as int) + tx.amount;
+        break;
+    }
+  }
+
+  return {
+    'income': income,
+    'expense': expense,
+    'asset': asset,
+    'balance': income - expense,
+    'users': users,
+  };
 });
 
 // 현재 월의 거래 목록
@@ -76,6 +129,85 @@ final dailyTotalsProvider = FutureProvider<Map<DateTime, Map<String, dynamic>>>(
     );
   },
 );
+
+// 주별 거래 조회를 위한 선택된 주 범위 Provider
+final selectedWeekStartProvider = Provider<DateTime>((ref) {
+  final date = ref.watch(selectedDateProvider);
+  final weekStartDay = ref.watch(weekStartDayProvider);
+  // weekStartDayProvider 설정에 따라 주의 첫째 날 계산
+  final weekRange = getWeekRangeFor(date, weekStartDay);
+  return weekRange.start;
+});
+
+// 주별 거래 목록
+final weeklyTransactionsProvider = FutureProvider<List<Transaction>>((
+  ref,
+) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) return [];
+
+  final weekStart = ref.watch(selectedWeekStartProvider);
+  final weekEnd = weekStart.add(const Duration(days: 6));
+  final repository = ref.watch(transactionRepositoryProvider);
+
+  return repository.getTransactionsByDateRange(
+    ledgerId: ledgerId,
+    startDate: weekStart,
+    endDate: weekEnd,
+  );
+});
+
+// 주별 합계 (사용자별 데이터 포함)
+final weeklyTotalProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+  final transactionsAsync = ref.watch(weeklyTransactionsProvider);
+  final transactions = transactionsAsync.valueOrNull ?? [];
+
+  int income = 0;
+  int expense = 0;
+  int asset = 0;
+  final Map<String, Map<String, dynamic>> users = {};
+
+  for (final tx in transactions) {
+    final userId = tx.userId;
+    final userName = tx.userName ?? 'Unknown';
+    final userColor = tx.userColor ?? '#A8D8EA';
+
+    if (!users.containsKey(userId)) {
+      users[userId] = {
+        'displayName': userName,
+        'color': userColor,
+        'income': 0,
+        'expense': 0,
+        'asset': 0,
+      };
+    }
+
+    switch (tx.type) {
+      case 'income':
+        income += tx.amount;
+        users[userId]!['income'] =
+            (users[userId]!['income'] as int) + tx.amount;
+        break;
+      case 'expense':
+        expense += tx.amount;
+        users[userId]!['expense'] =
+            (users[userId]!['expense'] as int) + tx.amount;
+        break;
+      case 'asset':
+        asset += tx.amount;
+        users[userId]!['asset'] = (users[userId]!['asset'] as int) + tx.amount;
+        break;
+    }
+  }
+
+  return {
+    'income': income,
+    'expense': expense,
+    'asset': asset,
+    'balance': income - expense,
+    'users': users,
+  };
+});
 
 // 거래 관리 노티파이어
 class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {

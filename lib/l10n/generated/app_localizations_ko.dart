@@ -531,6 +531,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ledgerInvitedLedgers => '초대받은 가계부';
 
   @override
+  String get ledgerSelectorMyLedgers => '내 가계부';
+
+  @override
+  String get ledgerSelectorSharedLedgers => '공유 가계부';
+
+  @override
   String get shareInvite => '초대';
 
   @override
@@ -1349,6 +1355,32 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get shareMemberManagement => '공유 멤버 관리';
+
+  @override
+  String get shareMemberRoleOwner => '소유자';
+
+  @override
+  String get shareMemberRoleAdmin => '관리자';
+
+  @override
+  String get shareMemberRoleMember => '멤버';
+
+  @override
+  String get shareMemberRemove => '방출하기';
+
+  @override
+  String get shareMemberRemoveTitle => '멤버 방출';
+
+  @override
+  String shareMemberRemoveConfirm(String name) {
+    return '\'$name\'님을 가계부에서 방출하시겠습니까?\n\n방출된 멤버는 더 이상 이 가계부에 접근할 수 없습니다.';
+  }
+
+  @override
+  String get shareMemberRemoved => '멤버가 방출되었습니다';
+
+  @override
   String get ledgerNewTitle => '새 가계부';
 
   @override
@@ -1457,6 +1489,42 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get calendarTransactionDeleteConfirm => '이 거래를 삭제하시겠습니까?';
+
+  @override
+  String get calendarViewDaily => '일별';
+
+  @override
+  String get calendarViewWeekly => '주별';
+
+  @override
+  String get calendarViewMonthly => '월별';
+
+  @override
+  String calendarDailyDate(int year, int month, int day) {
+    return '$year년 $month월 $day일';
+  }
+
+  @override
+  String calendarWeeklyRange(
+    int startMonth,
+    int startDay,
+    int endMonth,
+    int endDay,
+  ) {
+    return '$startMonth월 $startDay일 ~ $endMonth월 $endDay일';
+  }
+
+  @override
+  String get settingsWeekStartDay => '주 시작일';
+
+  @override
+  String get settingsWeekStartDayDescription => '캘린더 주별 보기의 시작 요일';
+
+  @override
+  String get settingsWeekStartSunday => '일요일';
+
+  @override
+  String get settingsWeekStartMonday => '월요일';
 
   @override
   String get assetNoData => '데이터가 없습니다';

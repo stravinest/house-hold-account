@@ -21,10 +21,7 @@ import 'asset_goal_progress_bar.dart';
 class AssetGoalSection extends ConsumerStatefulWidget {
   final String ledgerId;
 
-  const AssetGoalSection({
-    super.key,
-    required this.ledgerId,
-  });
+  const AssetGoalSection({super.key, required this.ledgerId});
 
   @override
   ConsumerState<AssetGoalSection> createState() => _AssetGoalSectionState();
@@ -52,6 +49,7 @@ class _AssetGoalSectionState extends ConsumerState<AssetGoalSection> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
                   padding: const EdgeInsets.all(16),

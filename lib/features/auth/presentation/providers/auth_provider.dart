@@ -52,21 +52,18 @@ class AuthService {
     required String password,
     String? displayName,
   }) async {
-    debugPrint('[AuthService] signUpWithEmail 시작');
-    debugPrint('[AuthService] 표시 이름: $displayName');
-    debugPrint('[AuthService] Supabase URL: ${SupabaseConfig.supabaseUrl}');
+    debugPrint('[AuthService] signUpWithEmail started');
 
     try {
-      debugPrint('[AuthService] _auth.signUp 호출 시작');
       final response = await _auth.signUp(
         email: email,
         password: password,
         data: displayName != null ? {'display_name': displayName} : null,
       );
 
-      debugPrint('[AuthService] signUp 응답 받음');
-      debugPrint('[AuthService] user id: ${response.user?.id}');
-      debugPrint('[AuthService] session 존재: ${response.session != null}');
+      debugPrint(
+        '[AuthService] signUp completed, session exists: ${response.session != null}',
+      );
 
       // 트리거가 자동으로 profiles 테이블에 데이터를 생성하므로
       // 여기서는 추가 작업 불필요 (handle_new_user 트리거)
@@ -80,26 +77,24 @@ class AuthService {
         // FCM 토큰 등록
         try {
           await _firebaseMessaging.initialize(response.user!.id);
-          debugPrint('[AuthService] FCM 초기화 성공');
+          debugPrint('[AuthService] FCM initialized');
         } catch (e) {
-          debugPrint('[AuthService] FCM 초기화 실패 (무시됨): $e');
+          debugPrint('[AuthService] FCM init failed (ignored)');
         }
       } else {
-        debugPrint('[AuthService] 이메일 확인 필요 - 가계부/FCM 초기화 건너뜀');
+        debugPrint('[AuthService] Email verification required - skipping FCM');
       }
 
       return response;
-    } catch (e, st) {
-      debugPrint('[AuthService] signUpWithEmail 에러: $e');
-      debugPrint('[AuthService] 에러 타입: ${e.runtimeType}');
-      debugPrint('[AuthService] 스택 트레이스: $st');
+    } catch (e) {
+      debugPrint('[AuthService] signUpWithEmail error: ${e.runtimeType}');
       rethrow;
     }
   }
 
   // 백업 안전장치: 프로필이 없으면 생성 (Google 로그인 시 트리거 실패 대비)
   Future<void> _ensureProfileExists(User user) async {
-    debugPrint('[AuthService] 프로필 존재 여부 확인 중...');
+    debugPrint('[AuthService] Checking profile existence...');
 
     try {
       final profile = await _client
@@ -109,12 +104,12 @@ class AuthService {
           .maybeSingle();
 
       if (profile != null) {
-        debugPrint('[AuthService] 프로필 존재 확인됨');
+        debugPrint('[AuthService] Profile exists');
         return;
       }
 
       // 프로필이 없으면 생성
-      debugPrint('[AuthService] 프로필 없음, 새로 생성 시작');
+      debugPrint('[AuthService] Profile not found, creating...');
       final displayName =
           user.userMetadata?['full_name'] ??
           user.userMetadata?['name'] ??
@@ -126,10 +121,9 @@ class AuthService {
         'email': user.email,
         'display_name': displayName,
       });
-      debugPrint('[AuthService] 프로필 생성 완료: $displayName');
-    } catch (e, st) {
-      debugPrint('[AuthService] 프로필 생성 실패: $e');
-      debugPrint('[AuthService] 스택 트레이스: $st');
+      debugPrint('[AuthService] Profile created');
+    } catch (e) {
+      debugPrint('[AuthService] Profile creation failed: ${e.runtimeType}');
       rethrow;
     }
   }
@@ -146,14 +140,16 @@ class AuthService {
         final ledgers = await _ledgerRepository.getLedgers();
 
         if (ledgers.isNotEmpty) {
-          debugPrint('[AuthService] 기본 가계부 확인됨: ${ledgers.length}개');
+          debugPrint(
+            '[AuthService] Default ledger confirmed: ${ledgers.length}',
+          );
           return;
         }
       } catch (e) {
         // getLedgers 실패는 계속 재시도
-        debugPrint('[AuthService] 가계부 조회 실패 (재시도 ${i + 1}/6): $e');
+        debugPrint('[AuthService] Ledger query failed (retry ${i + 1}/6)');
         if (i == 5) {
-          debugPrint('[AuthService] 가계부 조회 최종 실패');
+          debugPrint('[AuthService] Ledger query final failure');
           rethrow;
         }
         continue;
@@ -161,13 +157,16 @@ class AuthService {
     }
 
     // 여전히 0개면 생성 시도 (트리거 실패 추정)
-    debugPrint('[AuthService] 트리거 실패 추정, 백업 가계부 생성 시작');
+    debugPrint(
+      '[AuthService] Trigger failure suspected, creating backup ledger',
+    );
     try {
       await _ledgerRepository.createLedger(name: '내 가계부', currency: 'KRW');
-      debugPrint('[AuthService] 백업 가계부 생성 완료');
-    } catch (e, st) {
-      debugPrint('[AuthService] 백업 가계부 생성 실패: $e');
-      debugPrint('[AuthService] 스택 트레이스: $st');
+      debugPrint('[AuthService] Backup ledger created');
+    } catch (e) {
+      debugPrint(
+        '[AuthService] Backup ledger creation failed: ${e.runtimeType}',
+      );
       // CLAUDE.md 원칙: 데이터베이스 에러는 절대 무시하지 않는다
       rethrow;
     }
@@ -178,44 +177,24 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    debugPrint('[AuthService] signInWithEmail 시작');
-    debugPrint('[AuthService] Supabase URL: ${SupabaseConfig.supabaseUrl}');
+    debugPrint('[AuthService] signInWithEmail started');
     try {
       final response = await _auth.signInWithPassword(
         email: email,
         password: password,
       );
-      debugPrint('[AuthService] 로그인 성공: user=${response.user?.id}');
+      debugPrint('[AuthService] Login successful');
 
       try {
-        debugPrint('');
-        debugPrint('════════════════════════════════');
-        debugPrint('[AuthService] FCM 초기화 시작...');
-        debugPrint('User ID: ${response.user!.id}');
-        debugPrint('════════════════════════════════');
-
         await _firebaseMessaging.initialize(response.user!.id);
-
-        debugPrint('════════════════════════════════');
-        debugPrint('[AuthService] ✅ FCM 초기화 성공!');
-        debugPrint('════════════════════════════════');
-        debugPrint('');
-      } catch (e, st) {
-        debugPrint('');
-        debugPrint('❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌');
-        debugPrint('[AuthService] FCM 초기화 실패!');
-        debugPrint('에러: $e');
-        debugPrint('타입: ${e.runtimeType}');
-        debugPrint('스택 트레이스:');
-        debugPrint('$st');
-        debugPrint('❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌');
-        debugPrint('');
+        debugPrint('[AuthService] FCM initialized');
+      } catch (e) {
+        debugPrint('[AuthService] FCM init failed: ${e.runtimeType}');
       }
 
       return response;
-    } catch (e, st) {
-      debugPrint('[AuthService] 로그인 에러: $e');
-      debugPrint('[AuthService] 스택 트레이스: $st');
+    } catch (e) {
+      debugPrint('[AuthService] Login error: ${e.runtimeType}');
       rethrow;
     }
   }
@@ -225,12 +204,12 @@ class AuthService {
   // google_sign_in 패키지를 사용하여 네이티브 Google 로그인 후
   // Supabase signInWithIdToken으로 인증을 완료합니다.
   Future<AuthResponse> signInWithGoogle() async {
-    debugPrint('[AuthService] signInWithGoogle 시작');
+    debugPrint('[AuthService] signInWithGoogle started');
 
     try {
       // 1. Native Google Sign-In + Supabase 인증
       final response = await _googleSignInService.signIn();
-      debugPrint('[AuthService] Google 로그인 성공: ${response.user?.email}');
+      debugPrint('[AuthService] Google login successful');
 
       // 2. 로그인 성공 시 프로필/가계부 확인 및 FCM 초기화
       if (response.session != null && response.user != null) {
@@ -243,16 +222,15 @@ class AuthService {
         // FCM 토큰 등록
         try {
           await _firebaseMessaging.initialize(response.user!.id);
-          debugPrint('[AuthService] FCM 초기화 성공');
+          debugPrint('[AuthService] FCM initialized');
         } catch (e) {
-          debugPrint('[AuthService] FCM 초기화 실패 (무시됨): $e');
+          debugPrint('[AuthService] FCM init failed (ignored)');
         }
       }
 
       return response;
-    } catch (e, st) {
-      debugPrint('[AuthService] Google 로그인 실패: $e');
-      debugPrint('[AuthService] 스택 트레이스: $st');
+    } catch (e) {
+      debugPrint('[AuthService] Google login failed: ${e.runtimeType}');
       rethrow;
     }
   }
@@ -265,9 +243,9 @@ class AuthService {
       // FCM 토큰 삭제 실패가 로그아웃을 방해하면 안 되므로 try-catch로 감싸고 silent fail
       try {
         await _firebaseMessaging.deleteToken(userId);
-        debugPrint('[AuthService] FCM 토큰 삭제 성공');
+        debugPrint('[AuthService] FCM token deleted');
       } catch (e) {
-        debugPrint('[AuthService] FCM 토큰 삭제 실패 (무시됨): $e');
+        debugPrint('[AuthService] FCM token delete failed (ignored)');
       }
     }
 
@@ -275,16 +253,16 @@ class AuthService {
     try {
       await _googleSignInService.signOut();
     } catch (e) {
-      debugPrint('[AuthService] Google 로그아웃 실패 (무시됨): $e');
+      debugPrint('[AuthService] Google signOut failed (ignored)');
     }
 
     // SharedPreferences에서 저장된 가계부 ID 삭제 (다른 사용자 로그인 시 RLS 위반 방지)
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('flutter.current_ledger_id');
-      debugPrint('[AuthService] 저장된 가계부 ID 삭제 성공');
+      debugPrint('[AuthService] Stored ledger ID deleted');
     } catch (e) {
-      debugPrint('[AuthService] 저장된 가계부 ID 삭제 실패 (무시됨): $e');
+      debugPrint('[AuthService] Stored ledger ID delete failed (ignored)');
     }
 
     await _auth.signOut();
@@ -443,7 +421,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
       // 선택된 가계부 ID 초기화 (다른 사용자 로그인 시 RLS 위반 방지)
       _ref.read(selectedLedgerIdProvider.notifier).state = null;
-      debugPrint('[AuthNotifier] selectedLedgerIdProvider 초기화 완료');
+      debugPrint('[AuthNotifier] selectedLedgerIdProvider cleared');
 
       state = const AsyncValue.data(null);
     } catch (e, st) {
