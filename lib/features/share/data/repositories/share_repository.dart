@@ -7,14 +7,15 @@ import '../../domain/entities/ledger_invite.dart';
 class ShareRepository {
   final _client = SupabaseConfig.client;
 
-  // 이메일로 사용자 조회 (가입 여부 확인)
   Future<Map<String, dynamic>?> findUserByEmail(String email) async {
-    final response = await _client
-        .from('profiles')
-        .select('id, email, display_name')
-        .eq('email', email.toLowerCase().trim())
-        .maybeSingle();
-    return response;
+    final response = await _client.rpc(
+      'check_user_exists_by_email',
+      params: {'target_email': email},
+    );
+    if (response == null || (response as List).isEmpty) {
+      return null;
+    }
+    return response[0] as Map<String, dynamic>;
   }
 
   // 이미 멤버인지 확인
