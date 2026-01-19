@@ -35,8 +35,27 @@ class SupabaseConfig {
 
   static Future<void> _saveConfigForWidget() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('flutter.supabase_url', supabaseUrl);
-    await prefs.setString('flutter.supabase_anon_key', supabaseAnonKey);
+
+    await _migrateOldKeys(prefs);
+
+    await prefs.setString('supabase_url', supabaseUrl);
+    await prefs.setString('supabase_anon_key', supabaseAnonKey);
+  }
+
+  static Future<void> _migrateOldKeys(SharedPreferences prefs) async {
+    const migrations = [
+      ('flutter.supabase_url', 'supabase_url'),
+      ('flutter.supabase_anon_key', 'supabase_anon_key'),
+      ('flutter.current_ledger_id', 'current_ledger_id'),
+    ];
+
+    for (final (oldKey, newKey) in migrations) {
+      final oldValue = prefs.getString(oldKey);
+      if (oldValue != null && prefs.getString(newKey) == null) {
+        await prefs.setString(newKey, oldValue);
+        await prefs.remove(oldKey);
+      }
+    }
   }
 
   static SupabaseClient get client => Supabase.instance.client;

@@ -19,7 +19,7 @@ final ledgerIdPersistenceProvider = Provider<void>((ref) {
   ref.listen<String?>(selectedLedgerIdProvider, (previous, next) async {
     if (next != null) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('flutter.current_ledger_id', next);
+      await prefs.setString('current_ledger_id', next);
       debugPrint('Saved current ledger ID to SharedPreferences');
     }
   });
@@ -28,7 +28,7 @@ final ledgerIdPersistenceProvider = Provider<void>((ref) {
 // SharedPreferences에서 마지막 선택한 가계부 ID 복원
 final restoreLedgerIdProvider = FutureProvider<String?>((ref) async {
   final prefs = await SharedPreferences.getInstance();
-  final savedId = prefs.getString('flutter.current_ledger_id');
+  final savedId = prefs.getString('current_ledger_id');
   debugPrint(
     'Restored ledger ID from SharedPreferences: ${savedId != null ? "found" : "null"}',
   );

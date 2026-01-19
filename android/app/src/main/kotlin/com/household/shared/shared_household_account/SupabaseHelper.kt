@@ -32,6 +32,7 @@ class SupabaseHelper(private val context: Context) {
 
     companion object {
         private const val TAG = "SupabaseHelper"
+        private const val SCHEMA = "house"
     }
 
     init {
@@ -102,6 +103,7 @@ class SupabaseHelper(private val context: Context) {
                 .get()
                 .addHeader("Authorization", "Bearer $token")
                 .addHeader("apikey", apiKey)
+                .addHeader("Accept-Profile", SCHEMA)
                 .build()
             
             val response = client.newCall(request).execute()
@@ -170,6 +172,7 @@ class SupabaseHelper(private val context: Context) {
                 .addHeader("Authorization", "Bearer $token")
                 .addHeader("apikey", apiKey)
                 .addHeader("Content-Type", "application/json")
+                .addHeader("Content-Profile", SCHEMA)
                 .addHeader("Prefer", "return=minimal")
                 .build()
             
@@ -214,6 +217,7 @@ class SupabaseHelper(private val context: Context) {
                 .get()
                 .addHeader("Authorization", "Bearer $token")
                 .addHeader("apikey", apiKey)
+                .addHeader("Accept-Profile", SCHEMA)
                 .build()
 
             val response = client.newCall(request).execute()

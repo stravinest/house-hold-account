@@ -259,7 +259,7 @@ class AuthService {
     // SharedPreferences에서 저장된 가계부 ID 삭제 (다른 사용자 로그인 시 RLS 위반 방지)
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('flutter.current_ledger_id');
+      await prefs.remove('current_ledger_id');
       debugPrint('[AuthService] Stored ledger ID deleted');
     } catch (e) {
       debugPrint('[AuthService] Stored ledger ID delete failed (ignored)');
