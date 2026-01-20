@@ -22,6 +22,7 @@ import '../../../widget/presentation/providers/widget_provider.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../domain/entities/ledger.dart';
+import '../../../share/presentation/providers/share_provider.dart';
 import '../providers/ledger_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../widgets/calendar_view.dart';
@@ -770,14 +771,12 @@ class _MonthlyViewContent extends StatelessWidget {
         // 고정 헤더: 수입 | 지출 | 합계
         Consumer(
           builder: (context, ref, child) {
-            final currentLedgerAsync = ref.watch(currentLedgerProvider);
-            final currentLedger = currentLedgerAsync.valueOrNull;
-            final memberCount = currentLedger?.isShared == true ? 2 : 1;
+            // 실제 멤버 수 사용 (실시간 반영을 위해 isShared 대신 직접 조회)
+            final memberCount = ref.watch(currentLedgerMemberCountProvider);
 
             return RepaintBoundary(
               child: CalendarMonthSummary(
                 focusedDate: focusedDate,
-                ref: ref,
                 memberCount: memberCount,
               ),
             );

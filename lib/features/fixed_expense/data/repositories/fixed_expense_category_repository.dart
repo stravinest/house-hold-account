@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/supabase_error_handler.dart';
 import '../models/fixed_expense_category_model.dart';
 
 /// 고정비 카테고리 Repository
@@ -59,6 +60,9 @@ class FixedExpenseCategoryRepository {
 
       return FixedExpenseCategoryModel.fromJson(response);
     } catch (e) {
+      if (SupabaseErrorHandler.isDuplicateError(e)) {
+        throw DuplicateItemException(itemType: '고정비 카테고리', itemName: name);
+      }
       rethrow;
     }
   }
@@ -88,6 +92,9 @@ class FixedExpenseCategoryRepository {
 
       return FixedExpenseCategoryModel.fromJson(response);
     } catch (e) {
+      if (SupabaseErrorHandler.isDuplicateError(e)) {
+        throw DuplicateItemException(itemType: '고정비 카테고리', itemName: name);
+      }
       rethrow;
     }
   }

@@ -37,6 +37,7 @@ dependencies:
   intl: ^0.20.2
   uuid: ^4.5.1
   equatable: ^2.0.7
+  crypto: ^3.0.3
 
   # 이미지
   image_picker: ^1.1.2
@@ -63,6 +64,11 @@ dependencies:
 
   # 딥링크
   app_links: ^6.3.3
+
+  # SMS/알림 자동저장 (Android only)
+  another_telephony: ^0.4.1
+  notification_listener_service: ^0.3.5
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:

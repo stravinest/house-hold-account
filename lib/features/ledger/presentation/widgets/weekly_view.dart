@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../../../core/utils/color_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
@@ -11,7 +10,6 @@ import '../../../share/presentation/providers/share_provider.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart';
-import '../providers/ledger_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import 'calendar_month_summary.dart';
 
@@ -46,10 +44,8 @@ class WeeklyView extends ConsumerWidget {
       }
     });
 
-    // 멤버 수 계산
-    final currentLedgerAsync = ref.watch(currentLedgerProvider);
-    final currentLedger = currentLedgerAsync.valueOrNull;
-    final memberCount = currentLedger?.isShared == true ? 2 : 1;
+    // 실제 멤버 수 사용 (실시간 반영을 위해 isShared 대신 직접 조회)
+    final memberCount = ref.watch(currentLedgerMemberCountProvider);
 
     return Column(
       children: [
@@ -83,12 +79,6 @@ class WeeklyView extends ConsumerWidget {
       ],
     );
   }
-}
-
-/// 주별 요약 상수
-class _WeeklySummaryConstants {
-  // 사용자별 금액 표시 행 높이
-  static const double userIndicatorRowHeight = 14.0;
 }
 
 /// 주별 요약 헤더 (수입/지출/합계)
@@ -146,7 +136,7 @@ class _WeeklySummaryHeader extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: _SummaryColumn(
+              child: SummaryColumn(
                 label: l10n.transactionIncome,
                 totalAmount: income,
                 color: colorScheme.primary,
@@ -157,7 +147,7 @@ class _WeeklySummaryHeader extends ConsumerWidget {
             ),
             Container(width: 1, color: colorScheme.outlineVariant),
             Expanded(
-              child: _SummaryColumn(
+              child: SummaryColumn(
                 label: l10n.transactionExpense,
                 totalAmount: expense,
                 color: colorScheme.error,
@@ -168,7 +158,7 @@ class _WeeklySummaryHeader extends ConsumerWidget {
             ),
             Container(width: 1, color: colorScheme.outlineVariant),
             Expanded(
-              child: _SummaryColumn(
+              child: SummaryColumn(
                 label: l10n.summaryBalance,
                 totalAmount: balance,
                 color: colorScheme.onSurface,
@@ -180,143 +170,6 @@ class _WeeklySummaryHeader extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// 주별 수입/지출 열 위젯
-class _SummaryColumn extends StatelessWidget {
-  final String label;
-  final int totalAmount;
-  final Color color;
-  final Map<String, dynamic> users;
-  final SummaryType type;
-  final int memberCount;
-
-  const _SummaryColumn({
-    required this.label,
-    required this.totalAmount,
-    required this.color,
-    required this.users,
-    required this.type,
-    required this.memberCount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final formatter = NumberFormat('#,###', 'ko_KR');
-    final colorScheme = Theme.of(context).colorScheme;
-
-    // 유저별 금액 계산
-    final userAmounts = <MapEntry<Color, int>>[];
-    for (final entry in users.entries) {
-      final userData = entry.value is Map
-          ? Map<String, dynamic>.from(entry.value as Map)
-          : <String, dynamic>{};
-      final income = userData['income'] as int? ?? 0;
-      final expense = userData['expense'] as int? ?? 0;
-
-      int amount;
-      switch (type) {
-        case SummaryType.income:
-          amount = income;
-          break;
-        case SummaryType.expense:
-          amount = expense;
-          break;
-        case SummaryType.balance:
-          amount = income - expense;
-          break;
-      }
-
-      // 공유 가계부(2명)일 때는 0이어도 항상 표시
-      final shouldShow = memberCount >= 2
-          ? true
-          : (type == SummaryType.balance ? amount != 0 : amount > 0);
-      if (shouldShow) {
-        final colorHex = userData['color'] as String? ?? '#A8D8EA';
-        userAmounts.add(MapEntry(ColorUtils.parseHexColor(colorHex), amount));
-      }
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // 라벨
-        Text(
-          label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: colorScheme.onSurfaceVariant,
-            fontSize: 11,
-          ),
-        ),
-        // 총액
-        Text(
-          '${totalAmount < 0 ? '-' : ''}${formatter.format(totalAmount.abs())}',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-        // 유저별 표시 (세로 배치)
-        if (memberCount >= 2) ...[
-          const SizedBox(height: 2),
-          SizedBox(
-            height: 2 * _WeeklySummaryConstants.userIndicatorRowHeight,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: userAmounts.isEmpty
-                  ? []
-                  : userAmounts
-                        .map(
-                          (entry) => Padding(
-                            padding: const EdgeInsets.only(bottom: 1),
-                            child: _UserAmountIndicator(
-                              color: entry.key,
-                              amount: entry.value,
-                            ),
-                          ),
-                        )
-                        .toList(),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-/// 유저별 금액 인디케이터
-class _UserAmountIndicator extends StatelessWidget {
-  final Color color;
-  final int amount;
-
-  const _UserAmountIndicator({required this.color, required this.amount});
-
-  @override
-  Widget build(BuildContext context) {
-    final formatter = NumberFormat('#,###', 'ko_KR');
-    final isNegative = amount < 0;
-
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 6,
-          height: 6,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 2),
-        Text(
-          '${isNegative ? '-' : ''}${formatter.format(amount.abs())}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 9,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -342,7 +195,6 @@ class _WeeklyNavigationHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final colorScheme = Theme.of(context).colorScheme;
     final now = DateTime.now();
     final currentWeekRange = getWeekRangeFor(now, weekStartDay);
     final isCurrentWeek =

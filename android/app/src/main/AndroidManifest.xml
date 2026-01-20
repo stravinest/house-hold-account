@@ -1,9 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 권한 추가: <application> 태그 위에 위치 -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
-    <!-- Android 13(API 33) 이상에서 푸시 알림 권한 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    
+    <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
+    <uses-permission android:name="android.permission.SEND_SMS"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <application
         android:label="shared_household_account"
         android:name="${applicationName}"
@@ -93,6 +96,27 @@
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="household_account_channel" />
+        
+        <!-- SMS BroadcastReceiver -->
+        <receiver 
+            android:name="com.shounakmulay.telephony.sms.IncomingSmsReceiver"
+            android:permission="android.permission.BROADCAST_SMS" 
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED"/>
+            </intent-filter>
+        </receiver>
+        
+        <!-- NotificationListenerService -->
+        <service 
+            android:label="notifications"
+            android:name="notification.listener.service.NotificationListener"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService"/>
+            </intent-filter>
+        </service>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

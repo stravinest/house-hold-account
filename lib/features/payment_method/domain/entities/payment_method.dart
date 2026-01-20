@@ -1,5 +1,24 @@
 import 'package:equatable/equatable.dart';
 
+enum AutoSaveMode {
+  manual,
+  suggest,
+  auto;
+
+  static AutoSaveMode fromString(String value) {
+    switch (value) {
+      case 'suggest':
+        return AutoSaveMode.suggest;
+      case 'auto':
+        return AutoSaveMode.auto;
+      default:
+        return AutoSaveMode.manual;
+    }
+  }
+
+  String toJson() => name;
+}
+
 class PaymentMethod extends Equatable {
   final String id;
   final String ledgerId;
@@ -9,6 +28,8 @@ class PaymentMethod extends Equatable {
   final bool isDefault;
   final int sortOrder;
   final DateTime createdAt;
+  final AutoSaveMode autoSaveMode;
+  final String? defaultCategoryId;
 
   const PaymentMethod({
     required this.id,
@@ -19,7 +40,11 @@ class PaymentMethod extends Equatable {
     required this.isDefault,
     required this.sortOrder,
     required this.createdAt,
+    this.autoSaveMode = AutoSaveMode.manual,
+    this.defaultCategoryId,
   });
+
+  bool get isAutoSaveEnabled => autoSaveMode != AutoSaveMode.manual;
 
   PaymentMethod copyWith({
     String? id,
@@ -30,6 +55,8 @@ class PaymentMethod extends Equatable {
     bool? isDefault,
     int? sortOrder,
     DateTime? createdAt,
+    AutoSaveMode? autoSaveMode,
+    String? defaultCategoryId,
   }) {
     return PaymentMethod(
       id: id ?? this.id,
@@ -40,18 +67,22 @@ class PaymentMethod extends Equatable {
       isDefault: isDefault ?? this.isDefault,
       sortOrder: sortOrder ?? this.sortOrder,
       createdAt: createdAt ?? this.createdAt,
+      autoSaveMode: autoSaveMode ?? this.autoSaveMode,
+      defaultCategoryId: defaultCategoryId ?? this.defaultCategoryId,
     );
   }
 
   @override
   List<Object?> get props => [
-        id,
-        ledgerId,
-        name,
-        icon,
-        color,
-        isDefault,
-        sortOrder,
-        createdAt,
-      ];
+    id,
+    ledgerId,
+    name,
+    icon,
+    color,
+    isDefault,
+    sortOrder,
+    createdAt,
+    autoSaveMode,
+    defaultCategoryId,
+  ];
 }

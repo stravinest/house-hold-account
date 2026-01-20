@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/supabase_error_handler.dart';
 import '../models/payment_method_model.dart';
 
 class PaymentMethodRepository {
@@ -26,32 +27,39 @@ class PaymentMethodRepository {
     String icon = '',
     String color = '#6750A4',
   }) async {
-    // 현재 최대 sort_order 조회
-    final maxOrderResponse = await _client
-        .from('payment_methods')
-        .select('sort_order')
-        .eq('ledger_id', ledgerId)
-        .order('sort_order', ascending: false)
-        .limit(1)
-        .maybeSingle();
+    try {
+      // 현재 최대 sort_order 조회
+      final maxOrderResponse = await _client
+          .from('payment_methods')
+          .select('sort_order')
+          .eq('ledger_id', ledgerId)
+          .order('sort_order', ascending: false)
+          .limit(1)
+          .maybeSingle();
 
-    final maxOrder = maxOrderResponse?['sort_order'] as int? ?? 0;
+      final maxOrder = maxOrderResponse?['sort_order'] as int? ?? 0;
 
-    final data = PaymentMethodModel.toCreateJson(
-      ledgerId: ledgerId,
-      name: name,
-      icon: icon,
-      color: color,
-      sortOrder: maxOrder + 1,
-    );
+      final data = PaymentMethodModel.toCreateJson(
+        ledgerId: ledgerId,
+        name: name,
+        icon: icon,
+        color: color,
+        sortOrder: maxOrder + 1,
+      );
 
-    final response = await _client
-        .from('payment_methods')
-        .insert(data)
-        .select()
-        .single();
+      final response = await _client
+          .from('payment_methods')
+          .insert(data)
+          .select()
+          .single();
 
-    return PaymentMethodModel.fromJson(response);
+      return PaymentMethodModel.fromJson(response);
+    } catch (e) {
+      if (SupabaseErrorHandler.isDuplicateError(e)) {
+        throw DuplicateItemException(itemType: '결제수단', itemName: name);
+      }
+      rethrow;
+    }
   }
 
   // 결제수단 수정
@@ -62,20 +70,27 @@ class PaymentMethodRepository {
     String? color,
     int? sortOrder,
   }) async {
-    final updates = <String, dynamic>{};
-    if (name != null) updates['name'] = name;
-    if (icon != null) updates['icon'] = icon;
-    if (color != null) updates['color'] = color;
-    if (sortOrder != null) updates['sort_order'] = sortOrder;
+    try {
+      final updates = <String, dynamic>{};
+      if (name != null) updates['name'] = name;
+      if (icon != null) updates['icon'] = icon;
+      if (color != null) updates['color'] = color;
+      if (sortOrder != null) updates['sort_order'] = sortOrder;
 
-    final response = await _client
-        .from('payment_methods')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      final response = await _client
+          .from('payment_methods')
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
 
-    return PaymentMethodModel.fromJson(response);
+      return PaymentMethodModel.fromJson(response);
+    } catch (e) {
+      if (SupabaseErrorHandler.isDuplicateError(e)) {
+        throw DuplicateItemException(itemType: '결제수단', itemName: name);
+      }
+      rethrow;
+    }
   }
 
   // 결제수단 삭제
@@ -120,5 +135,40 @@ class PaymentMethodRepository {
           },
         )
         .subscribe();
+  }
+
+  Future<PaymentMethodModel> updateAutoSaveSettings({
+    required String id,
+    required String autoSaveMode,
+    String? defaultCategoryId,
+  }) async {
+    final updates = <String, dynamic>{'auto_save_mode': autoSaveMode};
+    if (defaultCategoryId != null) {
+      updates['default_category_id'] = defaultCategoryId;
+    }
+
+    final response = await _client
+        .from('payment_methods')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+    return PaymentMethodModel.fromJson(response);
+  }
+
+  Future<List<PaymentMethodModel>> getAutoSaveEnabledPaymentMethods(
+    String ledgerId,
+  ) async {
+    final response = await _client
+        .from('payment_methods')
+        .select()
+        .eq('ledger_id', ledgerId)
+        .neq('auto_save_mode', 'manual')
+        .order('sort_order');
+
+    return (response as List)
+        .map((json) => PaymentMethodModel.fromJson(json))
+        .toList();
   }
 }

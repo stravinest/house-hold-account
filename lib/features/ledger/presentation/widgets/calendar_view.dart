@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 import '../../../transaction/presentation/providers/transaction_provider.dart';
+import '../../../share/presentation/providers/share_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../providers/ledger_provider.dart';
 import 'calendar_header.dart';
@@ -46,10 +47,8 @@ class CalendarView extends ConsumerWidget {
     final currentLedgerAsync = ref.watch(currentLedgerProvider);
     final currentLedger = currentLedgerAsync.valueOrNull;
 
-    // 공유 가계부 여부에 따른 멤버 수 결정
-    // 현재 공유 가계부는 최대 2명으로 제한됨 (AppConstants.maxMembersPerLedger)
-    // isShared가 true면 2명, 아니면 1명 (개인 가계부)
-    final memberCount = currentLedger?.isShared == true ? 2 : 1;
+    // 실제 멤버 수 사용 (실시간 반영을 위해 isShared 대신 직접 조회)
+    final memberCount = ref.watch(currentLedgerMemberCountProvider);
 
     // 주 시작일 설정
     final weekStartDay = ref.watch(weekStartDayProvider);
@@ -64,7 +63,6 @@ class CalendarView extends ConsumerWidget {
           RepaintBoundary(
             child: CalendarMonthSummary(
               focusedDate: focusedDate,
-              ref: ref,
               memberCount: memberCount,
             ),
           ),

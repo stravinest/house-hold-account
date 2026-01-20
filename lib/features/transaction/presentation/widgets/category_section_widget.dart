@@ -101,7 +101,7 @@ class PaymentMethodSectionWidget extends ConsumerWidget {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
           child: Text(
-            l10n.paymentMethodOptional,
+            l10n.paymentMethodTitle,
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),

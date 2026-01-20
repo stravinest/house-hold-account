@@ -7,9 +7,9 @@ import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../../share/presentation/providers/share_provider.dart';
 import '../../../../core/utils/color_utils.dart';
 
-/// 월별 요약 상수
-class _SummaryConstants {
-  // 사용자별 금액 표시 행 높이 (UserAmountIndicator 높이 + padding)
+/// 요약 위젯 공통 상수
+class SummaryConstants {
+  /// 사용자별 금액 표시 행 높이 (UserAmountIndicator 높이 + padding)
   static const double userIndicatorRowHeight = 14.0;
 }
 
@@ -20,20 +20,18 @@ enum SummaryType { income, expense, balance }
 ///
 /// 상단에 표시되는 수입, 지출, 합계 요약 정보를 보여줍니다.
 /// 공유 가계부의 경우 사용자별 금액도 함께 표시됩니다.
-class CalendarMonthSummary extends StatelessWidget {
+class CalendarMonthSummary extends ConsumerWidget {
   final DateTime focusedDate;
-  final WidgetRef ref;
   final int memberCount;
 
   const CalendarMonthSummary({
     super.key,
     required this.focusedDate,
-    required this.ref,
     required this.memberCount,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -76,7 +74,7 @@ class CalendarMonthSummary extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: _SummaryColumn(
+              child: SummaryColumn(
                 label: l10n.transactionIncome,
                 totalAmount: income,
                 color: colorScheme.primary,
@@ -87,7 +85,7 @@ class CalendarMonthSummary extends StatelessWidget {
             ),
             Container(width: 1, color: colorScheme.outlineVariant),
             Expanded(
-              child: _SummaryColumn(
+              child: SummaryColumn(
                 label: l10n.transactionExpense,
                 totalAmount: expense,
                 color: colorScheme.error,
@@ -98,7 +96,7 @@ class CalendarMonthSummary extends StatelessWidget {
             ),
             Container(width: 1, color: colorScheme.outlineVariant),
             Expanded(
-              child: _SummaryColumn(
+              child: SummaryColumn(
                 label: l10n.summaryBalance,
                 totalAmount: balance,
                 color: colorScheme.onSurface,
@@ -114,8 +112,10 @@ class CalendarMonthSummary extends StatelessWidget {
   }
 }
 
-/// 수입/지출 열 위젯
-class _SummaryColumn extends StatelessWidget {
+/// 수입/지출/합계 열 위젯 (공통)
+///
+/// 월별, 주별, 일별 요약에서 공통으로 사용됩니다.
+class SummaryColumn extends StatelessWidget {
   final String label;
   final int totalAmount;
   final Color color;
@@ -123,7 +123,8 @@ class _SummaryColumn extends StatelessWidget {
   final SummaryType type;
   final int memberCount;
 
-  const _SummaryColumn({
+  const SummaryColumn({
+    super.key,
     required this.label,
     required this.totalAmount,
     required this.color,
@@ -197,7 +198,7 @@ class _SummaryColumn extends StatelessWidget {
           const SizedBox(height: 2),
           // 고정 높이: userIndicatorRowHeight(14.0) * 2명 = 28.0
           SizedBox(
-            height: 2 * _SummaryConstants.userIndicatorRowHeight,
+            height: 2 * SummaryConstants.userIndicatorRowHeight,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -207,7 +208,7 @@ class _SummaryColumn extends StatelessWidget {
                         .map(
                           (entry) => Padding(
                             padding: const EdgeInsets.only(bottom: 1),
-                            child: _UserAmountIndicator(
+                            child: UserAmountIndicator(
                               color: entry.key,
                               amount: entry.value,
                             ),
@@ -216,19 +217,22 @@ class _SummaryColumn extends StatelessWidget {
                         .toList(),
             ),
           ),
-          // 개인 가계부(memberCount < 2)일 때는 사용자별 금액 표시 불필요
         ],
       ],
     );
   }
 }
 
-/// 유저별 금액 인디케이터
-class _UserAmountIndicator extends StatelessWidget {
+/// 유저별 금액 인디케이터 (공통)
+class UserAmountIndicator extends StatelessWidget {
   final Color color;
   final int amount;
 
-  const _UserAmountIndicator({required this.color, required this.amount});
+  const UserAmountIndicator({
+    super.key,
+    required this.color,
+    required this.amount,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -90,7 +90,8 @@ class TransactionModel extends Transaction {
       'image_url': imageUrl,
       'is_recurring': isRecurring,
       'recurring_type': recurringType,
-      'recurring_end_date': recurringEndDate?.toIso8601String()
+      'recurring_end_date': recurringEndDate
+          ?.toIso8601String()
           .split('T')
           .first,
       'is_fixed_expense': isFixedExpense,
@@ -120,6 +121,7 @@ class TransactionModel extends Transaction {
     String? fixedExpenseCategoryId,
     bool isAsset = false,
     DateTime? maturityDate,
+    String? sourceType,
   }) {
     return {
       'ledger_id': ledgerId,
@@ -134,13 +136,15 @@ class TransactionModel extends Transaction {
       'image_url': imageUrl,
       'is_recurring': isRecurring,
       'recurring_type': recurringType,
-      'recurring_end_date': recurringEndDate?.toIso8601String()
+      'recurring_end_date': recurringEndDate
+          ?.toIso8601String()
           .split('T')
           .first,
       'is_fixed_expense': isFixedExpense,
       'fixed_expense_category_id': fixedExpenseCategoryId,
       'is_asset': isAsset,
       'maturity_date': maturityDate?.toIso8601String().split('T').first,
+      'source_type': sourceType,
     };
   }
 }

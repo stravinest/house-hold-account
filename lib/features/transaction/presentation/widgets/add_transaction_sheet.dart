@@ -345,7 +345,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
         Padding(
           padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
           child: Text(
-            l10n.transactionPaymentMethodOptional,
+            l10n.paymentMethodTitle,
             style: Theme.of(context).textTheme.titleMedium,
           ),
         ),

@@ -281,15 +281,10 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
                 final displayName =
                     member.displayName ?? member.email ?? l10n.shareUnknown;
 
-                // 권한 텍스트
-                String roleText;
-                if (member.role == 'owner') {
-                  roleText = l10n.shareMemberRoleOwner;
-                } else if (member.role == 'admin') {
-                  roleText = l10n.shareMemberRoleAdmin;
-                } else {
-                  roleText = l10n.shareMemberRoleMember;
-                }
+                // 권한 텍스트 (owner만 구분)
+                final roleText = isOwner
+                    ? l10n.shareMemberRoleOwner
+                    : l10n.shareMemberRoleMember;
 
                 // 멤버 색상
                 final memberColor = member.color != null
@@ -889,7 +884,6 @@ class _InviteDialog extends ConsumerStatefulWidget {
 class _InviteDialogState extends ConsumerState<_InviteDialog> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  String _selectedRole = 'member';
   bool _isLoading = false;
 
   @override
@@ -926,47 +920,6 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
                 return null;
               },
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _selectedRole,
-              decoration: InputDecoration(
-                labelText: l10n.shareRole,
-                border: const OutlineInputBorder(),
-              ),
-              isExpanded: true,
-              itemHeight: 60,
-              items: [
-                DropdownMenuItem(
-                  value: 'member',
-                  child: _RoleDropdownItem(
-                    title: l10n.shareRoleMember,
-                    description: l10n.shareRoleMemberDescription,
-                  ),
-                ),
-                DropdownMenuItem(
-                  value: 'admin',
-                  child: _RoleDropdownItem(
-                    title: l10n.shareRoleAdmin,
-                    description: l10n.shareRoleAdminDescription,
-                  ),
-                ),
-              ],
-              selectedItemBuilder: (context) => [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(l10n.shareRoleMember),
-                ),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(l10n.shareRoleAdmin),
-                ),
-              ],
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() => _selectedRole = value);
-                }
-              },
-            ),
           ],
         ),
       ),
@@ -1001,7 +954,6 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
           .sendInvite(
             ledgerId: widget.ledgerId,
             email: _emailController.text.trim(),
-            role: _selectedRole,
           );
 
       if (mounted) {
@@ -1018,31 +970,5 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
         setState(() => _isLoading = false);
       }
     }
-  }
-}
-
-// 역할 드롭다운 아이템 위젯
-class _RoleDropdownItem extends StatelessWidget {
-  final String title;
-  final String description;
-
-  const _RoleDropdownItem({required this.title, required this.description});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(title),
-        Text(
-          description,
-          style: TextStyle(
-            fontSize: 12,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-      ],
-    );
   }
 }

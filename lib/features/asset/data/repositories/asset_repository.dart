@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/utils/supabase_error_handler.dart';
 import '../../domain/entities/asset_goal.dart';
 import '../../domain/entities/asset_statistics.dart';
 import '../models/asset_goal_model.dart';
@@ -263,6 +264,9 @@ class AssetRepository {
 
       return AssetGoalModel.fromJson(response);
     } catch (e, st) {
+      if (SupabaseErrorHandler.isDuplicateError(e)) {
+        throw DuplicateItemException(itemType: '자산 목표', itemName: goal.title);
+      }
       Error.throwWithStackTrace(Exception('목표 생성 실패: $e'), st);
     }
   }

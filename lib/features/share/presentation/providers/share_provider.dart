@@ -90,9 +90,10 @@ final currentLedgerMembersProvider = FutureProvider<List<LedgerMember>>((
 });
 
 // 현재 가계부의 멤버 수
+// 로딩 중일 때 최소 1명(본인) 보장하여 UI 깜빡임 방지
 final currentLedgerMemberCountProvider = Provider<int>((ref) {
   final membersAsync = ref.watch(currentLedgerMembersProvider);
-  return membersAsync.valueOrNull?.length ?? 0;
+  return membersAsync.valueOrNull?.length ?? 1;
 });
 
 // 멤버 추가 가능 여부
@@ -113,15 +114,10 @@ class ShareNotifier extends StateNotifier<AsyncValue<void>> {
   Future<void> sendInvite({
     required String ledgerId,
     required String email,
-    String role = 'member',
   }) async {
     state = const AsyncValue.loading();
     try {
-      await _repository.createInvite(
-        ledgerId: ledgerId,
-        inviteeEmail: email,
-        role: role,
-      );
+      await _repository.createInvite(ledgerId: ledgerId, inviteeEmail: email);
       _ref.invalidate(sentInvitesProvider(ledgerId));
       state = const AsyncValue.data(null);
     } catch (e, st) {
@@ -137,6 +133,8 @@ class ShareNotifier extends StateNotifier<AsyncValue<void>> {
       await _repository.acceptInvite(inviteId);
       _ref.invalidate(receivedInvitesProvider);
       _ref.invalidate(ledgersProvider);
+      _ref.invalidate(currentLedgerMembersProvider);
+      _ref.invalidate(currentLedgerProvider);
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -205,6 +203,7 @@ class ShareNotifier extends StateNotifier<AsyncValue<void>> {
       await _repository.removeMember(ledgerId: ledgerId, userId: userId);
       _ref.invalidate(ledgerMembersListProvider(ledgerId));
       _ref.invalidate(currentLedgerMembersProvider);
+      _ref.invalidate(currentLedgerProvider);
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -216,10 +215,19 @@ class ShareNotifier extends StateNotifier<AsyncValue<void>> {
   Future<void> leaveLedger(String ledgerId) async {
     state = const AsyncValue.loading();
     try {
+      // 탈퇴 전 현재 선택된 가계부 확인
+      final currentSelectedId = _ref.read(selectedLedgerIdProvider);
+
       await _repository.leaveLedger(ledgerId);
       _ref.invalidate(ledgersProvider);
       _ref.invalidate(receivedInvitesProvider);
-      _ref.read(selectedLedgerIdProvider.notifier).state = null;
+      _ref.invalidate(currentLedgerMembersProvider);
+      _ref.invalidate(currentLedgerProvider);
+
+      // 탈퇴한 가계부가 현재 선택된 가계부일 때만 선택 해제
+      if (currentSelectedId == ledgerId) {
+        _ref.read(selectedLedgerIdProvider.notifier).state = null;
+      }
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

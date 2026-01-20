@@ -12,7 +12,9 @@ import '../features/category/presentation/pages/category_management_page.dart';
 import '../features/fixed_expense/presentation/pages/fixed_expense_management_page.dart';
 import '../features/ledger/presentation/pages/home_page.dart';
 import '../features/ledger/presentation/pages/ledger_management_page.dart';
+import '../features/payment_method/presentation/pages/auto_save_settings_page.dart';
 import '../features/payment_method/presentation/pages/payment_method_management_page.dart';
+import '../features/payment_method/presentation/pages/pending_transactions_page.dart';
 import '../features/search/presentation/pages/search_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/share/presentation/pages/share_management_page.dart';
@@ -45,6 +47,9 @@ class Routes {
   static const String addExpense = '/add-expense';
   static const String addIncome = '/add-income';
   static const String quickExpense = '/quick-expense';
+  static const String autoSaveSettings =
+      '/settings/payment-methods/:id/auto-save';
+  static const String pendingTransactions = '/settings/pending-transactions';
 }
 
 // 인증 상태 변경을 감지하는 Notifier
@@ -224,6 +229,27 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => slideTransition(
           key: state.pageKey,
           child: const FixedExpenseManagementPage(),
+        ),
+      ),
+
+      // 자동 저장 설정 - 슬라이드 전환
+      GoRoute(
+        path: Routes.autoSaveSettings,
+        pageBuilder: (context, state) {
+          final paymentMethodId = state.pathParameters['id']!;
+          return slideTransition(
+            key: state.pageKey,
+            child: AutoSaveSettingsPage(paymentMethodId: paymentMethodId),
+          );
+        },
+      ),
+
+      // 대기 중인 거래 - 슬라이드 전환
+      GoRoute(
+        path: Routes.pendingTransactions,
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const PendingTransactionsPage(),
         ),
       ),
 

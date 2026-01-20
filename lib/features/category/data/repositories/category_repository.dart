@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/supabase_error_handler.dart';
 import '../models/category_model.dart';
 
 class CategoryRepository {
@@ -44,34 +45,41 @@ class CategoryRepository {
     required String color,
     required String type,
   }) async {
-    // 현재 최대 sort_order 조회
-    final maxOrderResponse = await _client
-        .from('categories')
-        .select('sort_order')
-        .eq('ledger_id', ledgerId)
-        .eq('type', type)
-        .order('sort_order', ascending: false)
-        .limit(1)
-        .maybeSingle();
+    try {
+      // 현재 최대 sort_order 조회
+      final maxOrderResponse = await _client
+          .from('categories')
+          .select('sort_order')
+          .eq('ledger_id', ledgerId)
+          .eq('type', type)
+          .order('sort_order', ascending: false)
+          .limit(1)
+          .maybeSingle();
 
-    final maxOrder = maxOrderResponse?['sort_order'] as int? ?? 0;
+      final maxOrder = maxOrderResponse?['sort_order'] as int? ?? 0;
 
-    final data = CategoryModel.toCreateJson(
-      ledgerId: ledgerId,
-      name: name,
-      icon: icon,
-      color: color,
-      type: type,
-      sortOrder: maxOrder + 1,
-    );
+      final data = CategoryModel.toCreateJson(
+        ledgerId: ledgerId,
+        name: name,
+        icon: icon,
+        color: color,
+        type: type,
+        sortOrder: maxOrder + 1,
+      );
 
-    final response = await _client
-        .from('categories')
-        .insert(data)
-        .select()
-        .single();
+      final response = await _client
+          .from('categories')
+          .insert(data)
+          .select()
+          .single();
 
-    return CategoryModel.fromJson(response);
+      return CategoryModel.fromJson(response);
+    } catch (e) {
+      if (SupabaseErrorHandler.isDuplicateError(e)) {
+        throw DuplicateItemException(itemType: '카테고리', itemName: name);
+      }
+      rethrow;
+    }
   }
 
   // 카테고리 수정
@@ -82,34 +90,32 @@ class CategoryRepository {
     String? color,
     int? sortOrder,
   }) async {
-    final updates = <String, dynamic>{};
-    if (name != null) updates['name'] = name;
-    if (icon != null) updates['icon'] = icon;
-    if (color != null) updates['color'] = color;
-    if (sortOrder != null) updates['sort_order'] = sortOrder;
+    try {
+      final updates = <String, dynamic>{};
+      if (name != null) updates['name'] = name;
+      if (icon != null) updates['icon'] = icon;
+      if (color != null) updates['color'] = color;
+      if (sortOrder != null) updates['sort_order'] = sortOrder;
 
-    final response = await _client
-        .from('categories')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      final response = await _client
+          .from('categories')
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
 
-    return CategoryModel.fromJson(response);
+      return CategoryModel.fromJson(response);
+    } catch (e) {
+      if (SupabaseErrorHandler.isDuplicateError(e)) {
+        throw DuplicateItemException(itemType: '카테고리', itemName: name);
+      }
+      rethrow;
+    }
   }
 
-  // 카테고리 삭제 (기본 카테고리는 삭제 불가)
+  // 카테고리 삭제
   Future<void> deleteCategory(String id) async {
-    final response = await _client
-        .from('categories')
-        .delete()
-        .eq('id', id)
-        .eq('is_default', false)
-        .select();
-
-    if ((response as List).isEmpty) {
-      throw Exception('카테고리 삭제에 실패했습니다. 기본 카테고리이거나 권한이 없습니다.');
-    }
+    await _client.from('categories').delete().eq('id', id);
   }
 
   // 카테고리 순서 변경 (배치 RPC 사용)

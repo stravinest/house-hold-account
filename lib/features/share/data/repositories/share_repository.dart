@@ -73,12 +73,12 @@ class ShareRepository {
     return memberCount >= AppConstants.maxMembersPerLedger;
   }
 
-  // 초대 생성
+  // 초대 생성 (모든 멤버는 동일한 admin 권한)
   Future<LedgerInvite> createInvite({
     required String ledgerId,
     required String inviteeEmail,
-    String role = 'member',
   }) async {
+    const role = 'admin'; // 모든 멤버는 동일한 권한
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
 

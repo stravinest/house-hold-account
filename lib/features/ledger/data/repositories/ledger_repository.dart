@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/supabase_error_handler.dart';
 import '../models/ledger_model.dart';
 
 class LedgerRepository {
@@ -44,23 +45,30 @@ class LedgerRepository {
     String? description,
     required String currency,
   }) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw Exception('로그인이 필요합니다');
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) throw Exception('로그인이 필요합니다');
 
-    final data = LedgerModel.toCreateJson(
-      name: name,
-      description: description,
-      currency: currency,
-      ownerId: userId,
-    );
+      final data = LedgerModel.toCreateJson(
+        name: name,
+        description: description,
+        currency: currency,
+        ownerId: userId,
+      );
 
-    final response = await _client
-        .from('ledgers')
-        .insert(data)
-        .select()
-        .single();
+      final response = await _client
+          .from('ledgers')
+          .insert(data)
+          .select()
+          .single();
 
-    return LedgerModel.fromJson(response);
+      return LedgerModel.fromJson(response);
+    } catch (e) {
+      if (SupabaseErrorHandler.isDuplicateError(e)) {
+        throw DuplicateItemException(itemType: '가계부', itemName: name);
+      }
+      rethrow;
+    }
   }
 
   // 가계부 수정

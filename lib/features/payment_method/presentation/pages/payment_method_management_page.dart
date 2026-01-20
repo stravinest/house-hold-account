@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -11,6 +13,7 @@ import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../domain/entities/payment_method.dart';
 import '../providers/payment_method_provider.dart';
+import '../providers/pending_transaction_provider.dart';
 
 class PaymentMethodManagementPage extends ConsumerStatefulWidget {
   const PaymentMethodManagementPage({super.key});
@@ -35,9 +38,38 @@ class _PaymentMethodManagementPageState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
+    final pendingCountAsync = ref.watch(pendingTransactionCountProvider);
+    final isAndroid = Platform.isAndroid;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.paymentMethodManagement)),
+      appBar: AppBar(
+        title: Text(l10n.paymentMethodManagement),
+        actions: [
+          if (isAndroid)
+            pendingCountAsync.when(
+              data: (count) => count > 0
+                  ? Badge(
+                      label: Text(count.toString()),
+                      child: IconButton(
+                        icon: const Icon(Icons.pending_actions),
+                        tooltip: '대기 중인 거래',
+                        onPressed: () {
+                          context.push('/settings/pending-transactions');
+                        },
+                      ),
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.pending_actions_outlined),
+                      tooltip: '대기 중인 거래',
+                      onPressed: () {
+                        context.push('/settings/pending-transactions');
+                      },
+                    ),
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+        ],
+      ),
       body: CenteredContent(
         maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
         child: paymentMethodsAsync.when(
@@ -135,30 +167,119 @@ class _PaymentMethodTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final isAndroid = Platform.isAndroid;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        title: Text(paymentMethod.name),
-        subtitle: paymentMethod.isDefault
-            ? Text(l10n.paymentMethodDefault)
-            : null,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              tooltip: l10n.commonEdit,
-              onPressed: () => _showEditDialog(context, paymentMethod),
+      child: Column(
+        children: [
+          ListTile(
+            title: Text(paymentMethod.name),
+            subtitle: _buildSubtitle(context, l10n),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  tooltip: l10n.commonEdit,
+                  onPressed: () => _showEditDialog(context, paymentMethod),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  tooltip: l10n.commonDelete,
+                  onPressed: () =>
+                      _showDeleteConfirm(context, ref, paymentMethod),
+                ),
+              ],
             ),
-            IconButton(
-              icon: const Icon(Icons.delete),
-              tooltip: l10n.commonDelete,
-              onPressed: () => _showDeleteConfirm(context, ref, paymentMethod),
+          ),
+          // 자동 저장 설정 (Android만)
+          if (isAndroid) ...[
+            const Divider(height: 1),
+            InkWell(
+              onTap: () {
+                context.push(
+                  '/settings/payment-methods/${paymentMethod.id}/auto-save',
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      paymentMethod.isAutoSaveEnabled
+                          ? Icons.flash_on
+                          : Icons.flash_off_outlined,
+                      size: 20,
+                      color: paymentMethod.isAutoSaveEnabled
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: Spacing.sm),
+                    Expanded(child: Text('자동 저장', style: textTheme.bodyMedium)),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: Spacing.sm,
+                        vertical: Spacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: paymentMethod.isAutoSaveEnabled
+                            ? colorScheme.primaryContainer
+                            : colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(
+                          BorderRadiusToken.xs,
+                        ),
+                      ),
+                      child: Text(
+                        _getAutoSaveModeText(paymentMethod.autoSaveMode),
+                        style: textTheme.labelSmall?.copyWith(
+                          color: paymentMethod.isAutoSaveEnabled
+                              ? colorScheme.onPrimaryContainer
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: Spacing.xs),
+                    Icon(
+                      Icons.chevron_right,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
-        ),
+        ],
       ),
     );
+  }
+
+  Widget? _buildSubtitle(BuildContext context, AppLocalizations l10n) {
+    final items = <Widget>[];
+
+    if (paymentMethod.isDefault) {
+      items.add(Text(l10n.paymentMethodDefault));
+    }
+
+    if (items.isEmpty) return null;
+
+    return Row(children: items);
+  }
+
+  String _getAutoSaveModeText(AutoSaveMode mode) {
+    switch (mode) {
+      case AutoSaveMode.manual:
+        return '꺼짐';
+      case AutoSaveMode.suggest:
+        return '제안';
+      case AutoSaveMode.auto:
+        return '자동';
+    }
   }
 
   void _showEditDialog(BuildContext context, PaymentMethod paymentMethod) {

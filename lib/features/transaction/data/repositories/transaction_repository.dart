@@ -86,6 +86,7 @@ class TransactionRepository {
     String? fixedExpenseCategoryId,
     bool isAsset = false,
     DateTime? maturityDate,
+    String? sourceType,
   }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('로그인이 필요합니다');
@@ -108,6 +109,7 @@ class TransactionRepository {
       fixedExpenseCategoryId: fixedExpenseCategoryId,
       isAsset: isAsset,
       maturityDate: maturityDate,
+      sourceType: sourceType,
     );
 
     final response = await _client

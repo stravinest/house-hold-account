@@ -148,6 +148,26 @@ class PaymentMethodNotifier
       rethrow;
     }
   }
+
+  Future<void> updateAutoSaveSettings({
+    required String id,
+    required AutoSaveMode autoSaveMode,
+    String? defaultCategoryId,
+  }) async {
+    try {
+      await _repository.updateAutoSaveSettings(
+        id: id,
+        autoSaveMode: autoSaveMode.toJson(),
+        defaultCategoryId: defaultCategoryId,
+      );
+
+      _ref.invalidate(paymentMethodsProvider);
+      await loadPaymentMethods();
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
 }
 
 final paymentMethodNotifierProvider =

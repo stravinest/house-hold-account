@@ -264,7 +264,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
                             vertical: Spacing.sm,
                           ),
                           child: Text(
-                            l10n.transactionPaymentMethodOptional,
+                            l10n.paymentMethodTitle,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),

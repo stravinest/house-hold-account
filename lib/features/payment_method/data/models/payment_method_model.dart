@@ -10,6 +10,8 @@ class PaymentMethodModel extends PaymentMethod {
     required super.isDefault,
     required super.sortOrder,
     required super.createdAt,
+    super.autoSaveMode,
+    super.defaultCategoryId,
   });
 
   factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
@@ -22,6 +24,10 @@ class PaymentMethodModel extends PaymentMethod {
       isDefault: json['is_default'] as bool,
       sortOrder: json['sort_order'] as int,
       createdAt: DateTime.parse(json['created_at'] as String),
+      autoSaveMode: AutoSaveMode.fromString(
+        (json['auto_save_mode'] as String?) ?? 'manual',
+      ),
+      defaultCategoryId: json['default_category_id'] as String?,
     );
   }
 
@@ -35,6 +41,8 @@ class PaymentMethodModel extends PaymentMethod {
       'is_default': isDefault,
       'sort_order': sortOrder,
       'created_at': createdAt.toIso8601String(),
+      'auto_save_mode': autoSaveMode.toJson(),
+      'default_category_id': defaultCategoryId,
     };
   }
 
@@ -52,6 +60,16 @@ class PaymentMethodModel extends PaymentMethod {
       'color': color,
       'is_default': false,
       'sort_order': sortOrder,
+    };
+  }
+
+  static Map<String, dynamic> toAutoSaveUpdateJson({
+    required AutoSaveMode autoSaveMode,
+    String? defaultCategoryId,
+  }) {
+    return {
+      'auto_save_mode': autoSaveMode.toJson(),
+      if (defaultCategoryId != null) 'default_category_id': defaultCategoryId,
     };
   }
 }
