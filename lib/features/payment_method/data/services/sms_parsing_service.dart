@@ -3,7 +3,7 @@ import '../../../payment_method/domain/entities/learned_sms_format.dart';
 /// SMS 파싱 결과를 담는 클래스
 class ParsedSmsResult {
   final int? amount;
-  final String? transactionType; // 'expense' | 'income'
+  final String? transactionType; // 'expense'(지출) | 'income'(수입)
   final String? merchant;
   final DateTime? date;
   final String? cardLastDigits;
@@ -139,6 +139,91 @@ class FinancialSmsSenders {
 /// SMS 파싱 서비스
 class SmsParsingService {
   SmsParsingService._();
+
+  /// 샘플 텍스트로부터 학습된 포맷 생성
+  static LearnedSmsFormat generateFormatFromSample({
+    required String sample,
+    required String paymentMethodId,
+    String? knownMerchant,
+  }) {
+    // 1. 발신자/금융사 식별 및 키워드 추출
+    final potentialKeywords = <String>{};
+
+    // 대괄호 안의 내용 우선 추출 (사용자가 직접 수정한 경우 강력한 힌트)
+    final bracketPattern = RegExp(r'\[([^\]]+)\]');
+    final bracketMatch = bracketPattern.firstMatch(sample);
+    if (bracketMatch != null && bracketMatch.group(1) != null) {
+      potentialKeywords.add(bracketMatch.group(1)!);
+    }
+
+    // 기존에 정의된 금융사 패턴 매칭
+    final knownSender = FinancialSmsSenders.identifyFinancialInstitution(
+      sample,
+    );
+    if (knownSender != null) {
+      potentialKeywords.add(knownSender);
+      final keywords = FinancialSmsSenders.senderPatterns[knownSender];
+      if (keywords != null) {
+        potentialKeywords.addAll(keywords.where((k) => sample.contains(k)));
+      }
+    }
+
+    // 일반적인 패턴 (예: "XX카드", "XX은행", "XX페이", "XX뱅크")
+    final generalPattern = RegExp(r'([가-힣\w]+(?:카드|은행|페이|화폐|뱅크))');
+    final matches = generalPattern.allMatches(sample);
+    for (final match in matches) {
+      if (match.group(1) != null) {
+        potentialKeywords.add(match.group(1)!);
+      }
+    }
+
+    // 첫 단어 추출 (여전히 비어있는 경우)
+    if (potentialKeywords.isEmpty && sample.trim().isNotEmpty) {
+      final firstWord = sample.trim().split(RegExp(r'\s+')).first;
+      if (firstWord.length > 1) {
+        potentialKeywords.add(firstWord);
+      }
+    }
+
+    // 2. 금액 패턴 추출
+    // 단순히 숫자를 찾는 것이 아니라, 샘플 내의 금액 위치를 특정하여 정규식 생성
+    String amountRegex = KoreanFinancialSmsPatterns.amountPattern.pattern;
+    final amountMatch = KoreanFinancialSmsPatterns.amountPattern.firstMatch(
+      sample,
+    );
+    if (amountMatch != null) {
+      // 샘플에서 찾은 금액 주변의 맥락을 포함한 정규식을 만들 수도 있으나,
+      // 현재는 기본 패턴을 사용하는 것이 안전함.
+      // 필요하다면 추후 "15,000원" 자리에 (\d+(?:,\d+)*)원 패턴을 삽입하는 방식 고려.
+    }
+
+    // 3. 거래 유형 (지출/수입)
+    final typeKeywords = <String, List<String>>{'expense': [], 'income': []};
+
+    for (final keyword in KoreanFinancialSmsPatterns.expenseKeywords) {
+      if (sample.contains(keyword)) {
+        typeKeywords['expense']!.add(keyword);
+      }
+    }
+    for (final keyword in KoreanFinancialSmsPatterns.incomeKeywords) {
+      if (sample.contains(keyword)) {
+        typeKeywords['income']!.add(keyword);
+      }
+    }
+
+    return LearnedSmsFormat(
+      id: DateTime.now().millisecondsSinceEpoch.toString(), // 임시 ID
+      paymentMethodId: paymentMethodId,
+      senderPattern: knownSender ?? potentialKeywords.firstOrNull ?? '',
+      senderKeywords: potentialKeywords.toList(),
+      amountRegex: amountRegex,
+      typeKeywords: typeKeywords,
+      sampleSms: sample,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      // merchantRegex, dateRegex는 복잡하므로 일단 기본 파싱 로직에 맡김 (null)
+    );
+  }
 
   /// SMS 내용을 파싱하여 거래 정보 추출
   static ParsedSmsResult parseSms(String sender, String content) {

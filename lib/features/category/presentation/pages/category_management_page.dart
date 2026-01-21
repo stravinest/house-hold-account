@@ -29,10 +29,8 @@ class _CategoryManagementPageState extends ConsumerState<CategoryManagementPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    // 화면 진입 시 카테고리 데이터 새로 로드
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(categoryNotifierProvider.notifier).loadCategories();
-    });
+    // autoDispose provider는 페이지 재진입 시 자동으로 새 인스턴스를 생성하여 데이터를 로드하고,
+    // Realtime subscription이 변경사항을 감지하므로 수동 refresh가 불필요합니다.
   }
 
   @override

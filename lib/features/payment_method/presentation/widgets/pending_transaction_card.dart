@@ -10,6 +10,7 @@ class PendingTransactionCard extends StatelessWidget {
   final VoidCallback? onConfirm;
   final VoidCallback? onReject;
   final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   // NumberFormat 캐싱 (매 빌드마다 생성하지 않음)
   static final _currencyFormat = NumberFormat.currency(
@@ -25,6 +26,7 @@ class PendingTransactionCard extends StatelessWidget {
     this.onConfirm,
     this.onReject,
     this.onEdit,
+    this.onDelete,
   });
 
   @override
@@ -65,6 +67,23 @@ class PendingTransactionCard extends StatelessWidget {
                       color: colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  if (onDelete != null) ...[
+                    const SizedBox(width: Spacing.xs),
+                    InkWell(
+                      onTap: onDelete,
+                      borderRadius: BorderRadius.circular(
+                        BorderRadiusToken.circular,
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Icon(
+                          Icons.delete_outline,
+                          size: 16,
+                          color: colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: Spacing.sm),

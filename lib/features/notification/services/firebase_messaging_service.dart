@@ -230,6 +230,9 @@ class FirebaseMessagingService {
     });
   }
 
+  // 중복 수신 방지를 위한 최근 메시지 ID 저장
+  final Set<String> _processedMessageIds = {};
+
   /// 포그라운드/백그라운드 메시지 핸들러 설정
   void _setupMessageHandlers() {
     if (_messaging == null) return;
@@ -242,30 +245,62 @@ class FirebaseMessagingService {
     _onMessageSubscription = FirebaseMessaging.onMessage.listen((
       RemoteMessage message,
     ) {
+      final messageId = message.messageId;
+
       if (kDebugMode) {
-        print('포그라운드 메시지 수신: ${message.notification?.title}');
+        print('[FCM] 포그라운드 메시지 수신: ${message.notification?.title}');
+        print('[FCM] Message ID: $messageId');
+      }
+
+      // 메시지 ID가 있으면 중복 체크
+      if (messageId != null) {
+        if (_processedMessageIds.contains(messageId)) {
+          if (kDebugMode) {
+            print('[FCM] 중복 메시지 수신 무시 (ID: $messageId)');
+          }
+          return;
+        }
+
+        // 새로운 메시지 ID 저장 및 일정 시간 후 삭제 (메모리 관리)
+        _processedMessageIds.add(messageId);
+        Timer(const Duration(minutes: 5), () {
+          _processedMessageIds.remove(messageId);
+        });
       }
 
       // 본인이 생성한 거래에 대한 알림은 무시
       final creatorUserId = message.data['creator_user_id'];
       final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
+      if (kDebugMode) {
+        print(
+          '[FCM] creatorUserId: $creatorUserId, currentUserId: $currentUserId',
+        );
+      }
+
       if (creatorUserId != null &&
           currentUserId != null &&
           creatorUserId == currentUserId) {
         if (kDebugMode) {
-          print('Ignoring self-created transaction notification');
+          print('[FCM] Ignoring self-created transaction notification');
         }
         return;
       }
 
       // 로컬 알림으로 표시 (LocalNotificationService 사용)
       if (message.notification != null) {
+        if (kDebugMode) {
+          print('[FCM] Showing local notification for foreground message');
+        }
         LocalNotificationService().showNotification(
           title: message.notification!.title ?? '',
           body: message.notification!.body ?? '',
           data: message.data,
         );
+      } else {
+        if (kDebugMode) {
+          print('[FCM] Message received but no notification object found');
+        }
       }
     });
 

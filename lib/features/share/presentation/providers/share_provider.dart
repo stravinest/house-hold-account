@@ -50,7 +50,9 @@ final shareRepositoryProvider = Provider<ShareRepository>((ref) {
 });
 
 // 받은 초대 목록
-final receivedInvitesProvider = FutureProvider<List<LedgerInvite>>((ref) async {
+final receivedInvitesProvider = FutureProvider.autoDispose<List<LedgerInvite>>((
+  ref,
+) async {
   final repository = ref.watch(shareRepositoryProvider);
   return repository.getReceivedInvites();
 });
@@ -244,7 +246,7 @@ final shareNotifierProvider =
 
 // 내가 owner인 가계부 목록 (+ 각 가계부의 초대/멤버 정보 포함)
 final myOwnedLedgersWithInvitesProvider =
-    FutureProvider<List<LedgerWithInviteInfo>>((ref) async {
+    FutureProvider.autoDispose<List<LedgerWithInviteInfo>>((ref) async {
       final currentUserId = SupabaseConfig.auth.currentUser?.id;
       if (currentUserId == null) return [];
 

@@ -20,6 +20,7 @@ import 'features/notification/presentation/providers/notification_provider.dart'
 import 'features/notification/services/firebase_messaging_service.dart';
 import 'features/notification/services/local_notification_service.dart';
 import 'features/widget/data/services/widget_data_service.dart';
+import 'features/payment_method/presentation/providers/auto_save_manager.dart';
 import 'shared/themes/app_theme.dart';
 import 'shared/themes/theme_provider.dart';
 
@@ -267,6 +268,10 @@ class _SharedHouseholdAccountAppState
     // notificationProvider가 authStateChangesProvider를 watch하므로
     // 로그인/로그아웃 시 FCM 토큰이 자동으로 관리됨
     ref.watch(notificationProvider);
+
+    // 자동 저장 서비스 관리
+    // 사용자 로그인 및 가계부 선택 시 자동으로 서비스가 시작됨
+    ref.watch(autoSaveManagerProvider);
 
     return MaterialApp.router(
       onGenerateTitle: (context) =>

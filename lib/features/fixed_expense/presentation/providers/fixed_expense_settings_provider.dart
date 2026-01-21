@@ -9,12 +9,13 @@ import '../../domain/entities/fixed_expense_settings.dart';
 // Repository 프로바이더
 final fixedExpenseSettingsRepositoryProvider =
     Provider<FixedExpenseSettingsRepository>((ref) {
-  return FixedExpenseSettingsRepository();
-});
+      return FixedExpenseSettingsRepository();
+    });
 
 // 현재 가계부의 고정비 설정
-final fixedExpenseSettingsProvider =
-    FutureProvider<FixedExpenseSettings?>((ref) async {
+final fixedExpenseSettingsProvider = FutureProvider<FixedExpenseSettings?>((
+  ref,
+) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return null;
 
@@ -37,7 +38,7 @@ class FixedExpenseSettingsNotifier
   RealtimeChannel? _settingsChannel;
 
   FixedExpenseSettingsNotifier(this._repository, this._ledgerId, this._ref)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadSettings();
       _subscribeToChanges();
@@ -90,9 +91,13 @@ class FixedExpenseSettingsNotifier
     state = const AsyncValue.loading();
     try {
       final settings = await _repository.getSettings(_ledgerId);
-      state = AsyncValue.data(settings);
+      if (mounted) {
+        state = AsyncValue.data(settings);
+      }
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
@@ -106,18 +111,25 @@ class FixedExpenseSettingsNotifier
         includeInExpense: includeInExpense,
       );
 
-      state = AsyncValue.data(settings);
-      _ref.invalidate(fixedExpenseSettingsProvider);
+      if (mounted) {
+        state = AsyncValue.data(settings);
+        _ref.invalidate(fixedExpenseSettingsProvider);
+      }
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
 }
 
-final fixedExpenseSettingsNotifierProvider = StateNotifierProvider<
-    FixedExpenseSettingsNotifier, AsyncValue<FixedExpenseSettings?>>((ref) {
-  final repository = ref.watch(fixedExpenseSettingsRepositoryProvider);
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  return FixedExpenseSettingsNotifier(repository, ledgerId, ref);
-});
+final fixedExpenseSettingsNotifierProvider =
+    StateNotifierProvider.autoDispose<
+      FixedExpenseSettingsNotifier,
+      AsyncValue<FixedExpenseSettings?>
+    >((ref) {
+      final repository = ref.watch(fixedExpenseSettingsRepositoryProvider);
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      return FixedExpenseSettingsNotifier(repository, ledgerId, ref);
+    });

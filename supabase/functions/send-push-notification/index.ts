@@ -129,7 +129,7 @@ async function sendFcmMessage(
 ): Promise<FcmSendResult> {
   try {
     console.log(`Sending FCM to token: ${token.substring(0, 30)}...`);
-    
+
     const response = await fetch(`${FCM_URL}/${projectId}/messages:send`, {
       method: 'POST',
       headers: {
@@ -166,24 +166,24 @@ async function sendFcmMessage(
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`FCM send error (${response.status}):`, errorText);
-      
+
       let errorCode = 'UNKNOWN';
       let errorMessage = errorText;
       let shouldDeleteToken = false;
-      
+
       try {
         const errorJson = JSON.parse(errorText);
         if (errorJson.error) {
           errorCode = errorJson.error.code || errorJson.error.status || 'UNKNOWN';
           errorMessage = errorJson.error.message || errorText;
-          
+
           // FCM 에러 코드에 따라 토큰 삭제 여부 결정
           // UNREGISTERED: 앱이 제거되거나 재설치됨
           // INVALID_ARGUMENT: 토큰 형식이 잘못됨
           // NOT_FOUND: 토큰이 존재하지 않음
           const invalidTokenCodes = ['UNREGISTERED', 'INVALID_ARGUMENT', 'NOT_FOUND'];
           const errorDetails = errorJson.error.details || [];
-          
+
           for (const detail of errorDetails) {
             if (detail['@type']?.includes('ErrorInfo') && invalidTokenCodes.includes(detail.reason)) {
               shouldDeleteToken = true;
@@ -191,7 +191,7 @@ async function sendFcmMessage(
               break;
             }
           }
-          
+
           // status 코드로도 체크
           if (errorJson.error.status === 'NOT_FOUND' || errorJson.error.status === 'INVALID_ARGUMENT') {
             shouldDeleteToken = true;
@@ -200,9 +200,9 @@ async function sendFcmMessage(
       } catch {
 
       }
-      
+
       console.error(`FCM error details - code: ${errorCode}, shouldDelete: ${shouldDeleteToken}, message: ${errorMessage}`);
-      
+
       return {
         success: false,
         errorCode,
@@ -426,7 +426,7 @@ Deno.serve(async (req: Request) => {
           creator_user_id: record.user_id,
         }
       );
-      
+
       results.push({
         token: tokenData.token.substring(0, 30) + '...',
         userId: tokenData.user_id,
@@ -448,7 +448,7 @@ Deno.serve(async (req: Request) => {
           .from('fcm_tokens')
           .delete()
           .eq('token', token);
-        
+
         if (deleteError) {
           console.error(`Failed to delete token: ${deleteError.message}`);
         } else {
@@ -457,20 +457,31 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    for (const tokenData of tokens) {
-      const tokenResult = results.find(r => r.userId === tokenData.user_id);
-      if (tokenResult?.success) {
-        await supabase.schema('house').from('push_notifications').insert({
-          user_id: tokenData.user_id,
-          type: 'shared_ledger_change',
-          title: title,
-          body: body,
-          data: {
-            ledger_id: record.ledger_id,
-            transaction_id: record.id,
-            action: payload.type,
-          },
-        });
+    // 7. 알림 기록 저장 (성공적으로 전송된 사용자별로 한 번씩만)
+    const successfulUserIds = new Set<string>();
+    for (const result of results) {
+      if (result.success) {
+        successfulUserIds.add(result.userId);
+      }
+    }
+
+    console.log(`Saving notification records for ${successfulUserIds.size} unique user(s)`);
+
+    for (const userId of successfulUserIds) {
+      const { error: insertError } = await supabase.schema('house').from('push_notifications').insert({
+        user_id: userId,
+        type: 'shared_ledger_change',
+        title: title,
+        body: body,
+        data: {
+          ledger_id: record.ledger_id,
+          transaction_id: record.id,
+          action: payload.type,
+        },
+      });
+
+      if (insertError) {
+        console.error(`Failed to save notification record for user ${userId}:`, insertError);
       }
     }
 

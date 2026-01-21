@@ -12,6 +12,7 @@ class PaymentMethodModel extends PaymentMethod {
     required super.createdAt,
     super.autoSaveMode,
     super.defaultCategoryId,
+    super.canAutoSave,
   });
 
   factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +29,7 @@ class PaymentMethodModel extends PaymentMethod {
         (json['auto_save_mode'] as String?) ?? 'manual',
       ),
       defaultCategoryId: json['default_category_id'] as String?,
+      canAutoSave: (json['can_auto_save'] as bool?) ?? true,
     );
   }
 
@@ -43,6 +45,7 @@ class PaymentMethodModel extends PaymentMethod {
       'created_at': createdAt.toIso8601String(),
       'auto_save_mode': autoSaveMode.toJson(),
       'default_category_id': defaultCategoryId,
+      'can_auto_save': canAutoSave,
     };
   }
 
@@ -52,6 +55,7 @@ class PaymentMethodModel extends PaymentMethod {
     String icon = '',
     String color = '#6750A4',
     int sortOrder = 0,
+    bool canAutoSave = true,
   }) {
     return {
       'ledger_id': ledgerId,
@@ -60,6 +64,7 @@ class PaymentMethodModel extends PaymentMethod {
       'color': color,
       'is_default': false,
       'sort_order': sortOrder,
+      'can_auto_save': canAutoSave,
     };
   }
 

@@ -23,9 +23,9 @@ void main() {
   // Note: SmsScannerService 테스트는 Repository 의존성으로 인해
   // 통합 테스트에서 진행합니다. 여기서는 독립적인 유틸리티 테스트만 수행합니다.
 
-  group('SmsMessage', () {
-    test('SmsMessage 객체가 올바르게 생성되어야 한다', () {
-      final message = SmsMessage(
+  group('SmsMessageData', () {
+    test('SmsMessageData 객체가 올바르게 생성되어야 한다', () {
+      final message = SmsMessageData(
         id: 'msg-1',
         sender: 'KB국민카드',
         body: '승인 50,000원 스타벅스',
@@ -40,7 +40,7 @@ void main() {
     });
 
     test('toString이 유용한 디버그 정보를 반환해야 한다', () {
-      final message = SmsMessage(
+      final message = SmsMessageData(
         id: 'msg-1',
         sender: 'KB국민카드',
         body: '승인 50,000원',
@@ -69,7 +69,12 @@ void main() {
     test('메시지가 있으면 hasFinancialMessages가 true여야 한다', () {
       final result = SmsFormatScanResult(
         financialMessages: [
-          SmsMessage(id: '1', sender: 'KB', body: 'test', date: DateTime.now()),
+          SmsMessageData(
+            id: '1',
+            sender: 'KB',
+            body: 'test',
+            date: DateTime.now(),
+          ),
         ],
         groupedBySender: const {},
         detectedFormats: const [],

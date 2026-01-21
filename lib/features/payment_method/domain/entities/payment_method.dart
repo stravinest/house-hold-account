@@ -30,6 +30,7 @@ class PaymentMethod extends Equatable {
   final DateTime createdAt;
   final AutoSaveMode autoSaveMode;
   final String? defaultCategoryId;
+  final bool canAutoSave; // 자동 수집 지원 여부
 
   const PaymentMethod({
     required this.id,
@@ -42,6 +43,7 @@ class PaymentMethod extends Equatable {
     required this.createdAt,
     this.autoSaveMode = AutoSaveMode.manual,
     this.defaultCategoryId,
+    this.canAutoSave = true,
   });
 
   bool get isAutoSaveEnabled => autoSaveMode != AutoSaveMode.manual;
@@ -57,6 +59,7 @@ class PaymentMethod extends Equatable {
     DateTime? createdAt,
     AutoSaveMode? autoSaveMode,
     String? defaultCategoryId,
+    bool? canAutoSave,
   }) {
     return PaymentMethod(
       id: id ?? this.id,
@@ -69,6 +72,7 @@ class PaymentMethod extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       autoSaveMode: autoSaveMode ?? this.autoSaveMode,
       defaultCategoryId: defaultCategoryId ?? this.defaultCategoryId,
+      canAutoSave: canAutoSave ?? this.canAutoSave,
     );
   }
 
@@ -84,5 +88,6 @@ class PaymentMethod extends Equatable {
     createdAt,
     autoSaveMode,
     defaultCategoryId,
+    canAutoSave,
   ];
 }

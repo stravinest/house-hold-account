@@ -99,9 +99,13 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
     state = const AsyncValue.loading();
     try {
       final categories = await _repository.getCategories(_ledgerId);
-      state = AsyncValue.data(categories);
+      if (mounted) {
+        state = AsyncValue.data(categories);
+      }
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
@@ -127,7 +131,9 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
       await loadCategories();
       return category;
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
@@ -149,7 +155,9 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
       _ref.invalidate(categoriesProvider);
       await loadCategories();
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
@@ -168,7 +176,10 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
 }
 
 final categoryNotifierProvider =
-    StateNotifierProvider<CategoryNotifier, AsyncValue<List<Category>>>((ref) {
+    StateNotifierProvider.autoDispose<
+      CategoryNotifier,
+      AsyncValue<List<Category>>
+    >((ref) {
       final repository = ref.watch(categoryRepositoryProvider);
       final ledgerId = ref.watch(selectedLedgerIdProvider);
       return CategoryNotifier(repository, ledgerId, ref);

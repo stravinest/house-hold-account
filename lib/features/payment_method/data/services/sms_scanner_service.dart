@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:another_telephony/telephony.dart' as telephony;
 import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/learned_sms_format.dart';
@@ -7,6 +6,7 @@ import '../models/learned_sms_format_model.dart';
 import '../repositories/learned_sms_format_repository.dart';
 import 'korean_financial_patterns.dart';
 import 'sms_parsing_service.dart';
+import 'sms_listener_service.dart';
 
 /// 플랫폼 체크 추상화 (테스트 가능성)
 abstract class PlatformChecker {
@@ -19,21 +19,22 @@ class DefaultPlatformChecker implements PlatformChecker {
   const DefaultPlatformChecker();
 
   @override
-  bool get isAndroid => Platform.isAndroid;
+  bool get isAndroid =>
+      !kIsWeb && (defaultTargetPlatform == TargetPlatform.android);
 
   @override
-  bool get isIOS => Platform.isIOS;
+  bool get isIOS => !kIsWeb && (defaultTargetPlatform == TargetPlatform.iOS);
 }
 
 /// SMS 메시지 데이터
-class SmsMessage {
+class SmsMessageData {
   final String id;
   final String sender;
   final String body;
   final DateTime date;
   final bool isRead;
 
-  const SmsMessage({
+  const SmsMessageData({
     required this.id,
     required this.sender,
     required this.body,
@@ -41,14 +42,27 @@ class SmsMessage {
     this.isRead = false,
   });
 
+  factory SmsMessageData.fromTelephony(telephony.SmsMessage msg) {
+    return SmsMessageData(
+      id: msg.id?.toString() ?? '',
+      sender: msg.address ?? '',
+      body: msg.body ?? '',
+      date: msg.date != null
+          ? DateTime.fromMillisecondsSinceEpoch(msg.date!)
+          : DateTime.now(),
+      isRead: msg.read ?? false,
+    );
+  }
+
   @override
-  String toString() => 'SmsMessage(sender: $sender, body: $body, date: $date)';
+  String toString() =>
+      'SmsMessageData(sender: $sender, body: $body, date: $date)';
 }
 
 /// SMS 스캔 결과
 class SmsFormatScanResult {
-  final List<SmsMessage> financialMessages;
-  final Map<String, List<SmsMessage>> groupedBySender;
+  final List<SmsMessageData> financialMessages;
+  final Map<String, List<SmsMessageData>> groupedBySender;
   final List<FinancialSmsFormat> detectedFormats;
 
   const SmsFormatScanResult({
@@ -136,9 +150,13 @@ class SmsScannerService {
       );
     }
 
-    // TODO: Phase 3에서 another_telephony로 실제 SMS 읽기 구현
-    // 현재는 빈 결과 반환
-    final allMessages = <SmsMessage>[];
+    // SmsListenerService를 통해 실제 SMS 읽기
+    final messages = await SmsListenerService.instance.getRecentSms(
+      count: maxCount,
+    );
+    final allMessages = messages
+        .map((m) => SmsMessageData.fromTelephony(m))
+        .toList();
 
     // 금융 관련 메시지 필터링
     final financialMessages = allMessages
@@ -146,7 +164,7 @@ class SmsScannerService {
         .toList();
 
     // 발신자별 그룹화
-    final groupedBySender = <String, List<SmsMessage>>{};
+    final groupedBySender = <String, List<SmsMessageData>>{};
     for (final msg in financialMessages) {
       final key = _normalizeSmsSender(msg.sender);
       groupedBySender.putIfAbsent(key, () => []).add(msg);
@@ -169,7 +187,7 @@ class SmsScannerService {
   }
 
   /// SMS가 금융 관련인지 확인
-  bool _isFinancialSms(SmsMessage msg) {
+  bool _isFinancialSms(SmsMessageData msg) {
     // 발신자로 금융사 확인
     if (FinancialSmsSenders.isFinancialSender(msg.sender)) {
       return true;
@@ -203,7 +221,7 @@ class SmsScannerService {
   ///
   /// 사용자가 선택한 SMS를 분석하여 해당 금융사의 포맷을 학습합니다.
   Future<FormatLearningResult> learnFormatFromSms({
-    required SmsMessage sampleSms,
+    required SmsMessageData sampleSms,
     required String paymentMethodId,
     String? selectedInstitution,
   }) async {
@@ -265,7 +283,7 @@ class SmsScannerService {
 
   /// 범용 포맷 학습 (알 수 없는 금융사)
   Future<FormatLearningResult> _learnGenericFormat(
-    SmsMessage sampleSms,
+    SmsMessageData sampleSms,
     String paymentMethodId,
   ) async {
     // 기본 파싱 시도

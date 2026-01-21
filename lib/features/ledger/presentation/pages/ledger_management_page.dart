@@ -5,6 +5,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/ledger.dart';
 import '../providers/ledger_provider.dart';
@@ -14,11 +15,24 @@ class _LedgerConstants {
   static const int minLedgerCount = 1;
 }
 
-class LedgerManagementPage extends ConsumerWidget {
+class LedgerManagementPage extends ConsumerStatefulWidget {
   const LedgerManagementPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LedgerManagementPage> createState() =>
+      _LedgerManagementPageState();
+}
+
+class _LedgerManagementPageState extends ConsumerState<LedgerManagementPage> {
+  @override
+  void initState() {
+    super.initState();
+    // autoDispose provider는 페이지 재진입 시 자동으로 새 인스턴스를 생성하여 데이터를 로드하고,
+    // Realtime subscription이 변경사항을 감지하므로 수동 refresh가 불필요합니다.
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final ledgersAsync = ref.watch(ledgerNotifierProvider);
     final selectedId = ref.watch(selectedLedgerIdProvider);
@@ -60,7 +74,38 @@ class LedgerManagementPage extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView.builder(
+          padding: const EdgeInsets.all(Spacing.md),
+          itemCount: 3,
+          itemBuilder: (context, index) => Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Padding(
+              padding: const EdgeInsets.all(Spacing.md),
+              child: Row(
+                children: [
+                  const SkeletonCircle(size: 40),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonLine(
+                          width: MediaQuery.of(context).size.width * 0.4,
+                          height: 16,
+                        ),
+                        const SizedBox(height: 8),
+                        SkeletonLine(
+                          width: MediaQuery.of(context).size.width * 0.2,
+                          height: 12,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
         error: (e, _) =>
             Center(child: Text(l10n.errorWithMessage(e.toString()))),
       ),

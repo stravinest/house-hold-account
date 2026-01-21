@@ -4,13 +4,25 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/payment_method_repository.dart';
+import '../../data/repositories/learned_sms_format_repository.dart';
+import '../../data/services/sms_scanner_service.dart';
 import '../../domain/entities/payment_method.dart';
 
-// Repository 프로바이더
 final paymentMethodRepositoryProvider = Provider<PaymentMethodRepository>((
   ref,
 ) {
   return PaymentMethodRepository();
+});
+
+final learnedSmsFormatRepositoryProvider = Provider<LearnedSmsFormatRepository>(
+  (ref) {
+    return LearnedSmsFormatRepository();
+  },
+);
+
+final smsScannerServiceProvider = Provider<SmsScannerService>((ref) {
+  final repository = ref.watch(learnedSmsFormatRepositoryProvider);
+  return SmsScannerService(repository);
 });
 
 // 현재 가계부의 결제수단 목록
@@ -84,9 +96,13 @@ class PaymentMethodNotifier
     state = const AsyncValue.loading();
     try {
       final paymentMethods = await _repository.getPaymentMethods(_ledgerId);
-      state = AsyncValue.data(paymentMethods);
+      if (mounted) {
+        state = AsyncValue.data(paymentMethods);
+      }
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
@@ -95,6 +111,7 @@ class PaymentMethodNotifier
     required String name,
     String icon = '',
     String color = '#6750A4',
+    bool canAutoSave = true,
   }) async {
     if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
 
@@ -104,13 +121,19 @@ class PaymentMethodNotifier
         name: name,
         icon: icon,
         color: color,
+        canAutoSave: canAutoSave,
       );
 
-      _ref.invalidate(paymentMethodsProvider);
-      await loadPaymentMethods();
+      if (mounted) {
+        _ref.invalidate(paymentMethodsProvider);
+        await loadPaymentMethods();
+      }
       return paymentMethod;
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      debugPrint('PaymentMethod create fail: $e');
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
@@ -120,6 +143,7 @@ class PaymentMethodNotifier
     String? name,
     String? icon,
     String? color,
+    bool? canAutoSave,
   }) async {
     try {
       await _repository.updatePaymentMethod(
@@ -127,13 +151,22 @@ class PaymentMethodNotifier
         name: name,
         icon: icon,
         color: color,
+        canAutoSave: canAutoSave,
       );
 
-      _ref.invalidate(paymentMethodsProvider);
-      await loadPaymentMethods();
+      // Realtime subscription이 변경을 감지하므로 수동 로드가 불필요합니다.
+      // loadPaymentMethods()는 비동기이므로, 호출 전 mounted 체크를 하더라도
+      // 완료 전에 dispose될 수 있어 크래시가 발생할 수 있습니다.
+      // invalidate만 수행하고, Realtime subscription이 UI를 업데이트합니다.
+      if (mounted) {
+        _ref.invalidate(paymentMethodsProvider);
+      }
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
-      rethrow;
+      debugPrint('PaymentMethod update fail: $e');
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
+      // rethrow를 제거하여 호출자에서 추가 에러 핸들링 필요 없이 안전하게 종료
     }
   }
 
@@ -164,14 +197,16 @@ class PaymentMethodNotifier
       _ref.invalidate(paymentMethodsProvider);
       await loadPaymentMethods();
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
 }
 
 final paymentMethodNotifierProvider =
-    StateNotifierProvider<
+    StateNotifierProvider.autoDispose<
       PaymentMethodNotifier,
       AsyncValue<List<PaymentMethod>>
     >((ref) {

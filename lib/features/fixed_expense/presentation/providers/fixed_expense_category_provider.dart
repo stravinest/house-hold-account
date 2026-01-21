@@ -9,18 +9,18 @@ import '../../domain/entities/fixed_expense_category.dart';
 // Repository 프로바이더
 final fixedExpenseCategoryRepositoryProvider =
     Provider<FixedExpenseCategoryRepository>((ref) {
-  return FixedExpenseCategoryRepository();
-});
+      return FixedExpenseCategoryRepository();
+    });
 
 // 현재 가계부의 고정비 카테고리 목록
 final fixedExpenseCategoriesProvider =
     FutureProvider<List<FixedExpenseCategory>>((ref) async {
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  if (ledgerId == null) return [];
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      if (ledgerId == null) return [];
 
-  final repository = ref.watch(fixedExpenseCategoryRepositoryProvider);
-  return repository.getCategories(ledgerId);
-});
+      final repository = ref.watch(fixedExpenseCategoryRepositoryProvider);
+      return repository.getCategories(ledgerId);
+    });
 
 // 고정비 카테고리 관리 노티파이어
 class FixedExpenseCategoryNotifier
@@ -31,7 +31,7 @@ class FixedExpenseCategoryNotifier
   RealtimeChannel? _categoriesChannel;
 
   FixedExpenseCategoryNotifier(this._repository, this._ledgerId, this._ref)
-      : super(const AsyncValue.loading()) {
+    : super(const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadCategories();
       _subscribeToChanges();
@@ -84,9 +84,13 @@ class FixedExpenseCategoryNotifier
     state = const AsyncValue.loading();
     try {
       final categories = await _repository.getCategories(_ledgerId);
-      state = AsyncValue.data(categories);
+      if (mounted) {
+        state = AsyncValue.data(categories);
+      }
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
@@ -110,7 +114,9 @@ class FixedExpenseCategoryNotifier
       await loadCategories();
       return category;
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
@@ -132,7 +138,9 @@ class FixedExpenseCategoryNotifier
       _ref.invalidate(fixedExpenseCategoriesProvider);
       await loadCategories();
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      if (mounted) {
+        state = AsyncValue.error(e, st);
+      }
       rethrow;
     }
   }
@@ -150,10 +158,12 @@ class FixedExpenseCategoryNotifier
   }
 }
 
-final fixedExpenseCategoryNotifierProvider = StateNotifierProvider<
-    FixedExpenseCategoryNotifier,
-    AsyncValue<List<FixedExpenseCategory>>>((ref) {
-  final repository = ref.watch(fixedExpenseCategoryRepositoryProvider);
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  return FixedExpenseCategoryNotifier(repository, ledgerId, ref);
-});
+final fixedExpenseCategoryNotifierProvider =
+    StateNotifierProvider.autoDispose<
+      FixedExpenseCategoryNotifier,
+      AsyncValue<List<FixedExpenseCategory>>
+    >((ref) {
+      final repository = ref.watch(fixedExpenseCategoryRepositoryProvider);
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      return FixedExpenseCategoryNotifier(repository, ledgerId, ref);
+    });

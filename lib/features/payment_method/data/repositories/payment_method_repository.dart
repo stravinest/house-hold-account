@@ -26,6 +26,7 @@ class PaymentMethodRepository {
     required String name,
     String icon = '',
     String color = '#6750A4',
+    bool canAutoSave = true,
   }) async {
     try {
       // 현재 최대 sort_order 조회
@@ -45,6 +46,7 @@ class PaymentMethodRepository {
         icon: icon,
         color: color,
         sortOrder: maxOrder + 1,
+        canAutoSave: canAutoSave,
       );
 
       final response = await _client
@@ -69,6 +71,7 @@ class PaymentMethodRepository {
     String? icon,
     String? color,
     int? sortOrder,
+    bool? canAutoSave,
   }) async {
     try {
       final updates = <String, dynamic>{};
@@ -76,6 +79,7 @@ class PaymentMethodRepository {
       if (icon != null) updates['icon'] = icon;
       if (color != null) updates['color'] = color;
       if (sortOrder != null) updates['sort_order'] = sortOrder;
+      if (canAutoSave != null) updates['can_auto_save'] = canAutoSave;
 
       final response = await _client
           .from('payment_methods')
