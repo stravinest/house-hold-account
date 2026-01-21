@@ -87,9 +87,11 @@ class PendingTransactionModel extends PendingTransaction {
     String? parsedCategoryId,
     DateTime? parsedDate,
     String? duplicateHash,
+    PendingTransactionStatus? status,
   }) {
     return {
       'ledger_id': ledgerId,
+      if (status != null) 'status': status.toJson(),
       if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
       'user_id': userId,
       'source_type': sourceType.toJson(),

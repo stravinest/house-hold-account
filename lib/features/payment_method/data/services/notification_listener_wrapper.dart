@@ -65,6 +65,7 @@ class NotificationListenerWrapper {
     'com.nhn.android.search',
     'com.naver.pay.app',
     'com.kakaopay.app',
+    'com.android.shell', // For ADB testing
   };
 
   final _onNotificationProcessedController =
@@ -163,7 +164,7 @@ class NotificationListenerWrapper {
     if (!isAndroid || !_isInitialized || _isListening) return;
 
     _subscription = NotificationListenerService.notificationsStream.listen(
-      _onNotificationReceived,
+      onNotificationReceived,
       onError: (error) {
         debugPrint('Notification stream error: $error');
       },
@@ -180,7 +181,8 @@ class NotificationListenerWrapper {
     debugPrint('Notification listener stopped');
   }
 
-  Future<void> _onNotificationReceived(ServiceNotificationEvent event) async {
+  @visibleForTesting
+  Future<void> onNotificationReceived(ServiceNotificationEvent event) async {
     if (_currentUserId == null || _currentLedgerId == null) return;
     if (event.hasRemoved == true) return;
 
@@ -192,9 +194,11 @@ class NotificationListenerWrapper {
     if (packageName.isEmpty || content.isEmpty) return;
 
     if (!_isFinancialApp(packageName)) {
+      debugPrint('Skipping non-financial notification: $packageName');
       return;
     }
 
+    debugPrint('Processing financial notification: $packageName');
     final combinedContent = '$title $content';
 
     final matchResult = _findMatchingPaymentMethod(
@@ -202,14 +206,50 @@ class NotificationListenerWrapper {
       combinedContent,
     );
     if (matchResult == null) {
-      debugPrint('No matching payment method found for package: $packageName');
+      debugPrint(
+        'No matching payment method found for package: $packageName, content: $combinedContent',
+      );
+      return;
+    }
+
+    debugPrint(
+      'Found match for notification: ${matchResult.paymentMethod.name}',
+    );
+
+    await _processNotification(
+      packageName: packageName,
+      content: combinedContent,
+      timestamp: timestamp,
+      paymentMethod: matchResult.paymentMethod,
+      learnedFormat: matchResult.learnedFormat,
+    );
+  }
+
+  @visibleForTesting
+  Future<void> processManualNotification({
+    required String packageName,
+    required String title,
+    required String content,
+  }) async {
+    if (_currentUserId == null || _currentLedgerId == null) return;
+
+    final combinedContent = '$title $content';
+    final matchResult = _findMatchingPaymentMethod(
+      packageName,
+      combinedContent,
+    );
+
+    if (matchResult == null) {
+      debugPrint(
+        'Manual Notification: No matching payment method found for package: $packageName',
+      );
       return;
     }
 
     await _processNotification(
       packageName: packageName,
       content: combinedContent,
-      timestamp: timestamp,
+      timestamp: DateTime.now(),
       paymentMethod: matchResult.paymentMethod,
       learnedFormat: matchResult.learnedFormat,
     );
@@ -224,32 +264,41 @@ class NotificationListenerWrapper {
     String packageName,
     String content,
   ) {
+    final packageLower = packageName.toLowerCase();
+    final contentLower = content.toLowerCase();
+
     for (final pm in _autoSavePaymentMethods) {
       final formats = _learnedFormatsCache[pm.id];
-      if (formats == null || formats.isEmpty) continue;
 
-      for (final format in formats) {
-        final senderPattern = format.senderPattern.toLowerCase();
-        final packageLower = packageName.toLowerCase();
-        final contentLower = content.toLowerCase();
+      // 1. 학습된 포맷으로 먼저 매칭 시도
+      if (formats != null && formats.isNotEmpty) {
+        for (final format in formats) {
+          final senderPattern = format.senderPattern.toLowerCase();
 
-        if (packageLower.contains(senderPattern) ||
-            contentLower.contains(senderPattern)) {
-          return _PaymentMethodMatchResult(
-            paymentMethod: pm,
-            learnedFormat: format.toEntity(),
-          );
-        }
-
-        for (final keyword in format.senderKeywords) {
-          if (packageLower.contains(keyword.toLowerCase()) ||
-              contentLower.contains(keyword.toLowerCase())) {
+          if (packageLower.contains(senderPattern) ||
+              contentLower.contains(senderPattern)) {
             return _PaymentMethodMatchResult(
               paymentMethod: pm,
               learnedFormat: format.toEntity(),
             );
           }
+
+          for (final keyword in format.senderKeywords) {
+            if (packageLower.contains(keyword.toLowerCase()) ||
+                contentLower.contains(keyword.toLowerCase())) {
+              return _PaymentMethodMatchResult(
+                paymentMethod: pm,
+                learnedFormat: format.toEntity(),
+              );
+            }
+          }
         }
+      }
+
+      // 2. Fallback: 결제수단 이름이 내용에 포함되어 있는지 확인 (이름이 2자 이상인 경우만)
+      final pmName = pm.name.toLowerCase();
+      if (pmName.length >= 2 && contentLower.contains(pmName)) {
+        return _PaymentMethodMatchResult(paymentMethod: pm);
       }
     }
     return null;
@@ -276,7 +325,9 @@ class NotificationListenerWrapper {
     }
 
     if (!parsedResult.isParsed) {
-      debugPrint('Notification parsing failed for: $content');
+      debugPrint(
+        'Notification parsing failed for: $content. Result: $parsedResult',
+      );
       _onNotificationProcessedController.add(
         NotificationProcessedEvent(
           packageName: packageName,
@@ -379,6 +430,7 @@ class NotificationListenerWrapper {
         parsedCategoryId: categoryId,
         parsedDate: parsedResult.date ?? timestamp,
         duplicateHash: duplicateHash,
+        status: status,
       );
 
       if (status == PendingTransactionStatus.confirmed) {

@@ -30,6 +30,11 @@ class _PendingTransactionsPageState
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      if (!_tabController.indexIsChanging) {
+        setState(() {});
+      }
+    });
   }
 
   @override
@@ -57,38 +62,71 @@ class _PendingTransactionsPageState
                 case 'reject_all':
                   _rejectAll();
                   break;
+                case 'delete_pending':
+                  _deleteAllByStatus(PendingTransactionStatus.pending);
+                  break;
+                case 'delete_confirmed':
+                  _deleteAllConfirmed();
+                  break;
                 case 'delete_rejected':
                   _deleteRejected();
                   break;
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'confirm_all',
-                child: ListTile(
-                  leading: Icon(Icons.check_circle_outline),
-                  title: Text('모두 확인'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'reject_all',
-                child: ListTile(
-                  leading: Icon(Icons.cancel_outlined),
-                  title: Text('모두 거부'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              const PopupMenuDivider(),
-              const PopupMenuItem(
-                value: 'delete_rejected',
-                child: ListTile(
-                  leading: Icon(Icons.delete_outline),
-                  title: Text('거부된 항목 삭제'),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
+            itemBuilder: (context) {
+              final index = _tabController.index;
+              if (index == 0) {
+                return [
+                  const PopupMenuItem(
+                    value: 'confirm_all',
+                    child: ListTile(
+                      leading: Icon(Icons.check_circle_outline),
+                      title: Text('모두 확인'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'reject_all',
+                    child: ListTile(
+                      leading: Icon(Icons.cancel_outlined),
+                      title: Text('모두 거부'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                  const PopupMenuDivider(),
+                  const PopupMenuItem(
+                    value: 'delete_pending',
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline),
+                      title: Text('대기 중 모두 삭제'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ];
+              } else if (index == 1) {
+                return [
+                  const PopupMenuItem(
+                    value: 'delete_confirmed',
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline),
+                      title: Text('기록 삭제'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ];
+              } else {
+                return [
+                  const PopupMenuItem(
+                    value: 'delete_rejected',
+                    child: ListTile(
+                      leading: Icon(Icons.delete_outline),
+                      title: Text('거부된 항목 삭제'),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ];
+              }
+            },
           ),
         ],
         bottom: TabBar(
@@ -200,6 +238,7 @@ class _PendingTransactionsPageState
                   onEdit: tx.status == PendingTransactionStatus.pending
                       ? () => _editTransaction(tx)
                       : null,
+                  onDelete: () => _deleteTransaction(tx.id),
                 ),
               ),
             ),
@@ -362,11 +401,15 @@ class _PendingTransactionsPageState
   }
 
   Future<void> _deleteRejected() async {
+    await _deleteAllByStatus(PendingTransactionStatus.rejected);
+  }
+
+  Future<void> _deleteTransaction(String id) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('거부된 항목 삭제'),
-        content: const Text('거부된 모든 거래를 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.'),
+        title: const Text('거래 삭제'),
+        content: const Text('이 거래를 삭제하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -384,11 +427,110 @@ class _PendingTransactionsPageState
       try {
         await ref
             .read(pendingTransactionNotifierProvider.notifier)
-            .deleteRejected();
+            .deleteTransaction(id);
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('거부된 항목이 삭제되었습니다')));
+          ).showSnackBar(const SnackBar(content: Text('거래가 삭제되었습니다')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteAllByStatus(PendingTransactionStatus status) async {
+    String title;
+    String content;
+
+    switch (status) {
+      case PendingTransactionStatus.pending:
+        title = '대기 중인 거래 모두 삭제';
+        content = '대기 중인 모든 거래를 삭제하시겠습니까?';
+        break;
+      case PendingTransactionStatus.rejected:
+        title = '거부된 거래 모두 삭제';
+        content = '거부된 모든 거래를 삭제하시겠습니까?';
+        break;
+      case PendingTransactionStatus.confirmed:
+      case PendingTransactionStatus.converted:
+        title = '확인된 거래 모두 삭제';
+        content = '확인된 모든 거래 기록을 삭제하시겠습니까?';
+        break;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(content),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref
+            .read(pendingTransactionNotifierProvider.notifier)
+            .deleteAllByStatus(status);
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('삭제되었습니다')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        }
+      }
+    }
+  }
+
+  Future<void> _deleteAllConfirmed() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('확인된 거래 모두 삭제'),
+        content: const Text('확인된 모든 거래 기록을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final notifier = ref.read(pendingTransactionNotifierProvider.notifier);
+        // confirmed와 converted 모두 삭제
+        await notifier.deleteAllByStatus(PendingTransactionStatus.confirmed);
+        await notifier.deleteAllByStatus(PendingTransactionStatus.converted);
+
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('삭제되었습니다')));
         }
       } catch (e) {
         if (mounted) {

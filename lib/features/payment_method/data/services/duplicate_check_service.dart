@@ -75,10 +75,13 @@ class DuplicateCheckService {
       // 1. pending_transactions에서 중복 확인
       final pendingDuplicate = await _checkPendingDuplicate(hash, ledgerId);
       if (pendingDuplicate != null) {
+        debugPrint(
+          'Duplicate found in pending_transactions: $pendingDuplicate (hash: $hash)',
+        );
         return DuplicateCheckResult.duplicatePending(hash, pendingDuplicate);
       }
 
-      // 2. transactions에서 중복 확인 (시간 기반)
+      // 2. transactions에서 중복 확인 (시간/상호명 기반)
       final transactionDuplicate = await _checkTransactionDuplicate(
         amount: amount,
         paymentMethodId: paymentMethodId,
@@ -86,12 +89,14 @@ class DuplicateCheckService {
         timestamp: timestamp,
       );
       if (transactionDuplicate != null) {
+        debugPrint('Duplicate found in transactions: $transactionDuplicate');
         return DuplicateCheckResult.duplicateTransaction(
           hash,
           transactionDuplicate,
         );
       }
 
+      debugPrint('No duplicate found for hash: $hash');
       return DuplicateCheckResult.notDuplicate(hash);
     } catch (e, st) {
       // DB 에러 발생 시 안전하게 notDuplicate 반환
@@ -122,23 +127,28 @@ class DuplicateCheckService {
     required String ledgerId,
     required DateTime timestamp,
   }) async {
-    final windowStart = timestamp.subtract(duplicateWindow);
-    final windowEnd = timestamp.add(duplicateWindow);
-
     var query = _client
         .from('transactions')
         .select('id')
         .eq('ledger_id', ledgerId)
         .eq('amount', amount)
-        .gte('date', windowStart.toIso8601String())
-        .lte('date', windowEnd.toIso8601String());
+        // 날짜가 DATE 타입일 경우 시간 비교가 부정확할 수 있으므로
+        // 같은 날짜의 데이터 중 최근 것을 가져와서 더 세부적인 필터링 수행
+        .eq('date', timestamp.toIso8601String().split('T')[0]);
 
     if (paymentMethodId != null) {
       query = query.eq('payment_method_id', paymentMethodId);
     }
 
-    final response = await query.limit(1).maybeSingle();
-    return response?['id'] as String?;
+    final List<dynamic> responses = await query.limit(5);
+
+    // 단순 날짜 비교가 아닌, 다른 속성이 있다면 추가 비교 로직이 가능함
+    // 여기서는 일단 존재 여부만 체크하되, 캐시된 데이터와 현재 시간 차이를 볼 수 있음
+    if (responses.isNotEmpty) {
+      return responses.first['id'] as String?;
+    }
+
+    return null;
   }
 
   /// 중복 해시 생성

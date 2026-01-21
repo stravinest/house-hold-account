@@ -137,7 +137,7 @@ class SmsListenerService {
     if (!isAndroid || !_isInitialized || _isListening) return;
 
     _telephony.listenIncomingSms(
-      onNewMessage: _onSmsReceived,
+      onNewMessage: onSmsReceived,
       onBackgroundMessage: backgroundSmsHandler,
       listenInBackground: true,
     );
@@ -151,7 +151,8 @@ class SmsListenerService {
     debugPrint('SMS listener stopped');
   }
 
-  Future<void> _onSmsReceived(SmsMessage message) async {
+  @visibleForTesting
+  Future<void> onSmsReceived(SmsMessage message) async {
     if (_currentUserId == null || _currentLedgerId == null) return;
 
     final sender = message.address ?? '';
@@ -181,36 +182,69 @@ class SmsListenerService {
     );
   }
 
+  @visibleForTesting
+  Future<void> processManualSms({
+    required String sender,
+    required String content,
+  }) async {
+    if (_currentUserId == null || _currentLedgerId == null) return;
+
+    final matchResult = _findMatchingPaymentMethod(sender, content);
+    if (matchResult == null) {
+      debugPrint(
+        'Manual SMS: No matching payment method found for sender: $sender',
+      );
+      return;
+    }
+
+    await _processSms(
+      sender: sender,
+      content: content,
+      timestamp: DateTime.now(),
+      paymentMethod: matchResult.paymentMethod,
+      learnedFormat: matchResult.learnedFormat,
+    );
+  }
+
   _PaymentMethodMatchResult? _findMatchingPaymentMethod(
     String sender,
     String content,
   ) {
+    final senderLower = sender.toLowerCase();
+    final contentLower = content.toLowerCase();
+
     for (final pm in _autoSavePaymentMethods) {
       final formats = _learnedFormatsCache[pm.id];
-      if (formats == null || formats.isEmpty) continue;
 
-      for (final format in formats) {
-        final senderPattern = format.senderPattern.toLowerCase();
-        final senderLower = sender.toLowerCase();
-        final contentLower = content.toLowerCase();
+      // 1. 학습된 포맷으로 먼저 매칭 시도
+      if (formats != null && formats.isNotEmpty) {
+        for (final format in formats) {
+          final senderPattern = format.senderPattern.toLowerCase();
 
-        if (senderLower.contains(senderPattern) ||
-            contentLower.contains(senderPattern)) {
-          return _PaymentMethodMatchResult(
-            paymentMethod: pm,
-            learnedFormat: format.toEntity(),
-          );
-        }
-
-        for (final keyword in format.senderKeywords) {
-          if (senderLower.contains(keyword.toLowerCase()) ||
-              contentLower.contains(keyword.toLowerCase())) {
+          if (senderLower.contains(senderPattern) ||
+              contentLower.contains(senderPattern)) {
             return _PaymentMethodMatchResult(
               paymentMethod: pm,
               learnedFormat: format.toEntity(),
             );
           }
+
+          for (final keyword in format.senderKeywords) {
+            if (senderLower.contains(keyword.toLowerCase()) ||
+                contentLower.contains(keyword.toLowerCase())) {
+              return _PaymentMethodMatchResult(
+                paymentMethod: pm,
+                learnedFormat: format.toEntity(),
+              );
+            }
+          }
         }
+      }
+
+      // 2. Fallback: 결제수단 이름이 내용에 포함되어 있는지 확인 (이름이 2자 이상인 경우만)
+      final pmName = pm.name.toLowerCase();
+      if (pmName.length >= 2 && contentLower.contains(pmName)) {
+        return _PaymentMethodMatchResult(paymentMethod: pm);
       }
     }
     return null;
@@ -340,6 +374,7 @@ class SmsListenerService {
         parsedCategoryId: categoryId,
         parsedDate: parsedResult.date ?? timestamp,
         duplicateHash: duplicateHash,
+        status: status,
       );
 
       if (status == PendingTransactionStatus.confirmed) {

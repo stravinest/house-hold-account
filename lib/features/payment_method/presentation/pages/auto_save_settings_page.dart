@@ -8,8 +8,6 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
-import '../../../category/domain/entities/category.dart';
-import '../../../category/presentation/providers/category_provider.dart';
 import '../../domain/entities/payment_method.dart';
 import '../providers/payment_method_provider.dart';
 import '../widgets/permission_request_dialog.dart';
@@ -26,7 +24,6 @@ class AutoSaveSettingsPage extends ConsumerStatefulWidget {
 
 class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
   AutoSaveMode _selectedMode = AutoSaveMode.manual;
-  String? _selectedCategoryId;
   bool _isLoading = false;
   PaymentMethod? _paymentMethod;
 
@@ -46,7 +43,6 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
         setState(() {
           _paymentMethod = pm;
           _selectedMode = pm.autoSaveMode;
-          _selectedCategoryId = pm.defaultCategoryId;
         });
       }
     });
@@ -57,7 +53,6 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final categoriesAsync = ref.watch(expenseCategoriesProvider);
 
     // Android만 자동 저장 지원
     final isAndroid = Platform.isAndroid;
@@ -171,34 +166,6 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
                   const SizedBox(height: Spacing.sm),
                   _buildModeSelector(context, isAndroid),
                   const SizedBox(height: Spacing.lg),
-
-                  // 기본 카테고리 선택 (자동 저장 활성화 시에만)
-                  if (_selectedMode != AutoSaveMode.manual) ...[
-                    Text(
-                      '기본 카테고리',
-                      style: textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: Spacing.xs),
-                    Text(
-                      '파싱된 거래의 기본 카테고리를 선택하세요',
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: Spacing.sm),
-                    categoriesAsync.when(
-                      data: (categories) =>
-                          _buildCategorySelector(context, categories),
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Text(
-                        '카테고리를 불러올 수 없습니다: $e',
-                        style: TextStyle(color: colorScheme.error),
-                      ),
-                    ),
-                  ],
 
                   // 권한 안내
                   if (isAndroid && _selectedMode != AutoSaveMode.manual) ...[
@@ -364,60 +331,6 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
     );
   }
 
-  Widget _buildCategorySelector(
-    BuildContext context,
-    List<Category> categories,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-        child: DropdownButtonFormField<String?>(
-          value: _selectedCategoryId,
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: Spacing.sm),
-          ),
-          hint: const Text('카테고리 선택 (선택사항)'),
-          items: [
-            const DropdownMenuItem<String?>(value: null, child: Text('선택 안함')),
-            ...categories.map((category) {
-              return DropdownMenuItem<String>(
-                value: category.id,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      decoration: BoxDecoration(
-                        color: _parseColor(category.color),
-                        borderRadius: BorderRadius.circular(
-                          BorderRadiusToken.xs,
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          category.icon,
-                          style: const TextStyle(fontSize: 14),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: Spacing.sm),
-                    Text(category.name),
-                  ],
-                ),
-              );
-            }),
-          ],
-          onChanged: (value) {
-            setState(() {
-              _selectedCategoryId = value;
-            });
-          },
-        ),
-      ),
-    );
-  }
-
   Future<void> _saveSettings() async {
     if (_paymentMethod == null) return;
 
@@ -442,7 +355,6 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
           .updateAutoSaveSettings(
             id: widget.paymentMethodId,
             autoSaveMode: _selectedMode,
-            defaultCategoryId: _selectedCategoryId,
           );
 
       if (mounted) {

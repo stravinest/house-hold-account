@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../config/supabase_config.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../models/pending_transaction_model.dart';
@@ -9,20 +11,22 @@ class PendingTransactionRepository {
     String ledgerId, {
     PendingTransactionStatus? status,
   }) async {
-    var query = _client
-        .from('pending_transactions')
-        .select()
-        .eq('ledger_id', ledgerId);
+    return _retry(() async {
+      var query = _client
+          .from('pending_transactions')
+          .select()
+          .eq('ledger_id', ledgerId);
 
-    if (status != null) {
-      query = query.eq('status', status.toJson());
-    }
+      if (status != null) {
+        query = query.eq('status', status.toJson());
+      }
 
-    final response = await query.order('source_timestamp', ascending: false);
+      final response = await query.order('source_timestamp', ascending: false);
 
-    return (response as List)
-        .map((json) => PendingTransactionModel.fromJson(json))
-        .toList();
+      return (response as List)
+          .map((json) => PendingTransactionModel.fromJson(json))
+          .toList();
+    });
   }
 
   Future<int> getPendingCount(String ledgerId) async {
@@ -49,6 +53,7 @@ class PendingTransactionRepository {
     String? parsedCategoryId,
     DateTime? parsedDate,
     String? duplicateHash,
+    PendingTransactionStatus? status,
   }) async {
     final data = PendingTransactionModel.toCreateJson(
       ledgerId: ledgerId,
@@ -64,15 +69,18 @@ class PendingTransactionRepository {
       parsedCategoryId: parsedCategoryId,
       parsedDate: parsedDate,
       duplicateHash: duplicateHash,
+      status: status,
     );
 
-    final response = await _client
-        .from('pending_transactions')
-        .insert(data)
-        .select()
-        .single();
+    return _retry(() async {
+      final response = await _client
+          .from('pending_transactions')
+          .insert(data)
+          .select()
+          .single();
 
-    return PendingTransactionModel.fromJson(response);
+      return PendingTransactionModel.fromJson(response);
+    });
   }
 
   Future<PendingTransactionModel> updateStatus({
@@ -134,12 +142,19 @@ class PendingTransactionRepository {
     await _client.from('pending_transactions').delete().eq('id', id);
   }
 
-  Future<void> deleteAllRejected(String ledgerId) async {
+  Future<void> deleteAllByStatus(
+    String ledgerId,
+    PendingTransactionStatus status,
+  ) async {
     await _client
         .from('pending_transactions')
         .delete()
         .eq('ledger_id', ledgerId)
-        .eq('status', 'rejected');
+        .eq('status', status.toJson());
+  }
+
+  Future<void> deleteAllRejected(String ledgerId) async {
+    await deleteAllByStatus(ledgerId, PendingTransactionStatus.rejected);
   }
 
   Future<bool> checkDuplicate({
@@ -202,5 +217,41 @@ class PendingTransactionRepository {
         })
         .eq('ledger_id', ledgerId)
         .eq('status', 'pending');
+  }
+
+  RealtimeChannel subscribePendingTransactions({
+    required String ledgerId,
+    required void Function() onTableChanged,
+  }) {
+    return _client
+        .channel('pending_transactions_changes_$ledgerId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'house',
+          table: 'pending_transactions',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'ledger_id',
+            value: ledgerId,
+          ),
+          callback: (payload) {
+            onTableChanged();
+          },
+        )
+        .subscribe();
+  }
+
+  Future<T> _retry<T>(Future<T> Function() block, {int maxAttempts = 3}) async {
+    for (var i = 0; i < maxAttempts; i++) {
+      try {
+        return await block();
+      } catch (e) {
+        if (i == maxAttempts - 1) rethrow;
+        await Future.delayed(
+          Duration(milliseconds: 1000 * (i + 1)),
+        ); // 1s, 2s, 3s...
+      }
+    }
+    throw Exception('Unreachable');
   }
 }

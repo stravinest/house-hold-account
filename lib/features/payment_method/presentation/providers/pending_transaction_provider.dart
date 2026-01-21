@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../transaction/data/repositories/transaction_repository.dart';
@@ -24,7 +25,9 @@ final pendingTransactionsProvider =
       );
     });
 
-final pendingTransactionCountProvider = FutureProvider<int>((ref) async {
+final pendingTransactionCountProvider = FutureProvider.autoDispose<int>((
+  ref,
+) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return 0;
 
@@ -38,6 +41,7 @@ class PendingTransactionNotifier
   final TransactionRepository _transactionRepository;
   final String? _ledgerId;
   final Ref _ref;
+  RealtimeChannel? _subscription;
 
   PendingTransactionNotifier(
     this._repository,
@@ -47,9 +51,33 @@ class PendingTransactionNotifier
   ) : super(const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadPendingTransactions();
+      _subscribeToChanges();
     } else {
       state = const AsyncValue.data([]);
     }
+  }
+
+  void _subscribeToChanges() {
+    if (_ledgerId == null) return;
+
+    try {
+      _subscription = _repository.subscribePendingTransactions(
+        ledgerId: _ledgerId,
+        onTableChanged: () {
+          // DB 변경 시 리스트 새로고침 및 카운트 갱신
+          loadPendingTransactions();
+          _ref.invalidate(pendingTransactionCountProvider);
+        },
+      );
+    } catch (e) {
+      debugPrint('PendingTransaction Realtime subscribe fail: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _subscription?.unsubscribe();
+    super.dispose();
   }
 
   Future<void> loadPendingTransactions({
@@ -68,8 +96,8 @@ class PendingTransactionNotifier
       );
       state = AsyncValue.data(transactions);
     } catch (e, st) {
+      debugPrint('Error loading pending transactions: $e');
       state = AsyncValue.error(e, st);
-      rethrow;
     }
   }
 
@@ -204,21 +232,35 @@ class PendingTransactionNotifier
     }
   }
 
-  Future<void> deleteRejected() async {
-    if (_ledgerId == null) return;
-
+  Future<void> deleteTransaction(String id) async {
     try {
-      await _repository.deleteAllRejected(_ledgerId);
+      await _repository.deletePendingTransaction(id);
       await loadPendingTransactions();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;
     }
   }
+
+  Future<void> deleteAllByStatus(PendingTransactionStatus status) async {
+    if (_ledgerId == null) return;
+
+    try {
+      await _repository.deleteAllByStatus(_ledgerId, status);
+      await loadPendingTransactions();
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
+  Future<void> deleteRejected() async {
+    await deleteAllByStatus(PendingTransactionStatus.rejected);
+  }
 }
 
 final pendingTransactionNotifierProvider =
-    StateNotifierProvider<
+    StateNotifierProvider.autoDispose<
       PendingTransactionNotifier,
       AsyncValue<List<PendingTransactionModel>>
     >((ref) {

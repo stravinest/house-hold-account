@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,10 +9,10 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/empty_state.dart';
-import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../domain/entities/payment_method.dart';
 import '../providers/payment_method_provider.dart';
 import '../providers/pending_transaction_provider.dart';
+import 'payment_method_wizard_page.dart';
 
 class PaymentMethodManagementPage extends ConsumerStatefulWidget {
   const PaymentMethodManagementPage({super.key});
@@ -28,16 +27,17 @@ class _PaymentMethodManagementPageState
   @override
   void initState() {
     super.initState();
-    // 화면 진입 시 결제수단 데이터 새로 로드
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(paymentMethodNotifierProvider.notifier).loadPaymentMethods();
-    });
+    // 페이지 진입 시 결제수단 목록을 새로고침하지 않습니다.
+    // StateNotifier가 생성될 때 자동으로 loadPaymentMethods()를 호출하고,
+    // Realtime subscription이 변경사항을 감지하므로 중복 refresh가 불필요합니다.
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
+    // 대기 중인 거래 실시간 갱신을 위해 구독 유지
+    ref.watch(pendingTransactionNotifierProvider);
     final pendingCountAsync = ref.watch(pendingTransactionCountProvider);
     final isAndroid = Platform.isAndroid;
 
@@ -50,8 +50,10 @@ class _PaymentMethodManagementPageState
               data: (count) => count > 0
                   ? Badge(
                       label: Text(count.toString()),
+                      backgroundColor: Theme.of(context).colorScheme.error,
+                      textColor: Theme.of(context).colorScheme.onError,
                       child: IconButton(
-                        icon: const Icon(Icons.pending_actions),
+                        icon: const Icon(Icons.notifications_active_outlined),
                         tooltip: '대기 중인 거래',
                         onPressed: () {
                           context.push('/settings/pending-transactions');
@@ -59,88 +61,61 @@ class _PaymentMethodManagementPageState
                       ),
                     )
                   : IconButton(
-                      icon: const Icon(Icons.pending_actions_outlined),
+                      icon: const Icon(Icons.notifications_none_outlined),
                       tooltip: '대기 중인 거래',
                       onPressed: () {
                         context.push('/settings/pending-transactions');
                       },
                     ),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
+              loading: () => IconButton(
+                icon: const Icon(Icons.notifications_none_outlined),
+                onPressed: null,
+              ),
+              error: (_, __) => IconButton(
+                icon: const Icon(Icons.notifications_off_outlined),
+                onPressed: null,
+              ),
             ),
         ],
       ),
       body: CenteredContent(
         maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
-        child: paymentMethodsAsync.when(
-          data: (paymentMethods) {
-            if (paymentMethods.isEmpty) {
-              return EmptyState(
-                icon: Icons.credit_card_outlined,
-                message: l10n.paymentMethodEmpty,
-                action: ElevatedButton.icon(
-                  onPressed: () => _showAddDialog(context),
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.paymentMethodAdd),
-                ),
-              );
-            }
+        child: Column(
+          children: [
+            _buildPendingAlert(context, ref),
+            Expanded(
+              child: paymentMethodsAsync.when(
+                data: (paymentMethods) {
+                  if (paymentMethods.isEmpty) {
+                    return EmptyState(
+                      icon: Icons.credit_card_outlined,
+                      message: l10n.paymentMethodEmpty,
+                      action: ElevatedButton.icon(
+                        onPressed: () => _showAddDialog(context),
+                        icon: const Icon(Icons.add),
+                        label: Text(l10n.paymentMethodAdd),
+                      ),
+                    );
+                  }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(Spacing.md),
-              cacheExtent: 500, // 성능 최적화: 스크롤 시 미리 렌더링
-              itemCount: paymentMethods.length,
-              itemBuilder: (context, index) {
-                final paymentMethod = paymentMethods[index];
-                return _PaymentMethodTile(
-                  key: ValueKey(paymentMethod.id),
-                  paymentMethod: paymentMethod,
-                );
-              },
-            );
-          },
-          loading: () => ListView.builder(
-            padding: const EdgeInsets.all(Spacing.md),
-            itemCount: 5,
-            itemBuilder: (context, index) {
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: Padding(
-                  padding: const EdgeInsets.all(Spacing.md),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SkeletonLine(height: 18),
-                            if (index == 0) ...[
-                              const SizedBox(height: 8),
-                              const SkeletonLine(width: 60, height: 14),
-                            ],
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      SkeletonBox(
-                        width: 40,
-                        height: 40,
-                        borderRadius: BorderRadiusToken.md,
-                      ),
-                      const SizedBox(width: 8),
-                      SkeletonBox(
-                        width: 40,
-                        height: 40,
-                        borderRadius: BorderRadiusToken.md,
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-          error: (e, _) =>
-              Center(child: Text(l10n.errorWithMessage(e.toString()))),
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(Spacing.md),
+                    itemCount: paymentMethods.length,
+                    itemBuilder: (context, index) {
+                      final paymentMethod = paymentMethods[index];
+                      return _PaymentMethodTile(
+                        key: ValueKey(paymentMethod.id),
+                        paymentMethod: paymentMethod,
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, _) =>
+                    Center(child: Text(l10n.errorWithMessage(e.toString()))),
+              ),
+            ),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -152,9 +127,78 @@ class _PaymentMethodManagementPageState
   }
 
   void _showAddDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => const _PaymentMethodDialog(),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const PaymentMethodWizardPage()),
+    );
+  }
+
+  Widget _buildPendingAlert(BuildContext context, WidgetRef ref) {
+    final pendingCountAsync = ref.watch(pendingTransactionCountProvider);
+
+    return pendingCountAsync.maybeWhen(
+      data: (count) {
+        if (count == 0) return const SizedBox.shrink();
+
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.fromLTRB(
+            Spacing.md,
+            Spacing.md,
+            Spacing.md,
+            0,
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(
+              context,
+            ).colorScheme.errorContainer.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.error.withOpacity(0.3),
+            ),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => context.push('/settings/pending-transactions'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.new_releases_outlined,
+                      color: Theme.of(context).colorScheme.error,
+                      size: 20,
+                    ),
+                    const SizedBox(width: Spacing.sm),
+                    Expanded(
+                      child: Text(
+                        '확인 대기 중인 거래가 $count건 있습니다',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onErrorContainer,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.error.withOpacity(0.5),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      orElse: () => const SizedBox.shrink(),
     );
   }
 }
@@ -176,6 +220,13 @@ class _PaymentMethodTile extends ConsumerWidget {
       child: Column(
         children: [
           ListTile(
+            leading: CircleAvatar(
+              backgroundColor: _safeParseColor(paymentMethod.color),
+              child: Text(
+                paymentMethod.name.isNotEmpty ? paymentMethod.name[0] : '?',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
             title: Text(paymentMethod.name),
             subtitle: _buildSubtitle(context, l10n),
             trailing: Row(
@@ -184,7 +235,7 @@ class _PaymentMethodTile extends ConsumerWidget {
                 IconButton(
                   icon: const Icon(Icons.edit),
                   tooltip: l10n.commonEdit,
-                  onPressed: () => _showEditDialog(context, paymentMethod),
+                  onPressed: () => _showEditDialog(context, ref, paymentMethod),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete),
@@ -195,8 +246,7 @@ class _PaymentMethodTile extends ConsumerWidget {
               ],
             ),
           ),
-          // 자동 저장 설정 (Android만)
-          if (isAndroid) ...[
+          if (isAndroid && paymentMethod.canAutoSave) ...[
             const Divider(height: 1),
             InkWell(
               onTap: () {
@@ -260,15 +310,10 @@ class _PaymentMethodTile extends ConsumerWidget {
   }
 
   Widget? _buildSubtitle(BuildContext context, AppLocalizations l10n) {
-    final items = <Widget>[];
-
     if (paymentMethod.isDefault) {
-      items.add(Text(l10n.paymentMethodDefault));
+      return Text(l10n.paymentMethodDefault);
     }
-
-    if (items.isEmpty) return null;
-
-    return Row(children: items);
+    return null;
   }
 
   String _getAutoSaveModeText(AutoSaveMode mode) {
@@ -282,10 +327,17 @@ class _PaymentMethodTile extends ConsumerWidget {
     }
   }
 
-  void _showEditDialog(BuildContext context, PaymentMethod paymentMethod) {
-    showDialog(
-      context: context,
-      builder: (context) => _PaymentMethodDialog(paymentMethod: paymentMethod),
+  void _showEditDialog(
+    BuildContext context,
+    WidgetRef ref,
+    PaymentMethod paymentMethod,
+  ) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            PaymentMethodWizardPage(paymentMethod: paymentMethod),
+      ),
     );
   }
 
@@ -333,133 +385,12 @@ class _PaymentMethodTile extends ConsumerWidget {
       ),
     );
   }
-}
 
-class _PaymentMethodDialog extends ConsumerStatefulWidget {
-  final PaymentMethod? paymentMethod;
-
-  const _PaymentMethodDialog({this.paymentMethod});
-
-  @override
-  ConsumerState<_PaymentMethodDialog> createState() =>
-      _PaymentMethodDialogState();
-}
-
-class _PaymentMethodDialogState extends ConsumerState<_PaymentMethodDialog> {
-  final _formKey = GlobalKey<FormState>();
-  late TextEditingController _nameController;
-
-  static const List<String> _colorPalette = [
-    '#FF6B6B',
-    '#4ECDC4',
-    '#FFE66D',
-    '#95E1D3',
-    '#A8DADC',
-    '#F4A261',
-    '#E76F51',
-    '#2A9D8F',
-    '#4CAF50',
-    '#2196F3',
-    '#9C27B0',
-    '#00BCD4',
-    '#E91E63',
-    '#795548',
-    '#607D8B',
-    '#8BC34A',
-  ];
-
-  String _generateRandomColor() {
-    return _colorPalette[Random().nextInt(_colorPalette.length)];
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController(
-      text: widget.paymentMethod?.name ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final isEdit = widget.paymentMethod != null;
-
-    return AlertDialog(
-      title: Text(isEdit ? l10n.paymentMethodEdit : l10n.paymentMethodAdd),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _nameController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.paymentMethodName,
-            hintText: l10n.paymentMethodNameHint,
-            border: const OutlineInputBorder(),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return l10n.paymentMethodNameRequired;
-            }
-            return null;
-          },
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(l10n.commonCancel),
-        ),
-        TextButton(
-          onPressed: _submit,
-          child: Text(isEdit ? l10n.commonEdit : l10n.commonAdd),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    final l10n = AppLocalizations.of(context)!;
-
+  Color _safeParseColor(String colorStr) {
     try {
-      if (widget.paymentMethod != null) {
-        await ref
-            .read(paymentMethodNotifierProvider.notifier)
-            .updatePaymentMethod(
-              id: widget.paymentMethod!.id,
-              name: _nameController.text,
-            );
-      } else {
-        await ref
-            .read(paymentMethodNotifierProvider.notifier)
-            .createPaymentMethod(
-              name: _nameController.text,
-              icon: '',
-              color: _generateRandomColor(),
-            );
-      }
-
-      if (mounted) {
-        Navigator.pop(context);
-        SnackBarUtils.showSuccess(
-          context,
-          widget.paymentMethod != null
-              ? l10n.paymentMethodUpdated
-              : l10n.paymentMethodAdded,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
-      }
+      return Color(int.parse(colorStr.replaceAll('#', '0xFF')));
+    } catch (_) {
+      return Colors.grey;
     }
   }
 }
