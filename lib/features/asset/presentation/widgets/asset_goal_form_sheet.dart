@@ -90,10 +90,12 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                         _buildTargetDateField(context, l10n),
                         const SizedBox(height: 32),
                         _buildSubmitButton(context, l10n, isEditing),
-                        // 시스템 네비게이션 바 높이 + 여유 공간
+                        // 키보드 높이 + 시스템 네비게이션 바 높이 감지
                         SizedBox(
                           height:
-                              MediaQuery.of(context).viewPadding.bottom +
+                              (MediaQuery.of(context).viewInsets.bottom > 0
+                                  ? MediaQuery.of(context).viewInsets.bottom
+                                  : MediaQuery.of(context).viewPadding.bottom) +
                               Spacing.lg,
                         ),
                       ],

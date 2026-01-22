@@ -232,8 +232,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   }
 
   Widget _buildFormContent(ScrollController scrollController) {
-    // 시스템 네비게이션 바 높이를 고려한 하단 패딩
-    final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+    // 시스템 네비게이션 바 높이 + 키보드 높이 감지
+    final viewInsets = MediaQuery.of(context).viewInsets;
+    final viewPadding = MediaQuery.of(context).viewPadding;
+    final bottomPadding = viewInsets.bottom > 0
+        ? viewInsets.bottom
+        : viewPadding.bottom;
 
     return SingleChildScrollView(
       controller: scrollController,
@@ -299,8 +303,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             const Divider(),
           ],
           MemoInputSection(controller: _memoController),
-          // 시스템 네비게이션 바 높이 + 여유 공간
-          SizedBox(height: bottomPadding + Spacing.xxl),
+          // 키보드가 올라왔을 때 충분한 스크롤 공간 확보
+          SizedBox(height: bottomPadding + Spacing.xl),
         ],
       ),
     );
