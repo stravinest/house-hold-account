@@ -265,6 +265,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
               controller: _amountController,
               focusNode: _amountFocusNode,
               isInstallmentMode: _isInstallmentMode,
+              autofocus: true,
             ),
             const Divider(),
           ],

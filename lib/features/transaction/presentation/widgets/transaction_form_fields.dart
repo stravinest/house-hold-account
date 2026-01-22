@@ -75,12 +75,14 @@ class AmountInputField extends StatelessWidget {
   final TextEditingController controller;
   final FocusNode focusNode;
   final bool isInstallmentMode;
+  final bool autofocus;
 
   const AmountInputField({
     super.key,
     required this.controller,
     required this.focusNode,
     required this.isInstallmentMode,
+    this.autofocus = false,
   });
 
   @override
@@ -90,6 +92,7 @@ class AmountInputField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       focusNode: focusNode,
+      autofocus: autofocus,
       keyboardType: TextInputType.number,
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
