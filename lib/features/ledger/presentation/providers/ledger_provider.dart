@@ -263,9 +263,7 @@ class LedgerNotifier extends SafeNotifier<List<Ledger>> {
 }
 
 final ledgerNotifierProvider =
-    StateNotifierProvider.autoDispose<LedgerNotifier, AsyncValue<List<Ledger>>>(
-      (ref) {
-        final repository = ref.watch(ledgerRepositoryProvider);
-        return LedgerNotifier(repository, ref);
-      },
-    );
+    StateNotifierProvider<LedgerNotifier, AsyncValue<List<Ledger>>>((ref) {
+      final repository = ref.watch(ledgerRepositoryProvider);
+      return LedgerNotifier(repository, ref);
+    });

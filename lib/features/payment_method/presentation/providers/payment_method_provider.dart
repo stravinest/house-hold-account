@@ -204,7 +204,7 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
 }
 
 final paymentMethodNotifierProvider =
-    StateNotifierProvider.autoDispose<
+    StateNotifierProvider<
       PaymentMethodNotifier,
       AsyncValue<List<PaymentMethod>>
     >((ref) {

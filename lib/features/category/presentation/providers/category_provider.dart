@@ -182,10 +182,7 @@ class CategoryNotifier extends SafeNotifier<List<Category>> {
 }
 
 final categoryNotifierProvider =
-    StateNotifierProvider.autoDispose<
-      CategoryNotifier,
-      AsyncValue<List<Category>>
-    >((ref) {
+    StateNotifierProvider<CategoryNotifier, AsyncValue<List<Category>>>((ref) {
       final repository = ref.watch(categoryRepositoryProvider);
       final ledgerId = ref.watch(selectedLedgerIdProvider);
       return CategoryNotifier(repository, ledgerId, ref);
