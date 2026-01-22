@@ -25,6 +25,7 @@ class _PaymentMethodWizardPageState
   FinancialServiceTemplate? _selectedTemplate;
   late TextEditingController _nameController;
   late TextEditingController _sampleController;
+  late TextEditingController _keywordsController;
 
   bool get isEdit => widget.paymentMethod != null;
 
@@ -41,6 +42,7 @@ class _PaymentMethodWizardPageState
       text: widget.paymentMethod?.name ?? '',
     );
     _sampleController = TextEditingController();
+    _keywordsController = TextEditingController();
 
     // 수정 모드인 경우 초기 설정
     if (isEdit) {
@@ -73,6 +75,7 @@ class _PaymentMethodWizardPageState
   void dispose() {
     _nameController.dispose();
     _sampleController.dispose();
+    _keywordsController.dispose();
     super.dispose();
   }
 
@@ -144,6 +147,7 @@ class _PaymentMethodWizardPageState
 
     try {
       final notifier = ref.read(paymentMethodNotifierProvider.notifier);
+      final formatRepository = ref.read(learnedSmsFormatRepositoryProvider);
 
       if (isEdit) {
         // 1. 결제수단 수정
@@ -153,16 +157,38 @@ class _PaymentMethodWizardPageState
           canAutoSave: _selectedTemplate != null,
         );
 
-        // 2. 학습된 포맷 저장 (템플릿 선택 시에만)
+        // 2. 학습된 포맷 저장 또는 업데이트 (템플릿 선택 시에만)
         if (_selectedTemplate != null && _generatedFormat != null) {
-          // TODO: Repository를 통해 포맷 저장 로직 연결
-          print(
-            'Updated Format for ${widget.paymentMethod!.id}: $_generatedFormat',
+          // 기존 포맷이 있는지 확인
+          final existingFormats = await formatRepository.getFormatsByPaymentMethod(
+            widget.paymentMethod!.id,
           );
+          
+          if (existingFormats.isNotEmpty) {
+            // 기존 포맷 업데이트
+            await formatRepository.updateFormat(
+              id: existingFormats.first.id,
+              senderKeywords: _generatedFormat!.senderKeywords,
+            );
+          } else {
+            // 새로운 포맷 생성
+            await formatRepository.createFormat(
+              paymentMethodId: widget.paymentMethod!.id,
+              senderPattern: _generatedFormat!.senderPattern,
+              senderKeywords: _generatedFormat!.senderKeywords,
+              amountRegex: _generatedFormat!.amountRegex,
+              typeKeywords: _generatedFormat!.typeKeywords,
+              merchantRegex: _generatedFormat!.merchantRegex,
+              dateRegex: _generatedFormat!.dateRegex,
+              sampleSms: _generatedFormat!.sampleSms,
+              isSystem: false,
+              confidence: _generatedFormat!.confidence,
+            );
+          }
         }
       } else {
         // 1. 결제수단 생성
-        final paymentMethodId = await notifier.createPaymentMethod(
+        final paymentMethod = await notifier.createPaymentMethod(
           name: _nameController.text,
           icon: '',
           color: _selectedTemplate?.color ?? '#9E9E9E', // 템플릿 없으면 회색
@@ -171,8 +197,18 @@ class _PaymentMethodWizardPageState
 
         // 2. 학습된 포맷 저장 (템플릿 선택 시에만)
         if (_selectedTemplate != null && _generatedFormat != null) {
-          // TODO: Repository를 통해 포맷 저장 로직 연결
-          print('Saved Format for $paymentMethodId: $_generatedFormat');
+          await formatRepository.createFormat(
+            paymentMethodId: paymentMethod.id,
+            senderPattern: _generatedFormat!.senderPattern,
+            senderKeywords: _generatedFormat!.senderKeywords,
+            amountRegex: _generatedFormat!.amountRegex,
+            typeKeywords: _generatedFormat!.typeKeywords,
+            merchantRegex: _generatedFormat!.merchantRegex,
+            dateRegex: _generatedFormat!.dateRegex,
+            sampleSms: _generatedFormat!.sampleSms,
+            isSystem: false,
+            confidence: _generatedFormat!.confidence,
+          );
         }
       }
 
@@ -409,24 +445,38 @@ class _PaymentMethodWizardPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.auto_awesome, size: 20, color: Colors.blue),
-                        SizedBox(width: 8),
-                        Text(
-                          '현재 규칙으로 수집되는 정보',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        const Icon(Icons.auto_awesome, size: 20, color: Colors.blue),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            '현재 규칙으로 수집되는 정보',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: _showEditKeywordsDialog,
+                          icon: const Icon(Icons.edit, size: 16),
+                          tooltip: '키워드 수정',
+                          constraints: const BoxConstraints(),
+                          padding: EdgeInsets.zero,
                         ),
                       ],
                     ),
                     const Divider(),
-                    _buildRuleRow(
+                    _buildRuleRowWithEdit(
                       '감지 키워드 (OR 조건)',
                       _generatedFormat!.senderKeywords.join(', '),
                     ),
                     _buildRuleRow(
                       '금액 패턴 (필수)',
                       _getFriendlyAmountPattern(_generatedFormat!.amountRegex),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '금액 패턴은 수정할 수 없습니다',
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                     // 실제 파싱 결과 시뮬레이션 표시도 가능
                   ],
@@ -471,6 +521,27 @@ class _PaymentMethodWizardPageState
     );
   }
 
+  Widget _buildRuleRowWithEdit(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(label, style: const TextStyle(color: Colors.grey)),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _getFriendlyAmountPattern(String regex) {
     // 기본 패턴: r'([0-9,]+)\s*원'
     if (regex.contains('원') && regex.contains('[0-9,]+')) {
@@ -478,6 +549,81 @@ class _PaymentMethodWizardPageState
     }
     // 다른 패턴들에 대한 대응 추가 가능
     return regex; // 알 수 없는 경우 그대로 표시
+  }
+
+  Future<void> _showEditKeywordsDialog() async {
+    if (_generatedFormat == null) return;
+    
+    // 초기값 설정
+    _keywordsController.text = _generatedFormat!.senderKeywords.join(', ');
+
+    if (!mounted) return;
+
+    final result = await showDialog<List<String>>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('감지 키워드 수정'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '메시지에 포함되면 자동으로 감지할 키워드를 입력하세요.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _keywordsController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: '예: KB국민, KB국민카드\n쉼표로 구분해서 입력하세요',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  helperText: '최소 1개 이상의 키워드를 입력해야 합니다',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final keywords = _keywordsController.text
+                    .split(',')
+                    .map((k) => k.trim())
+                    .where((k) => k.isNotEmpty)
+                    .toList();
+
+                if (keywords.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('최소 1개 이상의 키워드를 입력해주세요')),
+                  );
+                  return;
+                }
+
+                Navigator.pop(context, keywords);
+              },
+              child: const Text('저장'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _generatedFormat = _generatedFormat!.copyWith(
+          senderKeywords: result,
+        );
+      });
+    }
   }
 
   Future<void> _showSmsImportDialog() async {

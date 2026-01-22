@@ -1,5 +1,15 @@
 // Supabase Edge Function: send-push-notification
 // 트랜잭션 생성/수정/삭제 시 공유 가계부 멤버에게 푸시 알림 발송
+//
+// 📌 설계 결정:
+// - 푸시 알림은 실시간 발송만 함 (DB 저장 안 함)
+// - 이유: 
+//   1. 실시간 알림의 역할을 하므로 발송 후 불필요
+//   2. 거래 이력은 transactions 테이블에 영구 저장
+//   3. DB 스토리지 증가 방지 (월 ~300건 × 연장 = 데이터 증가)
+//   4. 쿼리 성능 향상 (불필요한 INSERT 제거)
+// - 사용자가 알림을 놓친 경우: 최근 거래 탭에서 확인 가능
+//
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 

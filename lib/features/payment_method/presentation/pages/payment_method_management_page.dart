@@ -23,13 +23,23 @@ class PaymentMethodManagementPage extends ConsumerStatefulWidget {
 }
 
 class _PaymentMethodManagementPageState
-    extends ConsumerState<PaymentMethodManagementPage> {
+    extends ConsumerState<PaymentMethodManagementPage> with TickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
-    // 페이지 진입 시 결제수단 목록을 새로고침하지 않습니다.
-    // StateNotifier가 생성될 때 자동으로 loadPaymentMethods()를 호출하고,
-    // Realtime subscription이 변경사항을 감지하므로 중복 refresh가 불필요합니다.
+    // 2개 탭: 결제수단(SMS) / 거래내역
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -77,51 +87,151 @@ class _PaymentMethodManagementPageState
               ),
             ),
         ],
-      ),
-      body: CenteredContent(
-        maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
-        child: Column(
-          children: [
-            _buildPendingAlert(context, ref),
-            Expanded(
-              child: paymentMethodsAsync.when(
-                data: (paymentMethods) {
-                  if (paymentMethods.isEmpty) {
-                    return EmptyState(
-                      icon: Icons.credit_card_outlined,
-                      message: l10n.paymentMethodEmpty,
-                      action: ElevatedButton.icon(
-                        onPressed: () => _showAddDialog(context),
-                        icon: const Icon(Icons.add),
-                        label: Text(l10n.paymentMethodAdd),
-                      ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: const EdgeInsets.all(Spacing.md),
-                    itemCount: paymentMethods.length,
-                    itemBuilder: (context, index) {
-                      final paymentMethod = paymentMethods[index];
-                      return _PaymentMethodTile(
-                        key: ValueKey(paymentMethod.id),
-                        paymentMethod: paymentMethod,
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) =>
-                    Center(child: Text(l10n.errorWithMessage(e.toString()))),
-              ),
+        bottom: TabBar(
+          controller: _tabController,
+          labelColor: Theme.of(context).colorScheme.primary,
+          unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
+          labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+          tabs: const [
+            Tab(
+              text: '결제수단 (SMS)',
+              icon: Icon(Icons.credit_card_outlined),
+            ),
+            Tab(
+              text: '거래 내역',
+              icon: Icon(Icons.receipt_long_outlined),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddDialog(context),
-        tooltip: l10n.paymentMethodAdd,
-        child: const Icon(Icons.add),
+      body: CenteredContent(
+        maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            // 탭 1: SMS 기반 결제수단 관리
+            _buildPaymentMethodTab(context, l10n, paymentMethodsAsync, ref),
+            // 탭 2: 거래 내역 (대기 중인 거래)
+            _buildTransactionTab(context, l10n, ref),
+          ],
+        ),
+      ),
+      floatingActionButton: _tabController.index == 0
+          ? FloatingActionButton(
+              onPressed: () => _showAddDialog(context),
+              tooltip: l10n.paymentMethodAdd,
+              child: const Icon(Icons.add),
+            )
+          : null,
+    );
+  }
+
+  Widget _buildPaymentMethodTab(
+    BuildContext context,
+    AppLocalizations l10n,
+    AsyncValue<List<PaymentMethod>> paymentMethodsAsync,
+    WidgetRef ref,
+  ) {
+    return Column(
+      children: [
+        _buildPendingAlert(context, ref),
+        Expanded(
+          child: paymentMethodsAsync.when(
+            data: (paymentMethods) {
+              if (paymentMethods.isEmpty) {
+                return EmptyState(
+                  icon: Icons.credit_card_outlined,
+                  message: l10n.paymentMethodEmpty,
+                  action: ElevatedButton.icon(
+                    onPressed: () => _showAddDialog(context),
+                    icon: const Icon(Icons.add),
+                    label: Text(l10n.paymentMethodAdd),
+                  ),
+                );
+              }
+
+              return ListView.builder(
+                padding: const EdgeInsets.all(Spacing.md),
+                itemCount: paymentMethods.length,
+                itemBuilder: (context, index) {
+                  final paymentMethod = paymentMethods[index];
+                  return _PaymentMethodTile(
+                    key: ValueKey(paymentMethod.id),
+                    paymentMethod: paymentMethod,
+                  );
+                },
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) =>
+                Center(child: Text(l10n.errorWithMessage(e.toString()))),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTransactionTab(
+    BuildContext context,
+    AppLocalizations l10n,
+    WidgetRef ref,
+  ) {
+    final pendingAsync = ref.watch(pendingTransactionNotifierProvider);
+
+    return pendingAsync.when(
+      data: (transactions) {
+        if (transactions.isEmpty) {
+          return EmptyState(
+            icon: Icons.receipt_long_outlined,
+            message: '대기 중인 거래가 없습니다',
+            subtitle: 'SMS/푸시 알림에서 감지된 거래 내역이 여기 표시됩니다',
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(Spacing.md),
+          itemCount: transactions.length,
+          itemBuilder: (context, index) {
+            final transaction = transactions[index];
+          return Card(
+            margin: const EdgeInsets.only(bottom: Spacing.md),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor:
+                    Theme.of(context).colorScheme.primaryContainer,
+                child: Icon(
+                  Icons.notifications_active_outlined,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              title: Text(
+                transaction.parsedMerchant ?? transaction.sourceContent,
+              ),
+              subtitle: Text(
+                transaction.parsedAmount != null
+                    ? '${transaction.parsedAmount}원'
+                    : '금액 정보 없음',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              trailing: Icon(
+                Icons.chevron_right,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              onTap: () {
+                context.push('/settings/pending-transactions');
+              },
+            ),
+          );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Text('오류: $e'),
       ),
     );
   }

@@ -953,6 +953,32 @@ class AppLocalizationsKo extends AppLocalizations {
   String get paymentMethodDefault => '기본 결제수단';
 
   @override
+  String get paymentMethodDetectionKeywords => '감지 키워드';
+
+  @override
+  String get paymentMethodDetectionKeywordsHint =>
+      '쉼표로 구분하여 입력하세요 (예: KB국민, KB국민카드)';
+
+  @override
+  String get paymentMethodDetectionKeywordsSubtitle =>
+      '입력된 키워드가 메시지에 포함되면 자동으로 감지합니다';
+
+  @override
+  String get paymentMethodAmountPattern => '금액 패턴';
+
+  @override
+  String get paymentMethodCurrentRules => '현재 규칙으로 수집되는 정보';
+
+  @override
+  String get paymentMethodEditKeywords => '키워드 수정';
+
+  @override
+  String get paymentMethodAmountPatternReadOnly => '\'원\' 앞의 숫자';
+
+  @override
+  String get paymentMethodAmountPatternNote => '금액 패턴은 수정할 수 없습니다';
+
+  @override
   String get errorGeneric => '오류가 발생했습니다';
 
   @override

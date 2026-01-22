@@ -69,6 +69,23 @@ class PendingTransactionNotifier
           _ref.invalidate(pendingTransactionCountProvider);
         },
       );
+
+      // JWT 토큰 만료 에러 핸들링
+      _subscription?.onError((error) {
+        debugPrint('[PendingTransaction] Realtime error: $error');
+        final errorStr = error.toString().toLowerCase();
+        if ((errorStr.contains('token') || errorStr.contains('jwt')) &&
+            (errorStr.contains('expired') || errorStr.contains('invalid'))) {
+          debugPrint(
+            '[PendingTransaction] JWT expired, resubscribing in 3s...',
+          );
+          _subscription?.unsubscribe();
+          _subscription = null;
+          Future.delayed(const Duration(seconds: 3), () {
+            if (_ledgerId != null && mounted) _subscribeToChanges();
+          });
+        }
+      });
     } catch (e) {
       debugPrint('PendingTransaction Realtime subscribe fail: $e');
     }

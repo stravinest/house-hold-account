@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
-import '../../../../../shared/themes/design_tokens.dart';
 import '../../../../../shared/widgets/skeleton_loading.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';

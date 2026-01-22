@@ -970,6 +970,33 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentMethodDefault => 'Default Payment Method';
 
   @override
+  String get paymentMethodDetectionKeywords => 'Detection Keywords';
+
+  @override
+  String get paymentMethodDetectionKeywordsHint =>
+      'Enter comma-separated keywords (e.g., KB Kookmin, KB Kookmin Card)';
+
+  @override
+  String get paymentMethodDetectionKeywordsSubtitle =>
+      'Automatically detect when these keywords appear in messages';
+
+  @override
+  String get paymentMethodAmountPattern => 'Amount Pattern';
+
+  @override
+  String get paymentMethodCurrentRules => 'Current Rules for Collection';
+
+  @override
+  String get paymentMethodEditKeywords => 'Edit Keywords';
+
+  @override
+  String get paymentMethodAmountPatternReadOnly => 'Number before \'Won\'';
+
+  @override
+  String get paymentMethodAmountPatternNote =>
+      'Amount pattern cannot be modified';
+
+  @override
   String get errorGeneric => 'An error occurred';
 
   @override

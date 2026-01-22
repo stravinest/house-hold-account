@@ -1862,6 +1862,54 @@ abstract class AppLocalizations {
   /// **'기본 결제수단'**
   String get paymentMethodDefault;
 
+  /// No description provided for @paymentMethodDetectionKeywords.
+  ///
+  /// In ko, this message translates to:
+  /// **'감지 키워드'**
+  String get paymentMethodDetectionKeywords;
+
+  /// No description provided for @paymentMethodDetectionKeywordsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'쉼표로 구분하여 입력하세요 (예: KB국민, KB국민카드)'**
+  String get paymentMethodDetectionKeywordsHint;
+
+  /// No description provided for @paymentMethodDetectionKeywordsSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'입력된 키워드가 메시지에 포함되면 자동으로 감지합니다'**
+  String get paymentMethodDetectionKeywordsSubtitle;
+
+  /// No description provided for @paymentMethodAmountPattern.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액 패턴'**
+  String get paymentMethodAmountPattern;
+
+  /// No description provided for @paymentMethodCurrentRules.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 규칙으로 수집되는 정보'**
+  String get paymentMethodCurrentRules;
+
+  /// No description provided for @paymentMethodEditKeywords.
+  ///
+  /// In ko, this message translates to:
+  /// **'키워드 수정'**
+  String get paymentMethodEditKeywords;
+
+  /// No description provided for @paymentMethodAmountPatternReadOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'\'원\' 앞의 숫자'**
+  String get paymentMethodAmountPatternReadOnly;
+
+  /// No description provided for @paymentMethodAmountPatternNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액 패턴은 수정할 수 없습니다'**
+  String get paymentMethodAmountPatternNote;
+
   /// No description provided for @errorGeneric.
   ///
   /// In ko, this message translates to:
