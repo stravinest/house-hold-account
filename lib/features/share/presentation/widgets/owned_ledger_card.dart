@@ -29,14 +29,14 @@ class OwnedLedgerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final currentUserId = SupabaseConfig.auth.currentUser?.id;
     final colorScheme = Theme.of(context).colorScheme;
 
     // 다크모드 대응: colorScheme 기반 색상
     final activeBorderColor = colorScheme.primary;
     // 배경색을 더 연하게 (primary의 8% 투명도)
-    final activeBackgroundColor = colorScheme.primary.withValues(alpha: 0.08);
+    final activeBackgroundColor = colorScheme.primary.withOpacity(0.08);
     final inactiveBorderColor = colorScheme.outlineVariant;
 
     return Container(
@@ -54,7 +54,7 @@ class OwnedLedgerCard extends ConsumerWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.05),
+            color: colorScheme.shadow.withOpacity(0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -161,7 +161,7 @@ class OwnedLedgerCard extends ConsumerWidget {
         Icon(
           Icons.people_outline,
           size: 16,
-          color: colorScheme.onSurface.withValues(alpha: 0.7),
+          color: colorScheme.onSurface.withOpacity(0.7),
         ),
         const SizedBox(width: 4),
         Text(
@@ -171,7 +171,7 @@ class OwnedLedgerCard extends ConsumerWidget {
           ),
           style: TextStyle(
             fontSize: 13,
-            color: colorScheme.onSurface.withValues(alpha: 0.7),
+            color: colorScheme.onSurface.withOpacity(0.7),
           ),
         ),
         if (memberNames.isNotEmpty) ...[
@@ -234,14 +234,14 @@ class OwnedLedgerCard extends ConsumerWidget {
                 Icon(
                   Icons.check_circle,
                   size: 14,
-                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: colorScheme.onSurface.withOpacity(0.7),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   l10n.shareMemberFull,
                   style: TextStyle(
                     fontSize: 12,
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    color: colorScheme.onSurface.withOpacity(0.7),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -420,7 +420,7 @@ class OwnedLedgerCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: badgeColor.withValues(alpha: 0.2)),
+        border: Border.all(color: badgeColor.withOpacity(0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -454,7 +454,7 @@ class OwnedLedgerCard extends ConsumerWidget {
               email,
               style: TextStyle(
                 fontSize: 12,
-                color: colorScheme.onSurface.withValues(alpha: 0.8),
+                color: colorScheme.onSurface.withOpacity(0.8),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,

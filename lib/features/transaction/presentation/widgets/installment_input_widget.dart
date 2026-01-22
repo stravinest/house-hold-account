@@ -154,7 +154,7 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     final colorScheme = Theme.of(context).colorScheme;
     final dateFormat = locale == 'ko'

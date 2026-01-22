@@ -368,6 +368,9 @@ class NotificationListenerWrapper {
     }
 
     final autoSaveModeStr = paymentMethod.autoSaveMode.toJson();
+    debugPrint(
+      'Notification matched with mode: $autoSaveModeStr for ${paymentMethod.name}',
+    );
 
     if (autoSaveModeStr == 'auto') {
       await _createPendingTransaction(
@@ -379,6 +382,7 @@ class NotificationListenerWrapper {
         categoryId: categoryId,
         duplicateHash: duplicateResult.duplicateHash,
         status: PendingTransactionStatus.confirmed,
+        isViewed: false,
       );
     } else {
       await _createPendingTransaction(
@@ -390,6 +394,7 @@ class NotificationListenerWrapper {
         categoryId: categoryId,
         duplicateHash: duplicateResult.duplicateHash,
         status: PendingTransactionStatus.pending,
+        isViewed: false,
       );
     }
 
@@ -414,6 +419,7 @@ class NotificationListenerWrapper {
     required String? categoryId,
     required String duplicateHash,
     required PendingTransactionStatus status,
+    bool isViewed = false,
   }) async {
     try {
       await _pendingTransactionRepository.createPendingTransaction(
@@ -431,6 +437,7 @@ class NotificationListenerWrapper {
         parsedDate: parsedResult.date ?? timestamp,
         duplicateHash: duplicateHash,
         status: status,
+        isViewed: isViewed,
       );
 
       if (status == PendingTransactionStatus.confirmed) {

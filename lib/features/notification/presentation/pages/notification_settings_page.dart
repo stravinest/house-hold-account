@@ -17,7 +17,7 @@ class NotificationSettingsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final settingsAsync = ref.watch(notificationSettingsProvider);
 
     return Scaffold(
@@ -97,7 +97,7 @@ class NotificationSettingsPage extends ConsumerWidget {
     required IconData icon,
     required bool enabled,
   }) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return SwitchListTile(
       secondary: Icon(icon),
       title: Text(title),

@@ -279,7 +279,7 @@ class _RecurringSettingsWidgetState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     final colorScheme = Theme.of(context).colorScheme;
     final transactionCount = _calculateTransactionCount();
@@ -463,7 +463,7 @@ class _MonthYearPickerDialogState extends State<_MonthYearPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(l10n.recurringEndMonth),
       content: SizedBox(
@@ -578,7 +578,7 @@ class _YearPickerDialogState extends State<_YearPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(l10n.recurringEndYear),
       content: SizedBox(

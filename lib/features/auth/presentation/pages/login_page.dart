@@ -57,12 +57,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
       // 3초 후에도 auth state가 업데이트되지 않으면 에러 표시
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         SnackBarUtils.showError(context, l10n.authLoginError);
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         String errorMessage;
         if (e is AuthApiException) {
           switch (e.code) {
@@ -116,7 +116,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           return;
         }
 
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     } finally {
@@ -129,7 +129,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,

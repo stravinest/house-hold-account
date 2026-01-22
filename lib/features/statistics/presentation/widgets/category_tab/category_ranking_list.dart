@@ -14,7 +14,7 @@ class CategoryRankingList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final statisticsAsync = ref.watch(categoryStatisticsProvider);
 
     return statisticsAsync.when(

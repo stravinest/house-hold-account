@@ -74,7 +74,7 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            l10n?.errorSessionExpired ??
+            l10n.errorSessionExpired ??
                 'Session expired. Please log in again.',
           ),
           duration: const Duration(seconds: 4),
@@ -93,7 +93,7 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          l10n?.errorNetwork ?? 'Please check your network connection.',
+          l10n.errorNetwork ?? 'Please check your network connection.',
         ),
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
@@ -103,7 +103,7 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
 

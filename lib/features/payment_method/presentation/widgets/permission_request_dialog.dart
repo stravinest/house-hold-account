@@ -253,7 +253,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
       padding: const EdgeInsets.all(Spacing.sm),
       decoration: BoxDecoration(
         color: isGranted
-            ? colorScheme.primaryContainer.withValues(alpha: 0.3)
+            ? colorScheme.primaryContainer.withOpacity(0.3)
             : colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
         border: Border.all(

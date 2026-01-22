@@ -32,7 +32,7 @@ class _FixedExpenseManagementPageState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.fixedExpenseManagement)),
       body: CenteredContent(
@@ -69,7 +69,7 @@ class _SettingsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final settingsAsync = ref.watch(fixedExpenseSettingsNotifierProvider);
 
     return Card(
@@ -136,7 +136,7 @@ class _CategoryListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final categoriesAsync = ref.watch(fixedExpenseCategoryNotifierProvider);
 
     return categoriesAsync.when(
@@ -187,7 +187,7 @@ class _CategoryTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -223,7 +223,7 @@ class _CategoryTile extends ConsumerWidget {
     WidgetRef ref,
     FixedExpenseCategory category,
   ) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -312,7 +312,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isEdit = widget.category != null;
 
     return AlertDialog(
@@ -353,7 +353,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     try {
       if (widget.category != null) {

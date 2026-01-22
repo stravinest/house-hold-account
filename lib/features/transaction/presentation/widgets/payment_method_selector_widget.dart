@@ -57,7 +57,7 @@ class _PaymentMethodSelectorWidgetState
 
   /// 결제수단 추가 다이얼로그 표시
   void _showAddPaymentMethodDialog() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
 
     showDialog(
@@ -95,7 +95,7 @@ class _PaymentMethodSelectorWidgetState
     BuildContext dialogContext,
     TextEditingController nameController,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (nameController.text.trim().isEmpty) {
       SnackBarUtils.showError(context, l10n.paymentMethodNameRequired);
       return;
@@ -127,7 +127,7 @@ class _PaymentMethodSelectorWidgetState
 
   /// 결제수단 수정 다이얼로그
   void _showEditPaymentMethodDialog(PaymentMethod method) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: method.name);
 
     showDialog(
@@ -165,7 +165,7 @@ class _PaymentMethodSelectorWidgetState
     PaymentMethod method,
     TextEditingController nameController,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final newName = nameController.text.trim();
 
     if (newName.isEmpty) {
@@ -197,7 +197,7 @@ class _PaymentMethodSelectorWidgetState
 
   /// 결제수단 삭제
   Future<void> _deletePaymentMethod(PaymentMethod method) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -251,7 +251,7 @@ class _PaymentMethodSelectorWidgetState
       data: (paymentMethods) =>
           _buildPaymentMethodChips(context, paymentMethods),
       loading: () => _buildSkeletonChips(),
-      error: (e, _) => Text('${AppLocalizations.of(context)!.commonError}: $e'),
+      error: (e, _) => Text('${AppLocalizations.of(context).commonError}: $e'),
     );
   }
 
@@ -273,7 +273,7 @@ class _PaymentMethodSelectorWidgetState
     BuildContext context,
     List<PaymentMethod> paymentMethods,
   ) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     // 편집 모드: 칩들과 완료 버튼을 별도 줄로 분리

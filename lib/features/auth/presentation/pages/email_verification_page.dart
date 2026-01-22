@@ -160,7 +160,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
       );
 
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         SnackBarUtils.showSuccess(
           context,
           l10n.emailVerificationResent,
@@ -175,7 +175,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
         '[EmailVerificationPage] Resend verification email failed: $e',
       );
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         SnackBarUtils.showError(
           context,
           l10n.emailVerificationResendFailed(e.toString()),
@@ -203,7 +203,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(

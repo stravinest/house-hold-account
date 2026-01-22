@@ -18,7 +18,7 @@ class TransactionDetailSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final locale = Localizations.localeOf(context).languageCode;
     final formatter = NumberFormat('#,###', locale == 'ko' ? 'ko_KR' : 'en_US');
@@ -230,7 +230,7 @@ class TransactionDetailSheet extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(

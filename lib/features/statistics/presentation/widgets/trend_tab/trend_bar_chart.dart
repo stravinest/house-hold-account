@@ -71,7 +71,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final trendAsync = ref.watch(monthlyTrendWithAverageProvider);
     final selectedDate = ref.watch(statisticsSelectedDateProvider);
 
@@ -262,7 +262,7 @@ class _MonthlyTrendChartState extends ConsumerState<_MonthlyTrendChart> {
         barRods: [
           BarChartRodData(
             toY: value.toDouble(),
-            color: isSelected ? barColor : barColor.withValues(alpha: 0.5),
+            color: isSelected ? barColor : barColor.withOpacity(0.5),
             width: 24,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           ),
@@ -334,7 +334,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final trendAsync = ref.watch(yearlyTrendWithAverageProvider);
     final selectedDate = ref.watch(statisticsSelectedDateProvider);
 
@@ -521,7 +521,7 @@ class _YearlyTrendChartState extends ConsumerState<_YearlyTrendChart> {
         barRods: [
           BarChartRodData(
             toY: value.toDouble(),
-            color: isSelected ? barColor : barColor.withValues(alpha: 0.5),
+            color: isSelected ? barColor : barColor.withOpacity(0.5),
             width: 32,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           ),

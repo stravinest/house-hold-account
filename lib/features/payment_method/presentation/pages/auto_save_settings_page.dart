@@ -9,6 +9,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../domain/entities/payment_method.dart';
+import '../../data/services/auto_save_service.dart';
 import '../providers/payment_method_provider.dart';
 import '../widgets/permission_request_dialog.dart';
 
@@ -50,7 +51,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -156,9 +157,9 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
                     const SizedBox(height: Spacing.lg),
                   ],
 
-                  // 자동 저장 모드 선택
+                  // 자동 처리 모드 선택
                   Text(
-                    '자동 저장 모드',
+                    '자동 처리 모드',
                     style: textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -242,8 +243,8 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
         _buildModeOption(
           context,
           mode: AutoSaveMode.auto,
-          icon: Icons.flash_on_outlined,
-          title: '자동 저장',
+          icon: Icons.auto_awesome_outlined,
+          title: '자동 모드',
           description: '거래를 감지하면 바로 저장됩니다',
           enabled: isAndroid,
         ),
@@ -357,8 +358,15 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
             autoSaveMode: _selectedMode,
           );
 
+      // 서비스에 변경된 설정 즉시 반영
+      try {
+        await AutoSaveService.instance.refreshPaymentMethods();
+      } catch (e) {
+        debugPrint('Failed to refresh AutoSaveService: $e');
+      }
+
       if (mounted) {
-        SnackBarUtils.showSuccess(context, '자동 저장 설정이 저장되었습니다');
+        SnackBarUtils.showSuccess(context, '자동 처리 설정이 저장되었습니다');
         context.pop();
       }
     } catch (e) {

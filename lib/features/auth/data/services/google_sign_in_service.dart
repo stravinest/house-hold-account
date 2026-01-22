@@ -92,7 +92,7 @@ class GoogleSignInService {
       return response;
     } on AuthException {
       rethrow;
-    } catch (e, st) {
+    } catch (e) {
       debugPrint('[GoogleSignInService] 로그인 실패: ${e.runtimeType}');
 
       if (e.toString().contains('sign_in_canceled') ||

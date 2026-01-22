@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
@@ -352,8 +353,9 @@ class TransactionRepository {
     required String ledgerId,
     required void Function() onUpdate,
   }) {
-    return _client
-        .channel('transactions_$ledgerId')
+    final channel = _client.channel('transactions_$ledgerId');
+
+    return channel
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'house',
@@ -363,9 +365,21 @@ class TransactionRepository {
             column: 'ledger_id',
             value: ledgerId,
           ),
-          callback: (payload) => onUpdate(),
+          callback: (payload) {
+            if (kDebugMode) {
+              debugPrint('Realtime change detected for ledger: $ledgerId');
+            }
+            onUpdate();
+          },
         )
-        .subscribe();
+        .subscribe((status, [error]) {
+          if (status == RealtimeSubscribeStatus.channelError ||
+              status == RealtimeSubscribeStatus.timedOut) {
+            debugPrint(
+              'Realtime subscription error for ledger $ledgerId: $status, $error',
+            );
+          }
+        });
   }
 
   // 반복 거래 템플릿 생성

@@ -68,8 +68,17 @@ final currentLedgerProvider = FutureProvider<Ledger?>((ref) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return null;
 
-  final repository = ref.watch(ledgerRepositoryProvider);
-  return repository.getLedger(ledgerId);
+  // ledgerNotifierProvider를 감시하여 가계부 목록 변경 시 자동으로 갱신되도록 함
+  final ledgersAsync = ref.watch(ledgerNotifierProvider);
+  final ledgers = ledgersAsync.valueOrNull ?? [];
+
+  try {
+    return ledgers.firstWhere((ledger) => ledger.id == ledgerId);
+  } catch (_) {
+    // 캐시에 없으면 직접 조회
+    final repository = ref.read(ledgerRepositoryProvider);
+    return repository.getLedger(ledgerId);
+  }
 });
 
 // 가계부 멤버 목록

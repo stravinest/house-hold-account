@@ -24,7 +24,7 @@ class TrendTabView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return RefreshIndicator(
       onRefresh: () => _refreshTrendData(ref),
       child: SingleChildScrollView(

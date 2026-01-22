@@ -130,28 +130,25 @@ class AuthService {
 
   // 백업 안전장치: 가계부가 0개면 기본 가계부 생성
   Future<void> _ensureDefaultLedgerExists() async {
-    // DB 트리거 완료 대기 (최대 3초, 재시도 6회)
-    for (int i = 0; i < 6; i++) {
+    // DB 트리거 완료 대기 (최대 1.5초, 재시도 3회로 단축하여 UI 프리징 방지)
+    for (int i = 0; i < 3; i++) {
       if (i > 0) {
         await Future.delayed(const Duration(milliseconds: 500));
       }
 
       try {
-        final ledgers = await _ledgerRepository.getLedgers();
+        // timeout을 추가하여 네트워크 지연 시 무한 대기를 방지합니다.
+        final ledgers = await _ledgerRepository.getLedgers().timeout(
+          const Duration(seconds: 2),
+        );
 
         if (ledgers.isNotEmpty) {
-          debugPrint(
-            '[AuthService] Default ledger confirmed: ${ledgers.length}',
-          );
+          debugPrint('[AuthService] Ledger confirmed: ${ledgers.length}');
           return;
         }
       } catch (e) {
-        // getLedgers 실패는 계속 재시도
-        debugPrint('[AuthService] Ledger query failed (retry ${i + 1}/6)');
-        if (i == 5) {
-          debugPrint('[AuthService] Ledger query final failure');
-          rethrow;
-        }
+        debugPrint('[AuthService] Ledger check failed (retry ${i + 1}/3): $e');
+        if (i == 2) break;
         continue;
       }
     }
@@ -194,7 +191,7 @@ class AuthService {
 
       return response;
     } catch (e) {
-      debugPrint('[AuthService] Login error: ${e.runtimeType}');
+      debugPrint('[AuthService] Login error: $e');
       rethrow;
     }
   }

@@ -32,9 +32,9 @@ class PendingTransactionRepository {
   Future<int> getPendingCount(String ledgerId) async {
     final response = await _client
         .from('pending_transactions')
-        .select()
+        .select('id')
         .eq('ledger_id', ledgerId)
-        .eq('status', 'pending');
+        .eq('is_viewed', false);
 
     return (response as List).length;
   }
@@ -54,6 +54,7 @@ class PendingTransactionRepository {
     DateTime? parsedDate,
     String? duplicateHash,
     PendingTransactionStatus? status,
+    bool isViewed = false,
   }) async {
     final data = PendingTransactionModel.toCreateJson(
       ledgerId: ledgerId,
@@ -70,6 +71,7 @@ class PendingTransactionRepository {
       parsedDate: parsedDate,
       duplicateHash: duplicateHash,
       status: status,
+      isViewed: isViewed,
     );
 
     return _retry(() async {
@@ -253,5 +255,16 @@ class PendingTransactionRepository {
       }
     }
     throw Exception('Unreachable');
+  }
+
+  Future<void> markAllAsViewed(String ledgerId) async {
+    await _client
+        .from('pending_transactions')
+        .update({
+          'is_viewed': true,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('ledger_id', ledgerId)
+        .eq('is_viewed', false);
   }
 }

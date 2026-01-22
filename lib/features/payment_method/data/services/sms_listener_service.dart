@@ -312,6 +312,9 @@ class SmsListenerService {
     }
 
     final autoSaveModeStr = paymentMethod.autoSaveMode.toJson();
+    debugPrint(
+      'SMS matched with mode: $autoSaveModeStr for ${paymentMethod.name}',
+    );
 
     if (autoSaveModeStr == 'auto') {
       await _createPendingTransaction(
@@ -323,6 +326,7 @@ class SmsListenerService {
         categoryId: categoryId,
         duplicateHash: duplicateResult.duplicateHash,
         status: PendingTransactionStatus.confirmed,
+        isViewed: false,
       );
     } else {
       await _createPendingTransaction(
@@ -334,6 +338,7 @@ class SmsListenerService {
         categoryId: categoryId,
         duplicateHash: duplicateResult.duplicateHash,
         status: PendingTransactionStatus.pending,
+        isViewed: false,
       );
     }
 
@@ -358,6 +363,7 @@ class SmsListenerService {
     required String? categoryId,
     required String duplicateHash,
     required PendingTransactionStatus status,
+    bool isViewed = false,
   }) async {
     try {
       await _pendingTransactionRepository.createPendingTransaction(
@@ -375,6 +381,7 @@ class SmsListenerService {
         parsedDate: parsedResult.date ?? timestamp,
         duplicateHash: duplicateHash,
         status: status,
+        isViewed: isViewed,
       );
 
       if (status == PendingTransactionStatus.confirmed) {

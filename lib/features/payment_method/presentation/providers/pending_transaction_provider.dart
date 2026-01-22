@@ -257,6 +257,16 @@ class PendingTransactionNotifier
   Future<void> deleteRejected() async {
     await deleteAllByStatus(PendingTransactionStatus.rejected);
   }
+
+  Future<void> markAllAsViewed() async {
+    if (_ledgerId == null) return;
+    try {
+      await _repository.markAllAsViewed(_ledgerId);
+      _ref.invalidate(pendingTransactionCountProvider);
+    } catch (e) {
+      debugPrint('Failed to mark notifications as viewed: $e');
+    }
+  }
 }
 
 final pendingTransactionNotifierProvider =

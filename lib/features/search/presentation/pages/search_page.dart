@@ -77,7 +77,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final resultsAsync = ref.watch(searchResultsProvider);
 
     return Scaffold(
@@ -145,7 +145,7 @@ class _SearchResultItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final dateFormat = DateFormat('yyyy.MM.dd');
     final amountColor = transaction.isIncome

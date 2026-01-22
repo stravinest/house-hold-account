@@ -33,7 +33,7 @@ class _LedgerManagementPageState extends ConsumerState<LedgerManagementPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final ledgersAsync = ref.watch(ledgerNotifierProvider);
     final selectedId = ref.watch(selectedLedgerIdProvider);
 
@@ -136,7 +136,7 @@ class _LedgerCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final currentUserId = ref.watch(currentUserProvider)?.id;
     final isOwner = ledger.ownerId == currentUserId;
     final membersAsync = ref.watch(ledgerMembersProvider(ledger.id));
@@ -212,7 +212,7 @@ class _LedgerCard extends ConsumerWidget {
                             fontSize: 12,
                             color: Theme.of(
                               context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ).colorScheme.onSurface.withOpacity(0.7),
                           ),
                         ),
                         if (ledger.isShared)
@@ -281,7 +281,7 @@ class _LedgerCard extends ConsumerWidget {
                     fontSize: 14,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ).colorScheme.onSurface.withOpacity(0.7),
                   ),
                 ),
               ],
@@ -334,7 +334,7 @@ class _LedgerCard extends ConsumerWidget {
     List<LedgerMember> members,
     String? currentUserId,
   ) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     // currentUserId가 null이면 표시하지 않음
     if (currentUserId == null) {
@@ -383,7 +383,7 @@ class _LedgerCard extends ConsumerWidget {
           Icon(
             Icons.people_outline,
             size: 14,
-            color: colorScheme.onSurface.withValues(alpha: 0.7),
+            color: colorScheme.onSurface.withOpacity(0.7),
           ),
           const SizedBox(width: 4),
           Expanded(
@@ -391,7 +391,7 @@ class _LedgerCard extends ConsumerWidget {
               memberText,
               style: TextStyle(
                 fontSize: 12,
-                color: colorScheme.onSurface.withValues(alpha: 0.7),
+                color: colorScheme.onSurface.withOpacity(0.7),
               ),
               overflow: TextOverflow.ellipsis,
             ),
@@ -409,7 +409,7 @@ class _LedgerCard extends ConsumerWidget {
   }
 
   void _showDeleteConfirm(BuildContext context, WidgetRef ref, Ledger ledger) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     // 가계부가 1개뿐이면 삭제 불가 경고
     if (ledgersCount <= _LedgerConstants.minLedgerCount) {
@@ -514,7 +514,7 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isEdit = widget.ledger != null;
 
     return AlertDialog(
@@ -581,7 +581,7 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
   }
 
   Future<void> _submit() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     if (!_formKey.currentState!.validate()) return;
 
@@ -650,7 +650,7 @@ class _MemberInfoWidget extends ConsumerStatefulWidget {
 class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return widget.membersAsync.when(
       data: (members) {
@@ -697,7 +697,7 @@ class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
                 fontSize: 12,
                 color: Theme.of(
                   context,
-                ).colorScheme.onSurface.withValues(alpha: 0.7),
+                ).colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
           ],

@@ -58,6 +58,7 @@ class PendingTransaction extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime expiresAt;
+  final bool isViewed;
 
   const PendingTransaction({
     required this.id,
@@ -79,6 +80,7 @@ class PendingTransaction extends Equatable {
     required this.createdAt,
     required this.updatedAt,
     required this.expiresAt,
+    this.isViewed = false,
   });
 
   bool get isParsed => parsedAmount != null;
@@ -105,6 +107,7 @@ class PendingTransaction extends Equatable {
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? expiresAt,
+    bool? isViewed,
   }) {
     return PendingTransaction(
       id: id ?? this.id,
@@ -126,6 +129,7 @@ class PendingTransaction extends Equatable {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       expiresAt: expiresAt ?? this.expiresAt,
+      isViewed: isViewed ?? this.isViewed,
     );
   }
 
@@ -150,5 +154,6 @@ class PendingTransaction extends Equatable {
     createdAt,
     updatedAt,
     expiresAt,
+    isViewed,
   ];
 }

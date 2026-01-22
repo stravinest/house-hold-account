@@ -18,6 +18,7 @@ class PendingTransactionModel extends PendingTransaction {
     super.status,
     super.transactionId,
     super.duplicateHash,
+    super.isViewed,
     required super.createdAt,
     required super.updatedAt,
     required super.expiresAt,
@@ -46,6 +47,7 @@ class PendingTransactionModel extends PendingTransaction {
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       expiresAt: DateTime.parse(json['expires_at'] as String),
+      isViewed: json['is_viewed'] as bool? ?? false,
     );
   }
 
@@ -70,6 +72,7 @@ class PendingTransactionModel extends PendingTransaction {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'expires_at': expiresAt.toIso8601String(),
+      'is_viewed': isViewed,
     };
   }
 
@@ -88,9 +91,11 @@ class PendingTransactionModel extends PendingTransaction {
     DateTime? parsedDate,
     String? duplicateHash,
     PendingTransactionStatus? status,
+    bool isViewed = false,
   }) {
     return {
       'ledger_id': ledgerId,
+      'is_viewed': isViewed,
       if (status != null) 'status': status.toJson(),
       if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
       'user_id': userId,

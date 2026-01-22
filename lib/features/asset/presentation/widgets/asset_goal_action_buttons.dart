@@ -53,7 +53,7 @@ class AssetGoalActionButtons extends ConsumerWidget {
     AssetGoal goal,
     String ledgerId,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -102,8 +102,8 @@ class AssetGoalActionButtons extends ConsumerWidget {
     bool isDestructive = false,
   }) {
     final color = isDestructive
-        ? theme.colorScheme.error.withValues(alpha: 0.7)
-        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
+        ? theme.colorScheme.error.withOpacity(0.7)
+        : theme.colorScheme.onSurfaceVariant.withOpacity(0.6);
 
     return Material(
       color: Colors.transparent,

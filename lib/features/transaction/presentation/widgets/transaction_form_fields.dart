@@ -18,7 +18,7 @@ class TransactionTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return SegmentedButton<String>(
       segments: [
         ButtonSegment(
@@ -51,7 +51,7 @@ class TitleInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return TextFormField(
       controller: controller,
       maxLines: 1,
@@ -83,7 +83,7 @@ class AmountInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     return TextFormField(
       controller: controller,
@@ -149,7 +149,7 @@ class MaturityDateTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final locale = Localizations.localeOf(context).languageCode;
     final dateFormat = locale == 'ko'
         ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
@@ -181,7 +181,7 @@ class MemoInputSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -239,7 +239,7 @@ class SheetHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
       child: Row(

@@ -91,7 +91,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
       );
 
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         final navigator = Navigator.of(context);
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -101,7 +101,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     } finally {
@@ -113,7 +113,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final categoriesAsync = ref.watch(categoryNotifierProvider);
 
@@ -185,7 +185,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                       .toList();
 
                   return DropdownButtonFormField<Category>(
-                    value: _selectedCategory,
+                    initialValue: _selectedCategory,
                     decoration: InputDecoration(
                       labelText: l10n.transactionCategory,
                       border: OutlineInputBorder(

@@ -35,6 +35,13 @@ class _PendingTransactionsPageState
         setState(() {});
       }
     });
+
+    // 페이지 진입 시 모든 대기 거래를 '확인함' 처리하여 배지 카운트 초기화
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(pendingTransactionNotifierProvider.notifier).markAllAsViewed();
+      }
+    });
   }
 
   @override

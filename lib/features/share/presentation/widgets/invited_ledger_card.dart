@@ -24,14 +24,14 @@ class InvitedLedgerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isAccepted = invite.isAccepted;
     final colorScheme = Theme.of(context).colorScheme;
 
     // 다크모드 대응: colorScheme 기반 색상
     final activeBorderColor = colorScheme.primary;
     // 배경색을 더 연하게 (primary의 8% 투명도)
-    final activeBackgroundColor = colorScheme.primary.withValues(alpha: 0.08);
+    final activeBackgroundColor = colorScheme.primary.withOpacity(0.08);
     final inactiveBorderColor = colorScheme.outlineVariant;
 
     return Container(
@@ -45,7 +45,7 @@ class InvitedLedgerCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withValues(alpha: 0.05),
+            color: colorScheme.shadow.withOpacity(0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -114,7 +114,7 @@ class InvitedLedgerCard extends StatelessWidget {
                 Icon(
                   Icons.person_outline,
                   size: 16,
-                  color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: colorScheme.onSurface.withOpacity(0.7),
                 ),
                 const SizedBox(width: 4),
                 Expanded(
@@ -124,7 +124,7 @@ class InvitedLedgerCard extends StatelessWidget {
                     ),
                     style: TextStyle(
                       fontSize: 13,
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      color: colorScheme.onSurface.withOpacity(0.7),
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -142,7 +142,7 @@ class InvitedLedgerCard extends StatelessWidget {
   }
 
   Widget _buildActionRow(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     // pending 상태: 수락/거부 버튼 (동일한 스타일 + 아이콘 구분)
     if (invite.isPending) {

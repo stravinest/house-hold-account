@@ -56,7 +56,7 @@ class _FixedExpenseCategorySelectorWidgetState
 
   /// 고정비 카테고리 추가 다이얼로그 표시
   void _showAddFixedExpenseCategoryDialog() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
 
     showDialog(
@@ -94,7 +94,7 @@ class _FixedExpenseCategorySelectorWidgetState
     BuildContext dialogContext,
     TextEditingController nameController,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     if (nameController.text.trim().isEmpty) {
       SnackBarUtils.showError(context, l10n.fixedExpenseCategoryNameRequired);
@@ -126,7 +126,7 @@ class _FixedExpenseCategorySelectorWidgetState
 
   /// 고정비 카테고리 수정 다이얼로그
   void _showEditFixedExpenseCategoryDialog(FixedExpenseCategory category) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: category.name);
 
     showDialog(
@@ -170,7 +170,7 @@ class _FixedExpenseCategorySelectorWidgetState
     FixedExpenseCategory category,
     TextEditingController nameController,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final newName = nameController.text.trim();
 
     if (newName.isEmpty) {
@@ -204,7 +204,7 @@ class _FixedExpenseCategorySelectorWidgetState
   Future<void> _deleteFixedExpenseCategory(
     FixedExpenseCategory category,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -249,7 +249,7 @@ class _FixedExpenseCategorySelectorWidgetState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final categoriesAsync = ref.watch(fixedExpenseCategoriesProvider);
 
     return categoriesAsync.when(

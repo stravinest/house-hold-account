@@ -95,7 +95,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   }
 
   Future<void> _selectMaturityDate() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final picked = await showDatePicker(
       context: context,
       initialDate:
@@ -108,7 +108,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   }
 
   Future<void> _submit() async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
     if (_isInstallmentMode && _installmentResult == null) {
       SnackBarUtils.showError(context, l10n.installmentInfoRequired);
@@ -338,7 +338,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   );
 
   Widget _buildPaymentSection() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

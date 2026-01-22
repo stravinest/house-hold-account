@@ -15,7 +15,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final transactionsAsync = ref.watch(dailyTransactionsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -123,7 +123,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: EmptyState(
@@ -134,7 +134,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
   }
 
   Widget _buildDailySummary(BuildContext context, Map<String, int> totals) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final formatter = NumberFormat('#,###', 'ko_KR');
     final income = totals['income'] ?? 0;
     final expense = totals['expense'] ?? 0;
@@ -175,7 +175,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
     Color color,
     NumberFormat formatter,
   ) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Column(
       children: [
         Text(
@@ -202,7 +202,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
     List<Transaction> transactions,
     int total,
   ) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final formatter = NumberFormat('#,###', 'ko_KR');
     final isIncome = transactions.first.isIncome;

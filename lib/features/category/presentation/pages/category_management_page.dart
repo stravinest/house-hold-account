@@ -41,7 +41,7 @@ class _CategoryManagementPageState extends ConsumerState<CategoryManagementPage>
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.categoryManagement),
@@ -89,7 +89,7 @@ class _CategoryListView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final categoriesAsync = ref.watch(categoryNotifierProvider);
 
     return categoriesAsync.when(
@@ -161,7 +161,7 @@ class _CategoryTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
@@ -198,7 +198,7 @@ class _CategoryTile extends ConsumerWidget {
     WidgetRef ref,
     Category category,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await DialogUtils.showConfirmation(
       context,
       title: l10n.categoryDeleteConfirmTitle,
@@ -277,7 +277,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isEdit = widget.category != null;
 
     return AlertDialog(
@@ -316,7 +316,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     try {
       if (widget.category != null) {

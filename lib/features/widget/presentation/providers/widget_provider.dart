@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../ledger/presentation/providers/ledger_provider.dart';
-import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../data/services/widget_data_service.dart';
 

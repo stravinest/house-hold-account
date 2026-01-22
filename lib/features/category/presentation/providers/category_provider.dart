@@ -60,7 +60,7 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
 
     try {
       _categoriesChannel = _repository.subscribeCategories(
-        ledgerId: _ledgerId!,
+        ledgerId: _ledgerId,
         onCategoryChanged: () {
           _refreshCategoriesQuietly();
         },
@@ -74,7 +74,7 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
     if (_ledgerId == null) return;
 
     try {
-      final categories = await _repository.getCategories(_ledgerId!);
+      final categories = await _repository.getCategories(_ledgerId);
       if (mounted) {
         state = AsyncValue.data(categories);
         _ref.invalidate(categoriesProvider);

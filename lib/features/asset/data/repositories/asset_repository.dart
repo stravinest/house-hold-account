@@ -264,9 +264,11 @@ class AssetRepository {
 
       return AssetGoalModel.fromJson(response);
     } catch (e, st) {
+      // 중복 데이터 에러 처리
       if (SupabaseErrorHandler.isDuplicateError(e)) {
         throw DuplicateItemException(itemType: '자산 목표', itemName: goal.title);
       }
+      // RLS 정책에 의해 가계부 멤버라면 생성 가능
       Error.throwWithStackTrace(Exception('목표 생성 실패: $e'), st);
     }
   }
@@ -286,6 +288,7 @@ class AssetRepository {
         createdBy: goal.createdBy,
       );
 
+      // RLS 정책: 가계부 멤버라면 누구나 수정 가능하도록 DB 정책 수정됨
       final response = await _client
           .from('asset_goals')
           .update(model.toUpdateJson())
@@ -301,6 +304,7 @@ class AssetRepository {
 
   Future<void> deleteGoal(String goalId) async {
     try {
+      // RLS 정책: 가계부 멤버라면 누구나 삭제 가능하도록 DB 정책 수정됨
       await _client.from('asset_goals').delete().eq('id', goalId);
     } catch (e, st) {
       Error.throwWithStackTrace(Exception('목표 삭제 실패: $e'), st);

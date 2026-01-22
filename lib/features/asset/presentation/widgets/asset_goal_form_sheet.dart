@@ -43,7 +43,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final isEditing = widget.goal != null;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -301,7 +301,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
   }
 
   Future<void> _submit(BuildContext context, bool isEditing) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (!_formKey.currentState!.validate()) return;
 
     final ledgerId = ref.read(selectedLedgerIdProvider);

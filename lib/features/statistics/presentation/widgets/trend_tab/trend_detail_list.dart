@@ -29,7 +29,7 @@ class _MonthlyDetailList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final trendAsync = ref.watch(monthlyTrendWithAverageProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
 
@@ -89,7 +89,7 @@ class _YearlyDetailList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final trendAsync = ref.watch(yearlyTrendWithAverageProvider);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
 

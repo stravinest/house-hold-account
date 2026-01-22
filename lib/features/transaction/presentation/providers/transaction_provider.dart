@@ -100,8 +100,9 @@ final monthlyTransactionsProvider = FutureProvider<List<Transaction>>((
 // 현재 월 합계 (사용자별 데이터 포함)
 final monthlyTotalProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
-  if (ledgerId == null)
+  if (ledgerId == null) {
     return {'income': 0, 'expense': 0, 'balance': 0, 'users': {}};
+  }
 
   final date = ref.watch(selectedDateProvider);
   final repository = ref.watch(transactionRepositoryProvider);

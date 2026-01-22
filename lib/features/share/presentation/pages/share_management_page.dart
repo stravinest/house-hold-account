@@ -38,7 +38,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final ownedLedgersAsync = ref.watch(myOwnedLedgersWithInvitesProvider);
     final receivedInvitesAsync = ref.watch(receivedInvitesProvider);
     final selectedLedgerId = ref.watch(selectedLedgerIdProvider);
@@ -99,7 +99,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
       return _buildEmptyState(context);
     }
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return ListView(
       padding: const EdgeInsets.symmetric(vertical: 16),
       children: [
@@ -194,7 +194,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return _buildScrollableCenter(
       child: EmptyState(
         icon: Icons.account_balance_wallet_outlined,
@@ -210,7 +210,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
   }
 
   Widget _buildErrorWidget(BuildContext context, WidgetRef ref, String error) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return _buildScrollableCenter(
       child: EmptyState(
         icon: Icons.error_outline,
@@ -240,7 +240,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     WidgetRef ref,
     LedgerWithInviteInfo ledgerInfo,
   ) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final currentUserId = SupabaseConfig.auth.currentUser?.id;
     final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
@@ -417,7 +417,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String userId,
     String memberName,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -450,7 +450,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String ledgerId,
     String userId,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     try {
       await ref
           .read(shareNotifierProvider.notifier)
@@ -472,7 +472,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String ledgerId,
     String currentName,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final controller = TextEditingController(text: currentName);
 
     final newName = await showDialog<String>(
@@ -528,7 +528,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String ledgerId,
     String ledgerName,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -559,7 +559,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -593,7 +593,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     try {
       await ref
           .read(shareNotifierProvider.notifier)
@@ -616,7 +616,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String inviteId,
     String ledgerId,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -651,7 +651,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String inviteId,
     String ledgerId,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     try {
       await ref
           .read(shareNotifierProvider.notifier)
@@ -673,7 +673,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String inviteId,
     String ledgerId,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     try {
       await ref
           .read(shareNotifierProvider.notifier)
@@ -694,7 +694,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     try {
       await ref.read(shareNotifierProvider.notifier).acceptInvite(invite.id);
       if (context.mounted) {
@@ -713,7 +713,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -749,7 +749,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     WidgetRef ref,
     LedgerInvite invite,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     try {
       await ref.read(shareNotifierProvider.notifier).rejectInvite(invite.id);
       if (context.mounted) {
@@ -894,7 +894,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
       title: Text(l10n.shareMemberInvite),
       content: Form(
@@ -945,7 +945,7 @@ class _InviteDialogState extends ConsumerState<_InviteDialog> {
   Future<void> _sendInvite() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     setState(() => _isLoading = true);
 
     try {

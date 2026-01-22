@@ -48,7 +48,7 @@ class DialogUtils {
     String? confirmText,
     String? cancelText,
   }) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return showDialog<bool>(
       context: context,

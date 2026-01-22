@@ -153,13 +153,13 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
           );
 
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         Navigator.pop(context);
         SnackBarUtils.showSuccess(context, l10n.transactionUpdated);
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     } finally {
@@ -171,7 +171,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     // 시스템 네비게이션 바 높이를 고려한 하단 패딩
     final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
 

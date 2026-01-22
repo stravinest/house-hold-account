@@ -63,7 +63,7 @@ class _DailySummaryHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final dailyTotalAsync = ref.watch(dailyTotalProvider);
 
@@ -158,7 +158,7 @@ class _DailyNavigationHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final isToday =
         date.year == now.year && date.month == now.month && date.day == now.day;
@@ -232,7 +232,7 @@ class _DailyTransactionList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final dailyTransactionsAsync = ref.watch(dailyTransactionsProvider);
     final formatter = NumberFormat('#,###', 'ko_KR');

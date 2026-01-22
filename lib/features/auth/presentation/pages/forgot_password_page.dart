@@ -44,7 +44,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       }
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         SnackBarUtils.showError(
           context,
           l10n.authForgotPasswordSendFailed(e.toString()),
@@ -57,7 +57,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,

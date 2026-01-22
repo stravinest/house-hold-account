@@ -264,19 +264,18 @@ class _SharedHouseholdAccountAppState
     final themeMode = ref.watch(themeModeProvider);
     final locale = ref.watch(localeProvider);
 
-    // FCM 토큰 관리: 사용자 인증 상태 변경 시 자동으로 토큰 저장/삭제
-    // notificationProvider가 authStateChangesProvider를 watch하므로
-    // 로그인/로그아웃 시 FCM 토큰이 자동으로 관리됨
+    // FCM 토큰 관리 및 자동 저장 서비스 관리
+    // build에서의 watch는 에러 발생 시 앱 전체를 크래시(회색 화면) 시킬 수 있으나,
+    // notificationProvider는 내부적으로 AsyncValue를 사용하므로 안전하게 감시합니다.
     ref.watch(notificationProvider);
 
-    // 자동 저장 서비스 관리
-    // 사용자 로그인 및 가계부 선택 시 자동으로 서비스가 시작됨
+    // autoSaveManagerProvider는 Provider<void>이므로 listen 대신 watch를 사용합니다.
     ref.watch(autoSaveManagerProvider);
 
     return MaterialApp.router(
       onGenerateTitle: (context) =>
           AppLocalizations.of(context).appTitle ?? 'Shared Household Account',
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: true,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,

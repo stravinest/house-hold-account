@@ -30,7 +30,7 @@ class WeeklyView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final weekStartDay = ref.watch(weekStartDayProvider);
     final weekRange = getWeekRangeFor(selectedDate, weekStartDay);
 
@@ -95,7 +95,7 @@ class _WeeklySummaryHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final weeklyTotalAsync = ref.watch(weeklyTotalProvider);
 
@@ -194,7 +194,7 @@ class _WeeklyNavigationHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final now = DateTime.now();
     final currentWeekRange = getWeekRangeFor(now, weekStartDay);
     final isCurrentWeek =
@@ -281,7 +281,7 @@ class _WeeklyTransactionList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final weeklyTransactionsAsync = ref.watch(weeklyTransactionsProvider);
     final formatter = NumberFormat('#,###', 'ko_KR');

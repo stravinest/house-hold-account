@@ -182,7 +182,7 @@ class CalendarDaysOfWeekHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final weekStartDay = ref.watch(weekStartDayProvider);
 
     // 주 시작일에 따라 요일 배열 생성

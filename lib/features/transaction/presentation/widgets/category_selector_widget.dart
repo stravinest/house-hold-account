@@ -72,7 +72,7 @@ class _CategorySelectorWidgetState
 
   /// 카테고리 추가 다이얼로그 표시
   void _showAddCategoryDialog() {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
 
     String typeLabel;
@@ -120,7 +120,7 @@ class _CategorySelectorWidgetState
     BuildContext dialogContext,
     TextEditingController nameController,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     if (nameController.text.trim().isEmpty) {
       SnackBarUtils.showError(context, l10n.categoryNameRequired);
       return;
@@ -155,7 +155,7 @@ class _CategorySelectorWidgetState
 
   /// 카테고리 수정 다이얼로그
   void _showEditCategoryDialog(Category category) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: category.name);
 
     showDialog(
@@ -193,7 +193,7 @@ class _CategorySelectorWidgetState
     Category category,
     TextEditingController nameController,
   ) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final newName = nameController.text.trim();
 
     if (newName.isEmpty) {
@@ -228,7 +228,7 @@ class _CategorySelectorWidgetState
 
   /// 카테고리 삭제
   Future<void> _deleteCategory(Category category) async {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -284,7 +284,7 @@ class _CategorySelectorWidgetState
     return categoriesAsync.when(
       data: (categories) => _buildCategoryGrid(context, categories),
       loading: () => _buildSkeletonChips(),
-      error: (e, _) => Text('${AppLocalizations.of(context)!.commonError}: $e'),
+      error: (e, _) => Text('${AppLocalizations.of(context).commonError}: $e'),
     );
   }
 
@@ -303,7 +303,7 @@ class _CategorySelectorWidgetState
   }
 
   Widget _buildCategoryGrid(BuildContext context, List<Category> categories) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     // 편집 모드: 칩들과 완료 버튼을 별도 줄로 분리

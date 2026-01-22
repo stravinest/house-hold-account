@@ -365,7 +365,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   void _showLedgerSelector(BuildContext context) {
     final ledgersAsync = ref.read(ledgersProvider);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final currentUserId = ref.read(currentUserProvider)?.id;
 
     showModalBottomSheet(
@@ -893,7 +893,7 @@ class MoreTabView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final user = ref.watch(currentUserProvider);
     final profile = ref.watch(userProfileProvider).valueOrNull;
     final userColor = profile?['color'] as String?;
@@ -996,7 +996,7 @@ class _DailyUserSummary extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final dailyTransactionsAsync = ref.watch(dailyTransactionsProvider);
     final formatter = NumberFormat('#,###', 'ko_KR');
 

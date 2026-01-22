@@ -34,7 +34,7 @@ class _PaymentMethodManagementPageState
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
     // 대기 중인 거래 실시간 갱신을 위해 구독 유지
     ref.watch(pendingTransactionNotifierProvider);
@@ -134,6 +134,7 @@ class _PaymentMethodManagementPageState
   }
 
   Widget _buildPendingAlert(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     final pendingCountAsync = ref.watch(pendingTransactionCountProvider);
 
     return pendingCountAsync.maybeWhen(
@@ -149,13 +150,9 @@ class _PaymentMethodManagementPageState
             0,
           ),
           decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.errorContainer.withOpacity(0.5),
+            color: colorScheme.secondaryContainer.withOpacity(0.5),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.error.withOpacity(0.3),
-            ),
+            border: Border.all(color: colorScheme.secondary.withOpacity(0.3)),
           ),
           child: Material(
             color: Colors.transparent,
@@ -170,16 +167,16 @@ class _PaymentMethodManagementPageState
                 child: Row(
                   children: [
                     Icon(
-                      Icons.new_releases_outlined,
-                      color: Theme.of(context).colorScheme.error,
+                      Icons.notifications_active_outlined,
+                      color: colorScheme.secondary,
                       size: 20,
                     ),
                     const SizedBox(width: Spacing.sm),
                     Expanded(
                       child: Text(
-                        '확인 대기 중인 거래가 $count건 있습니다',
+                        '새로운 거래 내역이 $count건 있습니다',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onErrorContainer,
+                          color: colorScheme.onSecondaryContainer,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -187,9 +184,7 @@ class _PaymentMethodManagementPageState
                     ),
                     Icon(
                       Icons.chevron_right,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.error.withOpacity(0.5),
+                      color: colorScheme.secondary.withOpacity(0.5),
                     ),
                   ],
                 ),
@@ -210,7 +205,7 @@ class _PaymentMethodTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final isAndroid = Platform.isAndroid;
@@ -262,8 +257,10 @@ class _PaymentMethodTile extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(
-                      paymentMethod.isAutoSaveEnabled
-                          ? Icons.flash_on
+                      paymentMethod.autoSaveMode == AutoSaveMode.auto
+                          ? Icons.auto_awesome_outlined
+                          : paymentMethod.autoSaveMode == AutoSaveMode.suggest
+                          ? Icons.notifications_active_outlined
                           : Icons.flash_off_outlined,
                       size: 20,
                       color: paymentMethod.isAutoSaveEnabled
@@ -271,7 +268,7 @@ class _PaymentMethodTile extends ConsumerWidget {
                           : colorScheme.onSurfaceVariant,
                     ),
                     const SizedBox(width: Spacing.sm),
-                    Expanded(child: Text('자동 저장', style: textTheme.bodyMedium)),
+                    Expanded(child: Text('자동 처리', style: textTheme.bodyMedium)),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: Spacing.sm,
@@ -346,7 +343,7 @@ class _PaymentMethodTile extends ConsumerWidget {
     WidgetRef ref,
     PaymentMethod paymentMethod,
   ) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

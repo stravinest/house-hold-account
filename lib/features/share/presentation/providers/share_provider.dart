@@ -87,6 +87,9 @@ final currentLedgerMembersProvider = FutureProvider<List<LedgerMember>>((
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return [];
 
+  // 가계부 정보나 멤버 변경 시(Realtime) 함께 갱신되도록 ledgerNotifierProvider 감시
+  ref.watch(ledgerNotifierProvider);
+
   final repository = ref.watch(shareRepositoryProvider);
   return repository.getMembers(ledgerId);
 });
@@ -95,7 +98,16 @@ final currentLedgerMembersProvider = FutureProvider<List<LedgerMember>>((
 // 로딩 중일 때 최소 1명(본인) 보장하여 UI 깜빡임 방지
 final currentLedgerMemberCountProvider = Provider<int>((ref) {
   final membersAsync = ref.watch(currentLedgerMembersProvider);
-  return membersAsync.valueOrNull?.length ?? 1;
+  final currentLedger = ref.watch(currentLedgerProvider).valueOrNull;
+
+  final memberCount = membersAsync.valueOrNull?.length ?? 1;
+
+  // 가계부 자체가 공유 상태인 경우, 멤버 정보 로딩 중이라도 최소 2명으로 간주하여 공유 UI 유지
+  if (currentLedger?.isShared == true && memberCount < 2) {
+    return 2;
+  }
+
+  return memberCount;
 });
 
 // 멤버 추가 가능 여부

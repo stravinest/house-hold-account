@@ -1,7 +1,7 @@
 // Supabase Edge Function: send-push-notification
 // 트랜잭션 생성/수정/삭제 시 공유 가계부 멤버에게 푸시 알림 발송
 import 'jsr:@supabase/functions-js/edge-runtime.d.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // FCM HTTP v1 API endpoint
 const FCM_URL = 'https://fcm.googleapis.com/v1/projects';
@@ -43,13 +43,7 @@ async function getAccessToken(serviceAccount: {
   const now = Math.floor(Date.now() / 1000);
   const exp = now + 3600;
 
-  // JWT Header
-  const header = {
-    alg: 'RS256',
-    typ: 'JWT',
-  };
-
-  // JWT Payload
+  const header = { alg: 'RS256', typ: 'JWT' };
   const payload = {
     iss: serviceAccount.client_email,
     scope: 'https://www.googleapis.com/auth/firebase.messaging',
@@ -58,25 +52,22 @@ async function getAccessToken(serviceAccount: {
     exp: exp,
   };
 
-  // Base64URL encode
   const encoder = new TextEncoder();
-  const headerB64 = btoa(JSON.stringify(header))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
-  const payloadB64 = btoa(JSON.stringify(payload))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
 
+  const toBase64Url = (obj: any) => {
+    const json = JSON.stringify(obj);
+    const latin1 = encodeURIComponent(json).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+      String.fromCharCode(parseInt(p1, 16))
+    );
+    return btoa(latin1).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  };
+
+  const headerB64 = toBase64Url(header);
+  const payloadB64 = toBase64Url(payload);
   const signInput = `${headerB64}.${payloadB64}`;
 
-  // Import private key and sign
   const pemContents = serviceAccount.private_key
-    .replace('-----BEGIN PRIVATE KEY-----', '')
-    .replace('-----END PRIVATE KEY-----', '')
-    .replace(/\n/g, '');
-
+    .replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\n/g, '');
   const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
 
   const cryptoKey = await crypto.subtle.importKey(
@@ -94,13 +85,10 @@ async function getAccessToken(serviceAccount: {
   );
 
   const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 
   const jwt = `${signInput}.${signatureB64}`;
 
-  // Exchange JWT for access token
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -108,6 +96,9 @@ async function getAccessToken(serviceAccount: {
   });
 
   const tokenData = await tokenResponse.json();
+  if (!tokenData.access_token) {
+    throw new Error(`Failed to get access token: ${JSON.stringify(tokenData)}`);
+  }
   return tokenData.access_token;
 }
 
@@ -234,6 +225,7 @@ function createNotificationMessage(
 ): { title: string; body: string } {
   const record = payload.record || payload.old_record;
   const amount = record?.amount || 0;
+  const formattedAmount = new Intl.NumberFormat('ko-KR').format(amount);
   const transactionType = record?.type === 'expense' ? '지출' : record?.type === 'income' ? '수입' : '거래';
   const transactionTitle = record?.title || transactionType;
 
@@ -241,7 +233,7 @@ function createNotificationMessage(
     case 'INSERT':
       return {
         title: '공유 가계부 변경',
-        body: `${userName}님이 ${transactionTitle} ${amount.toLocaleString()}원을 추가했습니다.`,
+        body: `${userName}님이 ${transactionTitle} ${formattedAmount}원을 추가했습니다.`,
       };
     case 'UPDATE':
       return {
@@ -342,9 +334,9 @@ Deno.serve(async (req: Request) => {
     const creatorName = creator?.display_name || '멤버';
 
     // 3. 알림 대상 (생성자 제외한 다른 멤버들)
-    const targetUserIds = members
-      .map((m) => m.user_id)
-      .filter((id) => id !== record.user_id);
+    const targetUserIds = (members as any[])
+      .map((m: any) => m.user_id)
+      .filter((id: string) => id !== record.user_id);
 
     if (targetUserIds.length === 0) {
       console.log('No other members to notify');
@@ -378,7 +370,7 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const enabledUserIds = settings.map((s) => s.user_id);
+    const enabledUserIds = (settings as any[]).map((s: any) => s.user_id);
 
     // 5. FCM 토큰 조회
     const { data: tokens, error: tokensError } = await supabase

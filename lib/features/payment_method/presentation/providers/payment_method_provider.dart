@@ -57,7 +57,7 @@ class PaymentMethodNotifier
 
     try {
       _paymentMethodsChannel = _repository.subscribePaymentMethods(
-        ledgerId: _ledgerId!,
+        ledgerId: _ledgerId,
         onPaymentMethodChanged: () {
           _refreshPaymentMethodsQuietly();
         },
@@ -71,7 +71,7 @@ class PaymentMethodNotifier
     if (_ledgerId == null) return;
 
     try {
-      final paymentMethods = await _repository.getPaymentMethods(_ledgerId!);
+      final paymentMethods = await _repository.getPaymentMethods(_ledgerId);
       if (mounted) {
         state = AsyncValue.data(paymentMethods);
         _ref.invalidate(paymentMethodsProvider);

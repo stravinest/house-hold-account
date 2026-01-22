@@ -60,7 +60,7 @@ class AssetGoalProgressBar extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: progressColor.withValues(alpha: 0.15),
+                                color: progressColor.withOpacity(0.15),
                                 borderRadius: BorderRadius.circular(
                                   BorderRadiusToken.xs,
                                 ),
@@ -106,7 +106,7 @@ class AssetGoalProgressBar extends StatelessWidget {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  progressColor.withValues(alpha: 0.9),
+                                  progressColor.withOpacity(0.9),
                                   progressColor,
                                 ],
                               ),
@@ -125,16 +125,16 @@ class AssetGoalProgressBar extends StatelessWidget {
                       Text(
                         '0%',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.6,
+                          color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                            0.6,
                           ),
                         ),
                       ),
                       Text(
                         '100%',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.6,
+                          color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                            0.6,
                           ),
                         ),
                       ),

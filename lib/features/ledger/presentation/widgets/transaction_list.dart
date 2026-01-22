@@ -54,7 +54,7 @@ class TransactionList extends ConsumerWidget {
         itemBuilder: (context, index) => const SkeletonTransactionItem(),
       ),
       error: (e, _) {
-        final l10n = AppLocalizations.of(context)!;
+        final l10n = AppLocalizations.of(context);
         return ListView(
           padding: const EdgeInsets.all(Spacing.md),
           children: [
@@ -83,7 +83,7 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final dateFormat = DateFormat('M월 d일 (E)', 'ko_KR');
 
     return ListView(
@@ -120,7 +120,7 @@ class _TransactionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final formatter = NumberFormat('#,###', 'ko_KR');
     final amountColor = transaction.isIncome

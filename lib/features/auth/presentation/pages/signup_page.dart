@@ -61,7 +61,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         debugPrint('[SignupPage] signup success - navigating to home');
         context.go(Routes.home);
       }
-    } catch (e, st) {
+    } catch (e) {
       debugPrint('[SignupPage] signup failed: ${e.runtimeType}');
       if (mounted) {
         final l10n = AppLocalizations.of(context);
@@ -104,7 +104,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.authSignup)),

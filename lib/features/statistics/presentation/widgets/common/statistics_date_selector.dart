@@ -11,7 +11,7 @@ class StatisticsDateSelector extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final selectedDate = ref.watch(statisticsSelectedDateProvider);
     final theme = Theme.of(context);
 
@@ -123,7 +123,7 @@ class _MonthPickerSheetState extends State<_MonthPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final now = DateTime.now();
 
