@@ -194,10 +194,12 @@ class TransactionRepository {
       final startStr = startDate.toIso8601String().split('T').first;
       final endStr = endDate.toIso8601String().split('T').first;
 
-      // transactions와 profiles를 조인하여 user_id, display_name, color 조회
+      // transactions와 profiles를 조인하여 user_id, display_name, color 조회 (필요한 컬럼만 선택하여 최적화)
       final response = await _client
           .from('transactions')
-          .select('*, profiles!user_id(display_name, color)')
+          .select(
+            'amount, type, user_id, profiles!user_id(display_name, color)',
+          )
           .eq('ledger_id', ledgerId)
           .gte('date', startStr)
           .lte('date', endStr)
@@ -273,10 +275,12 @@ class TransactionRepository {
       final startStr = startDate.toIso8601String().split('T').first;
       final endStr = endDate.toIso8601String().split('T').first;
 
-      // transactions와 profiles를 조인하여 user_id, display_name, color 조회
+      // transactions와 profiles를 조인하여 user_id, display_name, color 조회 (필요한 컬럼만 선택하여 최적화)
       final response = await _client
           .from('transactions')
-          .select('*, profiles!user_id(display_name, color)')
+          .select(
+            'date, amount, type, user_id, profiles!user_id(display_name, color)',
+          )
           .eq('ledger_id', ledgerId)
           .gte('date', startStr)
           .lte('date', endStr)
