@@ -170,7 +170,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
             ),
             suffixText: l10n.transactionAmountUnit,
             suffixStyle: Theme.of(context).textTheme.titleMedium,
-            counterText: "",
+            counterText: '',
           ),
           maxLength: 18, // 콤마 포함 약 14~15자리 숫자 제한
           validator: (value) {

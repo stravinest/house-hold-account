@@ -690,7 +690,7 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
             decoration: InputDecoration(
               labelText: l10n.settingsDisplayName,
               border: const OutlineInputBorder(),
-              counterText: "",
+              counterText: '',
             ),
           ),
         ),

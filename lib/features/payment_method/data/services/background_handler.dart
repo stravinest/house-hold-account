@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 import 'sms_parsing_service.dart';
 
 @pragma('vm:entry-point')
-void onBackgroundSmsReceived(SmsMessage message) async {
+Future<void> onBackgroundSmsReceived(SmsMessage message) async {
   debugPrint('Background SMS received from: ${message.address}');
 
   final sender = message.address ?? '';

@@ -186,7 +186,7 @@ class _SkeletonPaymentMethodItem extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           // 진행 바
-          SkeletonBox(
+          const SkeletonBox(
             width: double.infinity,
             height: 6,
             borderRadius: 4,

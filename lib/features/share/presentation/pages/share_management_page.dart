@@ -818,7 +818,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
                     const SizedBox(height: 12),
                     const SkeletonLine(width: 120, height: 14),
                     const SizedBox(height: 12),
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         SkeletonBox(
@@ -847,9 +847,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
         ),
         ...List.generate(
           1,
-          (index) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: const Card(
+          (index) => const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Card(
               child: Padding(
                 padding: EdgeInsets.all(Spacing.md),
                 child: Column(

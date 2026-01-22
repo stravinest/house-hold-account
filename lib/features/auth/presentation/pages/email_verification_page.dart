@@ -213,7 +213,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(Spacing.lg),
+          padding: const EdgeInsets.all(Spacing.lg),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -238,7 +238,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                 ),
               ),
 
-              SizedBox(height: Spacing.xl),
+              const SizedBox(height: Spacing.xl),
 
               // Status text
               Text(
@@ -251,11 +251,11 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                 ),
               ),
 
-              SizedBox(height: Spacing.md),
+              const SizedBox(height: Spacing.md),
 
               // Email address
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: Spacing.md,
                   vertical: Spacing.sm,
                 ),
@@ -271,12 +271,12 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                 ),
               ),
 
-              SizedBox(height: Spacing.lg),
+              const SizedBox(height: Spacing.lg),
 
               // Verification badge
               _buildVerificationBadge(colorScheme, textTheme, l10n),
 
-              SizedBox(height: Spacing.lg),
+              const SizedBox(height: Spacing.lg),
 
               // Guide text
               Text(
@@ -290,7 +290,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
               ),
 
               if (!_isVerified) ...[
-                SizedBox(height: Spacing.xl),
+                const SizedBox(height: Spacing.xl),
 
                 // Check verification status button
                 OutlinedButton.icon(
@@ -306,7 +306,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                   ),
                 ),
 
-                SizedBox(height: Spacing.sm),
+                const SizedBox(height: Spacing.sm),
 
                 // Resend button
                 OutlinedButton.icon(
@@ -330,11 +330,11 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                   ),
                 ),
 
-                SizedBox(height: Spacing.md),
+                const SizedBox(height: Spacing.md),
               ],
 
               if (_isVerified) ...[
-                SizedBox(height: Spacing.xl),
+                const SizedBox(height: Spacing.xl),
 
                 // Loading indicator
                 const CircularProgressIndicator(),
@@ -352,7 +352,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
     AppLocalizations l10n,
   ) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: Spacing.md,
         vertical: Spacing.sm,
       ),
@@ -372,7 +372,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
                 ? colorScheme.onPrimaryContainer
                 : colorScheme.onErrorContainer,
           ),
-          SizedBox(width: Spacing.xs),
+          const SizedBox(width: Spacing.xs),
           Text(
             _isVerified
                 ? l10n.emailVerificationVerified

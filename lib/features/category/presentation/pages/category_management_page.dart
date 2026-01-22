@@ -124,20 +124,20 @@ class _CategoryListView extends ConsumerWidget {
         padding: const EdgeInsets.all(Spacing.md),
         itemCount: 5,
         itemBuilder: (context, index) {
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
+          return const Card(
+            margin: EdgeInsets.only(bottom: 8),
             child: Padding(
-              padding: const EdgeInsets.all(Spacing.md),
+              padding: EdgeInsets.all(Spacing.md),
               child: Row(
                 children: [
-                  const Expanded(child: SkeletonLine(height: 18)),
-                  const SizedBox(width: 8),
+                  Expanded(child: SkeletonLine(height: 18)),
+                  SizedBox(width: 8),
                   SkeletonBox(
                     width: 40,
                     height: 40,
                     borderRadius: BorderRadiusToken.md,
                   ),
-                  const SizedBox(width: 8),
+                  SizedBox(width: 8),
                   SkeletonBox(
                     width: 40,
                     height: 40,
@@ -296,7 +296,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
             labelText: l10n.categoryName,
             hintText: l10n.categoryNameHint,
             border: const OutlineInputBorder(),
-            counterText: "",
+            counterText: '',
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {

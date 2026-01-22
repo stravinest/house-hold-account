@@ -16,7 +16,7 @@ import 'duplicate_check_service.dart';
 import 'sms_parsing_service.dart';
 
 @pragma('vm:entry-point')
-void backgroundSmsHandler(SmsMessage message) async {
+Future<void> backgroundSmsHandler(SmsMessage message) async {
   debugPrint('Background SMS received: ${message.address}');
 }
 

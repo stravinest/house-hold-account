@@ -57,7 +57,7 @@ class _PendingTransactionsPageState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('대기 중인 거래'),
+        title: const Text('자동 수집'),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),

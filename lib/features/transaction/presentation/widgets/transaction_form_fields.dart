@@ -62,7 +62,7 @@ class TitleInputField extends StatelessWidget {
         hintText: l10n.categoryNameHintExample,
         prefixIcon: const Icon(Icons.edit),
         border: const OutlineInputBorder(),
-        counterText: "", // 카운터 표시 숨김 (깔끔한 UI)
+        counterText: '', // 카운터 표시 숨김 (깔끔한 UI)
       ),
       validator: (v) =>
           v == null || v.trim().isEmpty ? l10n.transactionTitleRequired : null,
@@ -104,7 +104,7 @@ class AmountInputField extends StatelessWidget {
         suffixText: l10n.transactionAmountUnit,
         suffixStyle: const TextStyle(fontSize: 18),
         border: InputBorder.none,
-        counterText: "",
+        counterText: '',
       ),
       maxLength: 18, // 콤마 포함 약 14~15자리 숫자 제한
       validator: (v) =>

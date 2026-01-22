@@ -98,7 +98,7 @@ class AssetDonutChart extends StatelessWidget {
           categoryIcon: null,
           categoryColor: '#9E9E9E',
           amount: othersTotal,
-          items: [],
+          items: const [],
         ),
       );
     }

@@ -159,7 +159,7 @@ void main() {
 
     test('AuthException 발생 시 에러가 올바르게 전파되어야 한다', () async {
       // Given: AuthException을 발생시키는 프로바이더
-      final authError = AuthException('Unauthorized');
+      const authError = AuthException('Unauthorized');
 
       final container = ProviderContainer(
         overrides: [
@@ -195,7 +195,7 @@ void main() {
 
     test('SocketException 발생 시 에러가 올바르게 전파되어야 한다', () async {
       // Given: SocketException을 발생시키는 프로바이더
-      final socketError = SocketException('Network error');
+      const socketError = SocketException('Network error');
 
       final container = ProviderContainer(
         overrides: [

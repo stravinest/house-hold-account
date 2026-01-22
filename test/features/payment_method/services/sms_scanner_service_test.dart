@@ -91,7 +91,7 @@ void main() {
         id: 'test-id',
         paymentMethodId: 'pm-1',
         senderPattern: 'KB국민',
-        senderKeywords: ['KB국민', 'KB카드'],
+        senderKeywords: const ['KB국민', 'KB카드'],
         amountRegex: r'([0-9,]+)\s*원',
         typeKeywords: const {
           'expense': ['승인'],
@@ -181,7 +181,7 @@ void main() {
     });
 
     test('allPatterns에 모든 금융사가 포함되어야 한다', () {
-      final all = KoreanFinancialPatterns.allPatterns;
+      const all = KoreanFinancialPatterns.allPatterns;
 
       // 카드사 9개, 은행 9개, 지역화폐 3개 = 21개
       expect(all.length, greaterThanOrEqualTo(21));

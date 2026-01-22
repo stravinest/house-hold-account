@@ -25,8 +25,8 @@ class SupabaseConfig {
     await Supabase.initialize(
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
-      authOptions: FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
-      postgrestOptions: PostgrestClientOptions(schema: schema),
+      authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
+      postgrestOptions: const PostgrestClientOptions(schema: schema),
       debug: kDebugMode,
     );
 

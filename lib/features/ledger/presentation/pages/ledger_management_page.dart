@@ -535,7 +535,7 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
                 decoration: InputDecoration(
                   labelText: l10n.ledgerNameLabel,
                   border: const OutlineInputBorder(),
-                  counterText: "",
+                  counterText: '',
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -551,7 +551,7 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
                 decoration: InputDecoration(
                   labelText: l10n.ledgerDescriptionLabel,
                   border: const OutlineInputBorder(),
-                  counterText: "",
+                  counterText: '',
                 ),
                 maxLines: 2,
               ),

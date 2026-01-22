@@ -71,7 +71,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(Spacing.lg),
+          padding: const EdgeInsets.all(Spacing.lg),
           child: _emailSent
               ? _buildSuccessView(l10n, colorScheme)
               : _buildFormView(l10n, colorScheme),
@@ -86,7 +86,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(height: Spacing.xl),
+          const SizedBox(height: Spacing.xl),
 
           // 아이콘
           Center(
@@ -104,7 +104,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
               ),
             ),
           ),
-          SizedBox(height: Spacing.lg),
+          const SizedBox(height: Spacing.lg),
 
           // 타이틀
           Text(
@@ -114,7 +114,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: Spacing.sm),
+          const SizedBox(height: Spacing.sm),
 
           // 부제목
           Text(
@@ -125,7 +125,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             textAlign: TextAlign.center,
           ),
 
-          SizedBox(height: Spacing.xl),
+          const SizedBox(height: Spacing.xl),
 
           // 이메일 입력
           TextFormField(
@@ -148,7 +148,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             },
           ),
 
-          SizedBox(height: Spacing.lg),
+          const SizedBox(height: Spacing.lg),
 
           // 재설정 링크 보내기 버튼
           ElevatedButton(
@@ -162,7 +162,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
                 : Text(l10n.authForgotPasswordSend),
           ),
 
-          SizedBox(height: Spacing.lg),
+          const SizedBox(height: Spacing.lg),
 
           // 로그인으로 돌아가기
           Center(
@@ -180,7 +180,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(height: Spacing.xxl),
+        const SizedBox(height: Spacing.xxl),
 
         // 성공 아이콘
         Center(
@@ -198,7 +198,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             ),
           ),
         ),
-        SizedBox(height: Spacing.lg),
+        const SizedBox(height: Spacing.lg),
 
         // 성공 메시지
         Text(
@@ -208,11 +208,11 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
-        SizedBox(height: Spacing.sm),
+        const SizedBox(height: Spacing.sm),
 
         // 이메일 표시
         Container(
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: Spacing.md,
             vertical: Spacing.sm,
           ),
@@ -228,7 +228,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             textAlign: TextAlign.center,
           ),
         ),
-        SizedBox(height: Spacing.md),
+        const SizedBox(height: Spacing.md),
 
         // 안내 메시지
         Text(
@@ -239,7 +239,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
           textAlign: TextAlign.center,
         ),
 
-        SizedBox(height: Spacing.xxl),
+        const SizedBox(height: Spacing.xxl),
 
         // 로그인으로 돌아가기 버튼
         ElevatedButton(

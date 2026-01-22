@@ -367,7 +367,7 @@ class _UserAmountList extends StatelessWidget {
     }
 
     // 최대 표시 개수 제한
-    final maxItems = CalendarCellConfig.maxVisibleItems;
+    const maxItems = CalendarCellConfig.maxVisibleItems;
     final hasMore = allItems.length > maxItems;
     final visibleItems = hasMore ? allItems.take(maxItems).toList() : allItems;
     final remainingCount = allItems.length - maxItems;
@@ -470,7 +470,7 @@ class _UserAmountRow extends StatelessWidget {
         children: [
           indicator,
           if (showAmount) ...[
-            SizedBox(width: CalendarConstants.dotSpacing),
+            const SizedBox(width: CalendarConstants.dotSpacing),
             Flexible(
               child: Text(
                 NumberFormatUtils.currency.format(amount),

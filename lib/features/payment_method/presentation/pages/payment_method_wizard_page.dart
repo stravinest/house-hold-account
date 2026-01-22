@@ -295,7 +295,7 @@ class _PaymentMethodWizardPageState
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: '예: 신한카드',
-                counterText: "",
+                counterText: '',
               ),
             ),
             const Spacer(),
@@ -329,7 +329,7 @@ class _PaymentMethodWizardPageState
               labelText: '별칭',
               helperText: '앱 내에서 표시될 이름입니다.',
               border: OutlineInputBorder(),
-              counterText: "",
+              counterText: '',
             ),
           ),
           const SizedBox(height: 24),
@@ -389,6 +389,7 @@ class _PaymentMethodWizardPageState
 
           TextField(
             controller: _sampleController,
+            readOnly: true, // 읽기 전용으로 변경
             maxLines: 5,
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
@@ -420,11 +421,11 @@ class _PaymentMethodWizardPageState
                     ),
                     const Divider(),
                     _buildRuleRow(
-                      '감지 키워드',
+                      '감지 키워드 (OR 조건)',
                       _generatedFormat!.senderKeywords.join(', '),
                     ),
                     _buildRuleRow(
-                      '금액 패턴',
+                      '금액 패턴 (필수)',
                       _getFriendlyAmountPattern(_generatedFormat!.amountRegex),
                     ),
                     // 실제 파싱 결과 시뮬레이션 표시도 가능

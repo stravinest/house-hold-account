@@ -89,7 +89,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           decoration: InputDecoration(
             hintText: l10n.searchHint,
             border: InputBorder.none,
-            counterText: "",
+            counterText: '',
           ),
           onChanged: (value) {
             ref.read(searchQueryProvider.notifier).state = value;

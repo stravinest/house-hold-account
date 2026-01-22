@@ -67,12 +67,12 @@ class _PaymentMethodManagementPageState
                         context.push('/settings/pending-transactions');
                       },
                     ),
-              loading: () => IconButton(
-                icon: const Icon(Icons.notifications_none_outlined),
+              loading: () => const IconButton(
+                icon: Icon(Icons.notifications_none_outlined),
                 onPressed: null,
               ),
-              error: (_, __) => IconButton(
-                icon: const Icon(Icons.notifications_off_outlined),
+              error: (_, __) => const IconButton(
+                icon: Icon(Icons.notifications_off_outlined),
                 onPressed: null,
               ),
             ),

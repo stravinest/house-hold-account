@@ -119,13 +119,13 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
 
     return Dialog(
       backgroundColor: Colors.transparent,
-      insetPadding: EdgeInsets.all(Spacing.xl),
+      insetPadding: const EdgeInsets.all(Spacing.xl),
       child: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
         ),
-        padding: EdgeInsets.all(Spacing.lg),
+        padding: const EdgeInsets.all(Spacing.lg),
         child: Form(
           key: _formKey,
           child: Column(
@@ -138,7 +138,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                   context,
                 ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: Spacing.lg),
+              const SizedBox(height: Spacing.lg),
 
               TextFormField(
                 controller: _amountController,
@@ -159,7 +159,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                   return null;
                 },
               ),
-              SizedBox(height: Spacing.md),
+              const SizedBox(height: Spacing.md),
 
               TextFormField(
                 controller: _titleController,
@@ -176,7 +176,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                   return null;
                 },
               ),
-              SizedBox(height: Spacing.md),
+              const SizedBox(height: Spacing.md),
 
               categoriesAsync.when(
                 data: (categories) {
@@ -202,9 +202,9 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                               children: [
                                 Text(
                                   category.icon,
-                                  style: TextStyle(fontSize: IconSize.sm),
+                                  style: const TextStyle(fontSize: IconSize.sm),
                                 ),
-                                SizedBox(width: Spacing.sm),
+                                const SizedBox(width: Spacing.sm),
                                 Text(category.name),
                               ],
                             ),
@@ -219,7 +219,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (_, __) => Text(l10n.transactionCategoryLoadError),
               ),
-              SizedBox(height: Spacing.lg),
+              const SizedBox(height: Spacing.lg),
 
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -228,7 +228,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                     onPressed: _isLoading ? null : () => Navigator.pop(context),
                     child: Text(l10n.commonCancel),
                   ),
-                  SizedBox(width: Spacing.sm),
+                  const SizedBox(width: Spacing.sm),
                   ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
                     child: _isLoading

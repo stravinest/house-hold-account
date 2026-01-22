@@ -59,17 +59,17 @@ class AssetPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Card(
-                margin: const EdgeInsets.all(16),
+              const Card(
+                margin: EdgeInsets.all(16),
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SkeletonLine(width: 80, height: 16),
-                      const SizedBox(height: 8),
-                      const SkeletonLine(width: 160, height: 32),
-                      const SizedBox(height: 12),
+                      SkeletonLine(width: 80, height: 16),
+                      SizedBox(height: 8),
+                      SkeletonLine(width: 160, height: 32),
+                      SizedBox(height: 12),
                       Row(
                         children: [
                           SkeletonBox(
@@ -77,8 +77,8 @@ class AssetPage extends ConsumerWidget {
                             height: 16,
                             borderRadius: BorderRadiusToken.xs,
                           ),
-                          const SizedBox(width: 4),
-                          const SkeletonLine(width: 100, height: 14),
+                          SizedBox(width: 4),
+                          SkeletonLine(width: 100, height: 14),
                         ],
                       ),
                     ],
@@ -86,15 +86,15 @@ class AssetPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
+              const Card(
+                margin: EdgeInsets.symmetric(horizontal: 16),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SkeletonLine(width: 100, height: 18),
-                      const SizedBox(height: 16),
+                      SkeletonLine(width: 100, height: 18),
+                      SizedBox(height: 16),
                       SkeletonBox(
                         width: double.infinity,
                         height: 200,
@@ -105,15 +105,15 @@ class AssetPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
+              const Card(
+                margin: EdgeInsets.symmetric(horizontal: 16),
                 child: Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SkeletonLine(width: 120, height: 18),
-                      const SizedBox(height: 16),
+                      SkeletonLine(width: 120, height: 18),
+                      SizedBox(height: 16),
                       Center(child: SkeletonCircle(size: 180)),
                     ],
                   ),
@@ -131,13 +131,13 @@ class AssetPage extends ConsumerWidget {
                       const SizedBox(height: 16),
                       ...List.generate(
                         3,
-                        (index) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                        (index) => const Padding(
+                          padding: EdgeInsets.only(bottom: 12),
                           child: Row(
                             children: [
-                              const Expanded(child: SkeletonLine(height: 16)),
-                              const SizedBox(width: 16),
-                              const SkeletonLine(width: 80, height: 16),
+                              Expanded(child: SkeletonLine(height: 16)),
+                              SizedBox(width: 16),
+                              SkeletonLine(width: 80, height: 16),
                             ],
                           ),
                         ),
