@@ -20,6 +20,23 @@ class PaymentMethodRepository {
         .toList();
   }
 
+  // 특정 멤버의 결제수단만 조회 (멤버별 탭용)
+  Future<List<PaymentMethodModel>> getPaymentMethodsByOwner({
+    required String ledgerId,
+    required String ownerUserId,
+  }) async {
+    final response = await _client
+        .from('payment_methods')
+        .select()
+        .eq('ledger_id', ledgerId)
+        .eq('owner_user_id', ownerUserId)
+        .order('sort_order');
+
+    return (response as List)
+        .map((json) => PaymentMethodModel.fromJson(json))
+        .toList();
+  }
+
   // 결제수단 생성
   Future<PaymentMethodModel> createPaymentMethod({
     required String ledgerId,
@@ -29,6 +46,12 @@ class PaymentMethodRepository {
     bool canAutoSave = true,
   }) async {
     try {
+      // 현재 로그인한 사용자 ID 가져오기
+      final currentUserId = _client.auth.currentUser?.id;
+      if (currentUserId == null) {
+        throw Exception('로그인이 필요합니다');
+      }
+
       // 현재 최대 sort_order 조회
       final maxOrderResponse = await _client
           .from('payment_methods')
@@ -42,6 +65,7 @@ class PaymentMethodRepository {
 
       final data = PaymentMethodModel.toCreateJson(
         ledgerId: ledgerId,
+        ownerUserId: currentUserId,
         name: name,
         icon: icon,
         color: color,

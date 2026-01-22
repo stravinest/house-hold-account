@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../data/models/pending_transaction_model.dart';
@@ -18,10 +19,14 @@ final pendingTransactionsProvider =
       final ledgerId = ref.watch(selectedLedgerIdProvider);
       if (ledgerId == null) return [];
 
+      final currentUser = ref.watch(currentUserProvider);
+      if (currentUser == null) return [];
+
       final repository = ref.watch(pendingTransactionRepositoryProvider);
       return repository.getPendingTransactions(
         ledgerId,
         status: PendingTransactionStatus.pending,
+        userId: currentUser.id,
       );
     });
 
@@ -31,8 +36,11 @@ final pendingTransactionCountProvider = FutureProvider.autoDispose<int>((
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return 0;
 
+  final currentUser = ref.watch(currentUserProvider);
+  if (currentUser == null) return 0;
+
   final repository = ref.watch(pendingTransactionRepositoryProvider);
-  return repository.getPendingCount(ledgerId);
+  return repository.getPendingCount(ledgerId, currentUser.id);
 });
 
 class PendingTransactionNotifier
@@ -40,6 +48,7 @@ class PendingTransactionNotifier
   final PendingTransactionRepository _repository;
   final TransactionRepository _transactionRepository;
   final String? _ledgerId;
+  final String? _userId;
   final Ref _ref;
   RealtimeChannel? _subscription;
 
@@ -47,9 +56,10 @@ class PendingTransactionNotifier
     this._repository,
     this._transactionRepository,
     this._ledgerId,
+    this._userId,
     this._ref,
   ) : super(const AsyncValue.loading()) {
-    if (_ledgerId != null) {
+    if (_ledgerId != null && _userId != null) {
       loadPendingTransactions();
       _subscribeToChanges();
     } else {
@@ -58,34 +68,17 @@ class PendingTransactionNotifier
   }
 
   void _subscribeToChanges() {
-    if (_ledgerId == null) return;
+    if (_ledgerId == null || _userId == null) return;
 
     try {
       _subscription = _repository.subscribePendingTransactions(
         ledgerId: _ledgerId,
+        userId: _userId,
         onTableChanged: () {
-          // DB 변경 시 리스트 새로고침 및 카운트 갱신
           loadPendingTransactions();
           _ref.invalidate(pendingTransactionCountProvider);
         },
       );
-
-      // JWT 토큰 만료 에러 핸들링
-      _subscription?.onError((error) {
-        debugPrint('[PendingTransaction] Realtime error: $error');
-        final errorStr = error.toString().toLowerCase();
-        if ((errorStr.contains('token') || errorStr.contains('jwt')) &&
-            (errorStr.contains('expired') || errorStr.contains('invalid'))) {
-          debugPrint(
-            '[PendingTransaction] JWT expired, resubscribing in 3s...',
-          );
-          _subscription?.unsubscribe();
-          _subscription = null;
-          Future.delayed(const Duration(seconds: 3), () {
-            if (_ledgerId != null && mounted) _subscribeToChanges();
-          });
-        }
-      });
     } catch (e) {
       debugPrint('PendingTransaction Realtime subscribe fail: $e');
     }
@@ -100,7 +93,7 @@ class PendingTransactionNotifier
   Future<void> loadPendingTransactions({
     PendingTransactionStatus? status,
   }) async {
-    if (_ledgerId == null) {
+    if (_ledgerId == null || _userId == null) {
       state = const AsyncValue.data([]);
       return;
     }
@@ -110,6 +103,7 @@ class PendingTransactionNotifier
       final transactions = await _repository.getPendingTransactions(
         _ledgerId,
         status: status,
+        userId: _userId,
       );
       state = AsyncValue.data(transactions);
     } catch (e, st) {
@@ -196,10 +190,10 @@ class PendingTransactionNotifier
   }
 
   Future<void> confirmAll() async {
-    if (_ledgerId == null) return;
+    if (_ledgerId == null || _userId == null) return;
 
     try {
-      final confirmed = await _repository.confirmAll(_ledgerId);
+      final confirmed = await _repository.confirmAll(_ledgerId, _userId);
 
       for (final tx in confirmed) {
         if (tx.parsedAmount != null && tx.parsedType != null) {
@@ -235,10 +229,10 @@ class PendingTransactionNotifier
   }
 
   Future<void> rejectAll() async {
-    if (_ledgerId == null) return;
+    if (_ledgerId == null || _userId == null) return;
 
     try {
-      await _repository.rejectAll(_ledgerId);
+      await _repository.rejectAll(_ledgerId, _userId);
 
       _ref.invalidate(pendingTransactionsProvider);
       _ref.invalidate(pendingTransactionCountProvider);
@@ -260,10 +254,10 @@ class PendingTransactionNotifier
   }
 
   Future<void> deleteAllByStatus(PendingTransactionStatus status) async {
-    if (_ledgerId == null) return;
+    if (_ledgerId == null || _userId == null) return;
 
     try {
-      await _repository.deleteAllByStatus(_ledgerId, status);
+      await _repository.deleteAllByStatus(_ledgerId, _userId, status);
       await loadPendingTransactions();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -276,9 +270,9 @@ class PendingTransactionNotifier
   }
 
   Future<void> markAllAsViewed() async {
-    if (_ledgerId == null) return;
+    if (_ledgerId == null || _userId == null) return;
     try {
-      await _repository.markAllAsViewed(_ledgerId);
+      await _repository.markAllAsViewed(_ledgerId, _userId);
       _ref.invalidate(pendingTransactionCountProvider);
     } catch (e) {
       debugPrint('Failed to mark notifications as viewed: $e');
@@ -294,10 +288,12 @@ final pendingTransactionNotifierProvider =
       final repository = ref.watch(pendingTransactionRepositoryProvider);
       final transactionRepository = TransactionRepository();
       final ledgerId = ref.watch(selectedLedgerIdProvider);
+      final currentUser = ref.watch(currentUserProvider);
       return PendingTransactionNotifier(
         repository,
         transactionRepository,
         ledgerId,
+        currentUser?.id,
         ref,
       );
     });

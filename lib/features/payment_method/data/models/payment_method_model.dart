@@ -4,6 +4,7 @@ class PaymentMethodModel extends PaymentMethod {
   const PaymentMethodModel({
     required super.id,
     required super.ledgerId,
+    required super.ownerUserId,
     required super.name,
     required super.icon,
     required super.color,
@@ -19,6 +20,7 @@ class PaymentMethodModel extends PaymentMethod {
     return PaymentMethodModel(
       id: json['id'] as String,
       ledgerId: json['ledger_id'] as String,
+      ownerUserId: json['owner_user_id'] as String,
       name: json['name'] as String,
       icon: (json['icon'] as String?) ?? '',
       color: (json['color'] as String?) ?? '#6750A4',
@@ -37,6 +39,7 @@ class PaymentMethodModel extends PaymentMethod {
     return {
       'id': id,
       'ledger_id': ledgerId,
+      'owner_user_id': ownerUserId,
       'name': name,
       'icon': icon,
       'color': color,
@@ -51,6 +54,7 @@ class PaymentMethodModel extends PaymentMethod {
 
   static Map<String, dynamic> toCreateJson({
     required String ledgerId,
+    required String ownerUserId,
     required String name,
     String icon = '',
     String color = '#6750A4',
@@ -59,6 +63,7 @@ class PaymentMethodModel extends PaymentMethod {
   }) {
     return {
       'ledger_id': ledgerId,
+      'owner_user_id': ownerUserId,
       'name': name,
       'icon': icon,
       'color': color,

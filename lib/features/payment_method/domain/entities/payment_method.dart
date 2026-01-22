@@ -22,6 +22,7 @@ enum AutoSaveMode {
 class PaymentMethod extends Equatable {
   final String id;
   final String ledgerId;
+  final String ownerUserId; // 소유자 ID (멤버별 결제수단 관리)
   final String name;
   final String icon;
   final String color;
@@ -35,6 +36,7 @@ class PaymentMethod extends Equatable {
   const PaymentMethod({
     required this.id,
     required this.ledgerId,
+    required this.ownerUserId,
     required this.name,
     required this.icon,
     required this.color,
@@ -51,6 +53,7 @@ class PaymentMethod extends Equatable {
   PaymentMethod copyWith({
     String? id,
     String? ledgerId,
+    String? ownerUserId,
     String? name,
     String? icon,
     String? color,
@@ -64,6 +67,7 @@ class PaymentMethod extends Equatable {
     return PaymentMethod(
       id: id ?? this.id,
       ledgerId: ledgerId ?? this.ledgerId,
+      ownerUserId: ownerUserId ?? this.ownerUserId,
       name: name ?? this.name,
       icon: icon ?? this.icon,
       color: color ?? this.color,
@@ -80,6 +84,7 @@ class PaymentMethod extends Equatable {
   List<Object?> get props => [
     id,
     ledgerId,
+    ownerUserId,
     name,
     icon,
     color,

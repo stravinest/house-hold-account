@@ -10,12 +10,17 @@ class PendingTransactionRepository {
   Future<List<PendingTransactionModel>> getPendingTransactions(
     String ledgerId, {
     PendingTransactionStatus? status,
+    String? userId,
   }) async {
     return _retry(() async {
       var query = _client
           .from('pending_transactions')
           .select()
           .eq('ledger_id', ledgerId);
+
+      if (userId != null) {
+        query = query.eq('user_id', userId);
+      }
 
       if (status != null) {
         query = query.eq('status', status.toJson());
@@ -29,11 +34,12 @@ class PendingTransactionRepository {
     });
   }
 
-  Future<int> getPendingCount(String ledgerId) async {
+  Future<int> getPendingCount(String ledgerId, String userId) async {
     final response = await _client
         .from('pending_transactions')
         .select('id')
         .eq('ledger_id', ledgerId)
+        .eq('user_id', userId)
         .eq('is_viewed', false);
 
     return (response as List).length;
@@ -146,17 +152,23 @@ class PendingTransactionRepository {
 
   Future<void> deleteAllByStatus(
     String ledgerId,
+    String userId,
     PendingTransactionStatus status,
   ) async {
     await _client
         .from('pending_transactions')
         .delete()
         .eq('ledger_id', ledgerId)
+        .eq('user_id', userId)
         .eq('status', status.toJson());
   }
 
-  Future<void> deleteAllRejected(String ledgerId) async {
-    await deleteAllByStatus(ledgerId, PendingTransactionStatus.rejected);
+  Future<void> deleteAllRejected(String ledgerId, String userId) async {
+    await deleteAllByStatus(
+      ledgerId,
+      userId,
+      PendingTransactionStatus.rejected,
+    );
   }
 
   Future<bool> checkDuplicate({
@@ -194,7 +206,10 @@ class PendingTransactionRepository {
     }
   }
 
-  Future<List<PendingTransactionModel>> confirmAll(String ledgerId) async {
+  Future<List<PendingTransactionModel>> confirmAll(
+    String ledgerId,
+    String userId,
+  ) async {
     final response = await _client
         .from('pending_transactions')
         .update({
@@ -202,6 +217,7 @@ class PendingTransactionRepository {
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('ledger_id', ledgerId)
+        .eq('user_id', userId)
         .eq('status', 'pending')
         .select();
 
@@ -210,7 +226,7 @@ class PendingTransactionRepository {
         .toList();
   }
 
-  Future<void> rejectAll(String ledgerId) async {
+  Future<void> rejectAll(String ledgerId, String userId) async {
     await _client
         .from('pending_transactions')
         .update({
@@ -218,15 +234,17 @@ class PendingTransactionRepository {
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('ledger_id', ledgerId)
+        .eq('user_id', userId)
         .eq('status', 'pending');
   }
 
   RealtimeChannel subscribePendingTransactions({
     required String ledgerId,
+    required String userId,
     required void Function() onTableChanged,
   }) {
     return _client
-        .channel('pending_transactions_changes_$ledgerId')
+        .channel('pending_transactions_changes_${ledgerId}_$userId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'house',
@@ -237,6 +255,12 @@ class PendingTransactionRepository {
             value: ledgerId,
           ),
           callback: (payload) {
+            final recordData = payload.newRecord ?? payload.oldRecord;
+            if (recordData is Map<String, dynamic>) {
+              if (recordData['user_id'] != userId) {
+                return;
+              }
+            }
             onTableChanged();
           },
         )
@@ -257,7 +281,7 @@ class PendingTransactionRepository {
     throw Exception('Unreachable');
   }
 
-  Future<void> markAllAsViewed(String ledgerId) async {
+  Future<void> markAllAsViewed(String ledgerId, String userId) async {
     await _client
         .from('pending_transactions')
         .update({
@@ -265,6 +289,7 @@ class PendingTransactionRepository {
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('ledger_id', ledgerId)
+        .eq('user_id', userId)
         .eq('is_viewed', false);
   }
 }

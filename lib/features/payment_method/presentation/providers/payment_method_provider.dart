@@ -36,6 +36,22 @@ final paymentMethodsProvider = FutureProvider<List<PaymentMethod>>((ref) async {
   return repository.getPaymentMethods(ledgerId);
 });
 
+// 특정 멤버의 결제수단 목록 (멤버별 탭용)
+final paymentMethodsByOwnerProvider =
+    FutureProvider.family<List<PaymentMethod>, String>((
+      ref,
+      ownerUserId,
+    ) async {
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      if (ledgerId == null) return [];
+
+      final repository = ref.watch(paymentMethodRepositoryProvider);
+      return repository.getPaymentMethodsByOwner(
+        ledgerId: ledgerId,
+        ownerUserId: ownerUserId,
+      );
+    });
+
 // 결제수단 관리 노티파이어
 class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
   final PaymentMethodRepository _repository;
