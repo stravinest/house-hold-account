@@ -190,10 +190,12 @@ class TransactionDetailSheet extends ConsumerWidget {
     Color? valueColor,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: 12),
@@ -203,12 +205,21 @@ class TransactionDetailSheet extends ConsumerWidget {
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          const Spacer(),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: valueColor,
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              maxLines: label == l10n.labelMemo
+                  ? null
+                  : (label == l10n.labelTitle ? 2 : 1),
+              overflow: label == l10n.labelMemo
+                  ? TextOverflow.clip
+                  : TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: valueColor,
+              ),
             ),
           ),
         ],

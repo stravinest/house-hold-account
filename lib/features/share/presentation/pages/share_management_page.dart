@@ -31,6 +31,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     super.initState();
     // 페이지 진입 시 항상 최신 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       ref.invalidate(myOwnedLedgersWithInvitesProvider);
       ref.invalidate(receivedInvitesProvider);
     });
@@ -151,10 +152,12 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
             title: l10n.shareInvitedLedgers,
             icon: Icons.mail_outline,
           ),
-          ...receivedInvites.map(
-            (invite) => InvitedLedgerCard(
+          ...receivedInvites.map((invite) {
+            final shareState = ref.watch(shareNotifierProvider);
+            return InvitedLedgerCard(
               invite: invite,
               isCurrentLedger: invite.ledgerId == selectedLedgerId,
+              isLoading: shareState.isLoading,
               onAccept: invite.isPending
                   ? () => _acceptInvite(context, ref, invite)
                   : null,
@@ -173,8 +176,8 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
                       invite.ledgerName ?? l10n.ledgerTitle,
                     )
                   : null,
-            ),
-          ),
+            );
+          }),
         ],
 
         // 하단 여백
@@ -457,7 +460,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
           .removeMember(ledgerId: ledgerId, userId: userId);
       if (context.mounted) {
         SnackBarUtils.showSuccess(context, l10n.shareMemberRemoved);
-        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+        if (mounted) {
+          ref.invalidate(myOwnedLedgersWithInvitesProvider);
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -510,9 +515,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
             .updateLedger(id: ledgerId, name: newName);
         if (context.mounted) {
           SnackBarUtils.showSuccess(context, l10n.commonSuccess);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
             ref.invalidate(myOwnedLedgersWithInvitesProvider);
-          });
+          }
         }
       } catch (e) {
         if (context.mounted) {
@@ -549,8 +554,12 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
 
     if (confirmed == true && context.mounted) {
       ref.read(ledgerNotifierProvider.notifier).selectLedger(ledgerId);
-      ref.invalidate(myOwnedLedgersWithInvitesProvider);
-      SnackBarUtils.showSuccess(context, l10n.shareLedgerChanged(ledgerName));
+      if (mounted) {
+        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+      }
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(context, l10n.shareLedgerChanged(ledgerName));
+      }
     }
   }
 
@@ -600,8 +609,10 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
           .leaveLedger(invite.ledgerId);
       if (context.mounted) {
         SnackBarUtils.showSuccess(context, l10n.shareLedgerLeft);
-        ref.invalidate(receivedInvitesProvider);
-        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+        if (mounted) {
+          ref.invalidate(receivedInvitesProvider);
+          ref.invalidate(myOwnedLedgersWithInvitesProvider);
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -658,7 +669,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
           .cancelInvite(inviteId: inviteId, ledgerId: ledgerId);
       if (context.mounted) {
         SnackBarUtils.showSuccess(context, l10n.shareInviteCancelledMessage);
-        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+        if (mounted) {
+          ref.invalidate(myOwnedLedgersWithInvitesProvider);
+        }
       }
     } catch (e) {
       if (context.mounted) {
@@ -680,7 +693,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
           .cancelInvite(inviteId: inviteId, ledgerId: ledgerId);
       if (context.mounted) {
         SnackBarUtils.showSuccess(context, l10n.shareInviteCancelledMessage);
-        ref.invalidate(myOwnedLedgersWithInvitesProvider);
+        if (mounted) {
+          ref.invalidate(myOwnedLedgersWithInvitesProvider);
+        }
       }
     } catch (e) {
       if (context.mounted) {

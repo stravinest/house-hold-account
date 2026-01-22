@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/providers/safe_notifier.dart';
+
 import '../../data/repositories/ledger_repository.dart';
 import '../../domain/entities/ledger.dart';
 
@@ -90,14 +92,13 @@ final ledgerMembersProvider = FutureProvider.family<List<LedgerMember>, String>(
 );
 
 // 가계부 관리 노티파이어
-class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
+class LedgerNotifier extends SafeNotifier<List<Ledger>> {
   final LedgerRepository _repository;
-  final Ref _ref;
   RealtimeChannel? _ledgersChannel;
   RealtimeChannel? _membersChannel;
 
-  LedgerNotifier(this._repository, this._ref)
-    : super(const AsyncValue.loading()) {
+  LedgerNotifier(this._repository, Ref ref)
+    : super(ref, const AsyncValue.loading()) {
     loadLedgers();
     _subscribeToChanges();
   }
@@ -106,6 +107,7 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
     try {
       // ledgers 테이블 변경 구독
       _ledgersChannel = _repository.subscribeLedgers((ledgers) {
+        if (!mounted) return;
         state = AsyncValue.data(ledgers);
       });
 
@@ -124,8 +126,10 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
   Future<void> _refreshLedgersQuietly() async {
     try {
       final ledgers = await _repository.getLedgers();
+      if (!mounted) return;
       state = AsyncValue.data(ledgers);
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -141,28 +145,30 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
     state = const AsyncValue.loading();
     try {
       final ledgers = await _repository.getLedgers();
+      if (!mounted) return;
       state = AsyncValue.data(ledgers);
 
       // 선택된 가계부가 없으면 저장된 ID 복원 시도
-      final selectedId = _ref.read(selectedLedgerIdProvider);
+      final selectedId = ref.read(selectedLedgerIdProvider);
       if (selectedId == null && ledgers.isNotEmpty) {
         // SharedPreferences에서 마지막 선택한 가계부 ID 복원
-        final savedId = await _ref.read(restoreLedgerIdProvider.future);
+        final savedId = await ref.read(restoreLedgerIdProvider.future);
 
         // 저장된 ID가 유효한지 확인 (가계부 목록에 존재하는지)
         final isValidSavedId =
             savedId != null && ledgers.any((ledger) => ledger.id == savedId);
 
         if (isValidSavedId) {
-          _ref.read(selectedLedgerIdProvider.notifier).state = savedId;
+          ref.read(selectedLedgerIdProvider.notifier).state = savedId;
           debugPrint('Ledger restored from saved ID');
         } else {
           // 저장된 ID가 없거나 유효하지 않으면 첫 번째 가계부 선택
-          _ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
+          ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
           debugPrint('No valid saved ledger, selecting first available');
         }
       }
     } catch (e, st) {
+      if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
   }
@@ -172,16 +178,20 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
     String? description,
     String currency = 'KRW',
   }) async {
-    final ledger = await _repository.createLedger(
-      name: name,
-      description: description,
-      currency: currency,
+    final ledger = await safeAsync(
+      () => _repository.createLedger(
+        name: name,
+        description: description,
+        currency: currency,
+      ),
     );
+
+    if (ledger == null) throw Exception('위젯이 dispose되었습니다');
 
     await loadLedgers();
 
     // 새로 생성한 가계부 선택
-    _ref.read(selectedLedgerIdProvider.notifier).state = ledger.id;
+    ref.read(selectedLedgerIdProvider.notifier).state = ledger.id;
 
     return ledger;
   }
@@ -193,25 +203,28 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
     String? currency,
     bool? isShared,
   }) async {
-    await _repository.updateLedger(
-      id: id,
-      name: name,
-      description: description,
-      currency: currency,
-      isShared: isShared,
+    await safeAsync(
+      () => _repository.updateLedger(
+        id: id,
+        name: name,
+        description: description,
+        currency: currency,
+        isShared: isShared,
+      ),
     );
+
     await loadLedgers();
   }
 
   Future<void> deleteLedger(String id) async {
-    await _repository.deleteLedger(id);
+    await safeAsync(() => _repository.deleteLedger(id));
 
     // 삭제한 가계부가 현재 선택된 가계부면 선택 해제
-    final selectedId = _ref.read(selectedLedgerIdProvider);
+    final selectedId = ref.read(selectedLedgerIdProvider);
     final wasSelected = selectedId == id;
 
     if (wasSelected) {
-      _ref.read(selectedLedgerIdProvider.notifier).state = null;
+      ref.read(selectedLedgerIdProvider.notifier).state = null;
     }
 
     await loadLedgers();
@@ -222,14 +235,14 @@ class LedgerNotifier extends StateNotifier<AsyncValue<List<Ledger>>> {
       if (currentState is AsyncData<List<Ledger>>) {
         final ledgers = currentState.value;
         if (ledgers.isNotEmpty) {
-          _ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
+          ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
         }
       }
     }
   }
 
   void selectLedger(String id) {
-    _ref.read(selectedLedgerIdProvider.notifier).state = id;
+    ref.read(selectedLedgerIdProvider.notifier).state = id;
   }
 
   // 멤버 수에 따라 공유 상태 동기화

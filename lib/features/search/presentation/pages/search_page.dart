@@ -85,9 +85,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         title: TextField(
           controller: _searchController,
           focusNode: _focusNode,
+          maxLength: 30,
           decoration: InputDecoration(
             hintText: l10n.searchHint,
             border: InputBorder.none,
+            counterText: "",
           ),
           onChanged: (value) {
             ref.read(searchQueryProvider.notifier).state = value;

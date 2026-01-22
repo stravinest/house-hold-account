@@ -55,12 +55,14 @@ class TitleInputField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       maxLines: 1,
+      maxLength: 40,
       textInputAction: TextInputAction.next,
       decoration: InputDecoration(
         labelText: l10n.transactionTitle,
         hintText: l10n.categoryNameHintExample,
         prefixIcon: const Icon(Icons.edit),
         border: const OutlineInputBorder(),
+        counterText: "", // 카운터 표시 숨김 (깔끔한 UI)
       ),
       validator: (v) =>
           v == null || v.trim().isEmpty ? l10n.transactionTitleRequired : null,
@@ -99,7 +101,9 @@ class AmountInputField extends StatelessWidget {
         suffixText: l10n.transactionAmountUnit,
         suffixStyle: const TextStyle(fontSize: 18),
         border: InputBorder.none,
+        counterText: "",
       ),
+      maxLength: 18, // 콤마 포함 약 14~15자리 숫자 제한
       validator: (v) =>
           !isInstallmentMode && (v == null || v.isEmpty || v == '0')
           ? l10n.transactionAmountRequired
@@ -195,6 +199,7 @@ class MemoInputSection extends StatelessWidget {
         TextFormField(
           controller: controller,
           maxLines: 3,
+          maxLength: 500,
           decoration: InputDecoration(
             hintText: l10n.transactionMemoHint,
             border: const OutlineInputBorder(),
@@ -274,12 +279,21 @@ class AmountInputFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     if (newValue.text.isEmpty) return newValue;
-    final number = int.tryParse(newValue.text.replaceAll(',', ''));
+
+    // 숫자 이외의 문자 제거
+    final cleanText = newValue.text.replaceAll(',', '');
+
+    // 최대 14자리 숫자까지만 허용 (99조원)
+    if (cleanText.length > 14) return oldValue;
+
+    final number = int.tryParse(cleanText);
     if (number == null) return oldValue;
+
     final formatted = NumberFormat(
       '#,###',
       locale == 'ko' ? 'ko_KR' : 'en_US',
     ).format(number);
+
     return TextEditingValue(
       text: formatted,
       selection: TextSelection.collapsed(offset: formatted.length),

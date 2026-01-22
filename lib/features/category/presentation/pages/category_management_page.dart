@@ -165,7 +165,11 @@ class _CategoryTile extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        title: Text(category.name),
+        title: Text(
+          category.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -287,10 +291,12 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
         child: TextFormField(
           controller: _nameController,
           autofocus: true,
+          maxLength: 20,
           decoration: InputDecoration(
             labelText: l10n.categoryName,
             hintText: l10n.categoryNameHint,
             border: const OutlineInputBorder(),
+            counterText: "",
           ),
           validator: (value) {
             if (value == null || value.isEmpty) {

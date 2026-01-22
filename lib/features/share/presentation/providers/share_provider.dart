@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/providers/safe_notifier.dart';
+
 import '../../../../config/supabase_config.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../ledger/domain/entities/ledger.dart';
@@ -98,16 +100,10 @@ final currentLedgerMembersProvider = FutureProvider<List<LedgerMember>>((
 // 로딩 중일 때 최소 1명(본인) 보장하여 UI 깜빡임 방지
 final currentLedgerMemberCountProvider = Provider<int>((ref) {
   final membersAsync = ref.watch(currentLedgerMembersProvider);
-  final currentLedger = ref.watch(currentLedgerProvider).valueOrNull;
 
-  final memberCount = membersAsync.valueOrNull?.length ?? 1;
-
-  // 가계부 자체가 공유 상태인 경우, 멤버 정보 로딩 중이라도 최소 2명으로 간주하여 공유 UI 유지
-  if (currentLedger?.isShared == true && memberCount < 2) {
-    return 2;
-  }
-
-  return memberCount;
+  // 로딩 중이거나 에러가 있으면 1명으로 간주 (UI 깜빡임 최소화)
+  // 실제 데이터가 로드되면 정확한 멤버 수 반환
+  return membersAsync.valueOrNull?.length ?? 1;
 });
 
 // 멤버 추가 가능 여부
@@ -117,75 +113,77 @@ final canAddMemberProvider = Provider<bool>((ref) {
 });
 
 // 공유 관리 노티파이어
-class ShareNotifier extends StateNotifier<AsyncValue<void>> {
+// 공유 관리 노티파이어
+class ShareNotifier extends SafeNotifier<void> {
   final ShareRepository _repository;
-  final Ref _ref;
 
-  ShareNotifier(this._repository, this._ref)
-    : super(const AsyncValue.data(null));
+  ShareNotifier(this._repository, Ref ref)
+    : super(ref, const AsyncValue.data(null));
 
-  // 초대 보내기
   Future<void> sendInvite({
     required String ledgerId,
     required String email,
   }) async {
     state = const AsyncValue.loading();
     try {
-      await _repository.createInvite(ledgerId: ledgerId, inviteeEmail: email);
-      _ref.invalidate(sentInvitesProvider(ledgerId));
-      state = const AsyncValue.data(null);
+      await safeAsync(
+        () => _repository.createInvite(ledgerId: ledgerId, inviteeEmail: email),
+      );
+      safeInvalidate(sentInvitesProvider(ledgerId));
+      safeUpdateState(const AsyncValue.data(null));
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
 
-  // 초대 수락
   Future<void> acceptInvite(String inviteId) async {
+    if (state.isLoading) return;
     state = const AsyncValue.loading();
     try {
-      await _repository.acceptInvite(inviteId);
-      _ref.invalidate(receivedInvitesProvider);
-      _ref.invalidate(ledgersProvider);
-      _ref.invalidate(currentLedgerMembersProvider);
-      _ref.invalidate(currentLedgerProvider);
-      state = const AsyncValue.data(null);
+      await safeAsync(() => _repository.acceptInvite(inviteId));
+      safeInvalidateAll([
+        receivedInvitesProvider,
+        ledgersProvider,
+        currentLedgerMembersProvider,
+        currentLedgerProvider,
+      ]);
+      safeUpdateState(const AsyncValue.data(null));
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
 
-  // 초대 거절
   Future<void> rejectInvite(String inviteId) async {
+    if (state.isLoading) return;
     state = const AsyncValue.loading();
     try {
-      await _repository.rejectInvite(inviteId);
-      _ref.invalidate(receivedInvitesProvider);
-      state = const AsyncValue.data(null);
+      await safeAsync(() => _repository.rejectInvite(inviteId));
+      safeInvalidate(receivedInvitesProvider);
+      safeUpdateState(const AsyncValue.data(null));
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
 
-  // 초대 취소
   Future<void> cancelInvite({
     required String inviteId,
     required String ledgerId,
   }) async {
+    if (state.isLoading) return;
     state = const AsyncValue.loading();
     try {
-      await _repository.cancelInvite(inviteId);
-      _ref.invalidate(sentInvitesProvider(ledgerId));
-      state = const AsyncValue.data(null);
+      await safeAsync(() => _repository.cancelInvite(inviteId));
+      safeInvalidate(sentInvitesProvider(ledgerId));
+      safeUpdateState(const AsyncValue.data(null));
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
 
-  // 멤버 역할 변경
   Future<void> updateMemberRole({
     required String ledgerId,
     required String userId,
@@ -193,58 +191,68 @@ class ShareNotifier extends StateNotifier<AsyncValue<void>> {
   }) async {
     state = const AsyncValue.loading();
     try {
-      await _repository.updateMemberRole(
-        ledgerId: ledgerId,
-        userId: userId,
-        role: role,
+      await safeAsync(
+        () => _repository.updateMemberRole(
+          ledgerId: ledgerId,
+          userId: userId,
+          role: role,
+        ),
       );
-      _ref.invalidate(ledgerMembersListProvider(ledgerId));
-      _ref.invalidate(currentLedgerMembersProvider);
-      state = const AsyncValue.data(null);
+      safeInvalidateAll([
+        ledgerMembersListProvider(ledgerId),
+        currentLedgerMembersProvider,
+      ]);
+      safeUpdateState(const AsyncValue.data(null));
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
 
-  // 멤버 제거
   Future<void> removeMember({
     required String ledgerId,
     required String userId,
   }) async {
+    if (state.isLoading) return;
     state = const AsyncValue.loading();
     try {
-      await _repository.removeMember(ledgerId: ledgerId, userId: userId);
-      _ref.invalidate(ledgerMembersListProvider(ledgerId));
-      _ref.invalidate(currentLedgerMembersProvider);
-      _ref.invalidate(currentLedgerProvider);
-      state = const AsyncValue.data(null);
+      await safeAsync(
+        () => _repository.removeMember(ledgerId: ledgerId, userId: userId),
+      );
+      safeInvalidateAll([
+        ledgerMembersListProvider(ledgerId),
+        currentLedgerMembersProvider,
+        currentLedgerProvider,
+      ]);
+      safeUpdateState(const AsyncValue.data(null));
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
 
-  // 가계부 나가기
   Future<void> leaveLedger(String ledgerId) async {
+    if (state.isLoading) return;
     state = const AsyncValue.loading();
     try {
       // 탈퇴 전 현재 선택된 가계부 확인
-      final currentSelectedId = _ref.read(selectedLedgerIdProvider);
+      final currentSelectedId = ref.read(selectedLedgerIdProvider);
 
-      await _repository.leaveLedger(ledgerId);
-      _ref.invalidate(ledgersProvider);
-      _ref.invalidate(receivedInvitesProvider);
-      _ref.invalidate(currentLedgerMembersProvider);
-      _ref.invalidate(currentLedgerProvider);
+      await safeAsync(() => _repository.leaveLedger(ledgerId));
+      safeInvalidateAll([
+        ledgersProvider,
+        receivedInvitesProvider,
+        currentLedgerMembersProvider,
+        currentLedgerProvider,
+      ]);
 
       // 탈퇴한 가계부가 현재 선택된 가계부일 때만 선택 해제
-      if (currentSelectedId == ledgerId) {
-        _ref.read(selectedLedgerIdProvider.notifier).state = null;
+      if (mounted && currentSelectedId == ledgerId) {
+        ref.read(selectedLedgerIdProvider.notifier).state = null;
       }
-      state = const AsyncValue.data(null);
+      safeUpdateState(const AsyncValue.data(null));
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }

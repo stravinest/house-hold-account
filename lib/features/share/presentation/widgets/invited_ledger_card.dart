@@ -7,6 +7,7 @@ import '../../domain/entities/ledger_invite.dart';
 class InvitedLedgerCard extends StatelessWidget {
   final LedgerInvite invite;
   final bool isCurrentLedger;
+  final bool isLoading;
   final VoidCallback? onAccept;
   final VoidCallback? onReject;
   final VoidCallback? onLeave;
@@ -16,6 +17,7 @@ class InvitedLedgerCard extends StatelessWidget {
     super.key,
     required this.invite,
     this.isCurrentLedger = false,
+    this.isLoading = false,
     this.onAccept,
     this.onReject,
     this.onLeave,
@@ -159,7 +161,7 @@ class InvitedLedgerCard extends StatelessWidget {
           const Spacer(),
           // 거부 버튼
           OutlinedButton.icon(
-            onPressed: onReject,
+            onPressed: isLoading ? null : onReject,
             style: buttonStyle,
             icon: const Icon(Icons.close, size: 16),
             label: Text(l10n.shareReject),
@@ -167,7 +169,7 @@ class InvitedLedgerCard extends StatelessWidget {
           const SizedBox(width: 8),
           // 수락 버튼
           OutlinedButton.icon(
-            onPressed: onAccept,
+            onPressed: isLoading ? null : onAccept,
             style: buttonStyle,
             icon: const Icon(Icons.check, size: 16),
             label: Text(l10n.shareAccept),
@@ -206,7 +208,7 @@ class InvitedLedgerCard extends StatelessWidget {
               // 사용 버튼 (사용중이 아닌 경우에만)
               if (!isCurrentLedger) ...[
                 OutlinedButton(
-                  onPressed: onSelectLedger,
+                  onPressed: isLoading ? null : onSelectLedger,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: colorScheme.primary,
                     side: BorderSide(color: colorScheme.primary),
@@ -226,7 +228,7 @@ class InvitedLedgerCard extends StatelessWidget {
                 const SizedBox(width: 8),
               ],
               OutlinedButton(
-                onPressed: onLeave,
+                onPressed: isLoading ? null : onLeave,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colorScheme.error,
                   side: BorderSide(color: colorScheme.error),

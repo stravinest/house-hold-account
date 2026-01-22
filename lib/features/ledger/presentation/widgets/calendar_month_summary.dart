@@ -138,35 +138,31 @@ class SummaryColumn extends StatelessWidget {
     final formatter = NumberFormat('#,###', 'ko_KR');
     final colorScheme = Theme.of(context).colorScheme;
 
-    // 유저별 금액 계산
+    // 유저별 금액 계산 (공유 가계부일 때만 수행)
     final userAmounts = <MapEntry<Color, int>>[];
-    for (final entry in users.entries) {
-      // 안전한 타입 변환
-      final userData = entry.value is Map
-          ? Map<String, dynamic>.from(entry.value as Map)
-          : <String, dynamic>{};
-      final income = userData['income'] as int? ?? 0;
-      final expense = userData['expense'] as int? ?? 0;
+    if (memberCount >= 2) {
+      for (final entry in users.entries) {
+        // 안전한 타입 변환
+        final userData = entry.value is Map
+            ? Map<String, dynamic>.from(entry.value as Map)
+            : <String, dynamic>{};
+        final income = userData['income'] as int? ?? 0;
+        final expense = userData['expense'] as int? ?? 0;
 
-      int amount;
-      switch (type) {
-        case SummaryType.income:
-          amount = income;
-          break;
-        case SummaryType.expense:
-          amount = expense;
-          break;
-        case SummaryType.balance:
-          amount = income - expense;
-          break;
-      }
+        int amount;
+        switch (type) {
+          case SummaryType.income:
+            amount = income;
+            break;
+          case SummaryType.expense:
+            amount = expense;
+            break;
+          case SummaryType.balance:
+            amount = income - expense;
+            break;
+        }
 
-      // 공유 가계부(2명)일 때는 0이어도 항상 표시
-      // 개인 가계부일 때는 기존 로직: 합계는 0이 아닌 경우, 수입/지출은 0보다 큰 경우만
-      final shouldShow = memberCount >= 2
-          ? true
-          : (type == SummaryType.balance ? amount != 0 : amount > 0);
-      if (shouldShow) {
+        // 공유 가계부에서는 0이어도 항상 표시하여 레이아웃 유지
         final colorHex = userData['color'] as String? ?? '#A8D8EA';
         userAmounts.add(MapEntry(ColorUtils.parseHexColor(colorHex), amount));
       }
@@ -184,12 +180,15 @@ class SummaryColumn extends StatelessWidget {
           ),
         ),
         // 총액
-        Text(
-          '${totalAmount < 0 ? '-' : ''}${formatter.format(totalAmount.abs())}',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: color,
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            '${totalAmount < 0 ? '-' : ''}${formatter.format(totalAmount.abs())}',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
           ),
         ),
         // 유저별 표시 (세로 배치)
@@ -248,11 +247,15 @@ class UserAmountIndicator extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 2),
-        Text(
-          '${isNegative ? '-' : ''}${formatter.format(amount.abs())}',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            fontSize: 9,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        Flexible(
+          child: Text(
+            '${isNegative ? '-' : ''}${formatter.format(amount.abs())}',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontSize: 9,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ],

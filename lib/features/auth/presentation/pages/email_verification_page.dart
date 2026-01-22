@@ -111,7 +111,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
     if (_isVerified || _isChecking) return;
 
     setState(() => _isChecking = true);
-    _syncAnimationController.forward(from: 0);
+    unawaited(_syncAnimationController.forward(from: 0)); // 애니메이션 비동기 시작
 
     try {
       // Get latest user info from server
@@ -161,10 +161,7 @@ class _EmailVerificationPageState extends ConsumerState<EmailVerificationPage>
 
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        SnackBarUtils.showSuccess(
-          context,
-          l10n.emailVerificationResent,
-        );
+        SnackBarUtils.showSuccess(context, l10n.emailVerificationResent);
 
         // Start 60 second cooldown
         setState(() => _resendCooldown = 60);

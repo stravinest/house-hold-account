@@ -70,11 +70,15 @@ class AssetSummaryCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
               ),
             ),
             const SizedBox(height: 12),
@@ -113,10 +117,7 @@ class AssetSummaryCard extends ConsumerWidget {
     );
   }
 
-  void _showGoalFormSheet(
-    BuildContext context,
-    dynamic goal,
-  ) {
+  void _showGoalFormSheet(BuildContext context, dynamic goal) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

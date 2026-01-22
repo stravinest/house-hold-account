@@ -137,8 +137,8 @@ class SettingsPage extends ConsumerWidget {
                             final authService = ref.read(authServiceProvider);
                             try {
                               await authService.updateProfile(color: color);
-                              ref.invalidate(userProfileProvider);
                               if (context.mounted) {
+                                ref.invalidate(userProfileProvider);
                                 SnackBarUtils.showSuccess(
                                   context,
                                   l10n.settingsColorChanged,
@@ -627,6 +627,12 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
   }
 
   Future<void> _saveDisplayName() async {
+    final newName = _controller.text.trim();
+    if (newName.isEmpty) {
+      SnackBarUtils.showError(context, '표시 이름을 입력해주세요');
+      return;
+    }
+
     if (!_isChanged || _isLoading) return;
 
     setState(() {
@@ -635,9 +641,9 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
 
     try {
       final authService = ref.read(authServiceProvider);
-      await authService.updateProfile(displayName: _controller.text);
+      await authService.updateProfile(displayName: newName);
       ref.invalidate(userProfileProvider);
-      _originalValue = _controller.text;
+      _originalValue = newName;
       setState(() {
         _isChanged = false;
       });
@@ -680,9 +686,11 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
         Expanded(
           child: TextFormField(
             controller: _controller,
+            maxLength: 15,
             decoration: InputDecoration(
               labelText: l10n.settingsDisplayName,
               border: const OutlineInputBorder(),
+              counterText: "",
             ),
           ),
         ),

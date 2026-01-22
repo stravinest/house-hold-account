@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/providers/safe_notifier.dart';
+
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/category_repository.dart';
 import '../../domain/entities/category.dart';
@@ -39,14 +41,13 @@ final savingCategoriesProvider = FutureProvider<List<Category>>((ref) async {
 });
 
 // 카테고리 관리 노티파이어
-class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
+class CategoryNotifier extends SafeNotifier<List<Category>> {
   final CategoryRepository _repository;
   final String? _ledgerId;
-  final Ref _ref;
   RealtimeChannel? _categoriesChannel;
 
-  CategoryNotifier(this._repository, this._ledgerId, this._ref)
-    : super(const AsyncValue.loading()) {
+  CategoryNotifier(this._repository, this._ledgerId, Ref ref)
+    : super(ref, const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadCategories();
       _subscribeToChanges();
@@ -74,11 +75,13 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
     if (_ledgerId == null) return;
 
     try {
-      final categories = await _repository.getCategories(_ledgerId);
-      if (mounted) {
-        state = AsyncValue.data(categories);
-        _ref.invalidate(categoriesProvider);
-      }
+      final categories = await safeAsync(
+        () => _repository.getCategories(_ledgerId),
+      );
+      if (categories == null) return; // disposed
+
+      safeUpdateState(AsyncValue.data(categories));
+      safeInvalidate(categoriesProvider);
     } catch (e) {
       debugPrint('Category refresh fail: $e');
     }
@@ -119,21 +122,23 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
     if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
 
     try {
-      final category = await _repository.createCategory(
-        ledgerId: _ledgerId,
-        name: name,
-        icon: icon,
-        color: color,
-        type: type,
+      final category = await safeAsync(
+        () => _repository.createCategory(
+          ledgerId: _ledgerId,
+          name: name,
+          icon: icon,
+          color: color,
+          type: type,
+        ),
       );
 
-      _ref.invalidate(categoriesProvider);
+      if (category == null) throw Exception('위젯이 dispose되었습니다');
+
+      safeInvalidate(categoriesProvider);
       await loadCategories();
       return category;
     } catch (e, st) {
-      if (mounted) {
-        state = AsyncValue.error(e, st);
-      }
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
@@ -145,27 +150,28 @@ class CategoryNotifier extends StateNotifier<AsyncValue<List<Category>>> {
     String? color,
   }) async {
     try {
-      await _repository.updateCategory(
-        id: id,
-        name: name,
-        icon: icon,
-        color: color,
+      await safeAsync(
+        () => _repository.updateCategory(
+          id: id,
+          name: name,
+          icon: icon,
+          color: color,
+        ),
       );
 
-      _ref.invalidate(categoriesProvider);
+      safeInvalidate(categoriesProvider);
       await loadCategories();
     } catch (e, st) {
-      if (mounted) {
-        state = AsyncValue.error(e, st);
-      }
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
 
   Future<void> deleteCategory(String id) async {
     try {
-      await _repository.deleteCategory(id);
-      _ref.invalidate(categoriesProvider);
+      await safeAsync(() => _repository.deleteCategory(id));
+
+      safeInvalidate(categoriesProvider);
       await loadCategories();
     } catch (e) {
       // 에러 발생 시에도 데이터를 다시 로드하여 상태 복구

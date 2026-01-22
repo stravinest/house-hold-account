@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../themes/design_tokens.dart';
@@ -49,7 +51,7 @@ class _SpinningRefreshButtonState extends State<SpinningRefreshButton>
     setState(() {
       _isRefreshing = true;
     });
-    _controller.repeat();
+    unawaited(_controller.repeat()); // 의도적으로 await하지 않음 (무한 반복 애니메이션)
 
     try {
       await widget.onRefresh();

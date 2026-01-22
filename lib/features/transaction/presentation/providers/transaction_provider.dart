@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/providers/safe_notifier.dart';
+
 import '../../../asset/presentation/providers/asset_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../ledger/presentation/providers/calendar_view_provider.dart';
@@ -11,6 +13,9 @@ import '../../domain/entities/transaction.dart';
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
   return TransactionRepository();
 });
+
+// 거래 업데이트 트리거 (버전 관리용)
+final transactionUpdateTriggerProvider = StateProvider<int>((ref) => 0);
 
 // 선택된 날짜
 final selectedDateProvider = StateProvider<DateTime>((ref) => DateTime.now());
@@ -211,13 +216,12 @@ final weeklyTotalProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 });
 
 // 거래 관리 노티파이어
-class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
+class TransactionNotifier extends SafeNotifier<List<Transaction>> {
   final TransactionRepository _repository;
   final String? _ledgerId;
-  final Ref _ref;
 
-  TransactionNotifier(this._repository, this._ledgerId, this._ref)
-    : super(const AsyncValue.loading()) {
+  TransactionNotifier(this._repository, this._ledgerId, Ref ref)
+    : super(ref, const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadTransactions();
     } else {
@@ -233,14 +237,15 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
 
     state = const AsyncValue.loading();
     try {
-      final date = _ref.read(selectedDateProvider);
-      final transactions = await _repository.getTransactionsByDate(
-        ledgerId: _ledgerId,
-        date: date,
+      final date = ref.read(selectedDateProvider);
+      final transactions = await safeAsync(
+        () =>
+            _repository.getTransactionsByDate(ledgerId: _ledgerId, date: date),
       );
-      state = AsyncValue.data(transactions);
+      if (transactions == null) return;
+      safeUpdateState(AsyncValue.data(transactions));
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
+      safeUpdateState(AsyncValue.error(e, st));
     }
   }
 
@@ -263,39 +268,56 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
   }) async {
     if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
 
-    final transaction = await _repository.createTransaction(
-      ledgerId: _ledgerId,
-      categoryId: categoryId,
-      paymentMethodId: paymentMethodId,
-      amount: amount,
-      type: type,
-      date: date,
-      title: title,
-      memo: memo,
-      imageUrl: imageUrl,
-      isRecurring: isRecurring,
-      recurringType: recurringType,
-      recurringEndDate: recurringEndDate,
-      isFixedExpense: isFixedExpense,
-      fixedExpenseCategoryId: fixedExpenseCategoryId,
-      isAsset: isAsset,
-      maturityDate: maturityDate,
+    final transaction = await safeAsync(
+      () => _repository.createTransaction(
+        ledgerId: _ledgerId,
+        categoryId: categoryId,
+        paymentMethodId: paymentMethodId,
+        amount: amount,
+        type: type,
+        date: date,
+        title: title,
+        memo: memo,
+        imageUrl: imageUrl,
+        isRecurring: isRecurring,
+        recurringType: recurringType,
+        recurringEndDate: recurringEndDate,
+        isFixedExpense: isFixedExpense,
+        fixedExpenseCategoryId: fixedExpenseCategoryId,
+        isAsset: isAsset,
+        maturityDate: maturityDate,
+      ),
     );
 
+    if (transaction == null) throw Exception('위젯이 dispose되었습니다');
+
     // 데이터 갱신
-    _ref.invalidate(dailyTransactionsProvider);
-    _ref.invalidate(monthlyTransactionsProvider);
-    _ref.invalidate(monthlyTotalProvider);
-    _ref.invalidate(dailyTotalsProvider);
+    safeInvalidateAll([
+      dailyTransactionsProvider,
+      monthlyTransactionsProvider,
+      monthlyTotalProvider,
+      dailyTotalsProvider,
+    ]);
 
     // 자산 거래인 경우 자산 통계도 갱신
     if (type == 'asset') {
-      _ref.invalidate(assetStatisticsProvider);
+      safeInvalidate(assetStatisticsProvider);
     }
 
     // 데이터 재계산 완료를 기다린 후 위젯 업데이트
-    await _ref.read(monthlyTotalProvider.future);
-    await _ref.read(widgetNotifierProvider.notifier).updateWidgetData();
+    final monthlyTotal = await safeAsync(
+      () => ref.read(monthlyTotalProvider.future),
+    );
+    if (monthlyTotal == null) return transaction;
+
+    await safeAsync(
+      () => ref.read(widgetNotifierProvider.notifier).updateWidgetData(),
+    );
+
+    // 트랜잭션 업데이트 트리거 발생 (가벼운 갱신용)
+    if (mounted) {
+      ref.read(transactionUpdateTriggerProvider.notifier).state++;
+    }
 
     return transaction;
   }
@@ -316,54 +338,74 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     bool? isFixedExpense,
     String? fixedExpenseCategoryId,
   }) async {
-    await _repository.updateTransaction(
-      id: id,
-      categoryId: categoryId,
-      paymentMethodId: paymentMethodId,
-      amount: amount,
-      type: type,
-      date: date,
-      title: title,
-      memo: memo,
-      imageUrl: imageUrl,
-      isRecurring: isRecurring,
-      recurringType: recurringType,
-      recurringEndDate: recurringEndDate,
-      isFixedExpense: isFixedExpense,
-      fixedExpenseCategoryId: fixedExpenseCategoryId,
+    await safeAsync(
+      () => _repository.updateTransaction(
+        id: id,
+        categoryId: categoryId,
+        paymentMethodId: paymentMethodId,
+        amount: amount,
+        type: type,
+        date: date,
+        title: title,
+        memo: memo,
+        imageUrl: imageUrl,
+        isRecurring: isRecurring,
+        recurringType: recurringType,
+        recurringEndDate: recurringEndDate,
+        isFixedExpense: isFixedExpense,
+        fixedExpenseCategoryId: fixedExpenseCategoryId,
+      ),
     );
 
     // 데이터 갱신
-    _ref.invalidate(dailyTransactionsProvider);
-    _ref.invalidate(monthlyTransactionsProvider);
-    _ref.invalidate(monthlyTotalProvider);
-    _ref.invalidate(dailyTotalsProvider);
+    safeInvalidateAll([
+      dailyTransactionsProvider,
+      monthlyTransactionsProvider,
+      monthlyTotalProvider,
+      dailyTotalsProvider,
+    ]);
 
     // 자산 거래인 경우 자산 통계도 갱신
     if (type == 'asset') {
-      _ref.invalidate(assetStatisticsProvider);
+      safeInvalidate(assetStatisticsProvider);
     }
 
     // 데이터 재계산 완료를 기다린 후 위젯 업데이트
-    await _ref.read(monthlyTotalProvider.future);
-    await _ref.read(widgetNotifierProvider.notifier).updateWidgetData();
+    await safeAsync(() => ref.read(monthlyTotalProvider.future));
+    await safeAsync(
+      () => ref.read(widgetNotifierProvider.notifier).updateWidgetData(),
+    );
+
+    // 트랜잭션 업데이트 트리거 발생
+    if (mounted) {
+      ref.read(transactionUpdateTriggerProvider.notifier).state++;
+    }
   }
 
   Future<void> deleteTransaction(String id) async {
-    await _repository.deleteTransaction(id);
+    await safeAsync(() => _repository.deleteTransaction(id));
 
     // 데이터 갱신
-    _ref.invalidate(dailyTransactionsProvider);
-    _ref.invalidate(monthlyTransactionsProvider);
-    _ref.invalidate(monthlyTotalProvider);
-    _ref.invalidate(dailyTotalsProvider);
+    safeInvalidateAll([
+      dailyTransactionsProvider,
+      monthlyTransactionsProvider,
+      monthlyTotalProvider,
+      dailyTotalsProvider,
+    ]);
 
     // 자산 통계도 갱신 (자산 거래가 아닐 경우 무시됨)
-    _ref.invalidate(assetStatisticsProvider);
+    safeInvalidate(assetStatisticsProvider);
 
     // 데이터 재계산 완료를 기다린 후 위젯 업데이트
-    await _ref.read(monthlyTotalProvider.future);
-    await _ref.read(widgetNotifierProvider.notifier).updateWidgetData();
+    await safeAsync(() => ref.read(monthlyTotalProvider.future));
+    await safeAsync(
+      () => ref.read(widgetNotifierProvider.notifier).updateWidgetData(),
+    );
+
+    // 트랜잭션 업데이트 트리거 발생
+    if (mounted) {
+      ref.read(transactionUpdateTriggerProvider.notifier).state++;
+    }
   }
 
   // 반복 거래 템플릿 생성 및 오늘까지 거래 자동 생성
@@ -402,14 +444,23 @@ class TransactionNotifier extends StateNotifier<AsyncValue<List<Transaction>>> {
     await _repository.generateRecurringTransactions();
 
     // 데이터 갱신
-    _ref.invalidate(dailyTransactionsProvider);
-    _ref.invalidate(monthlyTransactionsProvider);
-    _ref.invalidate(monthlyTotalProvider);
-    _ref.invalidate(dailyTotalsProvider);
+    safeInvalidateAll([
+      dailyTransactionsProvider,
+      monthlyTransactionsProvider,
+      monthlyTotalProvider,
+      dailyTotalsProvider,
+    ]);
 
     // 데이터 재계산 완료를 기다린 후 위젯 업데이트
-    await _ref.read(monthlyTotalProvider.future);
-    await _ref.read(widgetNotifierProvider.notifier).updateWidgetData();
+    await safeAsync(() => ref.read(monthlyTotalProvider.future));
+    await safeAsync(
+      () => ref.read(widgetNotifierProvider.notifier).updateWidgetData(),
+    );
+
+    // 트랜잭션 업데이트 트리거 발생
+    if (mounted) {
+      ref.read(transactionUpdateTriggerProvider.notifier).state++;
+    }
   }
 }
 

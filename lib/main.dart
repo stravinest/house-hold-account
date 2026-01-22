@@ -273,8 +273,7 @@ class _SharedHouseholdAccountAppState
     ref.watch(autoSaveManagerProvider);
 
     return MaterialApp.router(
-      onGenerateTitle: (context) =>
-          AppLocalizations.of(context).appTitle ?? 'Shared Household Account',
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       debugShowCheckedModeBanner: true,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

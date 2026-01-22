@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/providers/safe_notifier.dart';
+
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/payment_method_repository.dart';
 import '../../data/repositories/learned_sms_format_repository.dart';
@@ -35,15 +37,13 @@ final paymentMethodsProvider = FutureProvider<List<PaymentMethod>>((ref) async {
 });
 
 // 결제수단 관리 노티파이어
-class PaymentMethodNotifier
-    extends StateNotifier<AsyncValue<List<PaymentMethod>>> {
+class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
   final PaymentMethodRepository _repository;
   final String? _ledgerId;
-  final Ref _ref;
   RealtimeChannel? _paymentMethodsChannel;
 
-  PaymentMethodNotifier(this._repository, this._ledgerId, this._ref)
-    : super(const AsyncValue.loading()) {
+  PaymentMethodNotifier(this._repository, this._ledgerId, Ref ref)
+    : super(ref, const AsyncValue.loading()) {
     if (_ledgerId != null) {
       loadPaymentMethods();
       _subscribeToChanges();
@@ -71,11 +71,13 @@ class PaymentMethodNotifier
     if (_ledgerId == null) return;
 
     try {
-      final paymentMethods = await _repository.getPaymentMethods(_ledgerId);
-      if (mounted) {
-        state = AsyncValue.data(paymentMethods);
-        _ref.invalidate(paymentMethodsProvider);
-      }
+      final paymentMethods = await safeAsync(
+        () => _repository.getPaymentMethods(_ledgerId),
+      );
+      if (paymentMethods == null) return; // disposed
+
+      safeUpdateState(AsyncValue.data(paymentMethods));
+      safeInvalidate(paymentMethodsProvider);
     } catch (e) {
       debugPrint('PaymentMethod refresh fail: $e');
     }
@@ -116,24 +118,24 @@ class PaymentMethodNotifier
     if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
 
     try {
-      final paymentMethod = await _repository.createPaymentMethod(
-        ledgerId: _ledgerId,
-        name: name,
-        icon: icon,
-        color: color,
-        canAutoSave: canAutoSave,
+      final paymentMethod = await safeAsync(
+        () => _repository.createPaymentMethod(
+          ledgerId: _ledgerId,
+          name: name,
+          icon: icon,
+          color: color,
+          canAutoSave: canAutoSave,
+        ),
       );
 
-      if (mounted) {
-        _ref.invalidate(paymentMethodsProvider);
-        await loadPaymentMethods();
-      }
+      if (paymentMethod == null) throw Exception('위젯이 dispose되었습니다');
+
+      safeInvalidate(paymentMethodsProvider);
+      await loadPaymentMethods();
       return paymentMethod;
     } catch (e, st) {
       debugPrint('PaymentMethod create fail: $e');
-      if (mounted) {
-        state = AsyncValue.error(e, st);
-      }
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
@@ -146,34 +148,30 @@ class PaymentMethodNotifier
     bool? canAutoSave,
   }) async {
     try {
-      await _repository.updatePaymentMethod(
-        id: id,
-        name: name,
-        icon: icon,
-        color: color,
-        canAutoSave: canAutoSave,
+      await safeAsync(
+        () => _repository.updatePaymentMethod(
+          id: id,
+          name: name,
+          icon: icon,
+          color: color,
+          canAutoSave: canAutoSave,
+        ),
       );
 
       // Realtime subscription이 변경을 감지하므로 수동 로드가 불필요합니다.
-      // loadPaymentMethods()는 비동기이므로, 호출 전 mounted 체크를 하더라도
-      // 완료 전에 dispose될 수 있어 크래시가 발생할 수 있습니다.
-      // invalidate만 수행하고, Realtime subscription이 UI를 업데이트합니다.
-      if (mounted) {
-        _ref.invalidate(paymentMethodsProvider);
-      }
+      safeInvalidate(paymentMethodsProvider);
     } catch (e, st) {
       debugPrint('PaymentMethod update fail: $e');
-      if (mounted) {
-        state = AsyncValue.error(e, st);
-      }
+      safeUpdateState(AsyncValue.error(e, st));
       // rethrow를 제거하여 호출자에서 추가 에러 핸들링 필요 없이 안전하게 종료
     }
   }
 
   Future<void> deletePaymentMethod(String id) async {
     try {
-      await _repository.deletePaymentMethod(id);
-      _ref.invalidate(paymentMethodsProvider);
+      await safeAsync(() => _repository.deletePaymentMethod(id));
+
+      safeInvalidate(paymentMethodsProvider);
       await loadPaymentMethods();
     } catch (e) {
       // 에러 발생 시에도 데이터를 다시 로드하여 상태 복구
@@ -188,18 +186,18 @@ class PaymentMethodNotifier
     String? defaultCategoryId,
   }) async {
     try {
-      await _repository.updateAutoSaveSettings(
-        id: id,
-        autoSaveMode: autoSaveMode.toJson(),
-        defaultCategoryId: defaultCategoryId,
+      await safeAsync(
+        () => _repository.updateAutoSaveSettings(
+          id: id,
+          autoSaveMode: autoSaveMode.toJson(),
+          defaultCategoryId: defaultCategoryId,
+        ),
       );
 
-      _ref.invalidate(paymentMethodsProvider);
+      safeInvalidate(paymentMethodsProvider);
       await loadPaymentMethods();
     } catch (e, st) {
-      if (mounted) {
-        state = AsyncValue.error(e, st);
-      }
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }

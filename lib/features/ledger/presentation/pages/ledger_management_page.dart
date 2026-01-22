@@ -176,6 +176,8 @@ class _LedgerCard extends ConsumerWidget {
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                             if (isSelected) ...[
                               const SizedBox(width: 8),
@@ -283,6 +285,8 @@ class _LedgerCard extends ConsumerWidget {
                       context,
                     ).colorScheme.onSurface.withOpacity(0.7),
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
               const SizedBox(height: 8),
@@ -527,9 +531,11 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
             children: [
               TextFormField(
                 controller: _nameController,
+                maxLength: 20,
                 decoration: InputDecoration(
                   labelText: l10n.ledgerNameLabel,
                   border: const OutlineInputBorder(),
+                  counterText: "",
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -541,9 +547,11 @@ class _LedgerDialogState extends ConsumerState<_LedgerDialog> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
+                maxLength: 100,
                 decoration: InputDecoration(
                   labelText: l10n.ledgerDescriptionLabel,
                   border: const OutlineInputBorder(),
+                  counterText: "",
                 ),
                 maxLines: 2,
               ),
@@ -695,9 +703,7 @@ class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
               l10n.ledgerMemberLoading,
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withOpacity(0.7),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               ),
             ),
           ],

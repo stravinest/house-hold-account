@@ -11,6 +11,8 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../asset/presentation/providers/asset_goal_provider.dart';
+import '../../../asset/presentation/providers/asset_provider.dart';
 import '../../../asset/presentation/pages/asset_page.dart';
 import '../../../statistics/presentation/pages/statistics_page.dart';
 import '../../../transaction/domain/entities/transaction.dart';
@@ -97,6 +99,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final l10n = AppLocalizations.of(context);
     try {
       final ledgers = await ref.read(ledgersProvider.future);
+      if (!mounted) return;
       if (ledgers.isEmpty) {
         await ref
             .read(ledgerNotifierProvider.notifier)
@@ -139,6 +142,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         ref.read(monthlyTotalProvider.future),
         ref.read(dailyTotalsProvider.future),
       ]);
+
+      if (!mounted) return;
 
       // 홈 화면 위젯 데이터 업데이트
       await ref.read(widgetNotifierProvider.notifier).updateWidgetData();
@@ -321,6 +326,15 @@ class _HomePageState extends ConsumerState<HomePage> {
 
           if (shouldRefresh) {
             _refreshCalendarData();
+          }
+
+          // 자산 탭 클릭 시 자산 데이터 새로고침
+          if (index == 2) {
+            final ledgerId = ref.read(selectedLedgerIdProvider);
+            if (ledgerId != null) {
+              ref.invalidate(assetGoalNotifierProvider(ledgerId));
+              ref.invalidate(assetStatisticsProvider);
+            }
           }
         },
         destinations: [
@@ -619,10 +633,14 @@ class _HomePageState extends ConsumerState<HomePage> {
         style: TextStyle(
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
         subtitle,
         style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
       trailing: isSelected
           ? Icon(Icons.check, color: colorScheme.primary)

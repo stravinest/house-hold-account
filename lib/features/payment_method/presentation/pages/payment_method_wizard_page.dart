@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/payment_method.dart';
@@ -289,9 +291,11 @@ class _PaymentMethodWizardPageState
             const SizedBox(height: 8),
             TextFormField(
               controller: _nameController,
+              maxLength: 20,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
                 hintText: '예: 신한카드',
+                counterText: "",
               ),
             ),
             const Spacer(),
@@ -320,10 +324,12 @@ class _PaymentMethodWizardPageState
           // 1. 이름 설정
           TextFormField(
             controller: _nameController,
+            maxLength: 20,
             decoration: const InputDecoration(
               labelText: '별칭',
               helperText: '앱 내에서 표시될 이름입니다.',
               border: OutlineInputBorder(),
+              counterText: "",
             ),
           ),
           const SizedBox(height: 24),
@@ -492,67 +498,69 @@ class _PaymentMethodWizardPageState
 
     if (!mounted) return;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        minChildSize: 0.4,
-        maxChildSize: 0.9,
-        expand: false,
-        builder: (context, scrollController) {
-          return FutureBuilder<SmsFormatScanResult>(
-            future: scanner.scanFinancialSms(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              }
+    unawaited(
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        builder: (context) => DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return FutureBuilder<SmsFormatScanResult>(
+              future: scanner.scanFinancialSms(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
 
-              final messages = snapshot.data?.financialMessages ?? [];
-              if (messages.isEmpty) {
-                return const Center(child: Text('금융 관련 문자를 찾을 수 없습니다.'));
-              }
+                final messages = snapshot.data?.financialMessages ?? [];
+                if (messages.isEmpty) {
+                  return const Center(child: Text('금융 관련 문자를 찾을 수 없습니다.'));
+                }
 
-              return Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      '가져올 문자 선택',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                return Column(
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Text(
+                        '가져올 문자 선택',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      controller: scrollController,
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final msg = messages[index];
-                        return ListTile(
-                          title: Text(msg.sender),
-                          subtitle: Text(msg.body),
-                          trailing: Text('${msg.date.month}/${msg.date.day}'),
-                          onTap: () {
-                            _sampleController.text = msg.body;
-                            Navigator.pop(context);
-                          },
-                        );
-                      },
+                    Expanded(
+                      child: ListView.builder(
+                        controller: scrollController,
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final msg = messages[index];
+                          return ListTile(
+                            title: Text(msg.sender),
+                            subtitle: Text(msg.body),
+                            trailing: Text('${msg.date.month}/${msg.date.day}'),
+                            onTap: () {
+                              _sampleController.text = msg.body;
+                              Navigator.pop(context);
+                            },
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              );
-            },
-          );
-        },
+                  ],
+                );
+              },
+            );
+          },
+        ),
       ),
-    );
+    ); // unawaited 닫는 괄호
   }
 
   Color _safeParseColor(String colorStr) {

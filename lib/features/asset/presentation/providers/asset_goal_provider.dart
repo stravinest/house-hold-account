@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/providers/safe_notifier.dart';
+
 import '../../domain/entities/asset_goal.dart';
 import '../../data/repositories/asset_repository.dart';
-import '../providers/asset_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
+import '../../../transaction/presentation/providers/transaction_provider.dart';
 
 final assetGoalRepositoryProvider = Provider<AssetRepository>((ref) {
   return AssetRepository();
@@ -18,12 +20,12 @@ final assetGoalsProvider = FutureProvider<List<AssetGoal>>((ref) async {
   return repository.getGoals(ledgerId: ledgerId);
 });
 
-class AssetGoalNotifier extends StateNotifier<AsyncValue<List<AssetGoal>>> {
+class AssetGoalNotifier extends SafeNotifier<List<AssetGoal>> {
   final AssetRepository _repository;
   final String _ledgerId;
 
-  AssetGoalNotifier(this._repository, this._ledgerId)
-    : super(const AsyncValue.loading()) {
+  AssetGoalNotifier(this._repository, this._ledgerId, Ref ref)
+    : super(ref, const AsyncValue.loading()) {
     _loadGoals();
   }
 
@@ -41,9 +43,7 @@ class AssetGoalNotifier extends StateNotifier<AsyncValue<List<AssetGoal>>> {
     String? assetType,
     List<String>? categoryIds,
   }) async {
-    state = const AsyncValue.loading();
-
-    state = await AsyncValue.guard(() async {
+    await safeGuard(() async {
       final currentUser = Supabase.instance.client.auth.currentUser;
       if (currentUser == null) {
         throw Exception('로그인이 필요합니다');
@@ -63,23 +63,20 @@ class AssetGoalNotifier extends StateNotifier<AsyncValue<List<AssetGoal>>> {
       );
 
       await _repository.createGoal(goal);
-      return _repository.getGoals(ledgerId: _ledgerId);
+      final result = await _repository.getGoals(ledgerId: _ledgerId);
+      return result;
     });
   }
 
   Future<void> updateGoal(AssetGoal goal) async {
-    state = const AsyncValue.loading();
-
-    state = await AsyncValue.guard(() async {
+    await safeGuard(() async {
       await _repository.updateGoal(goal);
       return _repository.getGoals(ledgerId: _ledgerId);
     });
   }
 
   Future<void> deleteGoal(String goalId) async {
-    state = const AsyncValue.loading();
-
-    state = await AsyncValue.guard(() async {
+    await safeGuard(() async {
       await _repository.deleteGoal(goalId);
       return _repository.getGoals(ledgerId: _ledgerId);
     });
@@ -93,23 +90,15 @@ final assetGoalNotifierProvider =
       String
     >((ref, ledgerId) {
       final repository = ref.watch(assetGoalRepositoryProvider);
-      return AssetGoalNotifier(repository, ledgerId);
+      return AssetGoalNotifier(repository, ledgerId, ref);
     });
 
 final assetGoalCurrentAmountProvider = FutureProvider.family<int, AssetGoal>((
   ref,
   goal,
 ) async {
-  // 총자산 변경 감지하여 자동 업데이트
-  ref.watch(
-    assetStatisticsProvider.select(
-      (value) => value.when(
-        data: (stats) => stats.totalAmount,
-        loading: () => null,
-        error: (_, __) => null,
-      ),
-    ),
-  );
+  // 거래 변경 시에만 재조회하도록 트리거 watch (최적화)
+  ref.watch(transactionUpdateTriggerProvider);
 
   final repository = ref.watch(assetGoalRepositoryProvider);
   return repository.getCurrentAmount(

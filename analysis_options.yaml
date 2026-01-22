@@ -21,8 +21,28 @@ linter:
   # `// ignore_for_file: name_of_lint` syntax on the line or in the file
   # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    # 비동기 안전성 규칙 (SafeNotifier 패턴 보완)
+    unawaited_futures: true  # await 없이 Future를 호출하는 경우 경고
+    
+    # 추가 비동기 관련 규칙
+    avoid_void_async: true  # async 함수의 반환 타입이 void인 경우 경고 (Future<void> 권장)
+    cancel_subscriptions: true  # Stream subscription을 취소하지 않는 경우 경고
+    close_sinks: true  # StreamController를 닫지 않는 경우 경고
+    
+    # 코드 품질 개선 규칙
+    prefer_const_constructors: true  # const 생성자 사용 권장
+    prefer_const_declarations: true  # const 선언 사용 권장
+    prefer_const_literals_to_create_immutables: true  # 불변 컬렉션에 const 리터럴 사용 권장
+    unnecessary_null_checks: true  # 불필요한 null 체크 경고
+    use_key_in_widget_constructors: true  # 위젯 생성자에 key 매개변수 추가 권장
+    
+    # 가독성 개선
+    prefer_single_quotes: true  # 작은따옴표 사용 권장
+    require_trailing_commas: true  # 후행 쉼표 요구 (포맷팅 향상)
+    
+    # 성능 관련
+    avoid_unnecessary_containers: true  # 불필요한 Container 경고
+    sized_box_for_whitespace: true  # 공백용으로 SizedBox 사용 권장
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

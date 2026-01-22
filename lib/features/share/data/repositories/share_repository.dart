@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../config/supabase_config.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -132,11 +134,14 @@ class ShareRepository {
 
     final invite = LedgerInvite.fromJson(response);
 
-    _sendInviteNotification(
-      type: 'invite_received',
-      targetUserId: targetUser['id'] as String,
-      actorName: _client.auth.currentUser?.email ?? 'Unknown',
-      ledgerName: invite.ledgerName ?? 'Ledger',
+    // 백그라운드로 알림 전송 (응답을 기다리지 않음)
+    unawaited(
+      _sendInviteNotification(
+        type: 'invite_received',
+        targetUserId: targetUser['id'] as String,
+        actorName: _client.auth.currentUser?.email ?? 'Unknown',
+        ledgerName: invite.ledgerName ?? 'Ledger',
+      ),
     );
 
     return invite;
@@ -202,46 +207,59 @@ class ShareRepository {
   }
 
   Future<void> acceptInvite(String inviteId) async {
-    final invite = await _client
-        .from('ledger_invites')
-        .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name)')
-        .eq('id', inviteId)
-        .single();
+    final response = await _client.rpc(
+      'accept_ledger_invite',
+      params: {'target_invite_id': inviteId},
+    );
 
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw Exception('로그인이 필요합니다');
-
-    final ledgerId = invite['ledger_id'] as String;
-    if (await isMemberLimitReached(ledgerId)) {
-      throw Exception('이 가계부는 이미 멤버가 가득 찼습니다.');
+    final result = response as Map<String, dynamic>;
+    if (result['success'] != true) {
+      final errorCode = result['error_code'];
+      String message;
+      switch (errorCode) {
+        case 'NOT_FOUND':
+          message = '존재하지 않거나 삭제된 초대입니다.';
+          break;
+        case 'MEMBER_LIMIT_REACHED':
+          message = '가계부 멤버 정원이 초과되어 수락할 수 없습니다.';
+          break;
+        case 'INVALID_STATUS':
+          message = '이미 처리되었거나 만료된 초대입니다.';
+          break;
+        default:
+          message = result['error'] ?? '초대 수락 중 오류가 발생했습니다.';
+      }
+      throw Exception(message);
     }
 
-    await _client.from('ledger_members').insert({
-      'ledger_id': invite['ledger_id'],
-      'user_id': userId,
-      'role': invite['role'],
-    });
+    // 알림용 데이터 조회 (백그라운드 처리)
+    unawaited(_fetchAndSendAcceptNotification(inviteId));
+  }
 
-    await _client
-        .from('ledger_invites')
-        .update({'status': 'accepted'})
-        .eq('id', inviteId);
+  Future<void> _fetchAndSendAcceptNotification(String inviteId) async {
+    try {
+      final invite = await _client
+          .from('ledger_invites')
+          .select('*, ledger:ledgers!ledger_invites_ledger_id_fkey(name)')
+          .eq('id', inviteId)
+          .maybeSingle();
 
-    await _client
-        .from('ledgers')
-        .update({'is_shared': true})
-        .eq('id', invite['ledger_id']);
+      if (invite != null) {
+        final inviterUserId = invite['inviter_user_id'] as String;
+        final ledgerData = invite['ledger'] as Map<String, dynamic>?;
+        final ledgerName = ledgerData?['name'] as String? ?? 'Ledger';
 
-    final inviterUserId = invite['inviter_user_id'] as String;
-    final ledgerData = invite['ledger'] as Map<String, dynamic>?;
-    final ledgerName = ledgerData?['name'] as String? ?? 'Ledger';
-
-    _sendInviteNotification(
-      type: 'invite_accepted',
-      targetUserId: inviterUserId,
-      actorName: _client.auth.currentUser?.email ?? 'Unknown',
-      ledgerName: ledgerName,
-    );
+        // 백그라운드로 알림 전송
+        unawaited(
+          _sendInviteNotification(
+            type: 'invite_accepted',
+            targetUserId: inviterUserId,
+            actorName: _client.auth.currentUser?.email ?? 'Unknown',
+            ledgerName: ledgerName,
+          ),
+        );
+      }
+    } catch (_) {}
   }
 
   Future<void> rejectInvite(String inviteId) async {
@@ -260,11 +278,14 @@ class ShareRepository {
     final ledgerData = invite['ledger'] as Map<String, dynamic>?;
     final ledgerName = ledgerData?['name'] as String? ?? 'Ledger';
 
-    _sendInviteNotification(
-      type: 'invite_rejected',
-      targetUserId: inviterUserId,
-      actorName: _client.auth.currentUser?.email ?? 'Unknown',
-      ledgerName: ledgerName,
+    // 백그라운드로 알림 전송
+    unawaited(
+      _sendInviteNotification(
+        type: 'invite_rejected',
+        targetUserId: inviterUserId,
+        actorName: _client.auth.currentUser?.email ?? 'Unknown',
+        ledgerName: ledgerName,
+      ),
     );
   }
 
@@ -299,28 +320,34 @@ class ShareRepository {
         .eq('user_id', userId);
   }
 
-  // 멤버 제거
+  // 멤버 제거 (방출 또는 탈퇴)
   Future<void> removeMember({
     required String ledgerId,
     required String userId,
   }) async {
-    await _client
-        .from('ledger_members')
-        .delete()
-        .eq('ledger_id', ledgerId)
-        .eq('user_id', userId);
+    final response = await _client.rpc(
+      'delete_ledger_member',
+      params: {'target_ledger_id': ledgerId, 'target_user_id': userId},
+    );
 
-    // 남은 멤버 수 확인 (count만 필요하므로 id만 조회)
-    final remainingMembers = await _client
-        .from('ledger_members')
-        .select('id')
-        .eq('ledger_id', ledgerId);
-
-    if ((remainingMembers as List).length <= 1) {
-      await _client
-          .from('ledgers')
-          .update({'is_shared': false})
-          .eq('id', ledgerId);
+    final result = response as Map<String, dynamic>;
+    if (result['success'] != true) {
+      final errorCode = result['error_code'];
+      String message;
+      switch (errorCode) {
+        case 'NOT_FOUND':
+          message = '더 이상 가계부 멤버가 아닙니다.';
+          break;
+        case 'PERMISSION_DENIED':
+          message = '멤버를 관리할 권한이 없습니다.';
+          break;
+        case 'UNAUTHORIZED':
+          message = '인증 정보가 없습니다. 다시 로그인해 주세요.';
+          break;
+        default:
+          message = result['error'] ?? '멤버 제거 중 오류가 발생했습니다.';
+      }
+      throw Exception(message);
     }
   }
 

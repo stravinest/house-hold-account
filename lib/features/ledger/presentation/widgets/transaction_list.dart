@@ -244,6 +244,8 @@ class _TransactionCard extends StatelessWidget {
                           transaction.userName!,
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: colorScheme.outline),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ],

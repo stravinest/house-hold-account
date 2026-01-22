@@ -168,7 +168,9 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
             ),
             suffixText: l10n.transactionAmountUnit,
             suffixStyle: Theme.of(context).textTheme.titleMedium,
+            counterText: "",
           ),
+          maxLength: 18, // 콤마 포함 약 14~15자리 숫자 제한
           validator: (value) {
             if (value == null || value.trim().isEmpty) {
               return l10n.assetGoalAmountRequired;
@@ -361,7 +363,13 @@ class _AmountInputFormatter extends TextInputFormatter {
   ) {
     if (newValue.text.isEmpty) return newValue;
 
-    final number = int.tryParse(newValue.text.replaceAll(',', ''));
+    // 숫자 이외의 문자 제거
+    final cleanText = newValue.text.replaceAll(',', '');
+
+    // 최대 14자리 숫자까지만 허용 (99조원)
+    if (cleanText.length > 14) return oldValue;
+
+    final number = int.tryParse(cleanText);
     if (number == null) return oldValue;
 
     final formatter = NumberFormat('#,###', 'ko_KR');
