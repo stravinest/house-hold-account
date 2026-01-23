@@ -74,7 +74,7 @@ class _AutoSaveModeDialogState extends ConsumerState<AutoSaveModeDialog> {
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      colorScheme.primary,
+                      colorScheme.onPrimary,
                     ),
                   ),
                 )
@@ -269,7 +269,7 @@ class _AutoSaveModeDialogState extends ConsumerState<AutoSaveModeDialog> {
           const SizedBox(width: Spacing.md),
           Expanded(
             child: Text(
-              l10n.autoSaveSettingsIOSUnsupported,
+              l10n.autoSaveSettingsIosNotSupported,
               style: textTheme.bodySmall?.copyWith(
                 color: colorScheme.error,
               ),
@@ -317,25 +317,31 @@ class _AutoSaveModeDialogState extends ConsumerState<AutoSaveModeDialog> {
       }
 
       if (mounted) {
-        SnackBarUtils.showSuccess(context, l10n.autoSaveSettingsSaved);
         widget.onSave?.call();
+        SnackBarUtils.showSuccess(context, l10n.autoSaveSettingsSaved);
         Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
-      }
-    } finally {
-      if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     }
   }
 
   Future<bool> _checkAndRequestPermissions() async {
-    return true;
+    if (!Platform.isAndroid) {
+      return true;
+    }
+
+    final hasPermission = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => const PermissionRequestDialog(),
+    );
+
+    return hasPermission ?? false;
   }
 
   String _getModeDescription(AppLocalizations l10n, AutoSaveMode mode) {

@@ -140,7 +140,7 @@ class _PaymentMethodManagementPageState
     );
   }
 
-void _showAddDialog(BuildContext context) {
+  void _showAddDialog(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -402,9 +402,6 @@ class _PaymentMethodListView extends ConsumerWidget {
                       context: context,
                       builder: (context) => AutoSaveModeDialog(
                         paymentMethod: method,
-                        onSave: () {
-                          Navigator.pop(context);
-                        },
                       ),
                     ),
                     onDelete: () => _showDeleteConfirm(context, ref, method),
@@ -429,8 +426,8 @@ class _PaymentMethodListView extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: colorScheme.secondaryContainer,
-        border: Border.all(color: colorScheme.secondary),
+        color: colorScheme.tertiaryContainer,
+        border: Border.all(color: colorScheme.tertiary),
         borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
       ),
       child: Padding(
