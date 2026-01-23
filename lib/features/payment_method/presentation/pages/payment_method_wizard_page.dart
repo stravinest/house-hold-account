@@ -270,30 +270,30 @@ class _PaymentMethodWizardPageState
         }
 
         // 3. Save or update learned format (only when template selected in auto-collect mode)
+        // Delete all existing formats and create new one to ensure consistency
         if (canAutoSave && _selectedTemplate != null && _generatedFormat != null) {
           final existingFormats = await formatRepository.getFormatsByPaymentMethod(
             widget.paymentMethod!.id,
           );
 
-          if (existingFormats.isNotEmpty) {
-            await formatRepository.updateFormat(
-              id: existingFormats.first.id,
-              senderKeywords: _generatedFormat!.senderKeywords,
-            );
-          } else {
-            await formatRepository.createFormat(
-              paymentMethodId: widget.paymentMethod!.id,
-              senderPattern: _generatedFormat!.senderPattern,
-              senderKeywords: _generatedFormat!.senderKeywords,
-              amountRegex: _generatedFormat!.amountRegex,
-              typeKeywords: _generatedFormat!.typeKeywords,
-              merchantRegex: _generatedFormat!.merchantRegex,
-              dateRegex: _generatedFormat!.dateRegex,
-              sampleSms: _generatedFormat!.sampleSms,
-              isSystem: false,
-              confidence: _generatedFormat!.confidence,
-            );
+          // Delete all existing formats to prevent inconsistency
+          for (final format in existingFormats) {
+            await formatRepository.deleteFormat(format.id);
           }
+
+          // Create new format with updated settings
+          await formatRepository.createFormat(
+            paymentMethodId: widget.paymentMethod!.id,
+            senderPattern: _generatedFormat!.senderPattern,
+            senderKeywords: _generatedFormat!.senderKeywords,
+            amountRegex: _generatedFormat!.amountRegex,
+            typeKeywords: _generatedFormat!.typeKeywords,
+            merchantRegex: _generatedFormat!.merchantRegex,
+            dateRegex: _generatedFormat!.dateRegex,
+            sampleSms: _generatedFormat!.sampleSms,
+            isSystem: false,
+            confidence: _generatedFormat!.confidence,
+          );
         }
       } else {
         // 1. Create payment method

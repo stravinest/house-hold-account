@@ -686,14 +686,12 @@ class _PaymentMethodListView extends ConsumerWidget {
   }
 
   void _showAutoSaveModeDialog(BuildContext context, PaymentMethod paymentMethod) {
-    if (context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => PaymentMethodWizardPage(paymentMethod: paymentMethod),
-        ),
-      );
-    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PaymentMethodWizardPage(paymentMethod: paymentMethod),
+      ),
+    );
   }
 }
 
