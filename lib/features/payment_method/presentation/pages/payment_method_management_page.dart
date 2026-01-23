@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
@@ -16,7 +15,6 @@ import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../providers/payment_method_provider.dart';
 import '../providers/pending_transaction_provider.dart';
-import '../widgets/auto_save_mode_dialog.dart';
 import '../widgets/permission_request_dialog.dart';
 import 'payment_method_wizard_page.dart';
 
@@ -689,13 +687,10 @@ class _PaymentMethodListView extends ConsumerWidget {
 
   void _showAutoSaveModeDialog(BuildContext context, PaymentMethod paymentMethod) {
     if (context.mounted) {
-      showDialog(
-        context: context,
-        builder: (dialogContext) => AutoSaveModeDialog(
-          paymentMethod: paymentMethod,
-          onSave: () {
-            // Dialog will handle its own closing via Navigator.pop
-          },
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PaymentMethodWizardPage(paymentMethod: paymentMethod),
         ),
       );
     }
@@ -894,14 +889,6 @@ class _AutoCollectPaymentMethodCard extends StatelessWidget {
       AutoSaveMode.manual => l10n.autoSaveModeOff,
       AutoSaveMode.suggest => l10n.autoSaveModeSuggest,
       AutoSaveMode.auto => l10n.autoSaveModeAuto,
-    };
-  }
-
-  IconData _getAutoSaveModeIcon(AutoSaveMode mode) {
-    return switch (mode) {
-      AutoSaveMode.auto => Icons.auto_awesome_outlined,
-      AutoSaveMode.suggest => Icons.notifications_active_outlined,
-      AutoSaveMode.manual => Icons.flash_off_outlined,
     };
   }
 }

@@ -52,6 +52,9 @@ class _PaymentMethodWizardPageState
   // Notification type selection (sms | push)
   String _notificationType = 'sms';
 
+  // Auto save mode selection (suggest | auto)
+  AutoSaveMode _autoSaveMode = AutoSaveMode.suggest;
+
   // Analyzed format
   LearnedSmsFormat? _generatedFormat;
 
@@ -73,6 +76,9 @@ class _PaymentMethodWizardPageState
       _selectedMode = widget.paymentMethod!.canAutoSave
           ? PaymentMethodAddMode.autoCollect
           : PaymentMethodAddMode.manual;
+
+      // Initialize autoSaveMode from existing payment method
+      _autoSaveMode = widget.paymentMethod!.autoSaveMode;
 
       // Try template matching for auto-collect mode
       if (_selectedMode == PaymentMethodAddMode.autoCollect) {
@@ -255,7 +261,15 @@ class _PaymentMethodWizardPageState
           canAutoSave: canAutoSave,
         );
 
-        // 2. Save or update learned format (only when template selected in auto-collect mode)
+        // 2. Update autoSaveMode (only for auto-collect mode)
+        if (canAutoSave) {
+          await notifier.updateAutoSaveSettings(
+            id: widget.paymentMethod!.id,
+            autoSaveMode: _autoSaveMode,
+          );
+        }
+
+        // 3. Save or update learned format (only when template selected in auto-collect mode)
         if (canAutoSave && _selectedTemplate != null && _generatedFormat != null) {
           final existingFormats = await formatRepository.getFormatsByPaymentMethod(
             widget.paymentMethod!.id,
@@ -290,7 +304,15 @@ class _PaymentMethodWizardPageState
           canAutoSave: canAutoSave,
         );
 
-        // 2. Save learned format (only when template selected in auto-collect mode)
+        // 2. Update autoSaveMode (only for auto-collect mode)
+        if (canAutoSave) {
+          await notifier.updateAutoSaveSettings(
+            id: paymentMethod.id,
+            autoSaveMode: _autoSaveMode,
+          );
+        }
+
+        // 3. Save learned format (only when template selected in auto-collect mode)
         if (canAutoSave && _selectedTemplate != null && _generatedFormat != null) {
           await formatRepository.createFormat(
             paymentMethodId: paymentMethod.id,
@@ -349,6 +371,9 @@ class _PaymentMethodWizardPageState
       title = l10n.paymentMethodWizardAutoCollectAddTitle;
     }
 
+    // Show bottom button only in configuration step (step 2)
+    final showBottomButton = _currentStep == 2;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -358,6 +383,23 @@ class _PaymentMethodWizardPageState
         ),
       ),
       body: _buildBody(),
+      bottomNavigationBar: showBottomButton
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _submit,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    child: Text(isEdit ? l10n.paymentMethodWizardSaveButton : l10n.paymentMethodWizardAddButton),
+                  ),
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -684,21 +726,6 @@ class _PaymentMethodWizardPageState
               counterText: '',
             ),
           ),
-          const Spacer(),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: () {
-                if (_nameController.text.trim().isNotEmpty) _submit();
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: Text(isEdit ? l10n.paymentMethodWizardSaveButton : l10n.paymentMethodWizardAddButton),
-            ),
-          ),
-          // Consider navigation bar height
-          SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 16),
         ],
       ),
     );
@@ -864,20 +891,116 @@ class _PaymentMethodWizardPageState
               ),
             ),
 
-          const SizedBox(height: 32),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _submit,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: Text(isEdit ? l10n.paymentMethodWizardSaveButton : l10n.paymentMethodWizardAddButton),
-            ),
+          const SizedBox(height: 24),
+
+          // 4. Auto save mode selection (자동 / 제안)
+          Text(
+            l10n.autoSaveSettingsAutoProcessMode,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          // Consider navigation bar height
-          SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 16),
+          const SizedBox(height: 12),
+          _buildAutoSaveModeSelector(l10n),
+
+          const SizedBox(height: 32),
         ],
+      ),
+    );
+  }
+
+  /// Auto save mode selector UI (제안 / 자동)
+  Widget _buildAutoSaveModeSelector(AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        _buildAutoSaveModeOption(
+          mode: AutoSaveMode.suggest,
+          icon: Icons.notifications_active_outlined,
+          title: l10n.autoSaveSettingsSuggestModeTitle,
+          description: l10n.autoSaveSettingsSuggestModeDesc,
+          colorScheme: colorScheme,
+        ),
+        const SizedBox(height: 8),
+        _buildAutoSaveModeOption(
+          mode: AutoSaveMode.auto,
+          icon: Icons.auto_awesome_outlined,
+          title: l10n.autoSaveSettingsAutoModeTitle,
+          description: l10n.autoSaveSettingsAutoModeDesc,
+          colorScheme: colorScheme,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAutoSaveModeOption({
+    required AutoSaveMode mode,
+    required IconData icon,
+    required String title,
+    required String description,
+    required ColorScheme colorScheme,
+  }) {
+    final isSelected = _autoSaveMode == mode;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      color: isSelected ? colorScheme.primaryContainer : null,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _autoSaveMode = mode;
+          });
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isSelected
+                            ? colorScheme.onPrimaryContainer
+                            : null,
+                      ),
+                    ),
+                    Text(
+                      description,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: isSelected
+                            ? colorScheme.onPrimaryContainer
+                            : colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (isSelected)
+                Icon(Icons.check_circle, color: colorScheme.primary),
+            ],
+          ),
+        ),
       ),
     );
   }
