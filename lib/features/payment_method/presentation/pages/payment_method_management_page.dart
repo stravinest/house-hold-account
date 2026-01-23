@@ -15,7 +15,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../providers/payment_method_provider.dart';
-import '../providers/pending_transaction_provider.dart';
+import '../widgets/auto_save_mode_dialog.dart';
+import '../widgets/permission_request_dialog.dart';
 import 'payment_method_wizard_page.dart';
 
 /// Platform check for Android (cached at app startup)
@@ -30,10 +31,6 @@ const double _badgePaddingH = 6.0;
 const double _badgePaddingV = 2.0;
 const double _badgeBorderRadius = 10.0;
 const double _starIconSize = 14.0;
-
-/// Tab index constants
-const int _paymentMethodTabIndex = 0;
-const int _autoCollectHistoryTabIndex = 1;
 
 /// Date group classification enum
 enum _DateGroup { today, yesterday, thisWeek, thisMonth, older }
@@ -91,45 +88,19 @@ class _PaymentMethodManagementPageState
     extends ConsumerState<PaymentMethodManagementPage>
     with TickerProviderStateMixin {
   late final TabController _mainTabController;
-  late final TabController _autoCollectTabController;
 
   @override
   void initState() {
     super.initState();
     _mainTabController = TabController(
-      length: _isAndroidPlatform ? 2 : 1,
+      length: 1,
       vsync: this,
     );
-    _autoCollectTabController = TabController(length: 3, vsync: this);
-
-    // Listener for FAB state update
-    _mainTabController.addListener(_onMainTabChanged);
-  }
-
-  void _onMainTabChanged() {
-    // Process only after animation completes (prevent unnecessary setState)
-    if (_mainTabController.indexIsChanging) return;
-
-    // FAB state update
-    setState(() {});
-
-    // Mark as viewed when auto-collect history tab is selected (Android only)
-    if (_isAndroidPlatform && _mainTabController.index == _autoCollectHistoryTabIndex) {
-      _markAsViewed();
-    }
-  }
-
-  Future<void> _markAsViewed() async {
-    await ref
-        .read(pendingTransactionNotifierProvider.notifier)
-        .markAllAsViewed();
   }
 
   @override
   void dispose() {
-    _mainTabController.removeListener(_onMainTabChanged);
     _mainTabController.dispose();
-    _autoCollectTabController.dispose();
     super.dispose();
   }
 
@@ -138,8 +109,6 @@ class _PaymentMethodManagementPageState
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final pendingCountAsync = ref.watch(pendingTransactionCountProvider);
-    final pendingCount = pendingCountAsync.value ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -151,45 +120,6 @@ class _PaymentMethodManagementPageState
           indicatorWeight: 3,
           tabs: [
             Tab(text: l10n.paymentMethodTab),
-            // Auto-collect history tab (Android only, with badge)
-            if (_isAndroidPlatform)
-              Tab(
-                child: Semantics(
-                  label: pendingCount > 0
-                      ? '${l10n.autoCollectTab}, $pendingCount'
-                      : l10n.autoCollectTab,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(l10n.autoCollectTab),
-                      if (pendingCount > 0) ...[
-                        const SizedBox(width: Spacing.xs),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: _badgePaddingH,
-                            vertical: _badgePaddingV,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.error,
-                            borderRadius:
-                                BorderRadius.circular(_badgeBorderRadius),
-                          ),
-                          constraints: const BoxConstraints(minWidth: 18),
-                          child: Text(
-                            '$pendingCount',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
           ],
         ),
       ),
@@ -198,74 +128,19 @@ class _PaymentMethodManagementPageState
         child: TabBarView(
           controller: _mainTabController,
           children: [
-            // Payment method tab (shared + auto-collect integrated)
             _PaymentMethodListView(isAndroid: _isAndroidPlatform),
-            // Auto-collect history tab (Android only)
-            if (_isAndroidPlatform) _buildAutoCollectHistoryView(context),
           ],
         ),
       ),
-      floatingActionButton: ListenableBuilder(
-        listenable: _mainTabController,
-        builder: (context, child) {
-          return Visibility(
-            visible: _mainTabController.index == _paymentMethodTabIndex,
-            child: child!,
-          );
-        },
-        child: FloatingActionButton(
-          onPressed: () => _showAddDialog(context),
-          tooltip: l10n.paymentMethodAdd,
-          child: const Icon(Icons.add),
-        ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddDialog(context),
+        tooltip: l10n.paymentMethodAdd,
+        child: const Icon(Icons.add),
       ),
     );
   }
 
-  Widget _buildAutoCollectHistoryView(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    return Column(
-      children: [
-        // 2-level tab bar
-        Material(
-          color: colorScheme.surface,
-          elevation: 1,
-          child: TabBar(
-            controller: _autoCollectTabController,
-            labelColor: colorScheme.primary,
-            unselectedLabelColor: colorScheme.onSurfaceVariant,
-            indicatorWeight: 2,
-            tabs: [
-              Tab(text: l10n.pendingTransactionStatusPending),
-              Tab(text: l10n.pendingTransactionStatusConfirmed),
-              Tab(text: l10n.pendingTransactionStatusRejected),
-            ],
-          ),
-        ),
-        // 2-level tab view
-        Expanded(
-          child: TabBarView(
-            controller: _autoCollectTabController,
-            children: const [
-              _PendingTransactionListView(
-                status: PendingTransactionStatus.pending,
-              ),
-              _PendingTransactionListView(
-                status: PendingTransactionStatus.converted,
-              ),
-              _PendingTransactionListView(
-                status: PendingTransactionStatus.rejected,
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showAddDialog(BuildContext context) {
+void _showAddDialog(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -523,12 +398,83 @@ class _PaymentMethodListView extends ConsumerWidget {
                   _AutoCollectPaymentMethodCard(
                     key: ValueKey(method.id),
                     paymentMethod: method,
-                    onEdit: () => _showEditDialog(context, method),
+                    onEdit: () => showDialog(
+                      context: context,
+                      builder: (context) => AutoSaveModeDialog(
+                        paymentMethod: method,
+                        onSave: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
                     onDelete: () => _showDeleteConfirm(context, ref, method),
                   ),
               ],
             ),
+          if (_isAndroidPlatform && methods.isNotEmpty) ...[
+            const SizedBox(height: Spacing.md),
+            _buildPermissionBanner(context, l10n, colorScheme),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildPermissionBanner(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.secondaryContainer,
+        border: Border.all(color: colorScheme.secondary),
+        borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(Spacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.security,
+                  color: colorScheme.secondary,
+                  size: IconSize.sm,
+                ),
+                const SizedBox(width: Spacing.sm),
+                Expanded(
+                  child: Text(
+                    l10n.autoSaveSettingsRequiredPermissions,
+                    style: textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.secondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: Spacing.sm),
+            Text(
+              l10n.autoSaveSettingsPermissionDesc,
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSecondaryContainer,
+              ),
+            ),
+            const SizedBox(height: Spacing.md),
+            OutlinedButton.icon(
+              onPressed: () => showDialog(
+                context: context,
+                builder: (context) => const PermissionRequestDialog(),
+              ),
+              icon: const Icon(Icons.settings, size: IconSize.sm),
+              label: Text(l10n.autoSaveSettingsPermissionButton),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -812,42 +758,6 @@ class _AutoCollectPaymentMethodCard extends StatelessWidget {
               ],
             ),
           ),
-          // Auto process settings
-          const Divider(height: 1),
-          InkWell(
-            onTap: () {
-              context.push(
-                '/settings/payment-methods/${paymentMethod.id}/auto-save',
-              );
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.md,
-                vertical: Spacing.sm,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    _getAutoSaveModeIcon(paymentMethod.autoSaveMode),
-                    size: IconSize.sm,
-                    color: paymentMethod.isAutoSaveEnabled
-                        ? colorScheme.primary
-                        : colorScheme.onSurfaceVariant,
-                    semanticLabel: l10n.autoProcessSettings,
-                  ),
-                  const SizedBox(width: Spacing.sm),
-                  Expanded(
-                    child: Text(l10n.autoProcessSettings, style: textTheme.bodyMedium),
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    size: IconSize.sm,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -860,445 +770,5 @@ class _AutoCollectPaymentMethodCard extends StatelessWidget {
       AutoSaveMode.auto => l10n.autoSaveModeAuto,
     };
   }
-
-  IconData _getAutoSaveModeIcon(AutoSaveMode mode) {
-    return switch (mode) {
-      AutoSaveMode.auto => Icons.auto_awesome_outlined,
-      AutoSaveMode.suggest => Icons.notifications_active_outlined,
-      AutoSaveMode.manual => Icons.flash_off_outlined,
-    };
-  }
 }
 
-/// Pending transaction list view (collection history) - date grouping + detailed card
-class _PendingTransactionListView extends ConsumerWidget {
-  final PendingTransactionStatus status;
-
-  const _PendingTransactionListView({required this.status});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    // 로케일 변경에 대응하기 위해 build마다 생성
-    final timeFormat = DateFormat('HH:mm');
-    final dateFormat = DateFormat('MM/dd HH:mm');
-    final currencyFormat = NumberFormat('#,###');
-
-    final filteredTransactions = switch (status) {
-      PendingTransactionStatus.pending => ref.watch(pendingTabTransactionsProvider),
-      PendingTransactionStatus.converted ||
-      PendingTransactionStatus.confirmed => ref.watch(confirmedTabTransactionsProvider),
-      PendingTransactionStatus.rejected => ref.watch(rejectedTabTransactionsProvider),
-    };
-
-    if (filteredTransactions.isEmpty) {
-      return EmptyState(
-        icon: Icons.receipt_long_outlined,
-        message: _getEmptyMessage(l10n, status),
-        subtitle: _getEmptySubtitle(l10n, status),
-      );
-    }
-
-    // Date grouping (newest first)
-    final grouped = _groupTransactionsByDate(filteredTransactions);
-    final sortedGroups = grouped.keys.toList()
-      ..sort((a, b) => a.index.compareTo(b.index)); // today(0) -> older(4) order
-
-    return Column(
-      children: [
-        // Action bar (Design C: count + delete all button)
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Spacing.md,
-            vertical: Spacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerLow,
-            border: Border(
-              bottom: BorderSide(
-                color: colorScheme.outlineVariant,
-                width: 1,
-              ),
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.pendingTransactionItemCount(filteredTransactions.length),
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => _showDeleteAllConfirm(context, ref, l10n, filteredTransactions.length),
-                icon: Icon(
-                  Icons.delete_sweep_outlined,
-                  size: IconSize.sm,
-                  color: colorScheme.error,
-                  semanticLabel: l10n.pendingTransactionDeleteAll,
-                ),
-                label: Text(
-                  l10n.pendingTransactionDeleteAll,
-                  style: TextStyle(color: colorScheme.error),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: Spacing.sm),
-                  visualDensity: VisualDensity.compact,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // List content
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(Spacing.md),
-            itemCount: sortedGroups.length,
-            itemBuilder: (context, groupIndex) {
-              final group = sortedGroups[groupIndex];
-              // Create new list for immutability and sort by newest first
-              final sortedTransactions = grouped[group]!.toList()
-                ..sort((a, b) => b.sourceTimestamp.compareTo(a.sourceTimestamp));
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Date group header
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: Spacing.sm,
-                      bottom: Spacing.sm,
-                    ),
-                    child: Text(
-                      _getDateGroupLabel(l10n, group),
-                      style: textTheme.titleSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  // Transaction cards
-                  for (final tx in sortedTransactions)
-                    _PendingTransactionCard(
-                      key: ValueKey(tx.id),
-                      transaction: tx,
-                      status: status,
-                      timeFormat: timeFormat,
-                      dateFormat: dateFormat,
-                      currencyFormat: currencyFormat,
-                    ),
-                ],
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showDeleteAllConfirm(
-    BuildContext parentContext,
-    WidgetRef ref,
-    AppLocalizations l10n,
-    int count,
-  ) {
-    final statusText = _getStatusText(l10n, status);
-    showDialog(
-      context: parentContext,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.pendingTransactionDeleteAllConfirmTitle),
-        content: Text(l10n.pendingTransactionDeleteAllConfirmMessage(statusText, count)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await ref
-                    .read(pendingTransactionNotifierProvider.notifier)
-                    .deleteAllByStatus(status);
-                if (parentContext.mounted) {
-                  SnackBarUtils.showSuccess(parentContext, l10n.pendingTransactionDeleteAllSuccess);
-                }
-              } catch (e) {
-                if (parentContext.mounted) {
-                  SnackBarUtils.showError(parentContext, e.toString());
-                }
-              }
-            },
-            child: Text(
-              l10n.commonDelete,
-              style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _getStatusText(AppLocalizations l10n, PendingTransactionStatus status) {
-    return switch (status) {
-      PendingTransactionStatus.pending => l10n.pendingTransactionStatusPending,
-      PendingTransactionStatus.converted ||
-      PendingTransactionStatus.confirmed => l10n.pendingTransactionStatusConfirmed,
-      PendingTransactionStatus.rejected => l10n.pendingTransactionStatusRejected,
-    };
-  }
-
-  String _getEmptyMessage(AppLocalizations l10n, PendingTransactionStatus status) {
-    return switch (status) {
-      PendingTransactionStatus.pending => l10n.pendingTransactionEmptyPending,
-      PendingTransactionStatus.converted ||
-      PendingTransactionStatus.confirmed => l10n.pendingTransactionEmptyConfirmed,
-      PendingTransactionStatus.rejected => l10n.pendingTransactionEmptyRejected,
-    };
-  }
-
-  String? _getEmptySubtitle(AppLocalizations l10n, PendingTransactionStatus status) {
-    if (status == PendingTransactionStatus.pending) {
-      return l10n.pendingTransactionEmptySubtitle;
-    }
-    return null;
-  }
-}
-
-/// Improved pending transaction card widget
-class _PendingTransactionCard extends ConsumerWidget {
-  final PendingTransaction transaction;
-  final PendingTransactionStatus status;
-  final DateFormat timeFormat;
-  final DateFormat dateFormat;
-  final NumberFormat currencyFormat;
-
-  const _PendingTransactionCard({
-    super.key,
-    required this.transaction,
-    required this.status,
-    required this.timeFormat,
-    required this.dateFormat,
-    required this.currencyFormat,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: Spacing.md),
-      child: Padding(
-        padding: const EdgeInsets.all(Spacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top: notification source + time + delete button
-            Row(
-              children: [
-                Icon(
-                  transaction.sourceType == SourceType.sms
-                      ? Icons.sms_outlined
-                      : Icons.notifications_outlined,
-                  size: IconSize.xs,
-                  color: colorScheme.onSurfaceVariant,
-                  semanticLabel: transaction.sourceType == SourceType.sms
-                      ? l10n.sourceTypeSms
-                      : l10n.sourceTypeNotification,
-                ),
-                const SizedBox(width: Spacing.xs),
-                Text(
-                  transaction.sourceType == SourceType.sms
-                      ? l10n.sourceTypeSms
-                      : l10n.sourceTypeNotification,
-                  style: textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: Spacing.xs),
-                Expanded(
-                  child: Text(
-                    transaction.sourceSender ?? '',
-                    style: textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text(
-                  timeFormat.format(transaction.sourceTimestamp),
-                  style: textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => _showDeleteConfirm(context, ref),
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: IconSize.sm,
-                    color: colorScheme.error,
-                    semanticLabel: l10n.commonDelete,
-                  ),
-                  constraints: const BoxConstraints(),
-                  padding: const EdgeInsets.all(Spacing.xs),
-                  visualDensity: VisualDensity.compact,
-                  tooltip: l10n.commonDelete,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: Spacing.md),
-
-            // Middle: amount + status badge
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    transaction.parsedAmount != null
-                        ? '${transaction.parsedType == 'income' ? '+' : '-'}${currencyFormat.format(transaction.parsedAmount)}원'
-                        : l10n.noAmountInfo,
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: transaction.parsedType == 'income'
-                          ? colorScheme.primary
-                          : colorScheme.error,
-                    ),
-                  ),
-                ),
-                _buildStatusBadge(context, l10n),
-              ],
-            ),
-
-            // Merchant + date
-            if (transaction.parsedMerchant != null) ...[
-              const SizedBox(height: Spacing.xs),
-              Text(
-                '${transaction.parsedMerchant} ${dateFormat.format(transaction.parsedDate ?? transaction.sourceTimestamp)}',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
-
-            // Divider
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: Spacing.sm),
-              child: Divider(height: 1),
-            ),
-
-            // Original message
-            Text(
-              transaction.sourceContent,
-              style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(BuildContext context, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    final (String label, Color bgColor, Color textColor, IconData icon) = switch (status) {
-      PendingTransactionStatus.pending => (
-        l10n.pendingTransactionStatusWaiting,
-        colorScheme.secondaryContainer,
-        colorScheme.onSecondaryContainer,
-        Icons.schedule_outlined,
-      ),
-      PendingTransactionStatus.converted ||
-      PendingTransactionStatus.confirmed => (
-        l10n.pendingTransactionStatusSaved,
-        colorScheme.primaryContainer,
-        colorScheme.onPrimaryContainer,
-        Icons.check_circle_outline,
-      ),
-      PendingTransactionStatus.rejected => (
-        l10n.pendingTransactionStatusDenied,
-        colorScheme.errorContainer,
-        colorScheme.onErrorContainer,
-        Icons.cancel_outlined,
-      ),
-    };
-
-    return Semantics(
-      label: label,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: _badgePaddingH,
-          vertical: _badgePaddingV,
-        ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(_badgeBorderRadius),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: textColor),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: textTheme.labelSmall?.copyWith(
-                color: textColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteConfirm(BuildContext parentContext, WidgetRef ref) {
-    final l10n = AppLocalizations.of(parentContext);
-    showDialog(
-      context: parentContext,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.pendingTransactionDeleteConfirmTitle),
-        content: Text(l10n.pendingTransactionDeleteConfirmMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await ref
-                    .read(pendingTransactionNotifierProvider.notifier)
-                    .deleteTransaction(transaction.id);
-                if (parentContext.mounted) {
-                  SnackBarUtils.showSuccess(parentContext, l10n.pendingTransactionDeleted);
-                }
-              } catch (e) {
-                if (parentContext.mounted) {
-                  SnackBarUtils.showError(parentContext, e.toString());
-                }
-              }
-            },
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
-    );
-  }
-}
