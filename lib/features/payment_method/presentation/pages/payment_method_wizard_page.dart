@@ -1087,11 +1087,11 @@ class _PaymentMethodWizardPageState
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.cancel),
+            child: Text(l10n.commonCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.confirm),
+            child: Text(l10n.commonConfirm),
           ),
         ],
       ),
