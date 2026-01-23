@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/utils/supabase_error_handler.dart';
+import '../../../../l10n/generated/app_localizations.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/learned_sms_format.dart';
 import '../../domain/entities/financial_service_template.dart';
@@ -10,9 +14,24 @@ import '../../data/services/sms_listener_service.dart';
 import '../../data/services/sms_scanner_service.dart';
 import '../providers/payment_method_provider.dart';
 
+/// Payment method add mode
+enum PaymentMethodAddMode {
+  /// Manual entry (shared, canAutoSave = false)
+  manual,
+
+  /// Auto collect (personal, canAutoSave = true)
+  autoCollect,
+}
+
 class PaymentMethodWizardPage extends ConsumerStatefulWidget {
   final PaymentMethod? paymentMethod;
-  const PaymentMethodWizardPage({super.key, this.paymentMethod});
+  final PaymentMethodAddMode? initialMode;
+
+  const PaymentMethodWizardPage({
+    super.key,
+    this.paymentMethod,
+    this.initialMode,
+  });
 
   @override
   ConsumerState<PaymentMethodWizardPage> createState() =>
@@ -22,6 +41,7 @@ class PaymentMethodWizardPage extends ConsumerStatefulWidget {
 class _PaymentMethodWizardPageState
     extends ConsumerState<PaymentMethodWizardPage> {
   late int _currentStep;
+  PaymentMethodAddMode? _selectedMode;
   FinancialServiceTemplate? _selectedTemplate;
   late TextEditingController _nameController;
   late TextEditingController _sampleController;
@@ -29,11 +49,14 @@ class _PaymentMethodWizardPageState
 
   bool get isEdit => widget.paymentMethod != null;
 
-  // 알림 타입 선택 (sms | push)
+  // Notification type selection (sms | push)
   String _notificationType = 'sms';
 
-  // 분석된 포맷
+  // Analyzed format
   LearnedSmsFormat? _generatedFormat;
+
+  // Debounce timer for sample analysis
+  Timer? _debounceTimer;
 
   @override
   void initState() {
@@ -44,42 +67,66 @@ class _PaymentMethodWizardPageState
     _sampleController = TextEditingController();
     _keywordsController = TextEditingController();
 
-    // 수정 모드인 경우 초기 설정
+    // Edit mode initial settings
     if (isEdit) {
-      _currentStep = 1;
-      // 템플릿 매칭 시도 (이름 기반)
-      _selectedTemplate = FinancialServiceTemplate.templates
-          .cast<FinancialServiceTemplate?>()
-          .firstWhere(
-            (t) => t?.name == widget.paymentMethod?.name,
-            orElse: () => null,
-          );
+      _currentStep = 2; // Go directly to settings screen
+      _selectedMode = widget.paymentMethod!.canAutoSave
+          ? PaymentMethodAddMode.autoCollect
+          : PaymentMethodAddMode.manual;
 
-      if (_selectedTemplate != null) {
-        _sampleController.text = _selectedTemplate!.defaultSampleSms;
+      // Try template matching for auto-collect mode
+      if (_selectedMode == PaymentMethodAddMode.autoCollect) {
+        _selectedTemplate = FinancialServiceTemplate.templates
+            .cast<FinancialServiceTemplate?>()
+            .firstWhere(
+              (t) => t?.name == widget.paymentMethod?.name,
+              orElse: () => null,
+            );
+
+        if (_selectedTemplate != null) {
+          _sampleController.text = _selectedTemplate!.defaultSampleSms;
+        }
+      }
+    } else if (widget.initialMode != null) {
+      // When initialMode is specified
+      _selectedMode = widget.initialMode;
+      if (_selectedMode == PaymentMethodAddMode.manual) {
+        _currentStep = 2; // Manual entry goes directly to name input
+      } else {
+        _currentStep = 1; // Auto-collect goes to service selection
       }
     } else {
-      _currentStep = 0;
+      _currentStep = 0; // Start with mode selection
     }
 
-    // 샘플 텍스트 변경 시 포맷 재분석
-    _sampleController.addListener(_analyzeSample);
+    // Re-analyze format when sample text changes (with debounce)
+    _sampleController.addListener(_onSampleTextChanged);
 
-    // 초기 분석 실행
+    // Run initial analysis
     if (_sampleController.text.isNotEmpty) {
-      _analyzeSample();
+      _analyzeSampleImmediate();
     }
   }
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
+    _sampleController.removeListener(_onSampleTextChanged);
     _nameController.dispose();
     _sampleController.dispose();
     _keywordsController.dispose();
     super.dispose();
   }
 
-  void _analyzeSample() {
+  void _onSampleTextChanged() {
+    // Cancel previous timer and set new one (debounce)
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _analyzeSampleImmediate();
+    });
+  }
+
+  void _analyzeSampleImmediate() {
     if (_selectedTemplate == null) return;
 
     final sample = _sampleController.text;
@@ -93,18 +140,31 @@ class _PaymentMethodWizardPageState
     });
   }
 
+  void _selectMode(PaymentMethodAddMode mode) {
+    setState(() {
+      _selectedMode = mode;
+      if (mode == PaymentMethodAddMode.manual) {
+        _currentStep = 2; // Manual entry goes directly to name input
+        _selectedTemplate = null;
+        _nameController.text = '';
+      } else {
+        _currentStep = 1; // Auto-collect goes to service selection
+      }
+    });
+  }
+
   void _selectTemplate(FinancialServiceTemplate? template) {
     setState(() {
       _selectedTemplate = template;
-      _currentStep = 1;
+      _currentStep = 2;
 
       if (template != null) {
         _nameController.text = template.name;
-        _notificationType = 'sms'; // 기본값
+        _notificationType = 'sms';
         _sampleController.text = template.defaultSampleSms;
-        _analyzeSample();
+        _analyzeSampleImmediate();
       } else {
-        // 직접 입력 (수동)
+        // Direct input (selecting "Other" in auto-collect mode)
         _nameController.text = '';
         _sampleController.text = '';
         _generatedFormat = null;
@@ -124,54 +184,89 @@ class _PaymentMethodWizardPageState
             _selectedTemplate!.defaultSamplePush ??
             _selectedTemplate!.defaultSampleSms;
       }
-      _analyzeSample();
+      _analyzeSampleImmediate();
     });
   }
 
   void _goBack() {
-    if (_currentStep > 0 && !isEdit) {
-      setState(() {
-        if (_currentStep == 1) {
+    if (isEdit) {
+      Navigator.pop(context);
+      return;
+    }
+
+    setState(() {
+      if (_currentStep == 2) {
+        if (_selectedMode == PaymentMethodAddMode.manual) {
+          // Manual entry -> mode selection
+          if (widget.initialMode != null) {
+            Navigator.pop(context);
+          } else {
+            _currentStep = 0;
+            _selectedMode = null;
+          }
+        } else {
+          // Auto-collect settings -> service selection
+          _currentStep = 1;
           _selectedTemplate = null;
         }
-        _currentStep--;
-      });
-    } else {
-      Navigator.pop(context);
-    }
+      } else if (_currentStep == 1) {
+        // Service selection -> mode selection
+        if (widget.initialMode != null) {
+          Navigator.pop(context);
+        } else {
+          _currentStep = 0;
+          _selectedMode = null;
+        }
+      } else {
+        Navigator.pop(context);
+      }
+    });
   }
 
   Future<void> _submit() async {
-    // 직접 입력의 경우 _generatedFormat이 null일 수 있음
-    if (_selectedTemplate != null && _generatedFormat == null) return;
+    // Cannot proceed if template selected in auto-collect mode but no format
+    if (_selectedMode == PaymentMethodAddMode.autoCollect &&
+        _selectedTemplate != null &&
+        _generatedFormat == null) {
+      return;
+    }
 
     try {
       final notifier = ref.read(paymentMethodNotifierProvider.notifier);
       final formatRepository = ref.read(learnedSmsFormatRepositoryProvider);
 
+      // Determine canAutoSave: false for manual, true for auto-collect
+      final canAutoSave = _selectedMode == PaymentMethodAddMode.autoCollect;
+
+      final trimmedName = _nameController.text.trim();
+
       if (isEdit) {
-        // 1. 결제수단 수정
+        // 개인 → 공유로 변경 시 경고
+        final oldCanAutoSave = widget.paymentMethod!.canAutoSave;
+        if (oldCanAutoSave && !canAutoSave) {
+          final confirmed = await _showPermissionEscalationWarning();
+          if (confirmed != true) return;
+        }
+
+        // 1. Update payment method
         await notifier.updatePaymentMethod(
           id: widget.paymentMethod!.id,
-          name: _nameController.text,
-          canAutoSave: _selectedTemplate != null,
+          name: trimmedName,
+          canAutoSave: canAutoSave,
         );
 
-        // 2. 학습된 포맷 저장 또는 업데이트 (템플릿 선택 시에만)
-        if (_selectedTemplate != null && _generatedFormat != null) {
-          // 기존 포맷이 있는지 확인
+        // 2. Save or update learned format (only when template selected in auto-collect mode)
+        if (canAutoSave && _selectedTemplate != null && _generatedFormat != null) {
           final existingFormats = await formatRepository.getFormatsByPaymentMethod(
             widget.paymentMethod!.id,
           );
-          
+
           if (existingFormats.isNotEmpty) {
-            // 기존 포맷 업데이트
             await formatRepository.updateFormat(
               id: existingFormats.first.id,
               senderKeywords: _generatedFormat!.senderKeywords,
             );
           } else {
-            // 새로운 포맷 생성
             await formatRepository.createFormat(
               paymentMethodId: widget.paymentMethod!.id,
               senderPattern: _generatedFormat!.senderPattern,
@@ -187,16 +282,16 @@ class _PaymentMethodWizardPageState
           }
         }
       } else {
-        // 1. 결제수단 생성
+        // 1. Create payment method
         final paymentMethod = await notifier.createPaymentMethod(
-          name: _nameController.text,
+          name: trimmedName,
           icon: '',
-          color: _selectedTemplate?.color ?? '#9E9E9E', // 템플릿 없으면 회색
-          canAutoSave: _selectedTemplate != null, // 템플릿이 있을 때만 자동수집 가능
+          color: _selectedTemplate?.color ?? '#9E9E9E',
+          canAutoSave: canAutoSave,
         );
 
-        // 2. 학습된 포맷 저장 (템플릿 선택 시에만)
-        if (_selectedTemplate != null && _generatedFormat != null) {
+        // 2. Save learned format (only when template selected in auto-collect mode)
+        if (canAutoSave && _selectedTemplate != null && _generatedFormat != null) {
           await formatRepository.createFormat(
             paymentMethodId: paymentMethod.id,
             senderPattern: _generatedFormat!.senderPattern,
@@ -212,35 +307,244 @@ class _PaymentMethodWizardPageState
         }
       }
 
+      // Refresh providers - invalidate all related providers
+      ref.invalidate(sharedPaymentMethodsProvider);
+      ref.invalidate(paymentMethodsProvider);
+
+      // For auto-collect payment method, also refresh the user's provider
+      if (canAutoSave) {
+        final currentUserId = ref.read(currentUserProvider)?.id;
+        if (currentUserId != null) {
+          ref.invalidate(autoCollectPaymentMethodsByOwnerProvider(currentUserId));
+        }
+      }
+
       if (mounted) {
         Navigator.pop(context);
       }
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('PaymentMethod save failed: $e\n$st');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        final l10n = AppLocalizations.of(context);
+        if (e is DuplicateItemException) {
+          SnackBarUtils.showError(context, l10n.paymentMethodWizardDuplicateName);
+        } else {
+          SnackBarUtils.showError(context, l10n.paymentMethodWizardSaveFailed);
+        }
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    String title;
+    if (isEdit) {
+      title = l10n.paymentMethodWizardEditTitle;
+    } else if (_currentStep == 0) {
+      title = l10n.paymentMethodWizardAddTitle;
+    } else if (_selectedMode == PaymentMethodAddMode.manual) {
+      title = l10n.paymentMethodWizardManualAddTitle;
+    } else {
+      title = l10n.paymentMethodWizardAutoCollectAddTitle;
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? '결제수단 수정' : '결제수단 추가'),
+        title: Text(title),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: _goBack,
         ),
       ),
-      body: _currentStep == 0
-          ? _buildServiceSelection()
-          : _buildConfiguration(),
+      body: _buildBody(),
     );
   }
 
+  Widget _buildBody() {
+    if (_currentStep == 0) {
+      return _buildModeSelection();
+    } else if (_currentStep == 1) {
+      return _buildServiceSelection();
+    } else {
+      return _buildConfiguration();
+    }
+  }
+
+  /// Step 0: Mode selection (manual vs auto-collect)
+  Widget _buildModeSelection() {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.paymentMethodWizardModeQuestion,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 24),
+
+          // Manual entry card
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => _selectMode(PaymentMethodAddMode.manual),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.blue[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.edit_outlined,
+                        color: Colors.blue[700],
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                l10n.paymentMethodWizardManualMode,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[50],
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  l10n.paymentMethodWizardSharedBadge,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.blue[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.paymentMethodWizardManualDescription,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, size: 16),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Auto-collect card
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => _selectMode(PaymentMethodAddMode.autoCollect),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.green[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.auto_awesome_outlined,
+                        color: Colors.green[700],
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                l10n.paymentMethodWizardAutoCollectMode,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange[50],
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  l10n.paymentMethodWizardPersonalBadge,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.orange[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.paymentMethodWizardAutoCollectDescription,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios, size: 16),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Step 1: Service selection (auto-collect mode only) - chip grid style
   Widget _buildServiceSelection() {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
     final cards = FinancialServiceTemplate.templates
         .where((t) => t.category == FinancialServiceCategory.card)
         .toList();
@@ -251,133 +555,210 @@ class _PaymentMethodWizardPageState
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        const Text(
-          '어떤 서비스를 이용하시나요?',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        Text(
+          l10n.paymentMethodWizardServiceQuestion,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          l10n.paymentMethodWizardServiceDescription,
+          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
         const SizedBox(height: 24),
 
-        // 1. 카드 섹션
+        // 1. Card section
         if (cards.isNotEmpty) ...[
-          const Text('카드', style: TextStyle(fontSize: 16, color: Colors.grey)),
-          const SizedBox(height: 8),
-          ...cards.map((t) => _buildTemplateTile(t)),
-          const SizedBox(height: 24),
-        ],
-
-        // 2. 지역화폐 섹션
-        if (localCurrencies.isNotEmpty) ...[
-          const Text(
-            '지역화폐',
-            style: TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-          const SizedBox(height: 8),
-          ...localCurrencies.map((t) => _buildTemplateTile(t)),
-          const SizedBox(height: 24),
-        ],
-
-        // 3. 직접 입력 섹션
-        const Text('기타', style: TextStyle(fontSize: 16, color: Colors.grey)),
-        const SizedBox(height: 8),
-        Card(
-          child: ListTile(
-            leading: const CircleAvatar(
-              backgroundColor: Colors.grey,
-              child: Icon(Icons.edit, color: Colors.white),
+          Text(
+            l10n.paymentMethodWizardCategoryCard,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurfaceVariant,
             ),
-            title: const Text('직접 입력'),
-            subtitle: const Text('자동 수집 기능 없이 결제수단만 추가합니다.'),
-            onTap: () => _selectTemplate(null), // null = 직접 입력
           ),
-        ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: cards.map((t) => _buildTemplateChip(t)).toList(),
+          ),
+        ],
+
+        const SizedBox(height: 24),
+
+        // 2. Local currency section
+        if (localCurrencies.isNotEmpty) ...[
+          Text(
+            l10n.paymentMethodWizardCategoryLocalCurrency,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: localCurrencies.map((t) => _buildTemplateChip(t)).toList(),
+          ),
+        ],
       ],
     );
   }
 
-  Widget _buildTemplateTile(FinancialServiceTemplate template) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: _safeParseColor(template.color),
-          child: Text(
-            template.name.isNotEmpty ? template.name[0] : '?',
-            style: const TextStyle(color: Colors.white),
+  /// Template chip widget - improved touch target size
+  Widget _buildTemplateChip(FinancialServiceTemplate template) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ActionChip(
+      label: Text(template.name),
+      onPressed: () => _selectTemplate(template),
+      backgroundColor: colorScheme.surfaceContainerHighest,
+      side: BorderSide.none,
+      // Increased padding for better touch target (min 48dp)
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    );
+  }
+
+  /// Step 2: Configuration screen
+  Widget _buildConfiguration() {
+    // Manual mode or auto-collect mode without template
+    if (_selectedMode == PaymentMethodAddMode.manual ||
+        (_selectedMode == PaymentMethodAddMode.autoCollect && _selectedTemplate == null)) {
+      return _buildManualConfiguration();
+    }
+
+    // Auto-collect mode with template selected
+    return _buildAutoCollectConfiguration();
+  }
+
+  /// Manual entry configuration screen (name only)
+  Widget _buildManualConfiguration() {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Shared notice badge
+          if (_selectedMode == PaymentMethodAddMode.manual) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue[200]!),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.people_outline, size: 18, color: Colors.blue[700]),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.paymentMethodWizardSharedNotice,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.blue[700],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+
+          Text(
+            l10n.paymentMethodWizardNameLabel,
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-        ),
-        title: Text(template.name),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () => _selectTemplate(template),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _nameController,
+            maxLength: 20,
+            autofocus: true,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              hintText: l10n.paymentMethodWizardNameHint,
+              counterText: '',
+            ),
+          ),
+          const Spacer(),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                if (_nameController.text.trim().isNotEmpty) _submit();
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Text(isEdit ? l10n.paymentMethodWizardSaveButton : l10n.paymentMethodWizardAddButton),
+            ),
+          ),
+          // Consider navigation bar height
+          SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 16),
+        ],
       ),
     );
   }
 
-  Widget _buildConfiguration() {
-    // 직접 입력인 경우 (템플릿 없음) -> 단순 이름 입력 및 저장
-    if (_selectedTemplate == null) {
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '결제수단 이름',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: _nameController,
-              maxLength: 20,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: '예: 신한카드',
-                counterText: '',
-              ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (_nameController.text.isNotEmpty) _submit();
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text('저장하기'),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
+  /// Auto-collect configuration screen (after template selection)
+  Widget _buildAutoCollectConfiguration() {
+    final l10n = AppLocalizations.of(context);
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. 이름 설정
+          // Personal use notice badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.orange[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.orange[200]!),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.lock_outline, size: 18, color: Colors.orange[700]),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.paymentMethodWizardPersonalNotice,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.orange[700],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // 1. Name setting
           TextFormField(
             controller: _nameController,
             maxLength: 20,
-            decoration: const InputDecoration(
-              labelText: '별칭',
-              helperText: '앱 내에서 표시될 이름입니다.',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.paymentMethodWizardAliasLabel,
+              helperText: l10n.paymentMethodWizardAliasHelper,
+              border: const OutlineInputBorder(),
               counterText: '',
             ),
           ),
           const SizedBox(height: 24),
 
-          // 2. 샘플 에디터 (수집 설정)
-          const Text(
-            '자동 수집 규칙 설정',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          // 2. Sample editor (collection settings)
+          Text(
+            l10n.paymentMethodWizardAutoCollectRuleTitle,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           SizedBox(
-            height: 40, // 행의 높이를 고정하여 UI 흔들림 방지
+            height: 40,
             child: Row(
               children: [
                 Expanded(
@@ -389,7 +770,7 @@ class _PaymentMethodWizardPageState
                     child: TextButton.icon(
                       onPressed: _showSmsImportDialog,
                       icon: const Icon(Icons.sms_outlined),
-                      label: const Text('문자에서 가져오기'),
+                      label: Text(l10n.paymentMethodWizardImportFromSms),
                       style: TextButton.styleFrom(
                         padding: EdgeInsets.zero,
                         alignment: Alignment.centerLeft,
@@ -398,7 +779,7 @@ class _PaymentMethodWizardPageState
                     ),
                   ),
                 ),
-                // SMS / Push 토글
+                // SMS / Push toggle
                 SegmentedButton<String>(
                   segments: const [
                     ButtonSegment(value: 'sms', label: Text('SMS')),
@@ -417,15 +798,15 @@ class _PaymentMethodWizardPageState
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            '아래 메시지는 예시입니다. 실제로 받으시는 알림과 다르다면 수정해주세요.\n수정한 내용에 맞춰 수집 규칙이 변경됩니다.',
-            style: TextStyle(color: Colors.grey),
+          Text(
+            l10n.paymentMethodWizardSampleNotice,
+            style: const TextStyle(color: Colors.grey),
           ),
           const SizedBox(height: 16),
 
           TextField(
             controller: _sampleController,
-            readOnly: true, // 읽기 전용으로 변경
+            readOnly: true,
             maxLines: 5,
             decoration: InputDecoration(
               border: const OutlineInputBorder(),
@@ -436,7 +817,7 @@ class _PaymentMethodWizardPageState
 
           const SizedBox(height: 24),
 
-          // 3. 분석 결과 미리보기 (규칙)
+          // 3. Analysis result preview (rules)
           if (_generatedFormat != null)
             Card(
               color: Colors.blue[50],
@@ -449,36 +830,35 @@ class _PaymentMethodWizardPageState
                       children: [
                         const Icon(Icons.auto_awesome, size: 20, color: Colors.blue),
                         const SizedBox(width: 8),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            '현재 규칙으로 수집되는 정보',
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                            l10n.paymentMethodWizardCurrentRules,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
                         IconButton(
                           onPressed: _showEditKeywordsDialog,
                           icon: const Icon(Icons.edit, size: 16),
-                          tooltip: '키워드 수정',
+                          tooltip: l10n.paymentMethodEditKeywords,
                           constraints: const BoxConstraints(),
                           padding: EdgeInsets.zero,
                         ),
                       ],
                     ),
                     const Divider(),
-                    _buildRuleRowWithEdit(
-                      '감지 키워드 (OR 조건)',
+                    _buildRuleRow(
+                      l10n.paymentMethodWizardDetectionKeywordsOr,
                       _generatedFormat!.senderKeywords.join(', '),
                     ),
                     _buildRuleRow(
-                      '금액 패턴 (필수)',
+                      l10n.paymentMethodWizardAmountPatternRequired,
                       _getFriendlyAmountPattern(_generatedFormat!.amountRegex),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '금액 패턴은 수정할 수 없습니다',
+                      l10n.paymentMethodWizardAmountPatternNote,
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
-                    // 실제 파싱 결과 시뮬레이션 표시도 가능
                   ],
                 ),
               ),
@@ -492,9 +872,11 @@ class _PaymentMethodWizardPageState
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text('저장하기'),
+              child: Text(isEdit ? l10n.paymentMethodWizardSaveButton : l10n.paymentMethodWizardAddButton),
             ),
           ),
+          // Consider navigation bar height
+          SizedBox(height: MediaQuery.of(context).viewPadding.bottom + 16),
         ],
       ),
     );
@@ -521,67 +903,48 @@ class _PaymentMethodWizardPageState
     );
   }
 
-  Widget _buildRuleRowWithEdit(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(label, style: const TextStyle(color: Colors.grey)),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _getFriendlyAmountPattern(String regex) {
-    // 기본 패턴: r'([0-9,]+)\s*원'
-    if (regex.contains('원') && regex.contains('[0-9,]+')) {
-      return '\'원\' 앞의 숫자';
+    // Provide user-friendly description for common patterns
+    if (regex.contains('Won') && regex.contains('[0-9,]+')) {
+      return 'Number before "Won"';
     }
-    // 다른 패턴들에 대한 대응 추가 가능
-    return regex; // 알 수 없는 경우 그대로 표시
+    if (regex.contains(r'\d') || regex.contains('[0-9')) {
+      return 'Auto-detected number pattern';
+    }
+    return regex;
   }
 
   Future<void> _showEditKeywordsDialog() async {
     if (_generatedFormat == null) return;
-    
-    // 초기값 설정
+
     _keywordsController.text = _generatedFormat!.senderKeywords.join(', ');
 
     if (!mounted) return;
 
     final result = await showDialog<List<String>>(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
+        final dialogL10n = AppLocalizations.of(dialogContext);
         return AlertDialog(
-          title: const Text('감지 키워드 수정'),
+          title: Text(dialogL10n.paymentMethodWizardEditKeywordsTitle),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '메시지에 포함되면 자동으로 감지할 키워드를 입력하세요.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
+              Text(
+                dialogL10n.paymentMethodWizardEditKeywordsDescription,
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: _keywordsController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: '예: KB국민, KB국민카드\n쉼표로 구분해서 입력하세요',
+                  hintText: dialogL10n.paymentMethodWizardEditKeywordsHint,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  helperText: '최소 1개 이상의 키워드를 입력해야 합니다',
+                  helperText: dialogL10n.paymentMethodWizardEditKeywordsHelper,
                 ),
               ),
             ],
@@ -589,9 +952,9 @@ class _PaymentMethodWizardPageState
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
               },
-              child: const Text('취소'),
+              child: Text(dialogL10n.commonCancel),
             ),
             ElevatedButton(
               onPressed: () {
@@ -602,15 +965,15 @@ class _PaymentMethodWizardPageState
                     .toList();
 
                 if (keywords.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('최소 1개 이상의 키워드를 입력해주세요')),
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(content: Text(dialogL10n.paymentMethodWizardEditKeywordsMinError)),
                   );
                   return;
                 }
 
-                Navigator.pop(context, keywords);
+                Navigator.pop(dialogContext, keywords);
               },
-              child: const Text('저장'),
+              child: Text(dialogL10n.commonSave),
             ),
           ],
         );
@@ -628,8 +991,8 @@ class _PaymentMethodWizardPageState
 
   Future<void> _showSmsImportDialog() async {
     final scanner = ref.read(smsScannerServiceProvider);
+    final l10n = AppLocalizations.of(context);
 
-    // 권한 체크 (간소화됨)
     final hasPermission = await SmsListenerService.instance.checkPermissions();
     if (!hasPermission) {
       final granted = await SmsListenerService.instance.requestPermissions();
@@ -637,7 +1000,7 @@ class _PaymentMethodWizardPageState
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('SMS 권한이 필요합니다.')));
+          ).showSnackBar(SnackBar(content: Text(l10n.paymentMethodWizardSmsPermissionRequired)));
         }
         return;
       }
@@ -649,72 +1012,89 @@ class _PaymentMethodWizardPageState
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        builder: (context) => DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (context, scrollController) {
-            return FutureBuilder<SmsFormatScanResult>(
-              future: scanner.scanFinancialSms(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+        builder: (sheetContext) {
+          final sheetL10n = AppLocalizations.of(sheetContext);
+          return DraggableScrollableSheet(
+            initialChildSize: 0.6,
+            minChildSize: 0.4,
+            maxChildSize: 0.9,
+            expand: false,
+            builder: (sheetContext, scrollController) {
+              return FutureBuilder<SmsFormatScanResult>(
+                future: scanner.scanFinancialSms(),
+                builder: (builderContext, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
 
-                final messages = snapshot.data?.financialMessages ?? [];
-                if (messages.isEmpty) {
-                  return const Center(child: Text('금융 관련 문자를 찾을 수 없습니다.'));
-                }
+                  final messages = snapshot.data?.financialMessages ?? [];
+                  if (messages.isEmpty) {
+                    return Center(child: Text(sheetL10n.paymentMethodWizardNoFinancialSms));
+                  }
 
-                return Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        '가져올 문자 선택',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                  return Column(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          sheetL10n.paymentMethodWizardSelectSmsTitle,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    ),
-                    Expanded(
-                      child: ListView.builder(
-                        controller: scrollController,
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          final msg = messages[index];
-                          return ListTile(
-                            title: Text(msg.sender),
-                            subtitle: Text(msg.body),
-                            trailing: Text('${msg.date.month}/${msg.date.day}'),
-                            onTap: () {
-                              _sampleController.text = msg.body;
-                              Navigator.pop(context);
-                            },
-                          );
-                        },
+                      Expanded(
+                        child: ListView.builder(
+                          controller: scrollController,
+                          itemCount: messages.length,
+                          itemBuilder: (itemContext, index) {
+                            final msg = messages[index];
+                            return ListTile(
+                              title: Text(msg.sender),
+                              subtitle: Text(msg.body),
+                              trailing: Text('${msg.date.month}/${msg.date.day}'),
+                              onTap: () {
+                                _sampleController.text = msg.body;
+                                Navigator.pop(sheetContext);
+                              },
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        ),
+                    ],
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
-    ); // unawaited 닫는 괄호
+    );
   }
 
-  Color _safeParseColor(String colorStr) {
-    try {
-      return Color(int.parse(colorStr.replaceAll('#', '0xFF')));
-    } catch (_) {
-      return Colors.grey;
-    }
+  /// 개인 결제수단 → 공유 결제수단 변경 시 경고 다이얼로그
+  Future<bool?> _showPermissionEscalationWarning() {
+    final l10n = AppLocalizations.of(context);
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.paymentMethodPermissionWarningTitle),
+        content: Text(l10n.paymentMethodPermissionWarningMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
   }
 }

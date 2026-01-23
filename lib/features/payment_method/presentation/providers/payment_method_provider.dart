@@ -52,6 +52,32 @@ final paymentMethodsByOwnerProvider =
       );
     });
 
+// 공유 결제수단 목록 (직접입력, can_auto_save = false)
+final sharedPaymentMethodsProvider =
+    FutureProvider<List<PaymentMethod>>((ref) async {
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      if (ledgerId == null) return [];
+
+      final repository = ref.watch(paymentMethodRepositoryProvider);
+      return repository.getSharedPaymentMethods(ledgerId);
+    });
+
+// 특정 멤버의 자동수집 결제수단 목록 (can_auto_save = true)
+final autoCollectPaymentMethodsByOwnerProvider =
+    FutureProvider.family<List<PaymentMethod>, String>((
+      ref,
+      ownerUserId,
+    ) async {
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      if (ledgerId == null) return [];
+
+      final repository = ref.watch(paymentMethodRepositoryProvider);
+      return repository.getAutoCollectPaymentMethodsByOwner(
+        ledgerId: ledgerId,
+        ownerUserId: ownerUserId,
+      );
+    });
+
 // 결제수단 관리 노티파이어
 class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
   final PaymentMethodRepository _repository;
@@ -60,9 +86,12 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
 
   PaymentMethodNotifier(this._repository, this._ledgerId, Ref ref)
     : super(ref, const AsyncValue.loading()) {
+    // 생성자 완료 후 다음 이벤트 루프에서 초기화 실행
     if (_ledgerId != null) {
-      loadPaymentMethods();
-      _subscribeToChanges();
+      Future.microtask(() {
+        _subscribeToChanges();
+        loadPaymentMethods();
+      });
     } else {
       state = const AsyncValue.data([]);
     }
@@ -94,6 +123,11 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
 
       safeUpdateState(AsyncValue.data(paymentMethods));
       safeInvalidate(paymentMethodsProvider);
+      // 공유/자동수집 provider도 함께 갱신
+      safeInvalidate(sharedPaymentMethodsProvider);
+      // 자동수집 결제수단 provider는 family이므로 전체 목록 재갱신을 위해
+      // UI에서 현재 userId로 다시 watch하도록 함
+      // (family provider는 특정 args로만 invalidate 가능하므로 UI에서 처리)
     } catch (e) {
       debugPrint('PaymentMethod refresh fail: $e');
     }
@@ -179,7 +213,7 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
     } catch (e, st) {
       debugPrint('PaymentMethod update fail: $e');
       safeUpdateState(AsyncValue.error(e, st));
-      // rethrow를 제거하여 호출자에서 추가 에러 핸들링 필요 없이 안전하게 종료
+      rethrow; // UI에서 에러 처리할 수 있도록 전파
     }
   }
 

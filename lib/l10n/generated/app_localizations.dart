@@ -1856,6 +1856,12 @@ abstract class AppLocalizations {
   /// **'등록된 결제수단이 없습니다'**
   String get paymentMethodEmpty;
 
+  /// No description provided for @paymentMethodNotFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단을 찾을 수 없습니다'**
+  String get paymentMethodNotFound;
+
   /// No description provided for @paymentMethodDefault.
   ///
   /// In ko, this message translates to:
@@ -1909,6 +1915,528 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'금액 패턴은 수정할 수 없습니다'**
   String get paymentMethodAmountPatternNote;
+
+  /// No description provided for @paymentMethodTab.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단'**
+  String get paymentMethodTab;
+
+  /// No description provided for @paymentMethodEmptySubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단을 추가하여 시작하세요'**
+  String get paymentMethodEmptySubtitle;
+
+  /// No description provided for @paymentMethodNoPermissionToDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 결제수단을 삭제할 권한이 없습니다'**
+  String get paymentMethodNoPermissionToDelete;
+
+  /// No description provided for @paymentMethodOptions.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단 옵션'**
+  String get paymentMethodOptions;
+
+  /// No description provided for @sharedPaymentMethodTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유 결제수단'**
+  String get sharedPaymentMethodTitle;
+
+  /// No description provided for @sharedPaymentMethodDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'가계부 멤버 모두와 공유됩니다'**
+  String get sharedPaymentMethodDescription;
+
+  /// No description provided for @sharedPaymentMethodEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유 결제수단이 없습니다'**
+  String get sharedPaymentMethodEmpty;
+
+  /// No description provided for @sharedPaymentMethodAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유 결제수단 추가'**
+  String get sharedPaymentMethodAdd;
+
+  /// No description provided for @autoCollectTab.
+  ///
+  /// In ko, this message translates to:
+  /// **'수집내역'**
+  String get autoCollectTab;
+
+  /// No description provided for @autoCollectTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집'**
+  String get autoCollectTitle;
+
+  /// No description provided for @autoCollectDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS/푸시 알림에서 거래를 자동으로 감지합니다'**
+  String get autoCollectDescription;
+
+  /// No description provided for @autoCollectPaymentMethodEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집 결제수단이 없습니다'**
+  String get autoCollectPaymentMethodEmpty;
+
+  /// No description provided for @autoCollectPaymentMethodAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집 추가'**
+  String get autoCollectPaymentMethodAdd;
+
+  /// No description provided for @autoProcessSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 처리 설정'**
+  String get autoProcessSettings;
+
+  /// No description provided for @autoSaveModeOff.
+  ///
+  /// In ko, this message translates to:
+  /// **'꺼짐'**
+  String get autoSaveModeOff;
+
+  /// No description provided for @autoSaveModeSuggest.
+  ///
+  /// In ko, this message translates to:
+  /// **'제안'**
+  String get autoSaveModeSuggest;
+
+  /// No description provided for @autoSaveModeAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동'**
+  String get autoSaveModeAuto;
+
+  /// No description provided for @pendingTransactionTab.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집내역'**
+  String get pendingTransactionTab;
+
+  /// No description provided for @pendingTransactionStatusPending.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기중'**
+  String get pendingTransactionStatusPending;
+
+  /// No description provided for @pendingTransactionStatusConfirmed.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인됨'**
+  String get pendingTransactionStatusConfirmed;
+
+  /// No description provided for @pendingTransactionStatusRejected.
+  ///
+  /// In ko, this message translates to:
+  /// **'거부됨'**
+  String get pendingTransactionStatusRejected;
+
+  /// No description provided for @pendingTransactionEmptyPending.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 중인 거래가 없습니다'**
+  String get pendingTransactionEmptyPending;
+
+  /// No description provided for @pendingTransactionEmptyConfirmed.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인된 거래가 없습니다'**
+  String get pendingTransactionEmptyConfirmed;
+
+  /// No description provided for @pendingTransactionEmptyRejected.
+  ///
+  /// In ko, this message translates to:
+  /// **'거부된 거래가 없습니다'**
+  String get pendingTransactionEmptyRejected;
+
+  /// No description provided for @pendingTransactionEmptySubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS/푸시 알림에서 감지된 거래가 여기 표시됩니다'**
+  String get pendingTransactionEmptySubtitle;
+
+  /// No description provided for @noAmountInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액 정보 없음'**
+  String get noAmountInfo;
+
+  /// No description provided for @dateGroupToday.
+  ///
+  /// In ko, this message translates to:
+  /// **'오늘'**
+  String get dateGroupToday;
+
+  /// No description provided for @dateGroupYesterday.
+  ///
+  /// In ko, this message translates to:
+  /// **'어제'**
+  String get dateGroupYesterday;
+
+  /// No description provided for @dateGroupThisWeek.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 주'**
+  String get dateGroupThisWeek;
+
+  /// No description provided for @dateGroupThisMonth.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 달'**
+  String get dateGroupThisMonth;
+
+  /// No description provided for @dateGroupOlder.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전'**
+  String get dateGroupOlder;
+
+  /// No description provided for @sourceTypeSms.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS'**
+  String get sourceTypeSms;
+
+  /// No description provided for @sourceTypeNotification.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림'**
+  String get sourceTypeNotification;
+
+  /// No description provided for @pendingTransactionStatusSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장됨'**
+  String get pendingTransactionStatusSaved;
+
+  /// No description provided for @pendingTransactionStatusWaiting.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기중'**
+  String get pendingTransactionStatusWaiting;
+
+  /// No description provided for @pendingTransactionStatusDenied.
+  ///
+  /// In ko, this message translates to:
+  /// **'거부됨'**
+  String get pendingTransactionStatusDenied;
+
+  /// No description provided for @pendingTransactionDeleteConfirmTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 삭제'**
+  String get pendingTransactionDeleteConfirmTitle;
+
+  /// No description provided for @pendingTransactionDeleteConfirmMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 거래를 삭제하시겠습니까?'**
+  String get pendingTransactionDeleteConfirmMessage;
+
+  /// No description provided for @pendingTransactionDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래가 삭제되었습니다'**
+  String get pendingTransactionDeleted;
+
+  /// No description provided for @pendingTransactionDeleteAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 삭제'**
+  String get pendingTransactionDeleteAll;
+
+  /// No description provided for @pendingTransactionDeleteAllConfirmTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 삭제'**
+  String get pendingTransactionDeleteAllConfirmTitle;
+
+  /// No description provided for @pendingTransactionDeleteAllConfirmMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'{status} 내역 {count}건을 모두 삭제하시겠습니까?'**
+  String pendingTransactionDeleteAllConfirmMessage(String status, int count);
+
+  /// No description provided for @pendingTransactionDeleteAllSuccess.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 내역이 삭제되었습니다'**
+  String get pendingTransactionDeleteAllSuccess;
+
+  /// No description provided for @pendingTransactionItemCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}건'**
+  String pendingTransactionItemCount(int count);
+
+  /// No description provided for @paymentMethodWizardAddTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단 추가'**
+  String get paymentMethodWizardAddTitle;
+
+  /// No description provided for @paymentMethodWizardEditTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단 수정'**
+  String get paymentMethodWizardEditTitle;
+
+  /// No description provided for @paymentMethodWizardManualAddTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접입력 추가'**
+  String get paymentMethodWizardManualAddTitle;
+
+  /// No description provided for @paymentMethodWizardAutoCollectAddTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집 추가'**
+  String get paymentMethodWizardAutoCollectAddTitle;
+
+  /// No description provided for @paymentMethodWizardModeQuestion.
+  ///
+  /// In ko, this message translates to:
+  /// **'어떤 방식으로 추가하시겠습니까?'**
+  String get paymentMethodWizardModeQuestion;
+
+  /// No description provided for @paymentMethodWizardManualMode.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접입력'**
+  String get paymentMethodWizardManualMode;
+
+  /// No description provided for @paymentMethodWizardAutoCollectMode.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집'**
+  String get paymentMethodWizardAutoCollectMode;
+
+  /// No description provided for @paymentMethodWizardSharedBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유됨'**
+  String get paymentMethodWizardSharedBadge;
+
+  /// No description provided for @paymentMethodWizardPersonalBadge.
+  ///
+  /// In ko, this message translates to:
+  /// **'개인용'**
+  String get paymentMethodWizardPersonalBadge;
+
+  /// No description provided for @paymentMethodWizardManualDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'이름만 입력하여 간단하게 추가합니다.\n가계부 멤버와 공유됩니다.'**
+  String get paymentMethodWizardManualDescription;
+
+  /// No description provided for @paymentMethodWizardAutoCollectDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS/푸시 알림에서 거래를 자동으로 감지합니다.\n나만 사용할 수 있습니다.'**
+  String get paymentMethodWizardAutoCollectDescription;
+
+  /// No description provided for @paymentMethodWizardServiceQuestion.
+  ///
+  /// In ko, this message translates to:
+  /// **'어떤 서비스를 이용하시나요?'**
+  String get paymentMethodWizardServiceQuestion;
+
+  /// No description provided for @paymentMethodWizardServiceDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS/푸시 알림에서 거래를 자동으로 감지합니다.'**
+  String get paymentMethodWizardServiceDescription;
+
+  /// No description provided for @paymentMethodWizardCategoryCard.
+  ///
+  /// In ko, this message translates to:
+  /// **'카드'**
+  String get paymentMethodWizardCategoryCard;
+
+  /// No description provided for @paymentMethodWizardCategoryLocalCurrency.
+  ///
+  /// In ko, this message translates to:
+  /// **'지역화폐'**
+  String get paymentMethodWizardCategoryLocalCurrency;
+
+  /// No description provided for @paymentMethodWizardCategoryOther.
+  ///
+  /// In ko, this message translates to:
+  /// **'기타'**
+  String get paymentMethodWizardCategoryOther;
+
+  /// No description provided for @paymentMethodWizardCustomSetup.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 설정'**
+  String get paymentMethodWizardCustomSetup;
+
+  /// No description provided for @paymentMethodWizardCustomSetupDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'지원하지 않는 서비스를 직접 설정합니다.'**
+  String get paymentMethodWizardCustomSetupDescription;
+
+  /// No description provided for @paymentMethodWizardSharedNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 결제수단은 가계부 멤버와 공유됩니다'**
+  String get paymentMethodWizardSharedNotice;
+
+  /// No description provided for @paymentMethodWizardPersonalNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 결제수단은 나만 사용할 수 있습니다'**
+  String get paymentMethodWizardPersonalNotice;
+
+  /// No description provided for @paymentMethodWizardNameLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단 이름'**
+  String get paymentMethodWizardNameLabel;
+
+  /// No description provided for @paymentMethodWizardNameHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 신한카드, 현금'**
+  String get paymentMethodWizardNameHint;
+
+  /// No description provided for @paymentMethodWizardAliasLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'별칭'**
+  String get paymentMethodWizardAliasLabel;
+
+  /// No description provided for @paymentMethodWizardAliasHelper.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 내에서 표시될 이름입니다.'**
+  String get paymentMethodWizardAliasHelper;
+
+  /// No description provided for @paymentMethodWizardAutoCollectRuleTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 수집 규칙 설정'**
+  String get paymentMethodWizardAutoCollectRuleTitle;
+
+  /// No description provided for @paymentMethodWizardImportFromSms.
+  ///
+  /// In ko, this message translates to:
+  /// **'문자에서 가져오기'**
+  String get paymentMethodWizardImportFromSms;
+
+  /// No description provided for @paymentMethodWizardSampleNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'아래 메시지는 예시입니다. 실제로 받으시는 알림과 다르다면 수정해주세요.\n수정한 내용에 맞춰 수집 규칙이 변경됩니다.'**
+  String get paymentMethodWizardSampleNotice;
+
+  /// No description provided for @paymentMethodWizardCurrentRules.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 규칙으로 수집되는 정보'**
+  String get paymentMethodWizardCurrentRules;
+
+  /// No description provided for @paymentMethodWizardDetectionKeywordsOr.
+  ///
+  /// In ko, this message translates to:
+  /// **'감지 키워드 (OR 조건)'**
+  String get paymentMethodWizardDetectionKeywordsOr;
+
+  /// No description provided for @paymentMethodWizardAmountPatternRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액 패턴 (필수)'**
+  String get paymentMethodWizardAmountPatternRequired;
+
+  /// No description provided for @paymentMethodWizardAmountPatternNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액 패턴은 수정할 수 없습니다'**
+  String get paymentMethodWizardAmountPatternNote;
+
+  /// No description provided for @paymentMethodWizardSaveButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장하기'**
+  String get paymentMethodWizardSaveButton;
+
+  /// No description provided for @paymentMethodWizardAddButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가하기'**
+  String get paymentMethodWizardAddButton;
+
+  /// No description provided for @paymentMethodWizardEditKeywordsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'감지 키워드 수정'**
+  String get paymentMethodWizardEditKeywordsTitle;
+
+  /// No description provided for @paymentMethodWizardEditKeywordsDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'메시지에 포함되면 자동으로 감지할 키워드를 입력하세요.'**
+  String get paymentMethodWizardEditKeywordsDescription;
+
+  /// No description provided for @paymentMethodWizardEditKeywordsHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: KB국민, KB국민카드\n쉼표로 구분해서 입력하세요'**
+  String get paymentMethodWizardEditKeywordsHint;
+
+  /// No description provided for @paymentMethodWizardEditKeywordsHelper.
+  ///
+  /// In ko, this message translates to:
+  /// **'최소 1개 이상의 키워드를 입력해야 합니다'**
+  String get paymentMethodWizardEditKeywordsHelper;
+
+  /// No description provided for @paymentMethodWizardEditKeywordsMinError.
+  ///
+  /// In ko, this message translates to:
+  /// **'최소 1개 이상의 키워드를 입력해주세요'**
+  String get paymentMethodWizardEditKeywordsMinError;
+
+  /// No description provided for @paymentMethodWizardSelectSmsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가져올 문자 선택'**
+  String get paymentMethodWizardSelectSmsTitle;
+
+  /// No description provided for @paymentMethodWizardSmsPermissionRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS 권한이 필요합니다.'**
+  String get paymentMethodWizardSmsPermissionRequired;
+
+  /// No description provided for @paymentMethodWizardNoFinancialSms.
+  ///
+  /// In ko, this message translates to:
+  /// **'금융 관련 문자를 찾을 수 없습니다.'**
+  String get paymentMethodWizardNoFinancialSms;
+
+  /// No description provided for @paymentMethodWizardDuplicateName.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 존재하는 결제수단 이름입니다'**
+  String get paymentMethodWizardDuplicateName;
+
+  /// No description provided for @paymentMethodWizardSaveFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단 저장에 실패했습니다'**
+  String get paymentMethodWizardSaveFailed;
 
   /// No description provided for @errorGeneric.
   ///
@@ -3366,6 +3894,114 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'기타 자산'**
   String get defaultCategoryOtherAsset;
+
+  /// No description provided for @autoSaveSettingsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 저장 설정'**
+  String get autoSaveSettingsTitle;
+
+  /// No description provided for @autoSaveSettingsAutoProcessMode.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 처리 모드'**
+  String get autoSaveSettingsAutoProcessMode;
+
+  /// No description provided for @autoSaveSettingsSuggestModeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'제안 모드'**
+  String get autoSaveSettingsSuggestModeTitle;
+
+  /// No description provided for @autoSaveSettingsSuggestModeDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래를 감지하면 확인 후 저장할 수 있습니다'**
+  String get autoSaveSettingsSuggestModeDesc;
+
+  /// No description provided for @autoSaveSettingsAutoModeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 모드'**
+  String get autoSaveSettingsAutoModeTitle;
+
+  /// No description provided for @autoSaveSettingsAutoModeDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래를 감지하면 바로 저장됩니다'**
+  String get autoSaveSettingsAutoModeDesc;
+
+  /// No description provided for @autoSaveSettingsRequiredPermissions.
+  ///
+  /// In ko, this message translates to:
+  /// **'필요한 권한'**
+  String get autoSaveSettingsRequiredPermissions;
+
+  /// No description provided for @autoSaveSettingsPermissionDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS 읽기 권한 또는 알림 접근 권한이 필요합니다.\n설정 저장 시 권한 요청 화면이 표시됩니다.'**
+  String get autoSaveSettingsPermissionDesc;
+
+  /// No description provided for @autoSaveSettingsPermissionButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한 설정'**
+  String get autoSaveSettingsPermissionButton;
+
+  /// No description provided for @autoSaveSettingsIosNotSupported.
+  ///
+  /// In ko, this message translates to:
+  /// **'iOS에서는 자동 저장 기능을 사용할 수 없습니다.\nAndroid 기기에서만 SMS/알림 기반 자동 저장이 가능합니다.'**
+  String get autoSaveSettingsIosNotSupported;
+
+  /// No description provided for @autoSaveSettingsSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 처리 설정이 저장되었습니다'**
+  String get autoSaveSettingsSaved;
+
+  /// No description provided for @autoSaveSettingsSaveFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 실패: {error}'**
+  String autoSaveSettingsSaveFailed(String error);
+
+  /// No description provided for @autoSaveSettingsPermissionRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'필요한 권한이 없습니다. 권한을 허용해주세요.'**
+  String get autoSaveSettingsPermissionRequired;
+
+  /// No description provided for @autoSaveSettingsModeManual.
+  ///
+  /// In ko, this message translates to:
+  /// **'수동 입력'**
+  String get autoSaveSettingsModeManual;
+
+  /// No description provided for @autoSaveSettingsModeSuggest.
+  ///
+  /// In ko, this message translates to:
+  /// **'제안 모드'**
+  String get autoSaveSettingsModeSuggest;
+
+  /// No description provided for @autoSaveSettingsModeAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 저장'**
+  String get autoSaveSettingsModeAuto;
+
+  /// No description provided for @paymentMethodPermissionWarningTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유 전환 확인'**
+  String get paymentMethodPermissionWarningTitle;
+
+  /// No description provided for @paymentMethodPermissionWarningMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'개인 결제수단을 공유 결제수단으로 변경하면 다른 멤버도 이 결제수단을 수정할 수 있습니다. 계속하시겠습니까?'**
+  String get paymentMethodPermissionWarningMessage;
 }
 
 class _AppLocalizationsDelegate

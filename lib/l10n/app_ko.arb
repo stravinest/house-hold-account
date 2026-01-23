@@ -1,6 +1,5 @@
 {
   "@@locale": "ko",
-
   "appTitle": "공유 가계부",
   "@appTitle": {
     "description": "앱 제목"
@@ -9,7 +8,6 @@
   "@appSubtitle": {
     "description": "앱 부제목"
   },
-
   "commonCancel": "취소",
   "commonSave": "저장",
   "commonDelete": "삭제",
@@ -28,7 +26,6 @@
   "commonLoading": "로딩 중...",
   "commonError": "오류",
   "commonSuccess": "성공",
-
   "tooltipSearch": "검색",
   "tooltipSettings": "설정",
   "tooltipBook": "가계부 관리",
@@ -46,12 +43,10 @@
   "tooltipFilter": "필터",
   "tooltipSort": "정렬",
   "tooltipInfo": "정보",
-
   "navTabCalendar": "캘린더",
   "navTabStatistics": "통계",
   "navTabAsset": "자산",
   "navTabMore": "더보기",
-
   "authLogin": "로그인",
   "authSignup": "회원가입",
   "authLogout": "로그아웃",
@@ -72,7 +67,6 @@
   "authSignupTitle": "새 계정 만들기",
   "authSignupSubtitle": "공유 가계부를 시작하려면\n계정을 만들어주세요",
   "authTermsAgreement": "회원가입 시 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.",
-
   "authForgotPasswordTitle": "비밀번호 재설정",
   "authForgotPasswordSubtitle": "가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 링크를 보내드립니다.",
   "authForgotPasswordSend": "재설정 링크 보내기",
@@ -87,7 +81,6 @@
       }
     }
   },
-
   "validationEmailRequired": "이메일을 입력해주세요",
   "validationEmailInvalid": "올바른 이메일 형식이 아닙니다",
   "validationPasswordRequired": "비밀번호를 입력해주세요",
@@ -96,7 +89,6 @@
   "validationNameRequired": "이름을 입력해주세요",
   "validationNameTooShort": "이름은 2자 이상이어야 합니다",
   "validationPasswordConfirmRequired": "비밀번호를 다시 입력해주세요",
-
   "emailVerificationTitle": "이메일 인증",
   "emailVerificationWaiting": "이메일 인증 대기 중",
   "emailVerificationComplete": "이메일 인증 완료!",
@@ -124,7 +116,6 @@
   "emailVerificationVerified": "인증 완료",
   "emailVerificationNotVerified": "미인증",
   "emailVerificationChecking": "확인 중...",
-
   "settingsTitle": "설정",
   "settingsAppSettings": "앱 설정",
   "settingsTheme": "테마",
@@ -209,7 +200,6 @@
   "settingsAboutAppName": "공유 가계부",
   "settingsAboutAppDescription": "Flutter + Supabase로 만든 공유 가계부 앱입니다.",
   "settingsAboutAppSubDescription": "가족, 연인, 룸메이트와 함께 지출을 관리하세요.",
-
   "ledgerTitle": "가계부",
   "ledgerManagement": "가계부 관리",
   "ledgerShareManagement": "가계부 및 공유 관리",
@@ -253,7 +243,6 @@
   "ledgerInvitedLedgers": "초대받은 가계부",
   "ledgerSelectorMyLedgers": "내 가계부",
   "ledgerSelectorSharedLedgers": "공유 가계부",
-
   "shareInvite": "초대",
   "shareMemberInvite": "멤버 초대",
   "shareRole": "역할",
@@ -294,7 +283,6 @@
   },
   "shareLeave": "탈퇴",
   "shareReject": "거부",
-
   "categoryTitle": "카테고리",
   "categoryManagement": "카테고리 관리",
   "categoryAdd": "카테고리 추가",
@@ -322,7 +310,6 @@
       }
     }
   },
-
   "transactionExpense": "지출",
   "transactionIncome": "수입",
   "transactionAsset": "자산",
@@ -483,7 +470,6 @@
       }
     }
   },
-
   "paymentMethodTitle": "결제수단",
   "paymentMethodManagement": "결제수단 관리",
   "paymentMethodAdd": "결제수단 추가",
@@ -505,6 +491,7 @@
   "paymentMethodAdded": "결제수단이 추가되었습니다",
   "paymentMethodUpdated": "결제수단이 수정되었습니다",
   "paymentMethodEmpty": "등록된 결제수단이 없습니다",
+  "paymentMethodNotFound": "결제수단을 찾을 수 없습니다",
   "paymentMethodDefault": "기본 결제수단",
   "paymentMethodDetectionKeywords": "감지 키워드",
   "paymentMethodDetectionKeywordsHint": "쉼표로 구분하여 입력하세요 (예: KB국민, KB국민카드)",
@@ -514,7 +501,110 @@
   "paymentMethodEditKeywords": "키워드 수정",
   "paymentMethodAmountPatternReadOnly": "'원' 앞의 숫자",
   "paymentMethodAmountPatternNote": "금액 패턴은 수정할 수 없습니다",
-
+  "paymentMethodTab": "결제수단",
+  "paymentMethodEmptySubtitle": "결제수단을 추가하여 시작하세요",
+  "paymentMethodNoPermissionToDelete": "이 결제수단을 삭제할 권한이 없습니다",
+  "paymentMethodOptions": "결제수단 옵션",
+  "sharedPaymentMethodTitle": "공유 결제수단",
+  "sharedPaymentMethodDescription": "가계부 멤버 모두와 공유됩니다",
+  "sharedPaymentMethodEmpty": "공유 결제수단이 없습니다",
+  "sharedPaymentMethodAdd": "공유 결제수단 추가",
+  "autoCollectTab": "수집내역",
+  "autoCollectTitle": "자동수집",
+  "autoCollectDescription": "SMS/푸시 알림에서 거래를 자동으로 감지합니다",
+  "autoCollectPaymentMethodEmpty": "자동수집 결제수단이 없습니다",
+  "autoCollectPaymentMethodAdd": "자동수집 추가",
+  "autoProcessSettings": "자동 처리 설정",
+  "autoSaveModeOff": "꺼짐",
+  "autoSaveModeSuggest": "제안",
+  "autoSaveModeAuto": "자동",
+  "pendingTransactionTab": "자동수집내역",
+  "pendingTransactionStatusPending": "대기중",
+  "pendingTransactionStatusConfirmed": "확인됨",
+  "pendingTransactionStatusRejected": "거부됨",
+  "pendingTransactionEmptyPending": "대기 중인 거래가 없습니다",
+  "pendingTransactionEmptyConfirmed": "확인된 거래가 없습니다",
+  "pendingTransactionEmptyRejected": "거부된 거래가 없습니다",
+  "pendingTransactionEmptySubtitle": "SMS/푸시 알림에서 감지된 거래가 여기 표시됩니다",
+  "noAmountInfo": "금액 정보 없음",
+  "dateGroupToday": "오늘",
+  "dateGroupYesterday": "어제",
+  "dateGroupThisWeek": "이번 주",
+  "dateGroupThisMonth": "이번 달",
+  "dateGroupOlder": "이전",
+  "sourceTypeSms": "SMS",
+  "sourceTypeNotification": "알림",
+  "pendingTransactionStatusSaved": "저장됨",
+  "pendingTransactionStatusWaiting": "대기중",
+  "pendingTransactionStatusDenied": "거부됨",
+  "pendingTransactionDeleteConfirmTitle": "거래 삭제",
+  "pendingTransactionDeleteConfirmMessage": "이 거래를 삭제하시겠습니까?",
+  "pendingTransactionDeleted": "거래가 삭제되었습니다",
+  "pendingTransactionDeleteAll": "모두 삭제",
+  "pendingTransactionDeleteAllConfirmTitle": "모두 삭제",
+  "pendingTransactionDeleteAllConfirmMessage": "{status} 내역 {count}건을 모두 삭제하시겠습니까?",
+  "@pendingTransactionDeleteAllConfirmMessage": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingTransactionDeleteAllSuccess": "모든 내역이 삭제되었습니다",
+  "pendingTransactionItemCount": "{count}건",
+  "@pendingTransactionItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paymentMethodWizardAddTitle": "결제수단 추가",
+  "paymentMethodWizardEditTitle": "결제수단 수정",
+  "paymentMethodWizardManualAddTitle": "직접입력 추가",
+  "paymentMethodWizardAutoCollectAddTitle": "자동수집 추가",
+  "paymentMethodWizardModeQuestion": "어떤 방식으로 추가하시겠습니까?",
+  "paymentMethodWizardManualMode": "직접입력",
+  "paymentMethodWizardAutoCollectMode": "자동수집",
+  "paymentMethodWizardSharedBadge": "공유됨",
+  "paymentMethodWizardPersonalBadge": "개인용",
+  "paymentMethodWizardManualDescription": "이름만 입력하여 간단하게 추가합니다.\n가계부 멤버와 공유됩니다.",
+  "paymentMethodWizardAutoCollectDescription": "SMS/푸시 알림에서 거래를 자동으로 감지합니다.\n나만 사용할 수 있습니다.",
+  "paymentMethodWizardServiceQuestion": "어떤 서비스를 이용하시나요?",
+  "paymentMethodWizardServiceDescription": "SMS/푸시 알림에서 거래를 자동으로 감지합니다.",
+  "paymentMethodWizardCategoryCard": "카드",
+  "paymentMethodWizardCategoryLocalCurrency": "지역화폐",
+  "paymentMethodWizardCategoryOther": "기타",
+  "paymentMethodWizardCustomSetup": "직접 설정",
+  "paymentMethodWizardCustomSetupDescription": "지원하지 않는 서비스를 직접 설정합니다.",
+  "paymentMethodWizardSharedNotice": "이 결제수단은 가계부 멤버와 공유됩니다",
+  "paymentMethodWizardPersonalNotice": "이 결제수단은 나만 사용할 수 있습니다",
+  "paymentMethodWizardNameLabel": "결제수단 이름",
+  "paymentMethodWizardNameHint": "예: 신한카드, 현금",
+  "paymentMethodWizardAliasLabel": "별칭",
+  "paymentMethodWizardAliasHelper": "앱 내에서 표시될 이름입니다.",
+  "paymentMethodWizardAutoCollectRuleTitle": "자동 수집 규칙 설정",
+  "paymentMethodWizardImportFromSms": "문자에서 가져오기",
+  "paymentMethodWizardSampleNotice": "아래 메시지는 예시입니다. 실제로 받으시는 알림과 다르다면 수정해주세요.\n수정한 내용에 맞춰 수집 규칙이 변경됩니다.",
+  "paymentMethodWizardCurrentRules": "현재 규칙으로 수집되는 정보",
+  "paymentMethodWizardDetectionKeywordsOr": "감지 키워드 (OR 조건)",
+  "paymentMethodWizardAmountPatternRequired": "금액 패턴 (필수)",
+  "paymentMethodWizardAmountPatternNote": "금액 패턴은 수정할 수 없습니다",
+  "paymentMethodWizardSaveButton": "저장하기",
+  "paymentMethodWizardAddButton": "추가하기",
+  "paymentMethodWizardEditKeywordsTitle": "감지 키워드 수정",
+  "paymentMethodWizardEditKeywordsDescription": "메시지에 포함되면 자동으로 감지할 키워드를 입력하세요.",
+  "paymentMethodWizardEditKeywordsHint": "예: KB국민, KB국민카드\n쉼표로 구분해서 입력하세요",
+  "paymentMethodWizardEditKeywordsHelper": "최소 1개 이상의 키워드를 입력해야 합니다",
+  "paymentMethodWizardEditKeywordsMinError": "최소 1개 이상의 키워드를 입력해주세요",
+  "paymentMethodWizardSelectSmsTitle": "가져올 문자 선택",
+  "paymentMethodWizardSmsPermissionRequired": "SMS 권한이 필요합니다.",
+  "paymentMethodWizardNoFinancialSms": "금융 관련 문자를 찾을 수 없습니다.",
+  "paymentMethodWizardDuplicateName": "이미 존재하는 결제수단 이름입니다",
+  "paymentMethodWizardSaveFailed": "결제수단 저장에 실패했습니다",
   "errorGeneric": "오류가 발생했습니다",
   "errorNetwork": "네트워크 연결을 확인해주세요.",
   "errorSessionExpired": "로그인이 만료되었습니다. 다시 로그인해주세요.",
@@ -527,16 +617,13 @@
       }
     }
   },
-
   "user": "사용자",
   "homeTitle": "홈",
-
   "moreMenuShareManagement": "가계부 및 공유 관리",
   "moreMenuCategoryManagement": "카테고리 관리",
   "moreMenuPaymentMethodManagement": "결제수단 관리",
   "moreMenuFixedExpenseManagement": "고정비 관리",
   "noHistory": "내역 없음",
-
   "statisticsCategory": "카테고리",
   "statisticsTrend": "추이",
   "statisticsPaymentMethod": "결제수단",
@@ -596,7 +683,6 @@
   "statisticsPaymentDistribution": "결제수단별 분포",
   "statisticsPaymentRanking": "결제수단별 순위",
   "statisticsPaymentNotice": "결제수단 통계는 지출 내역만 표시됩니다.",
-
   "assetTitle": "자산",
   "assetTotal": "총 자산",
   "assetChange": "자산 변화",
@@ -644,7 +730,6 @@
   "assetGoalAchieved": "목표 달성 완료!",
   "assetGoalTapForDetails": "탭하여 상세 금액 보기",
   "assetGoalLoadError": "목표 정보를 불러올 수 없습니다",
-
   "fixedExpenseTitle": "고정비",
   "fixedExpenseManagement": "고정비 관리",
   "fixedExpenseCategoryTitle": "고정비 카테고리",
@@ -665,7 +750,7 @@
   "fixedExpenseCategoryEmpty": "등록된 고정비 카테고리가 없습니다",
   "fixedExpenseCategoryEmptySubtitle": "+ 버튼을 눌러 카테고리를 추가하세요",
   "fixedExpenseCategoryDelete": "고정비 카테고리 삭제",
-  "fixedExpenseCategoryDeleteConfirm": "'{name}' 카테고리를 삭제하시겠습니까?\n\n이 카테고리로 기록된 거래는 삭제되지 않습니다.",
+  "fixedExpenseCategoryDeleteConfirm": "'{name}' 카테고리를 삭제하시겠습니까?",
   "@fixedExpenseCategoryDeleteConfirm": {
     "placeholders": {
       "name": {
@@ -675,10 +760,8 @@
   },
   "fixedExpenseCategoryAdd": "고정비 카테고리 추가",
   "fixedExpenseCategoryEdit": "고정비 카테고리 수정",
-  "fixedExpenseCategoryNameHint": "예: 월세, 보험료, 구독료",
-
+  "fixedExpenseCategoryNameHint": "예: 월세, 통신비",
   "categoryUpdated": "카테고리가 수정되었습니다",
-
   "notificationSettingsTitle": "알림 설정",
   "notificationSettingsDescription": "받고 싶은 알림을 선택하세요",
   "notificationSettingsSaveFailed": "설정 저장 실패: {error}",
@@ -698,13 +781,11 @@
   "notificationInviteReceivedDesc": "다른 사용자가 가계부에 초대했을 때 알림",
   "notificationInviteAccepted": "초대 수락됨",
   "notificationInviteAcceptedDesc": "내가 보낸 초대를 다른 사용자가 수락했을 때 알림",
-
   "searchTitle": "검색",
   "searchHint": "제목/메모로 검색...",
   "searchEmpty": "제목/메모로 거래 내역을 검색하세요",
   "searchNoResults": "검색 결과가 없습니다",
   "searchUncategorized": "미분류",
-
   "shareManagementTitle": "가계부 및 공유 관리",
   "shareMyLedgers": "내 가계부",
   "shareInvitedLedgers": "초대받은 가계부",
@@ -805,7 +886,6 @@
     }
   },
   "shareMemberRemoved": "멤버가 방출되었습니다",
-
   "ledgerNewTitle": "새 가계부",
   "ledgerEditTitle": "가계부 수정",
   "ledgerNoLedgers": "등록된 가계부가 없습니다",
@@ -860,7 +940,6 @@
     }
   },
   "ledgerUser": "사용자",
-
   "calendarDaySun": "일",
   "calendarDayMon": "월",
   "calendarDayTue": "화",
@@ -893,32 +972,44 @@
   "calendarNewTransaction": "새 거래",
   "calendarTransactionDelete": "거래 삭제",
   "calendarTransactionDeleteConfirm": "이 거래를 삭제하시겠습니까?",
-
   "calendarViewDaily": "일별",
   "calendarViewWeekly": "주별",
   "calendarViewMonthly": "월별",
   "calendarDailyDate": "{year}년 {month}월 {day}일",
   "@calendarDailyDate": {
     "placeholders": {
-      "year": { "type": "int" },
-      "month": { "type": "int" },
-      "day": { "type": "int" }
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
     }
   },
   "calendarWeeklyRange": "{startMonth}월 {startDay}일 ~ {endMonth}월 {endDay}일",
   "@calendarWeeklyRange": {
     "placeholders": {
-      "startMonth": { "type": "int" },
-      "startDay": { "type": "int" },
-      "endMonth": { "type": "int" },
-      "endDay": { "type": "int" }
+      "startMonth": {
+        "type": "int"
+      },
+      "startDay": {
+        "type": "int"
+      },
+      "endMonth": {
+        "type": "int"
+      },
+      "endDay": {
+        "type": "int"
+      }
     }
   },
   "settingsWeekStartDay": "주 시작일",
   "settingsWeekStartDayDescription": "캘린더 주별 보기의 시작 요일",
   "settingsWeekStartSunday": "일요일",
   "settingsWeekStartMonday": "월요일",
-
   "assetNoData": "데이터가 없습니다",
   "assetOther": "기타",
   "assetNoAsset": "자산이 없습니다",
@@ -972,25 +1063,12 @@
       }
     }
   },
-
-  "fixedExpenseCategoryAdd": "고정비 카테고리 추가",
   "fixedExpenseCategoryName": "카테고리 이름",
-  "fixedExpenseCategoryNameHint": "예: 월세, 통신비",
   "fixedExpenseCategoryNameRequired": "카테고리 이름을 입력해주세요",
   "fixedExpenseCategoryAdded": "고정비 카테고리가 추가되었습니다",
-  "fixedExpenseCategoryDelete": "고정비 카테고리 삭제",
-  "fixedExpenseCategoryDeleteConfirm": "'{name}' 카테고리를 삭제하시겠습니까?",
-  "@fixedExpenseCategoryDeleteConfirm": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "fixedExpenseCategoryDeleted": "고정비 카테고리가 삭제되었습니다",
   "fixedExpenseCategoryNone": "선택 안함",
   "paymentMethodOptional": "결제수단 (선택)",
-
   "statisticsPeriodMonthly": "월별",
   "statisticsPeriodYearly": "연별",
   "statisticsTypeIncome": "수입",
@@ -1031,11 +1109,9 @@
       }
     }
   },
-
   "categoryUncategorized": "미지정",
   "categoryFixedExpense": "고정비",
   "categoryUnknown": "미분류",
-
   "defaultCategoryFood": "식비",
   "defaultCategoryTransport": "교통",
   "defaultCategoryShopping": "쇼핑",
@@ -1057,13 +1133,29 @@
   "defaultCategoryRealEstate": "부동산",
   "defaultCategoryCrypto": "암호화폐",
   "defaultCategoryOtherAsset": "기타 자산",
-
-  "errorWithMessage": "오류: {message}",
-  "@errorWithMessage": {
+  "autoSaveSettingsTitle": "자동 저장 설정",
+  "autoSaveSettingsAutoProcessMode": "자동 처리 모드",
+  "autoSaveSettingsSuggestModeTitle": "제안 모드",
+  "autoSaveSettingsSuggestModeDesc": "거래를 감지하면 확인 후 저장할 수 있습니다",
+  "autoSaveSettingsAutoModeTitle": "자동 모드",
+  "autoSaveSettingsAutoModeDesc": "거래를 감지하면 바로 저장됩니다",
+  "autoSaveSettingsRequiredPermissions": "필요한 권한",
+  "autoSaveSettingsPermissionDesc": "SMS 읽기 권한 또는 알림 접근 권한이 필요합니다.\n설정 저장 시 권한 요청 화면이 표시됩니다.",
+  "autoSaveSettingsPermissionButton": "권한 설정",
+  "autoSaveSettingsIosNotSupported": "iOS에서는 자동 저장 기능을 사용할 수 없습니다.\nAndroid 기기에서만 SMS/알림 기반 자동 저장이 가능합니다.",
+  "autoSaveSettingsSaved": "자동 처리 설정이 저장되었습니다",
+  "autoSaveSettingsSaveFailed": "저장 실패: {error}",
+  "@autoSaveSettingsSaveFailed": {
     "placeholders": {
-      "message": {
+      "error": {
         "type": "String"
       }
     }
-  }
+  },
+  "autoSaveSettingsPermissionRequired": "필요한 권한이 없습니다. 권한을 허용해주세요.",
+  "autoSaveSettingsModeManual": "수동 입력",
+  "autoSaveSettingsModeSuggest": "제안 모드",
+  "autoSaveSettingsModeAuto": "자동 저장",
+  "paymentMethodPermissionWarningTitle": "공유 전환 확인",
+  "paymentMethodPermissionWarningMessage": "개인 결제수단을 공유 결제수단으로 변경하면 다른 멤버도 이 결제수단을 수정할 수 있습니다. 계속하시겠습니까?"
 }

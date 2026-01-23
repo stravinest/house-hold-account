@@ -1,9 +1,7 @@
 {
   "@@locale": "en",
-
   "appTitle": "Shared Household",
   "appSubtitle": "Manage your household finances\nwith family, couple, or roommates",
-
   "commonCancel": "Cancel",
   "commonSave": "Save",
   "commonDelete": "Delete",
@@ -22,7 +20,6 @@
   "commonLoading": "Loading...",
   "commonError": "Error",
   "commonSuccess": "Success",
-
   "tooltipSearch": "Search",
   "tooltipSettings": "Settings",
   "tooltipBook": "Ledger Management",
@@ -40,12 +37,10 @@
   "tooltipFilter": "Filter",
   "tooltipSort": "Sort",
   "tooltipInfo": "Information",
-
   "navTabCalendar": "Calendar",
   "navTabStatistics": "Statistics",
   "navTabAsset": "Asset",
   "navTabMore": "More",
-
   "authLogin": "Log In",
   "authSignup": "Sign Up",
   "authLogout": "Log Out",
@@ -66,7 +61,6 @@
   "authSignupTitle": "Create Account",
   "authSignupSubtitle": "Create an account to start\nusing Shared Household",
   "authTermsAgreement": "By signing up, you agree to our\nTerms of Service and Privacy Policy.",
-
   "authForgotPasswordTitle": "Reset Password",
   "authForgotPasswordSubtitle": "Enter your email address and we'll send you\na link to reset your password.",
   "authForgotPasswordSend": "Send Reset Link",
@@ -74,7 +68,6 @@
   "authForgotPasswordSentSubtitle": "Check your email and click the link\nto reset your password.",
   "authForgotPasswordBackToLogin": "Back to Login",
   "authForgotPasswordSendFailed": "Failed to send email: {error}",
-
   "validationEmailRequired": "Please enter your email",
   "validationEmailInvalid": "Please enter a valid email address",
   "validationPasswordRequired": "Please enter your password",
@@ -83,7 +76,6 @@
   "validationNameRequired": "Please enter your name",
   "validationNameTooShort": "Name must be at least 2 characters",
   "validationPasswordConfirmRequired": "Please confirm your password",
-
   "emailVerificationTitle": "Email Verification",
   "emailVerificationWaiting": "Waiting for Email Verification",
   "emailVerificationComplete": "Email Verified!",
@@ -97,7 +89,6 @@
   "emailVerificationVerified": "Verified",
   "emailVerificationNotVerified": "Not Verified",
   "emailVerificationChecking": "Checking...",
-
   "settingsTitle": "Settings",
   "settingsAppSettings": "App Settings",
   "settingsTheme": "Theme",
@@ -147,7 +138,6 @@
   "settingsAboutAppName": "Shared Household Account",
   "settingsAboutAppDescription": "A shared household account app built with Flutter + Supabase.",
   "settingsAboutAppSubDescription": "Manage expenses together with family, couple, or roommates.",
-
   "ledgerTitle": "Ledger",
   "ledgerManagement": "Ledger Management",
   "ledgerShareManagement": "Ledger & Share Management",
@@ -177,7 +167,6 @@
   "ledgerInvitedLedgers": "Invited Ledgers",
   "ledgerSelectorMyLedgers": "My Ledgers",
   "ledgerSelectorSharedLedgers": "Shared Ledgers",
-
   "shareInvite": "Invite",
   "shareMemberInvite": "Invite Member",
   "shareRole": "Role",
@@ -197,7 +186,6 @@
   "shareLeaveConfirmMessage": "Leave '{name}'?\nYou will no longer have access to this ledger's data.",
   "shareLeave": "Leave",
   "shareReject": "Reject",
-
   "categoryTitle": "Category",
   "categoryManagement": "Category Management",
   "categoryAdd": "Add Category",
@@ -211,7 +199,6 @@
   "categoryDeleteConfirmMessage": "Transactions with this category will not be deleted.",
   "categoryAdded": "Category added",
   "categoryEmpty": "No {type} categories",
-
   "transactionExpense": "Expense",
   "transactionIncome": "Income",
   "transactionAsset": "Asset",
@@ -292,7 +279,6 @@
   "categoryDeleteConfirm": "Delete '{name}' category?",
   "paymentMethodNameHintExample": "e.g., Credit Card, Cash",
   "paymentMethodDeleteConfirm": "Delete '{name}' payment method?",
-
   "paymentMethodTitle": "Payment Method",
   "paymentMethodManagement": "Payment Method Management",
   "paymentMethodAdd": "Add Payment Method",
@@ -307,6 +293,7 @@
   "paymentMethodAdded": "Payment method added",
   "paymentMethodUpdated": "Payment method updated",
   "paymentMethodEmpty": "No payment methods",
+  "paymentMethodNotFound": "Payment method not found",
   "paymentMethodDefault": "Default Payment Method",
   "paymentMethodDetectionKeywords": "Detection Keywords",
   "paymentMethodDetectionKeywordsHint": "Enter comma-separated keywords (e.g., KB Kookmin, KB Kookmin Card)",
@@ -316,22 +303,122 @@
   "paymentMethodEditKeywords": "Edit Keywords",
   "paymentMethodAmountPatternReadOnly": "Number before 'Won'",
   "paymentMethodAmountPatternNote": "Amount pattern cannot be modified",
-
+  "paymentMethodTab": "Payment Methods",
+  "paymentMethodEmptySubtitle": "Add a payment method to get started",
+  "paymentMethodNoPermissionToDelete": "You do not have permission to delete this payment method",
+  "paymentMethodOptions": "Payment Method Options",
+  "sharedPaymentMethodTitle": "Shared Payment Methods",
+  "sharedPaymentMethodDescription": "Shared with all ledger members",
+  "sharedPaymentMethodEmpty": "No shared payment methods",
+  "sharedPaymentMethodAdd": "Add Shared Payment Method",
+  "autoCollectTab": "Collection History",
+  "autoCollectTitle": "Auto Collect",
+  "autoCollectDescription": "Automatically detect transactions from SMS/Push notifications",
+  "autoCollectPaymentMethodEmpty": "No auto-collect payment methods",
+  "autoCollectPaymentMethodAdd": "Add Auto Collect",
+  "autoProcessSettings": "Auto Process Settings",
+  "autoSaveModeOff": "Off",
+  "autoSaveModeSuggest": "Suggest",
+  "autoSaveModeAuto": "Auto",
+  "pendingTransactionTab": "Auto Collect History",
+  "pendingTransactionStatusPending": "Pending",
+  "pendingTransactionStatusConfirmed": "Confirmed",
+  "pendingTransactionStatusRejected": "Rejected",
+  "pendingTransactionEmptyPending": "No pending transactions",
+  "pendingTransactionEmptyConfirmed": "No confirmed transactions",
+  "pendingTransactionEmptyRejected": "No rejected transactions",
+  "pendingTransactionEmptySubtitle": "Transactions detected from SMS/Push will appear here",
+  "noAmountInfo": "No amount info",
+  "dateGroupToday": "Today",
+  "dateGroupYesterday": "Yesterday",
+  "dateGroupThisWeek": "This week",
+  "dateGroupThisMonth": "This month",
+  "dateGroupOlder": "Older",
+  "sourceTypeSms": "SMS",
+  "sourceTypeNotification": "Notification",
+  "pendingTransactionStatusSaved": "Saved",
+  "pendingTransactionStatusWaiting": "Waiting",
+  "pendingTransactionStatusDenied": "Denied",
+  "pendingTransactionDeleteConfirmTitle": "Delete Transaction",
+  "pendingTransactionDeleteConfirmMessage": "Are you sure you want to delete this transaction?",
+  "pendingTransactionDeleted": "Transaction deleted",
+  "pendingTransactionDeleteAll": "Delete All",
+  "pendingTransactionDeleteAllConfirmTitle": "Delete All",
+  "pendingTransactionDeleteAllConfirmMessage": "Delete all {count} {status} items?",
+  "@pendingTransactionDeleteAllConfirmMessage": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pendingTransactionDeleteAllSuccess": "All items deleted",
+  "pendingTransactionItemCount": "{count} items",
+  "@pendingTransactionItemCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paymentMethodWizardAddTitle": "Add Payment Method",
+  "paymentMethodWizardEditTitle": "Edit Payment Method",
+  "paymentMethodWizardManualAddTitle": "Add Manual Entry",
+  "paymentMethodWizardAutoCollectAddTitle": "Add Auto Collect",
+  "paymentMethodWizardModeQuestion": "How would you like to add it?",
+  "paymentMethodWizardManualMode": "Manual Entry",
+  "paymentMethodWizardAutoCollectMode": "Auto Collect",
+  "paymentMethodWizardSharedBadge": "Shared",
+  "paymentMethodWizardPersonalBadge": "Personal",
+  "paymentMethodWizardManualDescription": "Simply add by entering a name.\nShared with ledger members.",
+  "paymentMethodWizardAutoCollectDescription": "Automatically detect transactions from SMS/Push notifications.\nOnly you can use this.",
+  "paymentMethodWizardServiceQuestion": "Which service do you use?",
+  "paymentMethodWizardServiceDescription": "Automatically detect transactions from SMS/Push notifications.",
+  "paymentMethodWizardCategoryCard": "Card",
+  "paymentMethodWizardCategoryLocalCurrency": "Local Currency",
+  "paymentMethodWizardCategoryOther": "Other",
+  "paymentMethodWizardCustomSetup": "Custom Setup",
+  "paymentMethodWizardCustomSetupDescription": "Manually configure unsupported services.",
+  "paymentMethodWizardSharedNotice": "This payment method is shared with ledger members",
+  "paymentMethodWizardPersonalNotice": "This payment method is only available to you",
+  "paymentMethodWizardNameLabel": "Payment Method Name",
+  "paymentMethodWizardNameHint": "e.g., Credit Card, Cash",
+  "paymentMethodWizardAliasLabel": "Alias",
+  "paymentMethodWizardAliasHelper": "Name displayed in the app.",
+  "paymentMethodWizardAutoCollectRuleTitle": "Auto Collect Rule Settings",
+  "paymentMethodWizardImportFromSms": "Import from SMS",
+  "paymentMethodWizardSampleNotice": "The message below is an example. Please modify if different from your actual notifications.\nCollection rules will be updated accordingly.",
+  "paymentMethodWizardCurrentRules": "Information collected with current rules",
+  "paymentMethodWizardDetectionKeywordsOr": "Detection Keywords (OR)",
+  "paymentMethodWizardAmountPatternRequired": "Amount Pattern (Required)",
+  "paymentMethodWizardAmountPatternNote": "Amount pattern cannot be modified",
+  "paymentMethodWizardSaveButton": "Save",
+  "paymentMethodWizardAddButton": "Add",
+  "paymentMethodWizardEditKeywordsTitle": "Edit Detection Keywords",
+  "paymentMethodWizardEditKeywordsDescription": "Enter keywords to automatically detect when included in messages.",
+  "paymentMethodWizardEditKeywordsHint": "e.g., Chase, Bank of America\nSeparate with commas",
+  "paymentMethodWizardEditKeywordsHelper": "At least 1 keyword is required",
+  "paymentMethodWizardEditKeywordsMinError": "Please enter at least 1 keyword",
+  "paymentMethodWizardSelectSmsTitle": "Select SMS to import",
+  "paymentMethodWizardSmsPermissionRequired": "SMS permission is required.",
+  "paymentMethodWizardNoFinancialSms": "No financial SMS found.",
+  "paymentMethodWizardDuplicateName": "A payment method with this name already exists",
+  "paymentMethodWizardSaveFailed": "Failed to save payment method",
   "errorGeneric": "An error occurred",
   "errorNetwork": "Please check your network connection.",
   "errorSessionExpired": "Your session has expired. Please log in again.",
   "errorNotFound": "Page not found",
   "errorWithMessage": "Error: {message}",
-
   "user": "User",
   "homeTitle": "Home",
-
   "moreMenuShareManagement": "Ledger & Share Management",
   "moreMenuCategoryManagement": "Category Management",
   "moreMenuPaymentMethodManagement": "Payment Method Management",
   "moreMenuFixedExpenseManagement": "Fixed Expense Management",
   "noHistory": "No history",
-
   "statisticsCategory": "Category",
   "statisticsTrend": "Trend",
   "statisticsPaymentMethod": "Payment",
@@ -357,7 +444,6 @@
   "statisticsPaymentDistribution": "Payment Method Distribution",
   "statisticsPaymentRanking": "Payment Method Ranking",
   "statisticsPaymentNotice": "Payment method statistics only show expenses.",
-
   "assetTitle": "Asset",
   "assetTotal": "Total Assets",
   "assetChange": "Asset Change",
@@ -377,7 +463,6 @@
   "assetGoalAchieved": "Goal achieved!",
   "assetGoalTapForDetails": "Tap for details",
   "assetGoalLoadError": "Failed to load goal info",
-
   "fixedExpenseTitle": "Fixed Expense",
   "fixedExpenseManagement": "Fixed Expense Management",
   "fixedExpenseCategoryTitle": "Fixed Expense Categories",
@@ -391,13 +476,11 @@
   "fixedExpenseCategoryEmpty": "No fixed expense categories",
   "fixedExpenseCategoryEmptySubtitle": "Tap + to add a category",
   "fixedExpenseCategoryDelete": "Delete Fixed Expense Category",
-  "fixedExpenseCategoryDeleteConfirm": "Delete '{name}' category?\n\nTransactions with this category will not be deleted.",
+  "fixedExpenseCategoryDeleteConfirm": "Delete '{name}' category?",
   "fixedExpenseCategoryAdd": "Add Fixed Expense Category",
   "fixedExpenseCategoryEdit": "Edit Fixed Expense Category",
-  "fixedExpenseCategoryNameHint": "e.g., Rent, Insurance, Subscription",
-
+  "fixedExpenseCategoryNameHint": "e.g., Rent, Phone Bill",
   "categoryUpdated": "Category updated",
-
   "notificationSettingsTitle": "Notification Settings",
   "notificationSettingsDescription": "Select the notifications you want to receive",
   "notificationSettingsSaveFailed": "Failed to save settings: {error}",
@@ -410,13 +493,11 @@
   "notificationInviteReceivedDesc": "Notify when another user invites you to a ledger",
   "notificationInviteAccepted": "Invite Accepted",
   "notificationInviteAcceptedDesc": "Notify when another user accepts your invitation",
-
   "searchTitle": "Search",
   "searchHint": "Search by title/memo...",
   "searchEmpty": "Search transactions by title or memo",
   "searchNoResults": "No search results",
   "searchUncategorized": "Uncategorized",
-
   "shareManagementTitle": "Ledger & Share Management",
   "shareMyLedgers": "My Ledgers",
   "shareInvitedLedgers": "Invited Ledgers",
@@ -456,7 +537,6 @@
   "shareMemberRemoveTitle": "Remove Member",
   "shareMemberRemoveConfirm": "Remove '{name}' from this ledger?\n\nRemoved members will no longer have access to this ledger.",
   "shareMemberRemoved": "Member has been removed",
-
   "ledgerNewTitle": "New Ledger",
   "ledgerEditTitle": "Edit Ledger",
   "ledgerNoLedgers": "No ledgers registered",
@@ -474,7 +554,6 @@
   "ledgerSharedWithTwo": "Shared with {name1}, {name2}",
   "ledgerSharedWithMany": "Shared with {name1}, {name2} and {count} others",
   "ledgerUser": "User",
-
   "calendarDaySun": "Sun",
   "calendarDayMon": "Mon",
   "calendarDayTue": "Tue",
@@ -490,7 +569,6 @@
   "calendarNewTransaction": "New Transaction",
   "calendarTransactionDelete": "Delete Transaction",
   "calendarTransactionDeleteConfirm": "Delete this transaction?",
-
   "calendarViewDaily": "Daily",
   "calendarViewWeekly": "Weekly",
   "calendarViewMonthly": "Monthly",
@@ -500,7 +578,6 @@
   "settingsWeekStartDayDescription": "Start day for calendar weekly view",
   "settingsWeekStartSunday": "Sunday",
   "settingsWeekStartMonday": "Monday",
-
   "assetNoData": "No data",
   "assetOther": "Others",
   "assetNoAsset": "No assets",
@@ -526,18 +603,12 @@
   "assetGoalDeleteTitle": "Delete Goal",
   "assetGoalDeleteMessage": "Delete '{title}' goal?",
   "assetMonth": "{month}",
-
-  "fixedExpenseCategoryAdd": "Add Fixed Expense Category",
   "fixedExpenseCategoryName": "Category Name",
-  "fixedExpenseCategoryNameHint": "e.g., Rent, Phone Bill",
   "fixedExpenseCategoryNameRequired": "Please enter category name",
   "fixedExpenseCategoryAdded": "Fixed expense category added",
-  "fixedExpenseCategoryDelete": "Delete Fixed Expense Category",
-  "fixedExpenseCategoryDeleteConfirm": "Delete '{name}' category?",
   "fixedExpenseCategoryDeleted": "Fixed expense category deleted",
   "fixedExpenseCategoryNone": "None",
   "paymentMethodOptional": "Payment Method (Optional)",
-
   "statisticsPeriodMonthly": "Monthly",
   "statisticsPeriodYearly": "Yearly",
   "statisticsTypeIncome": "Income",
@@ -554,11 +625,9 @@
   "statisticsYearLabel": "{year}",
   "statisticsMonthLabel": "{month}",
   "statisticsYearMonthFormat": "{month}/{year}",
-
   "categoryUncategorized": "Uncategorized",
   "categoryFixedExpense": "Fixed Expense",
   "categoryUnknown": "Unknown",
-
   "defaultCategoryFood": "Food",
   "defaultCategoryTransport": "Transport",
   "defaultCategoryShopping": "Shopping",
@@ -580,6 +649,29 @@
   "defaultCategoryRealEstate": "Real Estate",
   "defaultCategoryCrypto": "Crypto",
   "defaultCategoryOtherAsset": "Other Asset",
-
-  "errorWithMessage": "Error: {message}"
+  "autoSaveSettingsTitle": "Auto Save Settings",
+  "autoSaveSettingsAutoProcessMode": "Auto Process Mode",
+  "autoSaveSettingsSuggestModeTitle": "Suggest Mode",
+  "autoSaveSettingsSuggestModeDesc": "Review and save detected transactions",
+  "autoSaveSettingsAutoModeTitle": "Auto Mode",
+  "autoSaveSettingsAutoModeDesc": "Automatically save detected transactions",
+  "autoSaveSettingsRequiredPermissions": "Required Permissions",
+  "autoSaveSettingsPermissionDesc": "SMS read or notification access permission is required.\nPermission request will appear when saving settings.",
+  "autoSaveSettingsPermissionButton": "Permission Settings",
+  "autoSaveSettingsIosNotSupported": "Auto save is not available on iOS.\nSMS/notification-based auto save only works on Android.",
+  "autoSaveSettingsSaved": "Auto process settings saved",
+  "autoSaveSettingsSaveFailed": "Save failed: {error}",
+  "@autoSaveSettingsSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "autoSaveSettingsPermissionRequired": "Required permissions not granted. Please allow permissions.",
+  "autoSaveSettingsModeManual": "Manual Entry",
+  "autoSaveSettingsModeSuggest": "Suggest Mode",
+  "autoSaveSettingsModeAuto": "Auto Save",
+  "paymentMethodPermissionWarningTitle": "Confirm Sharing",
+  "paymentMethodPermissionWarningMessage": "Changing from personal to shared payment method will allow other members to modify it. Continue?"
 }

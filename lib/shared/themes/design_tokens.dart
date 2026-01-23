@@ -156,6 +156,29 @@ class SnackBarDuration {
   static const long = Duration(seconds: 6);
 }
 
+/// 결제수단 색상 팔레트
+///
+/// 결제수단 생성 시 사용할 수 있는 색상 목록입니다.
+class PaymentMethodColors {
+  PaymentMethodColors._();
+
+  /// 결제수단 색상 팔레트 (Material Design 기반)
+  static const List<String> palette = [
+    '#4CAF50', // Green
+    '#2196F3', // Blue
+    '#F44336', // Red
+    '#FF9800', // Orange
+    '#9C27B0', // Purple
+    '#00BCD4', // Cyan
+    '#E91E63', // Pink
+    '#795548', // Brown
+    '#607D8B', // Blue Grey
+    '#3F51B5', // Indigo
+    '#009688', // Teal
+    '#CDDC39', // Lime
+  ];
+}
+
 /// 사용 예시:
 ///
 /// ```dart

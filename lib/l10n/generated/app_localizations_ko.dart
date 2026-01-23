@@ -950,6 +950,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get paymentMethodEmpty => '등록된 결제수단이 없습니다';
 
   @override
+  String get paymentMethodNotFound => '결제수단을 찾을 수 없습니다';
+
+  @override
   String get paymentMethodDefault => '기본 결제수단';
 
   @override
@@ -977,6 +980,278 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get paymentMethodAmountPatternNote => '금액 패턴은 수정할 수 없습니다';
+
+  @override
+  String get paymentMethodTab => '결제수단';
+
+  @override
+  String get paymentMethodEmptySubtitle => '결제수단을 추가하여 시작하세요';
+
+  @override
+  String get paymentMethodNoPermissionToDelete => '이 결제수단을 삭제할 권한이 없습니다';
+
+  @override
+  String get paymentMethodOptions => '결제수단 옵션';
+
+  @override
+  String get sharedPaymentMethodTitle => '공유 결제수단';
+
+  @override
+  String get sharedPaymentMethodDescription => '가계부 멤버 모두와 공유됩니다';
+
+  @override
+  String get sharedPaymentMethodEmpty => '공유 결제수단이 없습니다';
+
+  @override
+  String get sharedPaymentMethodAdd => '공유 결제수단 추가';
+
+  @override
+  String get autoCollectTab => '수집내역';
+
+  @override
+  String get autoCollectTitle => '자동수집';
+
+  @override
+  String get autoCollectDescription => 'SMS/푸시 알림에서 거래를 자동으로 감지합니다';
+
+  @override
+  String get autoCollectPaymentMethodEmpty => '자동수집 결제수단이 없습니다';
+
+  @override
+  String get autoCollectPaymentMethodAdd => '자동수집 추가';
+
+  @override
+  String get autoProcessSettings => '자동 처리 설정';
+
+  @override
+  String get autoSaveModeOff => '꺼짐';
+
+  @override
+  String get autoSaveModeSuggest => '제안';
+
+  @override
+  String get autoSaveModeAuto => '자동';
+
+  @override
+  String get pendingTransactionTab => '자동수집내역';
+
+  @override
+  String get pendingTransactionStatusPending => '대기중';
+
+  @override
+  String get pendingTransactionStatusConfirmed => '확인됨';
+
+  @override
+  String get pendingTransactionStatusRejected => '거부됨';
+
+  @override
+  String get pendingTransactionEmptyPending => '대기 중인 거래가 없습니다';
+
+  @override
+  String get pendingTransactionEmptyConfirmed => '확인된 거래가 없습니다';
+
+  @override
+  String get pendingTransactionEmptyRejected => '거부된 거래가 없습니다';
+
+  @override
+  String get pendingTransactionEmptySubtitle => 'SMS/푸시 알림에서 감지된 거래가 여기 표시됩니다';
+
+  @override
+  String get noAmountInfo => '금액 정보 없음';
+
+  @override
+  String get dateGroupToday => '오늘';
+
+  @override
+  String get dateGroupYesterday => '어제';
+
+  @override
+  String get dateGroupThisWeek => '이번 주';
+
+  @override
+  String get dateGroupThisMonth => '이번 달';
+
+  @override
+  String get dateGroupOlder => '이전';
+
+  @override
+  String get sourceTypeSms => 'SMS';
+
+  @override
+  String get sourceTypeNotification => '알림';
+
+  @override
+  String get pendingTransactionStatusSaved => '저장됨';
+
+  @override
+  String get pendingTransactionStatusWaiting => '대기중';
+
+  @override
+  String get pendingTransactionStatusDenied => '거부됨';
+
+  @override
+  String get pendingTransactionDeleteConfirmTitle => '거래 삭제';
+
+  @override
+  String get pendingTransactionDeleteConfirmMessage => '이 거래를 삭제하시겠습니까?';
+
+  @override
+  String get pendingTransactionDeleted => '거래가 삭제되었습니다';
+
+  @override
+  String get pendingTransactionDeleteAll => '모두 삭제';
+
+  @override
+  String get pendingTransactionDeleteAllConfirmTitle => '모두 삭제';
+
+  @override
+  String pendingTransactionDeleteAllConfirmMessage(String status, int count) {
+    return '$status 내역 $count건을 모두 삭제하시겠습니까?';
+  }
+
+  @override
+  String get pendingTransactionDeleteAllSuccess => '모든 내역이 삭제되었습니다';
+
+  @override
+  String pendingTransactionItemCount(int count) {
+    return '$count건';
+  }
+
+  @override
+  String get paymentMethodWizardAddTitle => '결제수단 추가';
+
+  @override
+  String get paymentMethodWizardEditTitle => '결제수단 수정';
+
+  @override
+  String get paymentMethodWizardManualAddTitle => '직접입력 추가';
+
+  @override
+  String get paymentMethodWizardAutoCollectAddTitle => '자동수집 추가';
+
+  @override
+  String get paymentMethodWizardModeQuestion => '어떤 방식으로 추가하시겠습니까?';
+
+  @override
+  String get paymentMethodWizardManualMode => '직접입력';
+
+  @override
+  String get paymentMethodWizardAutoCollectMode => '자동수집';
+
+  @override
+  String get paymentMethodWizardSharedBadge => '공유됨';
+
+  @override
+  String get paymentMethodWizardPersonalBadge => '개인용';
+
+  @override
+  String get paymentMethodWizardManualDescription =>
+      '이름만 입력하여 간단하게 추가합니다.\n가계부 멤버와 공유됩니다.';
+
+  @override
+  String get paymentMethodWizardAutoCollectDescription =>
+      'SMS/푸시 알림에서 거래를 자동으로 감지합니다.\n나만 사용할 수 있습니다.';
+
+  @override
+  String get paymentMethodWizardServiceQuestion => '어떤 서비스를 이용하시나요?';
+
+  @override
+  String get paymentMethodWizardServiceDescription =>
+      'SMS/푸시 알림에서 거래를 자동으로 감지합니다.';
+
+  @override
+  String get paymentMethodWizardCategoryCard => '카드';
+
+  @override
+  String get paymentMethodWizardCategoryLocalCurrency => '지역화폐';
+
+  @override
+  String get paymentMethodWizardCategoryOther => '기타';
+
+  @override
+  String get paymentMethodWizardCustomSetup => '직접 설정';
+
+  @override
+  String get paymentMethodWizardCustomSetupDescription =>
+      '지원하지 않는 서비스를 직접 설정합니다.';
+
+  @override
+  String get paymentMethodWizardSharedNotice => '이 결제수단은 가계부 멤버와 공유됩니다';
+
+  @override
+  String get paymentMethodWizardPersonalNotice => '이 결제수단은 나만 사용할 수 있습니다';
+
+  @override
+  String get paymentMethodWizardNameLabel => '결제수단 이름';
+
+  @override
+  String get paymentMethodWizardNameHint => '예: 신한카드, 현금';
+
+  @override
+  String get paymentMethodWizardAliasLabel => '별칭';
+
+  @override
+  String get paymentMethodWizardAliasHelper => '앱 내에서 표시될 이름입니다.';
+
+  @override
+  String get paymentMethodWizardAutoCollectRuleTitle => '자동 수집 규칙 설정';
+
+  @override
+  String get paymentMethodWizardImportFromSms => '문자에서 가져오기';
+
+  @override
+  String get paymentMethodWizardSampleNotice =>
+      '아래 메시지는 예시입니다. 실제로 받으시는 알림과 다르다면 수정해주세요.\n수정한 내용에 맞춰 수집 규칙이 변경됩니다.';
+
+  @override
+  String get paymentMethodWizardCurrentRules => '현재 규칙으로 수집되는 정보';
+
+  @override
+  String get paymentMethodWizardDetectionKeywordsOr => '감지 키워드 (OR 조건)';
+
+  @override
+  String get paymentMethodWizardAmountPatternRequired => '금액 패턴 (필수)';
+
+  @override
+  String get paymentMethodWizardAmountPatternNote => '금액 패턴은 수정할 수 없습니다';
+
+  @override
+  String get paymentMethodWizardSaveButton => '저장하기';
+
+  @override
+  String get paymentMethodWizardAddButton => '추가하기';
+
+  @override
+  String get paymentMethodWizardEditKeywordsTitle => '감지 키워드 수정';
+
+  @override
+  String get paymentMethodWizardEditKeywordsDescription =>
+      '메시지에 포함되면 자동으로 감지할 키워드를 입력하세요.';
+
+  @override
+  String get paymentMethodWizardEditKeywordsHint =>
+      '예: KB국민, KB국민카드\n쉼표로 구분해서 입력하세요';
+
+  @override
+  String get paymentMethodWizardEditKeywordsHelper => '최소 1개 이상의 키워드를 입력해야 합니다';
+
+  @override
+  String get paymentMethodWizardEditKeywordsMinError => '최소 1개 이상의 키워드를 입력해주세요';
+
+  @override
+  String get paymentMethodWizardSelectSmsTitle => '가져올 문자 선택';
+
+  @override
+  String get paymentMethodWizardSmsPermissionRequired => 'SMS 권한이 필요합니다.';
+
+  @override
+  String get paymentMethodWizardNoFinancialSms => '금융 관련 문자를 찾을 수 없습니다.';
+
+  @override
+  String get paymentMethodWizardDuplicateName => '이미 존재하는 결제수단 이름입니다';
+
+  @override
+  String get paymentMethodWizardSaveFailed => '결제수단 저장에 실패했습니다';
 
   @override
   String get errorGeneric => '오류가 발생했습니다';
@@ -1778,4 +2053,63 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get defaultCategoryOtherAsset => '기타 자산';
+
+  @override
+  String get autoSaveSettingsTitle => '자동 저장 설정';
+
+  @override
+  String get autoSaveSettingsAutoProcessMode => '자동 처리 모드';
+
+  @override
+  String get autoSaveSettingsSuggestModeTitle => '제안 모드';
+
+  @override
+  String get autoSaveSettingsSuggestModeDesc => '거래를 감지하면 확인 후 저장할 수 있습니다';
+
+  @override
+  String get autoSaveSettingsAutoModeTitle => '자동 모드';
+
+  @override
+  String get autoSaveSettingsAutoModeDesc => '거래를 감지하면 바로 저장됩니다';
+
+  @override
+  String get autoSaveSettingsRequiredPermissions => '필요한 권한';
+
+  @override
+  String get autoSaveSettingsPermissionDesc =>
+      'SMS 읽기 권한 또는 알림 접근 권한이 필요합니다.\n설정 저장 시 권한 요청 화면이 표시됩니다.';
+
+  @override
+  String get autoSaveSettingsPermissionButton => '권한 설정';
+
+  @override
+  String get autoSaveSettingsIosNotSupported =>
+      'iOS에서는 자동 저장 기능을 사용할 수 없습니다.\nAndroid 기기에서만 SMS/알림 기반 자동 저장이 가능합니다.';
+
+  @override
+  String get autoSaveSettingsSaved => '자동 처리 설정이 저장되었습니다';
+
+  @override
+  String autoSaveSettingsSaveFailed(String error) {
+    return '저장 실패: $error';
+  }
+
+  @override
+  String get autoSaveSettingsPermissionRequired => '필요한 권한이 없습니다. 권한을 허용해주세요.';
+
+  @override
+  String get autoSaveSettingsModeManual => '수동 입력';
+
+  @override
+  String get autoSaveSettingsModeSuggest => '제안 모드';
+
+  @override
+  String get autoSaveSettingsModeAuto => '자동 저장';
+
+  @override
+  String get paymentMethodPermissionWarningTitle => '공유 전환 확인';
+
+  @override
+  String get paymentMethodPermissionWarningMessage =>
+      '개인 결제수단을 공유 결제수단으로 변경하면 다른 멤버도 이 결제수단을 수정할 수 있습니다. 계속하시겠습니까?';
 }

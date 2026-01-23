@@ -39,8 +39,9 @@ class FinancialServiceTemplate extends Equatable {
     category,
   ];
 
-  // 프리셋 데이터
+  // 프리셋 데이터 - 카드사 9개 + 지역화폐 3개
   static const List<FinancialServiceTemplate> templates = [
+    // === 카드사 (9개) ===
     FinancialServiceTemplate(
       id: 'kb_card',
       name: 'KB국민카드',
@@ -54,6 +55,90 @@ class FinancialServiceTemplate extends Equatable {
       defaultKeywords: ['KB국민', '국민카드', 'KB카드'],
     ),
     FinancialServiceTemplate(
+      id: 'shinhan_card',
+      name: '신한카드',
+      logoIcon: 'assets/logos/shinhan_card.png',
+      color: '#0046FF',
+      category: FinancialServiceCategory.card,
+      defaultSampleSms:
+          '[신한카드] 홍길동님\n15,000원 승인\n신한(1*2*) 일시불\n01/21 13:30\n스타벅스',
+      defaultSamplePush:
+          '신한카드 승인\n홍길동님 15,000원 일시불\n스타벅스',
+      defaultKeywords: ['신한카드', '신한'],
+    ),
+    FinancialServiceTemplate(
+      id: 'samsung_card',
+      name: '삼성카드',
+      logoIcon: 'assets/logos/samsung_card.png',
+      color: '#1428A0',
+      category: FinancialServiceCategory.card,
+      defaultSampleSms:
+          '[삼성카드] 홍길동님\n15,000원 승인\n삼성(1*2*)\n01/21 13:30 일시불\n스타벅스',
+      defaultSamplePush:
+          '삼성카드 승인\n15,000원 일시불\n스타벅스',
+      defaultKeywords: ['삼성카드'],
+    ),
+    FinancialServiceTemplate(
+      id: 'hyundai_card',
+      name: '현대카드',
+      logoIcon: 'assets/logos/hyundai_card.png',
+      color: '#000000',
+      category: FinancialServiceCategory.card,
+      defaultSampleSms:
+          '[현대카드] 홍길동님\n15,000원 승인\n현대(1*2*)\n01/21 13:30 일시불\n스타벅스',
+      defaultSamplePush:
+          '현대카드 승인\n15,000원 일시불\n스타벅스',
+      defaultKeywords: ['현대카드'],
+    ),
+    FinancialServiceTemplate(
+      id: 'lotte_card',
+      name: '롯데카드',
+      logoIcon: 'assets/logos/lotte_card.png',
+      color: '#ED1C24',
+      category: FinancialServiceCategory.card,
+      defaultSampleSms:
+          '[롯데카드] 홍길동님\n15,000원 승인\n롯데(1*2*)\n01/21 13:30 일시불\n스타벅스',
+      defaultSamplePush:
+          '롯데카드 승인\n15,000원 일시불\n스타벅스',
+      defaultKeywords: ['롯데카드'],
+    ),
+    FinancialServiceTemplate(
+      id: 'woori_card',
+      name: '우리카드',
+      logoIcon: 'assets/logos/woori_card.png',
+      color: '#0066B3',
+      category: FinancialServiceCategory.card,
+      defaultSampleSms:
+          '[우리카드] 홍길동님\n15,000원 승인\n우리(1*2*)\n01/21 13:30 일시불\n스타벅스',
+      defaultSamplePush:
+          '우리카드 승인\n15,000원 일시불\n스타벅스',
+      defaultKeywords: ['우리카드'],
+    ),
+    FinancialServiceTemplate(
+      id: 'hana_card',
+      name: '하나카드',
+      logoIcon: 'assets/logos/hana_card.png',
+      color: '#009490',
+      category: FinancialServiceCategory.card,
+      defaultSampleSms:
+          '[하나카드] 홍길동님\n15,000원 승인\n하나(1*2*)\n01/21 13:30 일시불\n스타벅스',
+      defaultSamplePush:
+          '하나카드 승인\n15,000원 일시불\n스타벅스',
+      defaultKeywords: ['하나카드'],
+    ),
+    FinancialServiceTemplate(
+      id: 'bc_card',
+      name: 'BC카드',
+      logoIcon: 'assets/logos/bc_card.png',
+      color: '#F05A28',
+      category: FinancialServiceCategory.card,
+      defaultSampleSms:
+          '[BC카드] 홍길동님\n15,000원 승인\nBC(1*2*)\n01/21 13:30 일시불\n스타벅스',
+      defaultSamplePush:
+          'BC카드 승인\n15,000원 일시불\n스타벅스',
+      defaultKeywords: ['BC카드', 'BC'],
+    ),
+    FinancialServiceTemplate(
       id: 'nh_card',
       name: 'NH농협카드',
       logoIcon: 'assets/logos/nh_card.png',
@@ -64,6 +149,8 @@ class FinancialServiceTemplate extends Equatable {
       defaultSamplePush: 'NH농협카드 승인\n홍길동님 15,000원 정상처리 완료\n스타벅스',
       defaultKeywords: ['NH농협카드', '농협카드', 'NH농협'],
     ),
+
+    // === 지역화폐 (3개) ===
     FinancialServiceTemplate(
       id: 'gyeonggi_local',
       name: '경기지역화폐',
@@ -74,6 +161,28 @@ class FinancialServiceTemplate extends Equatable {
       defaultSamplePush:
           '경기지역화폐 결제알림\n15,000원 결제 완료\n가맹점: 스타벅스 경기점\n잔액: 35,000원',
       defaultKeywords: ['경기지역화폐', '경기지역', '지역화폐'],
+    ),
+    FinancialServiceTemplate(
+      id: 'seoul_love',
+      name: '서울사랑상품권',
+      logoIcon: 'assets/logos/seoul_love.png',
+      color: '#E60012',
+      category: FinancialServiceCategory.localCurrency,
+      defaultSampleSms: '[서울사랑상품권] 15,000원 결제\n스타벅스 서울점\n잔액: 35,000원',
+      defaultSamplePush:
+          '서울사랑상품권 결제\n15,000원 결제 완료\n가맹점: 스타벅스\n잔액: 35,000원',
+      defaultKeywords: ['서울사랑', '서울상품권', '서울페이'],
+    ),
+    FinancialServiceTemplate(
+      id: 'incheon_eum',
+      name: '인천이음페이',
+      logoIcon: 'assets/logos/incheon_eum.png',
+      color: '#005BAC',
+      category: FinancialServiceCategory.localCurrency,
+      defaultSampleSms: '[인천이음] 15,000원 결제\n스타벅스 인천점\n잔액: 35,000원',
+      defaultSamplePush:
+          '인천이음페이 결제\n15,000원 결제 완료\n가맹점: 스타벅스\n잔액: 35,000원',
+      defaultKeywords: ['인천이음', '이음페이'],
     ),
   ];
 }

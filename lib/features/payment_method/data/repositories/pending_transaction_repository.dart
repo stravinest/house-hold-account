@@ -256,10 +256,8 @@ class PendingTransactionRepository {
           ),
           callback: (payload) {
             final recordData = payload.newRecord ?? payload.oldRecord;
-            if (recordData is Map<String, dynamic>) {
-              if (recordData['user_id'] != userId) {
-                return;
-              }
+            if (recordData['user_id'] != userId) {
+              return;
             }
             onTableChanged();
           },

@@ -1,8 +1,11 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../payment_method/domain/entities/payment_method.dart';
 import '../../../payment_method/presentation/providers/payment_method_provider.dart';
@@ -38,21 +41,10 @@ class _PaymentMethodSelectorWidgetState
 
   // 랜덤 색상 생성
   String _generateRandomColor() {
-    final colors = [
-      '#4CAF50',
-      '#2196F3',
-      '#F44336',
-      '#FF9800',
-      '#9C27B0',
-      '#00BCD4',
-      '#E91E63',
-      '#795548',
-      '#607D8B',
-      '#3F51B5',
-      '#009688',
-      '#CDDC39',
+    final random = Random();
+    return PaymentMethodColors.palette[
+      random.nextInt(PaymentMethodColors.palette.length)
     ];
-    return colors[(DateTime.now().millisecondsSinceEpoch % colors.length)];
   }
 
   /// 결제수단 추가 다이얼로그 표시
@@ -108,6 +100,7 @@ class _PaymentMethodSelectorWidgetState
             name: nameController.text.trim(),
             icon: '',
             color: _generateRandomColor(),
+            canAutoSave: false, // 공유 결제수단 (자동수집 아님)
           );
 
       widget.onPaymentMethodSelected(newPaymentMethod);
@@ -117,7 +110,7 @@ class _PaymentMethodSelectorWidgetState
         SnackBarUtils.showSuccess(context, l10n.paymentMethodAdded);
       }
 
-      ref.invalidate(paymentMethodsProvider);
+      ref.invalidate(sharedPaymentMethodsProvider);
     } catch (e) {
       if (context.mounted) {
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
@@ -189,7 +182,7 @@ class _PaymentMethodSelectorWidgetState
 
       SnackBarUtils.showSuccess(context, l10n.commonSuccess);
 
-      ref.invalidate(paymentMethodsProvider);
+      ref.invalidate(sharedPaymentMethodsProvider);
     } catch (e) {
       SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     }
@@ -235,7 +228,7 @@ class _PaymentMethodSelectorWidgetState
         SnackBarUtils.showSuccess(context, l10n.paymentMethodDeleted);
       }
 
-      ref.invalidate(paymentMethodsProvider);
+      ref.invalidate(sharedPaymentMethodsProvider);
     } catch (e) {
       if (mounted) {
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
@@ -245,7 +238,8 @@ class _PaymentMethodSelectorWidgetState
 
   @override
   Widget build(BuildContext context) {
-    final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
+    // 공유 결제수단만 사용 (자동수집 결제수단 제외)
+    final paymentMethodsAsync = ref.watch(sharedPaymentMethodsProvider);
 
     return paymentMethodsAsync.when(
       data: (paymentMethods) =>

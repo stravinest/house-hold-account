@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../../../core/utils/color_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
@@ -24,30 +25,8 @@ class AutoSaveSettingsPage extends ConsumerStatefulWidget {
 }
 
 class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
-  AutoSaveMode _selectedMode = AutoSaveMode.manual;
+  AutoSaveMode? _selectedMode;
   bool _isLoading = false;
-  PaymentMethod? _paymentMethod;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPaymentMethod();
-  }
-
-  void _loadPaymentMethod() {
-    final paymentMethodsAsync = ref.read(paymentMethodNotifierProvider);
-    paymentMethodsAsync.whenData((paymentMethods) {
-      final pm = paymentMethods
-          .where((p) => p.id == widget.paymentMethodId)
-          .firstOrNull;
-      if (pm != null) {
-        setState(() {
-          _paymentMethod = pm;
-          _selectedMode = pm.autoSaveMode;
-        });
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,121 +34,166 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // Android만 자동 저장 지원
+    // Android only supports auto save
     final isAndroid = Platform.isAndroid;
 
+    // Watch provider to detect state changes
+    final paymentMethodsAsync = ref.watch(paymentMethodNotifierProvider);
+
+    return paymentMethodsAsync.when(
+      loading: () => Scaffold(
+        appBar: AppBar(title: Text(l10n.autoSaveSettingsTitle)),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(title: Text(l10n.autoSaveSettingsTitle)),
+        body: Center(child: Text(l10n.errorWithMessage(error.toString()))),
+      ),
+      data: (paymentMethods) {
+        final paymentMethod = paymentMethods
+            .where((p) => p.id == widget.paymentMethodId)
+            .firstOrNull;
+
+        if (paymentMethod == null) {
+          return Scaffold(
+            appBar: AppBar(title: Text(l10n.autoSaveSettingsTitle)),
+            body: Center(child: Text(l10n.paymentMethodNotFound)),
+          );
+        }
+
+        // Use user-changed mode if available, otherwise use server value
+        final currentMode = _selectedMode ?? paymentMethod.autoSaveMode;
+
+        return _buildContent(
+          context,
+          l10n,
+          colorScheme,
+          textTheme,
+          isAndroid,
+          paymentMethod,
+          currentMode,
+        );
+      },
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    bool isAndroid,
+    PaymentMethod paymentMethod,
+    AutoSaveMode currentMode,
+  ) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('자동 저장 설정'),
+        title: Text(l10n.autoSaveSettingsTitle),
         actions: [
-          if (_paymentMethod != null)
-            TextButton(
-              onPressed: _isLoading ? null : _saveSettings,
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(l10n.commonSave),
-            ),
+          TextButton(
+            onPressed: _isLoading ? null : _saveSettings,
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(l10n.commonSave),
+          ),
         ],
       ),
       body: CenteredContent(
         maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
-        child: _paymentMethod == null
-            ? const Center(child: CircularProgressIndicator())
-            : ListView(
+        child: ListView(
+          padding: const EdgeInsets.all(Spacing.md),
+          children: [
+            // Payment method info header
+            Card(
+              child: Padding(
                 padding: const EdgeInsets.all(Spacing.md),
-                children: [
-                  // 결제수단 정보 헤더
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(Spacing.md),
-                      child: Row(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: ColorUtils.parseHexColor(paymentMethod.color),
+                        borderRadius: BorderRadius.circular(
+                          BorderRadiusToken.md,
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.credit_card,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: Spacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: _parseColor(_paymentMethod!.color),
-                              borderRadius: BorderRadius.circular(
-                                BorderRadiusToken.md,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.credit_card,
-                              color: Colors.white,
+                          Text(
+                            paymentMethod.name,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: Spacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _paymentMethod!.name,
-                                  style: textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  _getModeDescription(_selectedMode),
-                                  style: textTheme.bodySmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
+                          Text(
+                            _getModeDescription(l10n, currentMode),
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  const SizedBox(height: Spacing.lg),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: Spacing.lg),
 
-                  // 플랫폼 안내 (iOS)
-                  if (!isAndroid) ...[
-                    Card(
-                      color: colorScheme.errorContainer,
-                      child: Padding(
-                        padding: const EdgeInsets.all(Spacing.md),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: colorScheme.onErrorContainer,
-                            ),
-                            const SizedBox(width: Spacing.sm),
-                            Expanded(
-                              child: Text(
-                                'iOS에서는 자동 저장 기능을 사용할 수 없습니다.\n'
-                                'Android 기기에서만 SMS/알림 기반 자동 저장이 가능합니다.',
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onErrorContainer,
-                                ),
-                              ),
-                            ),
-                          ],
+            // Platform notice (iOS)
+            if (!isAndroid) ...[
+              Card(
+                color: colorScheme.errorContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(Spacing.md),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: colorScheme.onErrorContainer,
+                      ),
+                      const SizedBox(width: Spacing.sm),
+                      Expanded(
+                        child: Text(
+                          l10n.autoSaveSettingsIosNotSupported,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onErrorContainer,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: Spacing.lg),
-                  ],
-
-                  // 자동 처리 모드 선택
-                  Text(
-                    '자동 처리 모드',
-                    style: textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    ],
                   ),
-                  const SizedBox(height: Spacing.sm),
-                  _buildModeSelector(context, isAndroid),
-                  const SizedBox(height: Spacing.lg),
+                ),
+              ),
+              const SizedBox(height: Spacing.lg),
+            ],
 
-                  // 권한 안내
-                  if (isAndroid && _selectedMode != AutoSaveMode.manual) ...[
+            // Auto process mode selection
+            Text(
+              l10n.autoSaveSettingsAutoProcessMode,
+              style: textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: Spacing.sm),
+            _buildModeSelector(context, l10n, isAndroid, currentMode),
+            const SizedBox(height: Spacing.lg),
+
+            // Permission notice (auto-collect always requires permission)
+            if (isAndroid) ...[
                     const SizedBox(height: Spacing.lg),
                     Card(
                       color: colorScheme.primaryContainer,
@@ -186,7 +210,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
                                 ),
                                 const SizedBox(width: Spacing.sm),
                                 Text(
-                                  '필요한 권한',
+                                  l10n.autoSaveSettingsRequiredPermissions,
                                   style: textTheme.titleSmall?.copyWith(
                                     color: colorScheme.onPrimaryContainer,
                                     fontWeight: FontWeight.bold,
@@ -196,8 +220,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
                             ),
                             const SizedBox(height: Spacing.sm),
                             Text(
-                              'SMS 읽기 권한 또는 알림 접근 권한이 필요합니다.\n'
-                              '설정 저장 시 권한 요청 화면이 표시됩니다.',
+                              l10n.autoSaveSettingsPermissionDesc,
                               style: textTheme.bodySmall?.copyWith(
                                 color: colorScheme.onPrimaryContainer,
                               ),
@@ -206,7 +229,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
                             OutlinedButton.icon(
                               onPressed: _showPermissionDialog,
                               icon: const Icon(Icons.settings),
-                              label: const Text('권한 설정'),
+                              label: Text(l10n.autoSaveSettingsPermissionButton),
                             ),
                           ],
                         ),
@@ -219,33 +242,28 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
     );
   }
 
-  Widget _buildModeSelector(BuildContext context, bool isAndroid) {
+  Widget _buildModeSelector(BuildContext context, AppLocalizations l10n, bool isAndroid, AutoSaveMode currentMode) {
     return Column(
       children: [
         _buildModeOption(
           context,
-          mode: AutoSaveMode.manual,
-          icon: Icons.edit_outlined,
-          title: '수동 입력',
-          description: 'SMS/알림을 자동으로 처리하지 않습니다',
-          enabled: true,
-        ),
-        const SizedBox(height: Spacing.sm),
-        _buildModeOption(
-          context,
+          l10n,
           mode: AutoSaveMode.suggest,
+          currentMode: currentMode,
           icon: Icons.notifications_active_outlined,
-          title: '제안 모드',
-          description: '거래를 감지하면 확인 후 저장할 수 있습니다',
+          title: l10n.autoSaveSettingsSuggestModeTitle,
+          description: l10n.autoSaveSettingsSuggestModeDesc,
           enabled: isAndroid,
         ),
         const SizedBox(height: Spacing.sm),
         _buildModeOption(
           context,
+          l10n,
           mode: AutoSaveMode.auto,
+          currentMode: currentMode,
           icon: Icons.auto_awesome_outlined,
-          title: '자동 모드',
-          description: '거래를 감지하면 바로 저장됩니다',
+          title: l10n.autoSaveSettingsAutoModeTitle,
+          description: l10n.autoSaveSettingsAutoModeDesc,
           enabled: isAndroid,
         ),
       ],
@@ -253,8 +271,10 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
   }
 
   Widget _buildModeOption(
-    BuildContext context, {
+    BuildContext context,
+    AppLocalizations l10n, {
     required AutoSaveMode mode,
+    required AutoSaveMode currentMode,
     required IconData icon,
     required String title,
     required String description,
@@ -262,7 +282,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final isSelected = _selectedMode == mode;
+    final isSelected = currentMode == mode;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -333,19 +353,21 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
   }
 
   Future<void> _saveSettings() async {
-    if (_paymentMethod == null) return;
+    final l10n = AppLocalizations.of(context);
+    final selectedMode = _selectedMode;
+    if (selectedMode == null) return;
 
     setState(() {
       _isLoading = true;
     });
 
     try {
-      // 자동 저장 모드가 활성화된 경우 권한 확인
-      if (_selectedMode != AutoSaveMode.manual && Platform.isAndroid) {
+      // Check permission if auto save mode is enabled
+      if (selectedMode != AutoSaveMode.manual && Platform.isAndroid) {
         final hasPermission = await _checkAndRequestPermissions();
         if (!hasPermission) {
           if (mounted) {
-            SnackBarUtils.showError(context, '필요한 권한이 없습니다. 권한을 허용해주세요.');
+            SnackBarUtils.showError(context, l10n.autoSaveSettingsPermissionRequired);
           }
           return;
         }
@@ -355,10 +377,10 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
           .read(paymentMethodNotifierProvider.notifier)
           .updateAutoSaveSettings(
             id: widget.paymentMethodId,
-            autoSaveMode: _selectedMode,
+            autoSaveMode: selectedMode,
           );
 
-      // 서비스에 변경된 설정 즉시 반영
+      // Immediately reflect changed settings to the service
       try {
         await AutoSaveService.instance.refreshPaymentMethods();
       } catch (e) {
@@ -366,12 +388,12 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
       }
 
       if (mounted) {
-        SnackBarUtils.showSuccess(context, '자동 처리 설정이 저장되었습니다');
+        SnackBarUtils.showSuccess(context, l10n.autoSaveSettingsSaved);
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(context, '저장 실패: $e');
+        SnackBarUtils.showError(context, l10n.autoSaveSettingsSaveFailed(e.toString()));
       }
     } finally {
       if (mounted) {
@@ -383,9 +405,10 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
   }
 
   Future<bool> _checkAndRequestPermissions() async {
-    // 권한 체크는 permission_handler를 사용해야 하지만,
-    // 여기서는 간단하게 true를 반환하고 실제 권한 체크는 서비스에서 처리
-    // 실제 구현에서는 PermissionHandler 패키지 사용
+    // Permission check should use permission_handler,
+    // but for now return true and let actual permission check happen in the service
+    // In actual implementation, use PermissionHandler package
+    // TODO: Implement actual permission check with permission_handler
     return true;
   }
 
@@ -396,25 +419,14 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
     );
   }
 
-  String _getModeDescription(AutoSaveMode mode) {
+  String _getModeDescription(AppLocalizations l10n, AutoSaveMode mode) {
     switch (mode) {
       case AutoSaveMode.manual:
-        return '수동 입력';
+        return l10n.autoSaveSettingsModeManual;
       case AutoSaveMode.suggest:
-        return '제안 모드';
+        return l10n.autoSaveSettingsModeSuggest;
       case AutoSaveMode.auto:
-        return '자동 저장';
-    }
-  }
-
-  Color _parseColor(String colorString) {
-    try {
-      if (colorString.startsWith('#')) {
-        return Color(int.parse('FF${colorString.substring(1)}', radix: 16));
-      }
-      return Colors.grey;
-    } catch (_) {
-      return Colors.grey;
+        return l10n.autoSaveSettingsModeAuto;
     }
   }
 }

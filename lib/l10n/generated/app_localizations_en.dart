@@ -967,6 +967,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentMethodEmpty => 'No payment methods';
 
   @override
+  String get paymentMethodNotFound => 'Payment method not found';
+
+  @override
   String get paymentMethodDefault => 'Default Payment Method';
 
   @override
@@ -995,6 +998,294 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paymentMethodAmountPatternNote =>
       'Amount pattern cannot be modified';
+
+  @override
+  String get paymentMethodTab => 'Payment Methods';
+
+  @override
+  String get paymentMethodEmptySubtitle =>
+      'Add a payment method to get started';
+
+  @override
+  String get paymentMethodNoPermissionToDelete =>
+      'You do not have permission to delete this payment method';
+
+  @override
+  String get paymentMethodOptions => 'Payment Method Options';
+
+  @override
+  String get sharedPaymentMethodTitle => 'Shared Payment Methods';
+
+  @override
+  String get sharedPaymentMethodDescription => 'Shared with all ledger members';
+
+  @override
+  String get sharedPaymentMethodEmpty => 'No shared payment methods';
+
+  @override
+  String get sharedPaymentMethodAdd => 'Add Shared Payment Method';
+
+  @override
+  String get autoCollectTab => 'Collection History';
+
+  @override
+  String get autoCollectTitle => 'Auto Collect';
+
+  @override
+  String get autoCollectDescription =>
+      'Automatically detect transactions from SMS/Push notifications';
+
+  @override
+  String get autoCollectPaymentMethodEmpty => 'No auto-collect payment methods';
+
+  @override
+  String get autoCollectPaymentMethodAdd => 'Add Auto Collect';
+
+  @override
+  String get autoProcessSettings => 'Auto Process Settings';
+
+  @override
+  String get autoSaveModeOff => 'Off';
+
+  @override
+  String get autoSaveModeSuggest => 'Suggest';
+
+  @override
+  String get autoSaveModeAuto => 'Auto';
+
+  @override
+  String get pendingTransactionTab => 'Auto Collect History';
+
+  @override
+  String get pendingTransactionStatusPending => 'Pending';
+
+  @override
+  String get pendingTransactionStatusConfirmed => 'Confirmed';
+
+  @override
+  String get pendingTransactionStatusRejected => 'Rejected';
+
+  @override
+  String get pendingTransactionEmptyPending => 'No pending transactions';
+
+  @override
+  String get pendingTransactionEmptyConfirmed => 'No confirmed transactions';
+
+  @override
+  String get pendingTransactionEmptyRejected => 'No rejected transactions';
+
+  @override
+  String get pendingTransactionEmptySubtitle =>
+      'Transactions detected from SMS/Push will appear here';
+
+  @override
+  String get noAmountInfo => 'No amount info';
+
+  @override
+  String get dateGroupToday => 'Today';
+
+  @override
+  String get dateGroupYesterday => 'Yesterday';
+
+  @override
+  String get dateGroupThisWeek => 'This week';
+
+  @override
+  String get dateGroupThisMonth => 'This month';
+
+  @override
+  String get dateGroupOlder => 'Older';
+
+  @override
+  String get sourceTypeSms => 'SMS';
+
+  @override
+  String get sourceTypeNotification => 'Notification';
+
+  @override
+  String get pendingTransactionStatusSaved => 'Saved';
+
+  @override
+  String get pendingTransactionStatusWaiting => 'Waiting';
+
+  @override
+  String get pendingTransactionStatusDenied => 'Denied';
+
+  @override
+  String get pendingTransactionDeleteConfirmTitle => 'Delete Transaction';
+
+  @override
+  String get pendingTransactionDeleteConfirmMessage =>
+      'Are you sure you want to delete this transaction?';
+
+  @override
+  String get pendingTransactionDeleted => 'Transaction deleted';
+
+  @override
+  String get pendingTransactionDeleteAll => 'Delete All';
+
+  @override
+  String get pendingTransactionDeleteAllConfirmTitle => 'Delete All';
+
+  @override
+  String pendingTransactionDeleteAllConfirmMessage(String status, int count) {
+    return 'Delete all $count $status items?';
+  }
+
+  @override
+  String get pendingTransactionDeleteAllSuccess => 'All items deleted';
+
+  @override
+  String pendingTransactionItemCount(int count) {
+    return '$count items';
+  }
+
+  @override
+  String get paymentMethodWizardAddTitle => 'Add Payment Method';
+
+  @override
+  String get paymentMethodWizardEditTitle => 'Edit Payment Method';
+
+  @override
+  String get paymentMethodWizardManualAddTitle => 'Add Manual Entry';
+
+  @override
+  String get paymentMethodWizardAutoCollectAddTitle => 'Add Auto Collect';
+
+  @override
+  String get paymentMethodWizardModeQuestion => 'How would you like to add it?';
+
+  @override
+  String get paymentMethodWizardManualMode => 'Manual Entry';
+
+  @override
+  String get paymentMethodWizardAutoCollectMode => 'Auto Collect';
+
+  @override
+  String get paymentMethodWizardSharedBadge => 'Shared';
+
+  @override
+  String get paymentMethodWizardPersonalBadge => 'Personal';
+
+  @override
+  String get paymentMethodWizardManualDescription =>
+      'Simply add by entering a name.\nShared with ledger members.';
+
+  @override
+  String get paymentMethodWizardAutoCollectDescription =>
+      'Automatically detect transactions from SMS/Push notifications.\nOnly you can use this.';
+
+  @override
+  String get paymentMethodWizardServiceQuestion => 'Which service do you use?';
+
+  @override
+  String get paymentMethodWizardServiceDescription =>
+      'Automatically detect transactions from SMS/Push notifications.';
+
+  @override
+  String get paymentMethodWizardCategoryCard => 'Card';
+
+  @override
+  String get paymentMethodWizardCategoryLocalCurrency => 'Local Currency';
+
+  @override
+  String get paymentMethodWizardCategoryOther => 'Other';
+
+  @override
+  String get paymentMethodWizardCustomSetup => 'Custom Setup';
+
+  @override
+  String get paymentMethodWizardCustomSetupDescription =>
+      'Manually configure unsupported services.';
+
+  @override
+  String get paymentMethodWizardSharedNotice =>
+      'This payment method is shared with ledger members';
+
+  @override
+  String get paymentMethodWizardPersonalNotice =>
+      'This payment method is only available to you';
+
+  @override
+  String get paymentMethodWizardNameLabel => 'Payment Method Name';
+
+  @override
+  String get paymentMethodWizardNameHint => 'e.g., Credit Card, Cash';
+
+  @override
+  String get paymentMethodWizardAliasLabel => 'Alias';
+
+  @override
+  String get paymentMethodWizardAliasHelper => 'Name displayed in the app.';
+
+  @override
+  String get paymentMethodWizardAutoCollectRuleTitle =>
+      'Auto Collect Rule Settings';
+
+  @override
+  String get paymentMethodWizardImportFromSms => 'Import from SMS';
+
+  @override
+  String get paymentMethodWizardSampleNotice =>
+      'The message below is an example. Please modify if different from your actual notifications.\nCollection rules will be updated accordingly.';
+
+  @override
+  String get paymentMethodWizardCurrentRules =>
+      'Information collected with current rules';
+
+  @override
+  String get paymentMethodWizardDetectionKeywordsOr =>
+      'Detection Keywords (OR)';
+
+  @override
+  String get paymentMethodWizardAmountPatternRequired =>
+      'Amount Pattern (Required)';
+
+  @override
+  String get paymentMethodWizardAmountPatternNote =>
+      'Amount pattern cannot be modified';
+
+  @override
+  String get paymentMethodWizardSaveButton => 'Save';
+
+  @override
+  String get paymentMethodWizardAddButton => 'Add';
+
+  @override
+  String get paymentMethodWizardEditKeywordsTitle => 'Edit Detection Keywords';
+
+  @override
+  String get paymentMethodWizardEditKeywordsDescription =>
+      'Enter keywords to automatically detect when included in messages.';
+
+  @override
+  String get paymentMethodWizardEditKeywordsHint =>
+      'e.g., Chase, Bank of America\nSeparate with commas';
+
+  @override
+  String get paymentMethodWizardEditKeywordsHelper =>
+      'At least 1 keyword is required';
+
+  @override
+  String get paymentMethodWizardEditKeywordsMinError =>
+      'Please enter at least 1 keyword';
+
+  @override
+  String get paymentMethodWizardSelectSmsTitle => 'Select SMS to import';
+
+  @override
+  String get paymentMethodWizardSmsPermissionRequired =>
+      'SMS permission is required.';
+
+  @override
+  String get paymentMethodWizardNoFinancialSms => 'No financial SMS found.';
+
+  @override
+  String get paymentMethodWizardDuplicateName =>
+      'A payment method with this name already exists';
+
+  @override
+  String get paymentMethodWizardSaveFailed => 'Failed to save payment method';
 
   @override
   String get errorGeneric => 'An error occurred';
@@ -1808,4 +2099,66 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get defaultCategoryOtherAsset => 'Other Asset';
+
+  @override
+  String get autoSaveSettingsTitle => 'Auto Save Settings';
+
+  @override
+  String get autoSaveSettingsAutoProcessMode => 'Auto Process Mode';
+
+  @override
+  String get autoSaveSettingsSuggestModeTitle => 'Suggest Mode';
+
+  @override
+  String get autoSaveSettingsSuggestModeDesc =>
+      'Review and save detected transactions';
+
+  @override
+  String get autoSaveSettingsAutoModeTitle => 'Auto Mode';
+
+  @override
+  String get autoSaveSettingsAutoModeDesc =>
+      'Automatically save detected transactions';
+
+  @override
+  String get autoSaveSettingsRequiredPermissions => 'Required Permissions';
+
+  @override
+  String get autoSaveSettingsPermissionDesc =>
+      'SMS read or notification access permission is required.\nPermission request will appear when saving settings.';
+
+  @override
+  String get autoSaveSettingsPermissionButton => 'Permission Settings';
+
+  @override
+  String get autoSaveSettingsIosNotSupported =>
+      'Auto save is not available on iOS.\nSMS/notification-based auto save only works on Android.';
+
+  @override
+  String get autoSaveSettingsSaved => 'Auto process settings saved';
+
+  @override
+  String autoSaveSettingsSaveFailed(String error) {
+    return 'Save failed: $error';
+  }
+
+  @override
+  String get autoSaveSettingsPermissionRequired =>
+      'Required permissions not granted. Please allow permissions.';
+
+  @override
+  String get autoSaveSettingsModeManual => 'Manual Entry';
+
+  @override
+  String get autoSaveSettingsModeSuggest => 'Suggest Mode';
+
+  @override
+  String get autoSaveSettingsModeAuto => 'Auto Save';
+
+  @override
+  String get paymentMethodPermissionWarningTitle => 'Confirm Sharing';
+
+  @override
+  String get paymentMethodPermissionWarningMessage =>
+      'Changing from personal to shared payment method will allow other members to modify it. Continue?';
 }

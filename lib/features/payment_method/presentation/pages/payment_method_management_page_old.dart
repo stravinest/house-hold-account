@@ -23,17 +23,15 @@ class PaymentMethodManagementPage extends ConsumerStatefulWidget {
 }
 
 class _PaymentMethodManagementPageState
-    extends ConsumerState<PaymentMethodManagementPage> with TickerProviderStateMixin {
+    extends ConsumerState<PaymentMethodManagementPage>
+    with TickerProviderStateMixin {
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     // 2개 탭: 결제수단(SMS) / 거래내역
-    _tabController = TabController(
-      length: 2,
-      vsync: this,
-    );
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -91,18 +89,12 @@ class _PaymentMethodManagementPageState
           controller: _tabController,
           labelColor: Theme.of(context).colorScheme.primary,
           unselectedLabelColor: Theme.of(context).colorScheme.onSurfaceVariant,
-          labelStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          labelStyle: Theme.of(
+            context,
+          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
           tabs: const [
-            Tab(
-              text: '결제수단 (SMS)',
-              icon: Icon(Icons.credit_card_outlined),
-            ),
-            Tab(
-              text: '거래 내역',
-              icon: Icon(Icons.receipt_long_outlined),
-            ),
+            Tab(text: '결제수단 (SMS)', icon: Icon(Icons.credit_card_outlined)),
+            Tab(text: '거래 내역', icon: Icon(Icons.receipt_long_outlined)),
           ],
         ),
       ),
@@ -183,7 +175,7 @@ class _PaymentMethodManagementPageState
     return pendingAsync.when(
       data: (transactions) {
         if (transactions.isEmpty) {
-          return EmptyState(
+          return const EmptyState(
             icon: Icons.receipt_long_outlined,
             message: '대기 중인 거래가 없습니다',
             subtitle: 'SMS/푸시 알림에서 감지된 거래 내역이 여기 표시됩니다',
@@ -195,44 +187,43 @@ class _PaymentMethodManagementPageState
           itemCount: transactions.length,
           itemBuilder: (context, index) {
             final transaction = transactions[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: Spacing.md),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor:
-                    Theme.of(context).colorScheme.primaryContainer,
-                child: Icon(
-                  Icons.notifications_active_outlined,
-                  color: Theme.of(context).colorScheme.primary,
+            return Card(
+              margin: const EdgeInsets.only(bottom: Spacing.md),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Theme.of(
+                    context,
+                  ).colorScheme.primaryContainer,
+                  child: Icon(
+                    Icons.notifications_active_outlined,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-              ),
-              title: Text(
-                transaction.parsedMerchant ?? transaction.sourceContent,
-              ),
-              subtitle: Text(
-                transaction.parsedAmount != null
-                    ? '${transaction.parsedAmount}원'
-                    : '금액 정보 없음',
-                style: TextStyle(
+                title: Text(
+                  transaction.parsedMerchant ?? transaction.sourceContent,
+                ),
+                subtitle: Text(
+                  transaction.parsedAmount != null
+                      ? '${transaction.parsedAmount}원'
+                      : '금액 정보 없음',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.chevron_right,
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
+                onTap: () {
+                  context.push('/settings/pending-transactions');
+                },
               ),
-              trailing: Icon(
-                Icons.chevron_right,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              onTap: () {
-                context.push('/settings/pending-transactions');
-              },
-            ),
-          );
+            );
           },
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(
-        child: Text('오류: $e'),
-      ),
+      error: (e, _) => Center(child: Text('오류: $e')),
     );
   }
 
