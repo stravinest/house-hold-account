@@ -351,14 +351,15 @@ class _PaymentMethodListView extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
-              IconButton(
-                onPressed: () => _showAddAutoCollectDialog(context),
-                icon: const Icon(Icons.add, size: IconSize.sm),
-                tooltip: l10n.autoCollectPaymentMethodAdd,
-                constraints: const BoxConstraints(),
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
-              ),
+              if (methods.isNotEmpty)
+                IconButton(
+                  onPressed: () => _showAddAutoCollectDialog(context),
+                  icon: const Icon(Icons.add, size: IconSize.sm),
+                  tooltip: l10n.autoCollectPaymentMethodAdd,
+                  constraints: const BoxConstraints(),
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                ),
             ],
           ),
           const SizedBox(height: Spacing.xs),
@@ -398,12 +399,16 @@ class _PaymentMethodListView extends ConsumerWidget {
                   _AutoCollectPaymentMethodCard(
                     key: ValueKey(method.id),
                     paymentMethod: method,
-                    onEdit: () => showDialog(
-                      context: context,
-                      builder: (context) => AutoSaveModeDialog(
-                        paymentMethod: method,
-                      ),
-                    ),
+                    onEdit: () {
+                      if (context.mounted) {
+                        showDialog(
+                          context: context,
+                          builder: (dialogContext) => AutoSaveModeDialog(
+                            paymentMethod: method,
+                          ),
+                        );
+                      }
+                    },
                     onDelete: () => _showDeleteConfirm(context, ref, method),
                   ),
               ],
