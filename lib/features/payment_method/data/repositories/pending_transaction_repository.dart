@@ -60,6 +60,7 @@ class PendingTransactionRepository {
     String? parsedCategoryId,
     DateTime? parsedDate,
     String? duplicateHash,
+    bool isDuplicate = false,
     PendingTransactionStatus? status,
     bool isViewed = false,
   }) async {
@@ -77,6 +78,7 @@ class PendingTransactionRepository {
       parsedCategoryId: parsedCategoryId,
       parsedDate: parsedDate,
       duplicateHash: duplicateHash,
+      isDuplicate: isDuplicate,
       status: status,
       isViewed: isViewed,
     );

@@ -55,6 +55,7 @@ class PendingTransaction extends Equatable {
   final PendingTransactionStatus status;
   final String? transactionId;
   final String? duplicateHash;
+  final bool isDuplicate;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime expiresAt;
@@ -77,6 +78,7 @@ class PendingTransaction extends Equatable {
     this.status = PendingTransactionStatus.pending,
     this.transactionId,
     this.duplicateHash,
+    this.isDuplicate = false,
     required this.createdAt,
     required this.updatedAt,
     required this.expiresAt,
@@ -86,7 +88,6 @@ class PendingTransaction extends Equatable {
   bool get isParsed => parsedAmount != null;
   bool get isExpense => parsedType == 'expense';
   bool get isIncome => parsedType == 'income';
-  bool get isDuplicate => duplicateHash != null;
 
   PendingTransaction copyWith({
     String? id,
@@ -105,6 +106,7 @@ class PendingTransaction extends Equatable {
     PendingTransactionStatus? status,
     String? transactionId,
     String? duplicateHash,
+    bool? isDuplicate,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? expiresAt,
@@ -127,6 +129,7 @@ class PendingTransaction extends Equatable {
       status: status ?? this.status,
       transactionId: transactionId ?? this.transactionId,
       duplicateHash: duplicateHash ?? this.duplicateHash,
+      isDuplicate: isDuplicate ?? this.isDuplicate,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       expiresAt: expiresAt ?? this.expiresAt,
@@ -152,6 +155,7 @@ class PendingTransaction extends Equatable {
     status,
     transactionId,
     duplicateHash,
+    isDuplicate,
     createdAt,
     updatedAt,
     expiresAt,

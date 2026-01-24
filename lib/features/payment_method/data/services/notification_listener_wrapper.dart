@@ -524,6 +524,7 @@ class NotificationListenerWrapper {
         parsedResult: parsedResult,
         categoryId: categoryId,
         duplicateHash: duplicateResult.duplicateHash,
+        isDuplicate: duplicateResult.isDuplicate,
         status: initialStatus,
         isViewed: false,
       );
@@ -562,6 +563,7 @@ class NotificationListenerWrapper {
     required ParsedSmsResult parsedResult,
     required String? categoryId,
     required String duplicateHash,
+    required bool isDuplicate,
     required PendingTransactionStatus status,
     bool isViewed = false,
   }) async {
@@ -570,6 +572,7 @@ class NotificationListenerWrapper {
       debugPrint('  - ledgerId: $_currentLedgerId');
       debugPrint('  - paymentMethodId: ${paymentMethod.id}');
       debugPrint('  - status: ${status.toJson()}');
+      debugPrint('  - isDuplicate: $isDuplicate');
     }
 
     try {
@@ -587,6 +590,7 @@ class NotificationListenerWrapper {
         parsedCategoryId: categoryId,
         parsedDate: parsedResult.date ?? timestamp,
         duplicateHash: duplicateHash,
+        isDuplicate: isDuplicate,
         status: status,
         isViewed: isViewed,
       );

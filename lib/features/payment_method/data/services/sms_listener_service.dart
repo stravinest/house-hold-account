@@ -348,6 +348,7 @@ class SmsListenerService {
       parsedResult: parsedResult,
       categoryId: categoryId,
       duplicateHash: duplicateResult.duplicateHash,
+      isDuplicate: duplicateResult.isDuplicate,
       status: initialStatus,
       isViewed: false,
     );
@@ -372,6 +373,7 @@ class SmsListenerService {
     required ParsedSmsResult parsedResult,
     required String? categoryId,
     required String duplicateHash,
+    required bool isDuplicate,
     required PendingTransactionStatus status,
     bool isViewed = false,
   }) async {
@@ -390,6 +392,7 @@ class SmsListenerService {
         parsedCategoryId: categoryId,
         parsedDate: parsedResult.date ?? timestamp,
         duplicateHash: duplicateHash,
+        isDuplicate: isDuplicate,
         status: status,
         isViewed: isViewed,
       );
