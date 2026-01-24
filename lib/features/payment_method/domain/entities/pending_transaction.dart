@@ -86,6 +86,7 @@ class PendingTransaction extends Equatable {
   bool get isParsed => parsedAmount != null;
   bool get isExpense => parsedType == 'expense';
   bool get isIncome => parsedType == 'income';
+  bool get isDuplicate => duplicateHash != null;
 
   PendingTransaction copyWith({
     String? id,

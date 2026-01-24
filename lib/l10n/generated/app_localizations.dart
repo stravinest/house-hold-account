@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'수정'**
   String get commonEdit;
 
+  /// No description provided for @commonReject.
+  ///
+  /// In ko, this message translates to:
+  /// **'거부'**
+  String get commonReject;
+
   /// No description provided for @commonAdd.
   ///
   /// In ko, this message translates to:
@@ -1310,11 +1316,29 @@ abstract class AppLocalizations {
   /// **'자산'**
   String get transactionAsset;
 
+  /// No description provided for @transactionTypeLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 유형'**
+  String get transactionTypeLabel;
+
   /// No description provided for @transactionTitle.
   ///
   /// In ko, this message translates to:
   /// **'제목'**
   String get transactionTitle;
+
+  /// No description provided for @transactionMerchant.
+  ///
+  /// In ko, this message translates to:
+  /// **'가맹점'**
+  String get transactionMerchant;
+
+  /// No description provided for @transactionMerchantHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'가맹점명을 입력하세요'**
+  String get transactionMerchantHint;
 
   /// No description provided for @transactionAmount.
   ///
@@ -1322,11 +1346,23 @@ abstract class AppLocalizations {
   /// **'금액'**
   String get transactionAmount;
 
+  /// No description provided for @transactionAmountHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액을 입력하세요'**
+  String get transactionAmountHint;
+
   /// No description provided for @transactionAmountUnit.
   ///
   /// In ko, this message translates to:
   /// **'원'**
   String get transactionAmountUnit;
+
+  /// No description provided for @noCategoryAvailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용 가능한 카테고리가 없습니다'**
+  String get noCategoryAvailable;
 
   /// No description provided for @transactionCategory.
   ///
@@ -2132,6 +2168,12 @@ abstract class AppLocalizations {
   /// **'거부됨'**
   String get pendingTransactionStatusDenied;
 
+  /// No description provided for @pendingTransactionParsingFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 정보를 파싱할 수 없습니다'**
+  String get pendingTransactionParsingFailed;
+
   /// No description provided for @pendingTransactionDeleteConfirmTitle.
   ///
   /// In ko, this message translates to:
@@ -2173,6 +2215,36 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'모든 내역이 삭제되었습니다'**
   String get pendingTransactionDeleteAllSuccess;
+
+  /// No description provided for @pendingTransactionEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 수정'**
+  String get pendingTransactionEdit;
+
+  /// No description provided for @pendingTransactionReject.
+  ///
+  /// In ko, this message translates to:
+  /// **'거부'**
+  String get pendingTransactionReject;
+
+  /// No description provided for @pendingTransactionConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get pendingTransactionConfirm;
+
+  /// No description provided for @pendingTransactionConfirmed.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래가 저장되었습니다'**
+  String get pendingTransactionConfirmed;
+
+  /// No description provided for @pendingTransactionRejected.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래가 거부되었습니다'**
+  String get pendingTransactionRejected;
 
   /// No description provided for @pendingTransactionItemCount.
   ///
@@ -4002,6 +4074,72 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'개인 결제수단을 공유 결제수단으로 변경하면 다른 멤버도 이 결제수단을 수정할 수 있습니다. 계속하시겠습니까?'**
   String get paymentMethodPermissionWarningMessage;
+
+  /// No description provided for @errorOccurred.
+  ///
+  /// In ko, this message translates to:
+  /// **'오류가 발생했습니다'**
+  String get errorOccurred;
+
+  /// No description provided for @pullToRefresh.
+  ///
+  /// In ko, this message translates to:
+  /// **'아래로 당겨서 새로고침'**
+  String get pullToRefresh;
+
+  /// No description provided for @duplicateTransaction.
+  ///
+  /// In ko, this message translates to:
+  /// **'중복 거래'**
+  String get duplicateTransaction;
+
+  /// No description provided for @duplicateTransactionWarning.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 거래는 중복으로 감지되었습니다'**
+  String get duplicateTransactionWarning;
+
+  /// No description provided for @originalTransactionTime.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 거래 시간'**
+  String get originalTransactionTime;
+
+  /// No description provided for @viewOriginal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 보기'**
+  String get viewOriginal;
+
+  /// No description provided for @confirmDuplicate.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세'**
+  String get confirmDuplicate;
+
+  /// No description provided for @ignoreDuplicate.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get ignoreDuplicate;
+
+  /// No description provided for @duplicateInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'중복 정보'**
+  String get duplicateInfo;
+
+  /// No description provided for @originalTransactionNotFound.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 거래를 찾을 수 없습니다.'**
+  String get originalTransactionNotFound;
+
+  /// No description provided for @duplicateMessageReceivedTwice.
+  ///
+  /// In ko, this message translates to:
+  /// **'동일한 SMS/알림이 2번 수신되었을 수 있습니다.'**
+  String get duplicateMessageReceivedTwice;
 }
 
 class _AppLocalizationsDelegate

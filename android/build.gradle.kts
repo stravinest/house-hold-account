@@ -35,6 +35,13 @@ subprojects {
                 }
             }
         }
+
+        // Kotlin JVM 타겟을 전역으로 설정
+        tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+            compilerOptions {
+                jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+            }
+        }
     }
 }
 subprojects {

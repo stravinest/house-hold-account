@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -11,10 +12,15 @@ import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../category/domain/entities/category.dart';
+import '../../../category/presentation/providers/category_provider.dart';
+import '../../../ledger/presentation/providers/ledger_provider.dart';
+import '../../data/models/pending_transaction_model.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../providers/payment_method_provider.dart';
 import '../providers/pending_transaction_provider.dart';
+import '../widgets/pending_transaction_card.dart';
 import '../widgets/permission_request_dialog.dart';
 import 'payment_method_wizard_page.dart';
 
@@ -66,11 +72,11 @@ String _getDateGroupLabel(AppLocalizations l10n, _DateGroup group) {
 }
 
 /// Group transactions by date with consistent now reference
-Map<_DateGroup, List<PendingTransaction>> _groupTransactionsByDate(
-  List<PendingTransaction> transactions,
+Map<_DateGroup, List<PendingTransactionModel>> _groupTransactionsByDate(
+  List<PendingTransactionModel> transactions,
 ) {
   final now = DateTime.now(); // Create once for consistency
-  final grouped = <_DateGroup, List<PendingTransaction>>{};
+  final grouped = <_DateGroup, List<PendingTransactionModel>>{};
   for (final tx in transactions) {
     final group = _getDateGroup(tx.sourceTimestamp, now);
     grouped.putIfAbsent(group, () => []).add(tx);
@@ -115,8 +121,29 @@ class _PaymentMethodManagementPageState
 
     // Mark as viewed when auto-collect history tab is selected (Android only)
     if (_isAndroidPlatform && _mainTabController.index == _autoCollectHistoryTabIndex) {
-      _markAsViewed();
+      _handleAutoCollectTabSelected();
     }
+  }
+
+  Future<void> _handleAutoCollectTabSelected() async {
+    if (kDebugMode) {
+      debugPrint('[TabChanged] Auto-collect tab selected, refreshing data...');
+    }
+    try {
+      await _refreshPendingTransactions();
+      await _markAsViewed();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[TabChanged] Error: $e');
+      }
+    }
+  }
+
+  Future<void> _refreshPendingTransactions() async {
+    // Silent refresh: 이미 데이터가 있으면 UI 깜빡임 없이 백그라운드에서 업데이트
+    await ref
+        .read(pendingTransactionNotifierProvider.notifier)
+        .loadPendingTransactions(silent: true);
   }
 
   Future<void> _markAsViewed() async {
@@ -248,15 +275,18 @@ class _PaymentMethodManagementPageState
         Expanded(
           child: TabBarView(
             controller: _autoCollectTabController,
-            children: const [
+            children: [
               _PendingTransactionListView(
                 status: PendingTransactionStatus.pending,
+                tabController: _autoCollectTabController,
               ),
               _PendingTransactionListView(
                 status: PendingTransactionStatus.converted,
+                tabController: _autoCollectTabController,
               ),
               _PendingTransactionListView(
                 status: PendingTransactionStatus.rejected,
+                tabController: _autoCollectTabController,
               ),
             ],
           ),
@@ -892,35 +922,125 @@ class _AutoCollectPaymentMethodCard extends StatelessWidget {
 }
 
 /// Pending transaction list view (collection history) - date grouping + detailed card
-class _PendingTransactionListView extends ConsumerWidget {
+class _PendingTransactionListView extends ConsumerStatefulWidget {
   final PendingTransactionStatus status;
+  final TabController? tabController;
 
-  const _PendingTransactionListView({required this.status});
+  const _PendingTransactionListView({
+    required this.status,
+    this.tabController,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PendingTransactionListView> createState() =>
+      _PendingTransactionListViewState();
+}
+
+class _PendingTransactionListViewState
+    extends ConsumerState<_PendingTransactionListView>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // KeepAlive를 위해 필수
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    // 로케일 변경에 대응하기 위해 build마다 생성
-    final timeFormat = DateFormat('HH:mm');
-    final dateFormat = DateFormat('MM/dd HH:mm');
-    final currencyFormat = NumberFormat('#,###');
+    // ledgerId와 userId 가져오기
+    final ledgerId = ref.watch(selectedLedgerIdProvider);
+    final currentUser = ref.watch(currentUserProvider);
 
-    final filteredTransactions = switch (status) {
+    // AsyncValue 상태 확인
+    final asyncState = ref.watch(pendingTransactionNotifierProvider);
+
+    final filteredTransactions = switch (widget.status) {
       PendingTransactionStatus.pending => ref.watch(pendingTabTransactionsProvider),
       PendingTransactionStatus.converted ||
       PendingTransactionStatus.confirmed => ref.watch(confirmedTabTransactionsProvider),
       PendingTransactionStatus.rejected => ref.watch(rejectedTabTransactionsProvider),
     };
 
+    // ledgerId나 userId가 없으면 빈 상태 표시
+    if (ledgerId == null || currentUser == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Error 상태 처리
+    if (asyncState.hasError && filteredTransactions.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () async {
+          await ref
+              .read(pendingTransactionNotifierProvider.notifier)
+              .loadPendingTransactions();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: colorScheme.error,
+                    ),
+                    const SizedBox(height: Spacing.md),
+                    Text(
+                      l10n.errorOccurred,
+                      style: textTheme.titleMedium?.copyWith(
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: Spacing.xs),
+                    Text(
+                      l10n.pullToRefresh,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Loading 상태 처리 (초기 로딩만)
+    if (asyncState.isLoading && filteredTransactions.isEmpty) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
     if (filteredTransactions.isEmpty) {
-      return EmptyState(
-        icon: Icons.receipt_long_outlined,
-        message: _getEmptyMessage(l10n, status),
-        subtitle: _getEmptySubtitle(l10n, status),
+      return RefreshIndicator(
+        onRefresh: () async {
+          await ref
+              .read(pendingTransactionNotifierProvider.notifier)
+              .loadPendingTransactions();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: EmptyState(
+                icon: Icons.receipt_long_outlined,
+                message: _getEmptyMessage(l10n, widget.status),
+                subtitle: _getEmptySubtitle(l10n, widget.status),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -975,12 +1095,18 @@ class _PendingTransactionListView extends ConsumerWidget {
             ],
           ),
         ),
-        // List content
+        // List content with pull-to-refresh
         Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.all(Spacing.md),
-            itemCount: sortedGroups.length,
-            itemBuilder: (context, groupIndex) {
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await ref
+                  .read(pendingTransactionNotifierProvider.notifier)
+                  .loadPendingTransactions();
+            },
+            child: ListView.builder(
+              padding: const EdgeInsets.all(Spacing.md),
+              itemCount: sortedGroups.length,
+              itemBuilder: (context, groupIndex) {
               final group = sortedGroups[groupIndex];
               // Create new list for immutability and sort by newest first
               final sortedTransactions = grouped[group]!.toList()
@@ -1005,17 +1131,38 @@ class _PendingTransactionListView extends ConsumerWidget {
                   ),
                   // Transaction cards
                   for (final tx in sortedTransactions)
-                    _PendingTransactionCard(
+                    PendingTransactionCard(
                       key: ValueKey(tx.id),
                       transaction: tx,
-                      status: status,
-                      timeFormat: timeFormat,
-                      dateFormat: dateFormat,
-                      currencyFormat: currencyFormat,
+                      ledgerId: ledgerId,
+                      userId: currentUser.id,
+                      onEdit: widget.status == PendingTransactionStatus.pending
+                          ? () {
+                              if (tx is PendingTransactionModel) {
+                                _showEditSheet(context, ref, tx);
+                              }
+                            }
+                          : null,
+                      onReject: widget.status == PendingTransactionStatus.pending
+                          ? () => _rejectTransaction(context, ref, tx.id)
+                          : null,
+                      onConfirm: widget.status == PendingTransactionStatus.pending &&
+                              tx is PendingTransactionModel
+                          ? () => _confirmTransaction(context, ref, tx)
+                          : null,
+                      onDelete: () =>
+                          _deletePendingTransaction(context, ref, tx.id),
+                      onViewOriginal: tx.isDuplicate
+                          ? () {
+                              // 원본 거래로 스크롤하거나 표시
+                              // TODO: 구현 필요
+                            }
+                          : null,
                     ),
                 ],
               );
             },
+            ),
           ),
         ),
       ],
@@ -1028,7 +1175,7 @@ class _PendingTransactionListView extends ConsumerWidget {
     AppLocalizations l10n,
     int count,
   ) {
-    final statusText = _getStatusText(l10n, status);
+    final statusText = _getStatusText(l10n, widget.status);
     showDialog(
       context: parentContext,
       builder: (dialogContext) => AlertDialog(
@@ -1043,9 +1190,14 @@ class _PendingTransactionListView extends ConsumerWidget {
             onPressed: () async {
               Navigator.pop(dialogContext);
               try {
-                await ref
-                    .read(pendingTransactionNotifierProvider.notifier)
-                    .deleteAllByStatus(status);
+                final notifier = ref.read(pendingTransactionNotifierProvider.notifier);
+                // 확인됨 탭에서는 confirmed + converted 둘 다 삭제
+                if (widget.status == PendingTransactionStatus.converted ||
+                    widget.status == PendingTransactionStatus.confirmed) {
+                  await notifier.deleteAllConfirmed();
+                } else {
+                  await notifier.deleteAllByStatus(widget.status);
+                }
                 if (parentContext.mounted) {
                   SnackBarUtils.showSuccess(parentContext, l10n.pendingTransactionDeleteAllSuccess);
                 }
@@ -1089,237 +1241,602 @@ class _PendingTransactionListView extends ConsumerWidget {
     }
     return null;
   }
-}
 
-/// Improved pending transaction card widget
-class _PendingTransactionCard extends ConsumerWidget {
-  final PendingTransaction transaction;
-  final PendingTransactionStatus status;
-  final DateFormat timeFormat;
-  final DateFormat dateFormat;
-  final NumberFormat currencyFormat;
+  void _showEditSheet(
+    BuildContext context,
+    WidgetRef ref,
+    PendingTransactionModel transaction,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (sheetContext) => _PendingTransactionEditSheet(
+        transaction: transaction,
+        onConfirmed: () {
+          // 확인됨 탭으로 이동 (index 1)
+          widget.tabController?.animateTo(1);
+        },
+        onRejected: () {
+          // 거부됨 탭으로 이동 (index 2)
+          widget.tabController?.animateTo(2);
+        },
+      ),
+    );
+  }
 
-  const _PendingTransactionCard({
-    super.key,
-    required this.transaction,
-    required this.status,
-    required this.timeFormat,
-    required this.dateFormat,
-    required this.currencyFormat,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Future<void> _rejectTransaction(
+    BuildContext context,
+    WidgetRef ref,
+    String transactionId,
+  ) async {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: Spacing.md),
-      child: Padding(
-        padding: const EdgeInsets.all(Spacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top: notification source + time + delete button
-            Row(
-              children: [
-                Icon(
-                  transaction.sourceType == SourceType.sms
-                      ? Icons.sms_outlined
-                      : Icons.notifications_outlined,
-                  size: IconSize.xs,
-                  color: colorScheme.onSurfaceVariant,
-                  semanticLabel: transaction.sourceType == SourceType.sms
-                      ? l10n.sourceTypeSms
-                      : l10n.sourceTypeNotification,
-                ),
-                const SizedBox(width: Spacing.xs),
-                Text(
-                  transaction.sourceType == SourceType.sms
-                      ? l10n.sourceTypeSms
-                      : l10n.sourceTypeNotification,
-                  style: textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: Spacing.xs),
-                Expanded(
-                  child: Text(
-                    transaction.sourceSender ?? '',
-                    style: textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text(
-                  timeFormat.format(transaction.sourceTimestamp),
-                  style: textTheme.labelSmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => _showDeleteConfirm(context, ref),
-                  icon: Icon(
-                    Icons.delete_outline,
-                    size: IconSize.sm,
-                    color: colorScheme.error,
-                    semanticLabel: l10n.commonDelete,
-                  ),
-                  constraints: const BoxConstraints(),
-                  padding: const EdgeInsets.all(Spacing.xs),
-                  visualDensity: VisualDensity.compact,
-                  tooltip: l10n.commonDelete,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: Spacing.md),
-
-            // Middle: amount + status badge
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Text(
-                    transaction.parsedAmount != null
-                        ? '${transaction.parsedType == 'income' ? '+' : '-'}${currencyFormat.format(transaction.parsedAmount)}원'
-                        : l10n.noAmountInfo,
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: transaction.parsedType == 'income'
-                          ? colorScheme.primary
-                          : colorScheme.error,
-                    ),
-                  ),
-                ),
-                _buildStatusBadge(context, l10n),
-              ],
-            ),
-
-            // Merchant + date
-            if (transaction.parsedMerchant != null) ...[
-              const SizedBox(height: Spacing.xs),
-              Text(
-                '${transaction.parsedMerchant} ${dateFormat.format(transaction.parsedDate ?? transaction.sourceTimestamp)}',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurface,
-                ),
-              ),
-            ],
-
-            // Divider
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: Spacing.sm),
-              child: Divider(height: 1),
-            ),
-
-            // Original message
-            Text(
-              transaction.sourceContent,
-              style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
+    try {
+      await ref
+          .read(pendingTransactionNotifierProvider.notifier)
+          .rejectTransaction(transactionId);
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(context, l10n.pendingTransactionRejected);
+        // 거부됨 탭으로 이동 (index 2)
+        widget.tabController?.animateTo(2);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(context, e.toString());
+      }
+    }
   }
 
-  Widget _buildStatusBadge(BuildContext context, AppLocalizations l10n) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
-    final (String label, Color bgColor, Color textColor, IconData icon) = switch (status) {
-      PendingTransactionStatus.pending => (
-        l10n.pendingTransactionStatusWaiting,
-        colorScheme.secondaryContainer,
-        colorScheme.onSecondaryContainer,
-        Icons.schedule_outlined,
-      ),
-      PendingTransactionStatus.converted ||
-      PendingTransactionStatus.confirmed => (
-        l10n.pendingTransactionStatusSaved,
-        colorScheme.primaryContainer,
-        colorScheme.onPrimaryContainer,
-        Icons.check_circle_outline,
-      ),
-      PendingTransactionStatus.rejected => (
-        l10n.pendingTransactionStatusDenied,
-        colorScheme.errorContainer,
-        colorScheme.onErrorContainer,
-        Icons.cancel_outlined,
-      ),
-    };
-
-    return Semantics(
-      label: label,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: _badgePaddingH,
-          vertical: _badgePaddingV,
-        ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(_badgeBorderRadius),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 12, color: textColor),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: textTheme.labelSmall?.copyWith(
-                color: textColor,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  Future<void> _confirmTransaction(
+    BuildContext context,
+    WidgetRef ref,
+    PendingTransaction transaction,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      await ref
+          .read(pendingTransactionNotifierProvider.notifier)
+          .confirmTransaction(transaction.id);
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(context, l10n.pendingTransactionConfirmed);
+        // 확인됨 탭으로 이동 (index 1)
+        widget.tabController?.animateTo(1);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(context, e.toString());
+      }
+    }
   }
 
-  void _showDeleteConfirm(BuildContext parentContext, WidgetRef ref) {
-    final l10n = AppLocalizations.of(parentContext);
-    showDialog(
-      context: parentContext,
+  Future<void> _deletePendingTransaction(
+    BuildContext context,
+    WidgetRef ref,
+    String transactionId,
+  ) async {
+    final l10n = AppLocalizations.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.pendingTransactionDeleteConfirmTitle),
         content: Text(l10n.pendingTransactionDeleteConfirmMessage),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: Text(l10n.commonCancel),
           ),
           TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await ref
-                    .read(pendingTransactionNotifierProvider.notifier)
-                    .deleteTransaction(transaction.id);
-                if (parentContext.mounted) {
-                  SnackBarUtils.showSuccess(parentContext, l10n.pendingTransactionDeleted);
-                }
-              } catch (e) {
-                if (parentContext.mounted) {
-                  SnackBarUtils.showError(parentContext, e.toString());
-                }
-              }
-            },
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(l10n.commonDelete),
           ),
         ],
       ),
     );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        await ref
+            .read(pendingTransactionNotifierProvider.notifier)
+            .deleteTransaction(transactionId);
+        if (context.mounted) {
+          SnackBarUtils.showSuccess(context, l10n.pendingTransactionDeleted);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          SnackBarUtils.showError(context, e.toString());
+        }
+      }
+    }
+  }
+}
+
+/// 대기중 거래 수정/저장/거부 바텀시트
+class _PendingTransactionEditSheet extends ConsumerStatefulWidget {
+  final PendingTransactionModel transaction;
+  final VoidCallback? onConfirmed;
+  final VoidCallback? onRejected;
+
+  const _PendingTransactionEditSheet({
+    required this.transaction,
+    this.onConfirmed,
+    this.onRejected,
+  });
+
+  @override
+  ConsumerState<_PendingTransactionEditSheet> createState() =>
+      _PendingTransactionEditSheetState();
+}
+
+class _PendingTransactionEditSheetState
+    extends ConsumerState<_PendingTransactionEditSheet> {
+  late TextEditingController _amountController;
+  late TextEditingController _merchantController;
+  String? _selectedCategoryId;
+  late String _transactionType;
+  late DateTime _selectedDate;
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController = TextEditingController(
+      text: widget.transaction.parsedAmount?.toString() ?? '',
+    );
+    _merchantController = TextEditingController(
+      text: widget.transaction.parsedMerchant ?? '',
+    );
+    _selectedCategoryId = widget.transaction.parsedCategoryId;
+    _transactionType = widget.transaction.parsedType ?? 'expense';
+    _selectedDate =
+        widget.transaction.parsedDate ?? widget.transaction.sourceTimestamp;
+  }
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _merchantController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final dateFormat = DateFormat('yyyy-MM-dd');
+
+    // 카테고리 목록 가져오기
+    final categoriesAsync = _transactionType == 'income'
+        ? ref.watch(incomeCategoriesProvider)
+        : ref.watch(expenseCategoriesProvider);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(BorderRadiusToken.lg),
+            ),
+          ),
+          child: Column(
+            children: [
+              // 핸들 바
+              Container(
+                margin: const EdgeInsets.symmetric(vertical: Spacing.sm),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              // 헤더
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.sm,
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      l10n.pendingTransactionEdit,
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // 내용
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.all(Spacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // 원본 메시지 표시
+                      Container(
+                        padding: const EdgeInsets.all(Spacing.md),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius:
+                              BorderRadius.circular(BorderRadiusToken.sm),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  widget.transaction.sourceType == SourceType.sms
+                                      ? Icons.sms_outlined
+                                      : Icons.notifications_outlined,
+                                  size: IconSize.sm,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: Spacing.xs),
+                                Text(
+                                  widget.transaction.sourceSender ?? '',
+                                  style: textTheme.labelMedium?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: Spacing.sm),
+                            Text(
+                              widget.transaction.sourceContent,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.lg),
+
+                      // 거래 유형 선택
+                      Text(
+                        l10n.transactionTypeLabel,
+                        style: textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      SegmentedButton<String>(
+                        segments: [
+                          ButtonSegment(
+                            value: 'expense',
+                            label: Text(l10n.transactionExpense),
+                            icon: const Icon(Icons.arrow_downward),
+                          ),
+                          ButtonSegment(
+                            value: 'income',
+                            label: Text(l10n.transactionIncome),
+                            icon: const Icon(Icons.arrow_upward),
+                          ),
+                        ],
+                        selected: {_transactionType},
+                        onSelectionChanged: (selected) {
+                          setState(() {
+                            _transactionType = selected.first;
+                            _selectedCategoryId = null; // 카테고리 초기화
+                          });
+                        },
+                      ),
+                      const SizedBox(height: Spacing.lg),
+
+                      // 금액 입력
+                      Text(
+                        l10n.transactionAmount,
+                        style: textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      TextField(
+                        controller: _amountController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          hintText: l10n.transactionAmountHint,
+                          suffixText: l10n.transactionAmountUnit,
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.lg),
+
+                      // 가맹점 입력
+                      Text(
+                        l10n.transactionMerchant,
+                        style: textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      TextField(
+                        controller: _merchantController,
+                        decoration: InputDecoration(
+                          hintText: l10n.transactionMerchantHint,
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.lg),
+
+                      // 카테고리 선택
+                      Text(
+                        l10n.transactionCategory,
+                        style: textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      categoriesAsync.when(
+                        data: (categories) => _buildCategorySelector(
+                          context,
+                          categories,
+                          colorScheme,
+                          textTheme,
+                        ),
+                        loading: () => const Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                        error: (e, _) => Text(l10n.errorWithMessage(e.toString())),
+                      ),
+                      const SizedBox(height: Spacing.lg),
+
+                      // 날짜 선택
+                      Text(
+                        l10n.labelDate,
+                        style: textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      InkWell(
+                        onTap: () => _selectDate(context),
+                        borderRadius:
+                            BorderRadius.circular(BorderRadiusToken.sm),
+                        child: Container(
+                          padding: const EdgeInsets.all(Spacing.md),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: colorScheme.outline),
+                            borderRadius:
+                                BorderRadius.circular(BorderRadiusToken.sm),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.calendar_today,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: Spacing.md),
+                              Text(
+                                dateFormat.format(_selectedDate),
+                                style: textTheme.bodyLarge,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.xl),
+                    ],
+                  ),
+                ),
+              ),
+              // 하단 버튼
+              Container(
+                padding: const EdgeInsets.all(Spacing.md),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Row(
+                    children: [
+                      // 거부 버튼
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _isLoading ? null : _rejectTransaction,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: colorScheme.error,
+                            side: BorderSide(color: colorScheme.error),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: Spacing.md,
+                            ),
+                          ),
+                          child: Text(l10n.pendingTransactionReject),
+                        ),
+                      ),
+                      const SizedBox(width: Spacing.md),
+                      // 저장 버튼
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _confirmTransaction,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: Spacing.md,
+                            ),
+                          ),
+                          child: _isLoading
+                              ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      colorScheme.onPrimary,
+                                    ),
+                                  ),
+                                )
+                              : Text(l10n.pendingTransactionConfirm),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategorySelector(
+    BuildContext context,
+    List<Category> categories,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
+    if (categories.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(Spacing.md),
+        decoration: BoxDecoration(
+          border: Border.all(color: colorScheme.outline),
+          borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
+        ),
+        child: Text(
+          AppLocalizations.of(context).noCategoryAvailable,
+          style: textTheme.bodyMedium?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: Spacing.sm,
+      runSpacing: Spacing.sm,
+      children: categories.map((category) {
+        final isSelected = _selectedCategoryId == category.id;
+        return FilterChip(
+          selected: isSelected,
+          label: Text(category.name),
+          avatar: Text(category.icon),
+          onSelected: (selected) {
+            setState(() {
+              _selectedCategoryId = selected ? category.id : null;
+            });
+          },
+          selectedColor: colorScheme.primaryContainer,
+          checkmarkColor: colorScheme.onPrimaryContainer,
+        );
+      }).toList(),
+    );
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 1)),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _confirmTransaction() async {
+    final l10n = AppLocalizations.of(context);
+    final amountText =
+        _amountController.text.replaceAll(',', '').replaceAll(' ', '');
+    final amount = int.tryParse(amountText);
+
+    if (amount == null || amount <= 0) {
+      SnackBarUtils.showError(context, l10n.transactionAmountRequired);
+      return;
+    }
+
+    // 최대 금액 제한 (1억원)
+    const maxAmount = 100000000;
+    if (amount > maxAmount) {
+      SnackBarUtils.showError(context, l10n.transactionAmountRequired);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 단일 트랜잭션으로 파싱 데이터 업데이트와 거래 확인 수행
+      await ref
+          .read(pendingTransactionNotifierProvider.notifier)
+          .updateAndConfirmTransaction(
+            id: widget.transaction.id,
+            parsedAmount: amount,
+            parsedType: _transactionType,
+            parsedMerchant: _merchantController.text.trim().isEmpty
+                ? null
+                : _merchantController.text.trim(),
+            parsedCategoryId: _selectedCategoryId,
+            parsedDate: _selectedDate,
+          );
+
+      if (mounted) {
+        Navigator.pop(context);
+        SnackBarUtils.showSuccess(context, l10n.pendingTransactionConfirmed);
+        widget.onConfirmed?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _rejectTransaction() async {
+    final l10n = AppLocalizations.of(context);
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await ref
+          .read(pendingTransactionNotifierProvider.notifier)
+          .rejectTransaction(widget.transaction.id);
+
+      if (mounted) {
+        Navigator.pop(context);
+        SnackBarUtils.showSuccess(context, l10n.pendingTransactionRejected);
+        widget.onRejected?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
+    }
   }
 }

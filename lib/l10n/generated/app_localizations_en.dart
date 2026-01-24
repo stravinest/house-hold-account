@@ -31,6 +31,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonEdit => 'Edit';
 
   @override
+  String get commonReject => 'Reject';
+
+  @override
   String get commonAdd => 'Add';
 
   @override
@@ -666,13 +669,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionAsset => 'Asset';
 
   @override
+  String get transactionTypeLabel => 'Transaction Type';
+
+  @override
   String get transactionTitle => 'Title';
+
+  @override
+  String get transactionMerchant => 'Merchant';
+
+  @override
+  String get transactionMerchantHint => 'Enter merchant name';
 
   @override
   String get transactionAmount => 'Amount';
 
   @override
+  String get transactionAmountHint => 'Enter amount';
+
+  @override
   String get transactionAmountUnit => 'KRW';
+
+  @override
+  String get noCategoryAvailable => 'No categories available';
 
   @override
   String get transactionCategory => 'Category';
@@ -1112,6 +1130,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingTransactionStatusDenied => 'Denied';
 
   @override
+  String get pendingTransactionParsingFailed =>
+      'Unable to parse transaction information';
+
+  @override
   String get pendingTransactionDeleteConfirmTitle => 'Delete Transaction';
 
   @override
@@ -1134,6 +1156,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pendingTransactionDeleteAllSuccess => 'All items deleted';
+
+  @override
+  String get pendingTransactionEdit => 'Edit Transaction';
+
+  @override
+  String get pendingTransactionReject => 'Reject';
+
+  @override
+  String get pendingTransactionConfirm => 'Save';
+
+  @override
+  String get pendingTransactionConfirmed => 'Transaction saved';
+
+  @override
+  String get pendingTransactionRejected => 'Transaction rejected';
 
   @override
   String pendingTransactionItemCount(int count) {
@@ -2161,4 +2198,39 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paymentMethodPermissionWarningMessage =>
       'Changing from personal to shared payment method will allow other members to modify it. Continue?';
+
+  @override
+  String get errorOccurred => 'An error occurred';
+
+  @override
+  String get pullToRefresh => 'Pull down to refresh';
+
+  @override
+  String get duplicateTransaction => 'Duplicate Transaction';
+
+  @override
+  String get duplicateTransactionWarning =>
+      'This transaction was detected as a duplicate';
+
+  @override
+  String get originalTransactionTime => 'Original Transaction Time';
+
+  @override
+  String get viewOriginal => 'View Original';
+
+  @override
+  String get confirmDuplicate => 'Details';
+
+  @override
+  String get ignoreDuplicate => 'Save';
+
+  @override
+  String get duplicateInfo => 'Duplicate Info';
+
+  @override
+  String get originalTransactionNotFound => 'Original transaction not found.';
+
+  @override
+  String get duplicateMessageReceivedTwice =>
+      'The same SMS/notification may have been received twice.';
 }

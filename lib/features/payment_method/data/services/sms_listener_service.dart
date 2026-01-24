@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:another_telephony/telephony.dart';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/learned_sms_format.dart';
@@ -48,6 +50,10 @@ class SmsListenerService {
 
   List<PaymentMethodModel> _autoSavePaymentMethods = [];
   final Map<String, List<LearnedSmsFormatModel>> _learnedFormatsCache = {};
+
+  // SMS/Push 중복 수신 방지 캐시 (메시지 해시 → 타임스탬프)
+  final Map<String, DateTime> _recentlyProcessedMessages = {};
+  static const Duration _messageCacheDuration = Duration(seconds: 10);
 
   final _onSmsProcessedController =
       StreamController<SmsProcessedEvent>.broadcast();
@@ -163,7 +169,8 @@ class SmsListenerService {
 
     if (sender.isEmpty || content.isEmpty) return;
 
-    if (!FinancialSmsSenders.isFinancialSender(sender)) {
+    // 발신자 또는 본문에서 금융사 패턴 확인
+    if (!FinancialSmsSenders.isFinancialSender(sender, content)) {
       return;
     }
 
@@ -257,6 +264,25 @@ class SmsListenerService {
     required PaymentMethodModel paymentMethod,
     LearnedSmsFormat? learnedFormat,
   }) async {
+    // 메시지 내용으로 해시 생성 (중복 수신 방지)
+    final messageHash = _generateMessageHash(sender, content, timestamp);
+
+    // 최근 10초 이내에 동일한 메시지를 처리했는지 확인
+    final cachedTime = _recentlyProcessedMessages[messageHash];
+    if (cachedTime != null) {
+      final timeDiff = DateTime.now().difference(cachedTime);
+      if (timeDiff < _messageCacheDuration) {
+        debugPrint(
+          'Duplicate message detected (cached ${timeDiff.inSeconds}s ago) - ignoring',
+        );
+        return;
+      }
+    }
+
+    // 메시지 처리 시작 - 캐시에 기록
+    _recentlyProcessedMessages[messageHash] = DateTime.now();
+    _cleanupMessageCache();
+
     ParsedSmsResult parsedResult;
 
     if (learnedFormat != null) {
@@ -290,19 +316,6 @@ class SmsListenerService {
       timestamp: timestamp,
     );
 
-    if (duplicateResult.isDuplicate) {
-      debugPrint('Duplicate SMS detected');
-      _onSmsProcessedController.add(
-        SmsProcessedEvent(
-          sender: sender,
-          content: content,
-          success: false,
-          reason: 'duplicate',
-        ),
-      );
-      return;
-    }
-
     String? categoryId = paymentMethod.defaultCategoryId;
     if (categoryId == null && parsedResult.merchant != null) {
       categoryId = await _categoryMappingService.findCategoryId(
@@ -316,31 +329,28 @@ class SmsListenerService {
       'SMS matched with mode: $autoSaveModeStr for ${paymentMethod.name}',
     );
 
-    if (autoSaveModeStr == 'auto') {
-      await _createPendingTransaction(
-        sender: sender,
-        content: content,
-        timestamp: timestamp,
-        paymentMethod: paymentMethod,
-        parsedResult: parsedResult,
-        categoryId: categoryId,
-        duplicateHash: duplicateResult.duplicateHash,
-        status: PendingTransactionStatus.confirmed,
-        isViewed: false,
-      );
+    // 중복 감지 처리: 중복이더라도 pending으로 저장하여 사용자가 확인할 수 있게 함
+    PendingTransactionStatus initialStatus;
+    if (duplicateResult.isDuplicate) {
+      debugPrint('Duplicate SMS detected - saving as pending for user review');
+      initialStatus = PendingTransactionStatus.pending;
+    } else if (autoSaveModeStr == 'auto') {
+      initialStatus = PendingTransactionStatus.confirmed;
     } else {
-      await _createPendingTransaction(
-        sender: sender,
-        content: content,
-        timestamp: timestamp,
-        paymentMethod: paymentMethod,
-        parsedResult: parsedResult,
-        categoryId: categoryId,
-        duplicateHash: duplicateResult.duplicateHash,
-        status: PendingTransactionStatus.pending,
-        isViewed: false,
-      );
+      initialStatus = PendingTransactionStatus.pending;
     }
+
+    await _createPendingTransaction(
+      sender: sender,
+      content: content,
+      timestamp: timestamp,
+      paymentMethod: paymentMethod,
+      parsedResult: parsedResult,
+      categoryId: categoryId,
+      duplicateHash: duplicateResult.duplicateHash,
+      status: initialStatus,
+      isViewed: false,
+    );
 
     _onSmsProcessedController.add(
       SmsProcessedEvent(
@@ -409,7 +419,10 @@ class SmsListenerService {
       );
 
       return messages
-          .where((m) => FinancialSmsSenders.isFinancialSender(m.address ?? ''))
+          .where((m) => FinancialSmsSenders.isFinancialSender(
+                m.address ?? '',
+                m.body,
+              ))
           .take(count)
           .toList();
     } catch (e) {
@@ -449,6 +462,28 @@ class SmsListenerService {
     }
   }
 
+  /// 메시지 내용으로 고유 해시 생성 (중복 수신 방지용)
+  ///
+  /// 발신자 + 내용 일부 + 시간(분 단위)로 해시를 만들어
+  /// SMS와 Push 알림이 동시에 와도 동일한 메시지임을 식별
+  String _generateMessageHash(String sender, String content, DateTime timestamp) {
+    final minuteBucket = timestamp.millisecondsSinceEpoch ~/ (60 * 1000);
+    final contentPreview = content.length > 100 ? content.substring(0, 100) : content;
+    final input = '$sender-$contentPreview-$minuteBucket';
+
+    // md5 해시 (결정적 해시, duplicate_check_service와 동일한 방식)
+    final bytes = utf8.encode(input);
+    return md5.convert(bytes).toString();
+  }
+
+  /// 오래된 메시지 캐시 정리
+  void _cleanupMessageCache() {
+    final now = DateTime.now();
+    _recentlyProcessedMessages.removeWhere((key, timestamp) {
+      return now.difference(timestamp) > _messageCacheDuration;
+    });
+  }
+
   void dispose() {
     stopListening();
     _onSmsProcessedController.close();
@@ -456,6 +491,7 @@ class SmsListenerService {
     _currentUserId = null;
     _currentLedgerId = null;
     _learnedFormatsCache.clear();
+    _recentlyProcessedMessages.clear();
     _instance = null;
   }
 }

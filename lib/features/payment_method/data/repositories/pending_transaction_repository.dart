@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
@@ -81,13 +82,39 @@ class PendingTransactionRepository {
     );
 
     return _retry(() async {
+      // 현재 인증 사용자 확인
+      final currentAuthUser = _client.auth.currentUser;
+      if (currentAuthUser == null) {
+        throw Exception('Not authenticated - auth.currentUser is null');
+      }
+      if (currentAuthUser.id != userId) {
+        throw Exception(
+          'User ID mismatch - auth.uid: ${currentAuthUser.id}, provided userId: $userId',
+        );
+      }
+
       final response = await _client
           .from('pending_transactions')
           .insert(data)
-          .select()
-          .single();
+          .select();
 
-      return PendingTransactionModel.fromJson(response);
+      if ((response as List).isEmpty) {
+        // 추가 진단: 해당 사용자가 ledger의 멤버인지 확인
+        final memberCheck = await _client
+            .from('ledger_members')
+            .select('role')
+            .eq('ledger_id', ledgerId)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        throw Exception(
+          'INSERT returned 0 rows - RLS policy may have blocked the insert. '
+          'ledgerId: $ledgerId, userId: $userId, authUid: ${currentAuthUser.id}, '
+          'isMember: ${memberCheck != null}, role: ${memberCheck?['role']}',
+        );
+      }
+
+      return PendingTransactionModel.fromJson(response.first);
     });
   }
 
@@ -171,6 +198,16 @@ class PendingTransactionRepository {
     );
   }
 
+  /// 확인됨 탭의 모든 항목 삭제 (confirmed + converted 상태)
+  Future<void> deleteAllConfirmed(String ledgerId, String userId) async {
+    await _client
+        .from('pending_transactions')
+        .delete()
+        .eq('ledger_id', ledgerId)
+        .eq('user_id', userId)
+        .inFilter('status', ['confirmed', 'converted']);
+  }
+
   Future<bool> checkDuplicate({
     required int amount,
     required String? paymentMethodId,
@@ -190,7 +227,10 @@ class PendingTransactionRepository {
         },
       );
       return response as bool? ?? false;
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[PendingTransaction] checkDuplicate RPC failed: $e');
+      }
       return false;
     }
   }
@@ -201,7 +241,10 @@ class PendingTransactionRepository {
         'cleanup_expired_pending_transactions',
       );
       return response as int? ?? 0;
-    } catch (_) {
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[PendingTransaction] cleanupExpired RPC failed: $e');
+      }
       return 0;
     }
   }
@@ -289,5 +332,33 @@ class PendingTransactionRepository {
         .eq('ledger_id', ledgerId)
         .eq('user_id', userId)
         .eq('is_viewed', false);
+  }
+
+  /// duplicateHash로 원본 중복 거래 찾기
+  Future<PendingTransactionModel?> findOriginalDuplicate({
+    required String ledgerId,
+    required String userId,
+    required String duplicateHash,
+    required String currentTransactionId,
+  }) async {
+    try {
+      final response = await _client
+          .from('pending_transactions')
+          .select()
+          .eq('ledger_id', ledgerId)
+          .eq('user_id', userId)
+          .eq('duplicate_hash', duplicateHash)
+          .neq('id', currentTransactionId)
+          .order('created_at', ascending: true)
+          .limit(1);
+
+      if ((response as List).isEmpty) return null;
+      return PendingTransactionModel.fromJson(response.first);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[PendingTransaction] findOriginalDuplicate failed: $e');
+      }
+      return null;
+    }
   }
 }

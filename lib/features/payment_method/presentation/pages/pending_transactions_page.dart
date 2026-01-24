@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/models/pending_transaction_model.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../providers/pending_transaction_provider.dart';
@@ -54,6 +56,18 @@ class _PendingTransactionsPageState
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final pendingTxAsync = ref.watch(pendingTransactionNotifierProvider);
+    final ledgerId = ref.watch(selectedLedgerIdProvider);
+    final currentUser = ref.watch(currentUserProvider);
+
+    // ledgerId나 userId가 없으면 로딩 표시
+    if (ledgerId == null || currentUser == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('자동 수집')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final userId = currentUser.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -156,6 +170,8 @@ class _PendingTransactionsPageState
                 transactions
                     .where((t) => t.status == PendingTransactionStatus.pending)
                     .toList(),
+                ledgerId: ledgerId,
+                userId: userId,
                 emptyMessage: '대기 중인 거래가 없습니다',
                 emptyIcon: Icons.hourglass_empty,
               ),
@@ -168,6 +184,8 @@ class _PendingTransactionsPageState
                           t.status == PendingTransactionStatus.converted,
                     )
                     .toList(),
+                ledgerId: ledgerId,
+                userId: userId,
                 emptyMessage: '확인된 거래가 없습니다',
                 emptyIcon: Icons.check_circle_outline,
               ),
@@ -176,6 +194,8 @@ class _PendingTransactionsPageState
                 transactions
                     .where((t) => t.status == PendingTransactionStatus.rejected)
                     .toList(),
+                ledgerId: ledgerId,
+                userId: userId,
                 emptyMessage: '거부된 거래가 없습니다',
                 emptyIcon: Icons.cancel_outlined,
               ),
@@ -196,6 +216,8 @@ class _PendingTransactionsPageState
   Widget _buildTransactionList(
     BuildContext context,
     List<PendingTransactionModel> transactions, {
+    required String ledgerId,
+    required String userId,
     required String emptyMessage,
     required IconData emptyIcon,
   }) {
@@ -236,6 +258,8 @@ class _PendingTransactionsPageState
                 padding: const EdgeInsets.only(bottom: Spacing.sm),
                 child: PendingTransactionCard(
                   transaction: tx,
+                  ledgerId: ledgerId,
+                  userId: userId,
                   onConfirm: tx.status == PendingTransactionStatus.pending
                       ? () => _confirmTransaction(tx.id)
                       : null,
@@ -246,6 +270,12 @@ class _PendingTransactionsPageState
                       ? () => _editTransaction(tx)
                       : null,
                   onDelete: () => _deleteTransaction(tx.id),
+                  onViewOriginal: tx.isDuplicate
+                      ? () {
+                          // 원본 거래로 스크롤
+                          // TODO: 구현 필요
+                        }
+                      : null,
                 ),
               ),
             ),

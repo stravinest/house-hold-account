@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../../../../config/supabase_config.dart';
 import '../models/learned_sms_format_model.dart';
 
@@ -123,19 +125,26 @@ class LearnedSmsFormatRepository {
       );
     } catch (_) {
       // RPC 함수가 없으면 직접 업데이트 (race condition 가능성 있음)
-      final current = await _client
-          .from('learned_sms_formats')
-          .select('match_count')
-          .eq('id', id)
-          .single();
+      try {
+        final current = await _client
+            .from('learned_sms_formats')
+            .select('match_count')
+            .eq('id', id)
+            .maybeSingle();
 
-      await _client
-          .from('learned_sms_formats')
-          .update({
-            'match_count': (current['match_count'] as int) + 1,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', id);
+        if (current != null) {
+          await _client
+              .from('learned_sms_formats')
+              .update({
+                'match_count': (current['match_count'] as int? ?? 0) + 1,
+                'updated_at': DateTime.now().toIso8601String(),
+              })
+              .eq('id', id);
+        }
+      } catch (e) {
+        // match_count는 핵심 기능이 아니지만 지속적 실패 시 확인 필요
+        debugPrint('[LearnedSmsFormat] incrementMatchCount fallback failed: $e');
+      }
     }
   }
 

@@ -1,81 +1,52 @@
 # 코드 리뷰 결과
 
 ## 요약
-- 검토 파일: 2개
-  - `payment_method_wizard_page.dart` (1,223 lines)
-  - `payment_method_management_page.dart` (1,327 lines)
-- **Critical: 0개** / **High: 3개** / **Medium: 5개** / **Low: 3개**
+- 검토 파일: 4개
+  - `payment_method_management_page.dart` (변경 약 500줄)
+  - `pending_transaction_card.dart` (변경 약 20줄)
+  - `app_ko.arb` / `app_en.arb` (i18n 추가)
+- **Critical: 0개** / **High: 2개** / **Medium: 4개** / **Low: 3개**
 
 ---
 
 ## High 이슈
 
-### 1. [payment_method_wizard_page.dart:232-358] 저장 로직에서 트랜잭션 미사용
-- **문제**: `_submit()` 메서드에서 여러 비동기 작업(updatePaymentMethod, updateAutoSaveSettings, createFormat/updateFormat)을 순차적으로 수행하지만, 하나의 트랜잭션으로 묶지 않음
-- **위험**: 중간 단계에서 실패 시 데이터 불일치 발생 가능. 예: paymentMethod는 업데이트되었지만 autoSaveSettings 업데이트가 실패하는 경우
-- **해결**: Supabase의 RPC 함수나 repository 레벨에서 트랜잭션 처리를 구현하거나, 최소한 실패 시 롤백 로직 추가
-
+### 1. [payment_method_management_page.dart:1965-1986] 두 개의 연속 API 호출 사이 Race Condition
+- **문제**: `_confirmTransaction` 메서드에서 `updateParsedData`와 `confirmTransaction`을 순차적으로 호출하고 있음. 코드 주석에도 이 문제가 명시되어 있음.
+- **위험**: 
+  - 첫 번째 호출(`updateParsedData`) 성공 후 두 번째 호출(`confirmTransaction`) 실패 시 데이터 불일치 발생
+  - 네트워크 불안정 상황에서 사용자가 수정한 데이터만 저장되고 실제 거래는 생성되지 않을 수 있음
+- **해결**: Repository 레벨에서 단일 트랜잭션 메서드로 합치거나, Supabase RPC 함수 사용 권장
 ```dart
 // 현재 코드 (문제)
-await notifier.updatePaymentMethod(...);
-await notifier.updateAutoSaveSettings(...);  // 여기서 실패하면?
-await formatRepository.createFormat(...);    // 부분 업데이트 상태
+await ref.read(...).updateParsedData(...);
+await ref.read(...).confirmTransaction(widget.transaction.id);  // 여기서 실패하면?
 
-// 권장 방안: Repository에 트랜잭션 메서드 추가
-await notifier.updatePaymentMethodWithSettings(
-  id: id,
-  name: name,
-  canAutoSave: canAutoSave,
-  autoSaveMode: autoSaveMode,
-  format: generatedFormat,
+// 권장 방안: 단일 메서드로 통합
+await ref.read(...).updateAndConfirmTransaction(
+  id: widget.transaction.id,
+  parsedAmount: amount,
+  parsedType: _transactionType,
+  ...
 );
 ```
 
-### 2. [payment_method_wizard_page.dart:273-296] 포맷 업데이트 시 첫 번째 포맷만 업데이트
-- **문제**: `existingFormats.first`만 업데이트하고, 동일 paymentMethod에 여러 포맷이 있을 경우 나머지는 무시됨
-- **위험**: 기존에 여러 SMS 포맷이 등록된 경우 의도치 않은 동작 발생 가능
-- **해결**: 명확한 정책 수립 필요 (전체 삭제 후 재생성 또는 특정 조건으로 포맷 선택)
-
+### 2. [payment_method_management_page.dart:932-959] 프로덕션에 남아있는 debugPrint 문
+- **문제**: 리스트뷰 빌드마다 여러 개의 `debugPrint` 호출이 실행됨
+- **위험**: 
+  - 프로덕션 빌드에서도 `debugPrint`는 실행되어 성능에 영향
+  - 빌드마다 호출되어 긴 리스트에서 성능 저하 발생 가능
+  - 민감한 정보(transaction ID 등)가 로그에 노출될 수 있음
+- **해결**: `kDebugMode` 체크 안에 감싸거나 프로덕션 릴리즈 전에 제거
 ```dart
-// 현재 코드
-if (existingFormats.isNotEmpty) {
-  await formatRepository.updateFormat(
-    id: existingFormats.first.id,  // 첫 번째만 업데이트
-    senderKeywords: _generatedFormat!.senderKeywords,
-  );
-}
+// 현재 코드 (문제)
+debugPrint('[ListView] build called for status: ${status.toJson()}');
+debugPrint('[ListView] Provider state: $asyncState');
+debugPrint('[ListView] Filtered transactions count: ${filteredTransactions.length}');
 
-// 권장: 명확한 의도 표현
-// 옵션 1: 전체 삭제 후 재생성
-await formatRepository.deleteFormatsByPaymentMethod(widget.paymentMethod!.id);
-await formatRepository.createFormat(...);
-
-// 옵션 2: 모든 기존 포맷 업데이트
-for (final format in existingFormats) {
-  await formatRepository.updateFormat(id: format.id, ...);
-}
-```
-
-### 3. [payment_method_management_page.dart:688-697] context.mounted 중복 체크
-- **문제**: `_showAutoSaveModeDialog` 메서드에서 `context.mounted` 체크 후 `Navigator.push`를 호출하지만, 이 메서드는 `ConsumerWidget`의 `build` 외부에서 호출되어 StatelessWidget의 context가 항상 mounted 상태임
-- **위험**: 불필요한 코드이며, 실제 문제(async gap 후 context 사용)를 해결하지 못함
-
-```dart
-// 현재 코드 (불필요한 체크)
-void _showAutoSaveModeDialog(BuildContext context, PaymentMethod paymentMethod) {
-  if (context.mounted) {  // StatelessWidget에서는 항상 true
-    Navigator.push(...);
-  }
-}
-
-// 이 메서드는 동기적으로 호출되므로 mounted 체크 불필요
-void _showAutoSaveModeDialog(BuildContext context, PaymentMethod paymentMethod) {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => PaymentMethodWizardPage(paymentMethod: paymentMethod),
-    ),
-  );
+// 권장 방안
+if (kDebugMode) {
+  debugPrint('[ListView] build called for status: ${status.toJson()}');
 }
 ```
 
@@ -83,161 +54,127 @@ void _showAutoSaveModeDialog(BuildContext context, PaymentMethod paymentMethod) 
 
 ## Medium 이슈
 
-### 1. [payment_method_wizard_page.dart:84-95] 편집 모드에서 템플릿 매칭 로직의 취약성
-- **문제**: 템플릿 매칭을 이름으로만 수행. 사용자가 이름을 변경했거나, 동일 이름의 다른 결제수단이 있을 경우 잘못된 템플릿이 매칭됨
-- **개선**: 템플릿 ID를 PaymentMethod에 저장하거나, 더 강건한 매칭 로직 필요
-
+### 1. [payment_method_management_page.dart:1098-1103] 안전하지 않은 타입 캐스팅
+- **문제**: `_PendingTransactionListView`에서 transaction을 `PendingTransactionModel`로 캐스팅 시도
+- **위험**: Provider가 반환하는 타입이 변경될 경우 런타임 에러 발생 가능
+- **해결**: 이미 `is` 체크가 있지만, 조기 반환 패턴으로 더 명확하게 처리
 ```dart
-// 현재 (취약)
-_selectedTemplate = FinancialServiceTemplate.templates
-    .cast<FinancialServiceTemplate?>()
-    .firstWhere(
-      (t) => t?.name == widget.paymentMethod?.name,  // 이름만으로 매칭
-      orElse: () => null,
-    );
+// 현재 코드 (양호하지만 개선 가능)
+onEdit: status == PendingTransactionStatus.pending
+    ? () {
+        if (tx is PendingTransactionModel) {
+          _showEditSheet(context, ref, tx);
+        }
+      }
+    : null,
 
-// 권장: PaymentMethod에 templateId 필드 추가
-_selectedTemplate = FinancialServiceTemplate.templates
-    .cast<FinancialServiceTemplate?>()
-    .firstWhere(
-      (t) => t?.id == widget.paymentMethod?.templateId,
-      orElse: () => null,
-    );
+// 권장: 타입 체크 실패 시 로그 추가
+onEdit: status == PendingTransactionStatus.pending
+    ? () {
+        if (tx is PendingTransactionModel) {
+          _showEditSheet(context, ref, tx);
+        } else {
+          debugPrint('[Warning] Expected PendingTransactionModel but got ${tx.runtimeType}');
+        }
+      }
+    : null,
 ```
 
-### 2. [payment_method_wizard_page.dart:46-48] TextEditingController 초기화 누락
-- **문제**: `_keywordsController`가 빈 문자열로 초기화되지만, 편집 모드에서 기존 키워드가 로드되지 않음
-- **개선**: 편집 모드 초기화 시 기존 LearnedSmsFormat의 키워드를 로드
+### 2. [payment_method_management_page.dart:964-977] 디버그 UI가 프로덕션에 표시될 수 있음
+- **문제**: `kDebugMode` 조건부로 디버그 배너 Container를 표시하지만, 이 UI가 릴리즈 빌드에서도 영향을 줄 수 있음
+- **위험**: `kDebugMode`는 컴파일 타임 상수이므로 릴리즈에서는 제거되지만, 코드 가독성과 유지보수 측면에서 별도 위젯으로 분리하는 것이 좋음
+- **해결**: 디버그 전용 위젯으로 분리하거나, 별도의 debug_widgets.dart 파일로 관리
 
+### 3. [pending_transaction_card.dart:175, 186, 194] 하드코딩된 한글 문자열
+- **문제**: `'거부'`, `'수정'`, `'저장'` 문자열이 하드코딩되어 있음
+- **위험**: 다국어 지원에 문제 발생. 이미 `l10n.commonReject` 등의 키가 존재함
+- **해결**: i18n 키 사용으로 변경
 ```dart
-// initState에서 편집 모드일 때 기존 포맷 로드 필요
-if (isEdit && _selectedMode == PaymentMethodAddMode.autoCollect) {
-  // 기존 포맷 로드 후 _keywordsController 초기화
-  _loadExistingFormat();
-}
+// 현재 코드 (문제)
+label: const Text('거부'),
+label: const Text('수정'),
+label: const Text('저장'),
+
+// 권장 방안
+label: Text(l10n.commonReject),
+label: Text(l10n.commonEdit),
+label: Text(l10n.commonSave),
 ```
 
-### 3. [payment_method_management_page.dart:24] Platform.isAndroid 캐싱 방식
-- **문제**: 전역 getter로 `Platform.isAndroid`를 사용. 테스트 시 mocking이 어려움
-- **개선**: Provider나 생성자 파라미터로 주입
-
+### 4. [payment_method_management_page.dart:1954-1958] 불명확한 에러 메시지
+- **문제**: 최대 금액 초과 시 `transactionAmountRequired` 메시지를 표시하는데, 이는 금액 미입력 에러와 동일함
+- **위험**: 사용자가 왜 저장이 안 되는지 이해하기 어려움
+- **해결**: 별도의 에러 메시지 추가 (`transactionAmountExceedsLimit` 등)
 ```dart
-// 현재 (테스트 어려움)
-bool get _isAndroidPlatform => Platform.isAndroid;
-
-// 권장: Provider로 주입
-final isAndroidProvider = Provider<bool>((ref) => Platform.isAndroid);
-
-// 또는 Widget 파라미터로 주입 (테스트용)
-class PaymentMethodManagementPage extends ConsumerStatefulWidget {
-  final bool? overrideIsAndroid;  // 테스트용
-  // ...
-}
-```
-
-### 4. [payment_method_wizard_page.dart:1115-1199] SMS 불러오기 다이얼로그의 에러 핸들링 부족
-- **문제**: `_showSmsImportDialog`에서 `scanner.scanFinancialSms()` 실패 시 단순히 에러 메시지만 표시. 구체적인 에러 유형(권한, 네트워크 등)에 따른 처리 없음
-- **개선**: 에러 유형별 적절한 사용자 안내 제공
-
-```dart
-// 현재
-if (snapshot.hasError) {
-  return Center(child: Text('Error: ${snapshot.error}'));
+// 현재 코드 (문제)
+if (amount > maxAmount) {
+  SnackBarUtils.showError(context, l10n.transactionAmountRequired);  // 같은 메시지
+  return;
 }
 
-// 권장
-if (snapshot.hasError) {
-  final error = snapshot.error;
-  if (error is PermissionDeniedException) {
-    return _buildPermissionErrorView(context);
-  }
-  return Center(child: Text(l10n.smsLoadError));
+// 권장 방안
+if (amount > maxAmount) {
+  SnackBarUtils.showError(context, l10n.transactionAmountExceedsLimit);  // 별도 메시지
+  return;
 }
-```
-
-### 5. [payment_method_management_page.dart:69-79] 날짜 그룹 분류 로직의 경계 케이스
-- **문제**: `_getDateGroup`에서 월 경계 처리가 불완전. 예: 1월 7일에 12월 31일 데이터는 `thisWeek`가 아닌 `older`로 분류되어야 하지만, 로직이 복잡하고 테스트하기 어려움
-- **개선**: 단순히 일수 차이만으로 분류하거나, 별도 유틸 클래스로 분리
-
-```dart
-// 현재 (복잡한 조건)
-if (difference <= 7 && date.year == now.year && date.month == now.month) {
-  return _DateGroup.thisWeek;
-}
-
-// 권장: 단순화
-if (difference <= 7) return _DateGroup.thisWeek;
 ```
 
 ---
 
 ## Low 이슈
 
-### 1. [payment_method_wizard_page.dart:348] debugPrint 사용
-- **문제**: 프로덕션 코드에 `debugPrint` 사용. 로깅 전략이 일관되지 않음
-- **개선**: 로깅 유틸리티 또는 Logger 패키지 사용
+### 1. [payment_method_management_page.dart:1293-1435] 들여쓰기 불일치
+- **문제**: `_PendingTransactionCard`의 `build` 메서드 내 Column의 children에서 들여쓰기가 일관되지 않음 (일부는 4칸, 일부는 6칸)
+- **해결**: 코드 포매터 실행 (`dart format`)
 
+### 2. [payment_method_management_page.dart:1416, 1424] 불필요한 SizedBox
+- **문제**: `onReject`나 `onEdit`가 null일 때도 SizedBox가 추가됨
+- **해결**: 조건부 SizedBox로 변경
 ```dart
-// 현재
-debugPrint('PaymentMethod save failed: $e\n$st');
+// 현재 코드
+if (onReject != null)
+  TextButton.icon(...),
+const SizedBox(width: Spacing.xs),  // onReject가 null이어도 추가됨
+if (onEdit != null)
+  OutlinedButton.icon(...),
 
-// 권장: 앱 전체 로깅 전략 사용
-AppLogger.error('PaymentMethod save failed', error: e, stackTrace: st);
+// 권장 방안
+if (onReject != null) ...[
+  TextButton.icon(...),
+  const SizedBox(width: Spacing.xs),
+],
+if (onEdit != null) ...[
+  OutlinedButton.icon(...),
+  const SizedBox(width: Spacing.xs),
+],
 ```
 
-### 2. [payment_method_management_page.dart:910-912] DateFormat/NumberFormat 매번 생성
-- **문제**: `build` 메서드에서 DateFormat, NumberFormat을 매번 생성. 성능에 미미한 영향이지만 불필요한 객체 생성
-- **개선**: 상위 위젯에서 한 번만 생성하거나, static const로 선언
-
-```dart
-// 현재 (매번 생성)
-final timeFormat = DateFormat('HH:mm');
-final dateFormat = DateFormat('MM/dd HH:mm');
-final currencyFormat = NumberFormat('#,###');
-
-// 권장: 클래스 레벨 또는 Provider로 관리
-static final _timeFormat = DateFormat('HH:mm');
-static final _dateFormat = DateFormat('MM/dd HH:mm');
-static final _currencyFormat = NumberFormat('#,###');
-```
-
-### 3. [payment_method_wizard_page.dart:1029-1038] 하드코딩된 문자열
-- **문제**: `_getFriendlyAmountPattern` 메서드에서 영어 문자열 하드코딩
-- **개선**: l10n으로 이동
-
-```dart
-// 현재 (하드코딩)
-if (regex.contains('Won') && regex.contains('[0-9,]+')) {
-  return 'Number before "Won"';
-}
-
-// 권장
-return l10n.amountPatternBeforeWon;
-```
+### 3. [payment_method_management_page.dart:1533-1538] 미사용 콜백 파라미터
+- **문제**: `_PendingTransactionEditSheet`에서 `onConfirmed`와 `onRejected`가 nullable이지만 항상 전달됨
+- **해결**: required로 변경하거나 기본값 제공
 
 ---
 
 ## 긍정적인 점
 
-1. **SafeArea 적용**: `bottomNavigationBar`에 SafeArea를 적용하여 노치/홈 인디케이터 영역을 고려함
-2. **접근성 고려**: Semantics 위젯을 적절히 사용하여 스크린 리더 지원
-3. **상태 관리**: Riverpod을 사용한 일관된 상태 관리 패턴
-4. **UI/UX**: 모드 선택 카드, 칩 스타일의 직관적인 UI 구현
-5. **에러 처리**: mounted 체크를 통한 비동기 작업 후 안전한 UI 업데이트
-6. **코드 분리**: 기능별 위젯 분리 (공유 섹션, 자동수집 섹션, 트랜잭션 카드 등)
+1. **타입 안전성 고려**: `PendingTransactionModel`로 캐스팅 전에 `is` 체크를 수행하여 런타임 에러 방지
+2. **적절한 에러 처리**: try-catch 블록으로 에러를 잡고 사용자에게 SnackBar로 피드백 제공
+3. **mounted 체크**: 비동기 작업 후 `mounted` 또는 `context.mounted` 체크로 위젯 해제 후 setState 방지
+4. **Pull-to-refresh 구현**: 빈 상태에서도 RefreshIndicator를 통해 새로고침 가능
+5. **탭 전환 UX**: 액션(저장/거부) 후 자동으로 해당 탭으로 이동하여 사용자 경험 향상
+6. **i18n 키 추가**: 새로운 기능에 맞춰 한국어/영어 번역 키 모두 추가
 
 ---
 
 ## 추가 권장사항
 
-### 테스트
-- `_submit()` 메서드의 복잡한 저장 로직에 대한 단위 테스트 추가 권장
-- 날짜 그룹 분류 로직(`_getDateGroup`)에 대한 경계값 테스트 추가
+### 테스트 추가
+- `_PendingTransactionEditSheet`의 금액 검증 로직에 대한 단위 테스트
+- 탭 전환 로직에 대한 위젯 테스트
 
-### 리팩토링
-- `PaymentMethodWizardPage`가 1,200줄로 큰 편. 각 Step을 별도 위젯으로 분리 고려
-- SMS 불러오기 다이얼로그를 별도 위젯으로 분리하여 재사용성 향상
+### 리팩토링 제안
+1. `_PendingTransactionEditSheet` 위젯이 약 500줄로 비대해짐 - 별도 파일로 분리 권장
+2. `_confirmTransaction`과 `_rejectTransaction` 로직을 별도 UseCase 또는 Service로 분리 고려
 
 ### 문서화
-- `autoSaveMode`의 세 가지 모드(manual, suggest, auto)의 동작 차이를 주석으로 명확히 문서화
-- 편집 모드와 생성 모드의 플로우 차이를 문서화
+- 새로 추가된 i18n 키들에 대한 설명 주석 추가 권장

@@ -30,6 +30,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get commonEdit => '수정';
 
   @override
+  String get commonReject => '거부';
+
+  @override
   String get commonAdd => '추가';
 
   @override
@@ -652,13 +655,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get transactionAsset => '자산';
 
   @override
+  String get transactionTypeLabel => '거래 유형';
+
+  @override
   String get transactionTitle => '제목';
+
+  @override
+  String get transactionMerchant => '가맹점';
+
+  @override
+  String get transactionMerchantHint => '가맹점명을 입력하세요';
 
   @override
   String get transactionAmount => '금액';
 
   @override
+  String get transactionAmountHint => '금액을 입력하세요';
+
+  @override
   String get transactionAmountUnit => '원';
+
+  @override
+  String get noCategoryAvailable => '사용 가능한 카테고리가 없습니다';
 
   @override
   String get transactionCategory => '카테고리';
@@ -1090,6 +1108,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pendingTransactionStatusDenied => '거부됨';
 
   @override
+  String get pendingTransactionParsingFailed => '거래 정보를 파싱할 수 없습니다';
+
+  @override
   String get pendingTransactionDeleteConfirmTitle => '거래 삭제';
 
   @override
@@ -1111,6 +1132,21 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get pendingTransactionDeleteAllSuccess => '모든 내역이 삭제되었습니다';
+
+  @override
+  String get pendingTransactionEdit => '거래 수정';
+
+  @override
+  String get pendingTransactionReject => '거부';
+
+  @override
+  String get pendingTransactionConfirm => '저장';
+
+  @override
+  String get pendingTransactionConfirmed => '거래가 저장되었습니다';
+
+  @override
+  String get pendingTransactionRejected => '거래가 거부되었습니다';
 
   @override
   String pendingTransactionItemCount(int count) {
@@ -2112,4 +2148,37 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get paymentMethodPermissionWarningMessage =>
       '개인 결제수단을 공유 결제수단으로 변경하면 다른 멤버도 이 결제수단을 수정할 수 있습니다. 계속하시겠습니까?';
+
+  @override
+  String get errorOccurred => '오류가 발생했습니다';
+
+  @override
+  String get pullToRefresh => '아래로 당겨서 새로고침';
+
+  @override
+  String get duplicateTransaction => '중복 거래';
+
+  @override
+  String get duplicateTransactionWarning => '이 거래는 중복으로 감지되었습니다';
+
+  @override
+  String get originalTransactionTime => '원본 거래 시간';
+
+  @override
+  String get viewOriginal => '원본 보기';
+
+  @override
+  String get confirmDuplicate => '상세';
+
+  @override
+  String get ignoreDuplicate => '저장';
+
+  @override
+  String get duplicateInfo => '중복 정보';
+
+  @override
+  String get originalTransactionNotFound => '원본 거래를 찾을 수 없습니다.';
+
+  @override
+  String get duplicateMessageReceivedTwice => '동일한 SMS/알림이 2번 수신되었을 수 있습니다.';
 }

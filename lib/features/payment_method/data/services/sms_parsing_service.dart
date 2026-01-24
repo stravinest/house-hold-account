@@ -117,12 +117,22 @@ class FinancialSmsSenders {
     '인천이음페이': ['인천이음', '이음페이'],
   };
 
-  /// 발신자 문자열에서 금융사 식별
-  static String? identifyFinancialInstitution(String sender) {
+  /// 발신자 또는 본문에서 금융사 식별
+  /// [sender]: 발신자 (번호 또는 이름)
+  /// [content]: 문자 본문 (선택, 제공 시 본문에서도 금융사 패턴 검색)
+  static String? identifyFinancialInstitution(String sender, [String? content]) {
     final lowerSender = sender.toLowerCase();
+    final lowerContent = content?.toLowerCase();
+
     for (final entry in senderPatterns.entries) {
       for (final pattern in entry.value) {
-        if (lowerSender.contains(pattern.toLowerCase())) {
+        final lowerPattern = pattern.toLowerCase();
+        // 발신자에서 매칭
+        if (lowerSender.contains(lowerPattern)) {
+          return entry.key;
+        }
+        // 본문에서도 매칭 (content가 제공된 경우)
+        if (lowerContent != null && lowerContent.contains(lowerPattern)) {
           return entry.key;
         }
       }
@@ -130,9 +140,11 @@ class FinancialSmsSenders {
     return null;
   }
 
-  /// 발신자가 금융 관련인지 확인
-  static bool isFinancialSender(String sender) {
-    return identifyFinancialInstitution(sender) != null;
+  /// 발신자 또는 본문이 금융 관련인지 확인
+  /// [sender]: 발신자 (번호 또는 이름)
+  /// [content]: 문자 본문 (선택, 제공 시 본문에서도 금융사 패턴 검색)
+  static bool isFinancialSender(String sender, [String? content]) {
+    return identifyFinancialInstitution(sender, content) != null;
   }
 }
 
