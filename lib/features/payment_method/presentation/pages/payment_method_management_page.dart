@@ -350,34 +350,60 @@ class _PaymentMethodListView extends ConsumerWidget {
     final hasAutoCollect = autoCollectMethods.isNotEmpty;
 
     if (!hasShared && !hasAutoCollect) {
-      return EmptyState(
-        icon: Icons.credit_card_outlined,
-        message: l10n.paymentMethodEmpty,
-        subtitle: l10n.paymentMethodEmptySubtitle,
-        action: ElevatedButton.icon(
-          onPressed: () => _showAddDialog(context),
-          icon: const Icon(Icons.add),
-          label: Text(l10n.paymentMethodAdd),
+      return RefreshIndicator(
+        onRefresh: () => _refreshPaymentMethods(ref, userId),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: EmptyState(
+                icon: Icons.credit_card_outlined,
+                message: l10n.paymentMethodEmpty,
+                subtitle: l10n.paymentMethodEmptySubtitle,
+                action: ElevatedButton.icon(
+                  onPressed: () => _showAddDialog(context),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.paymentMethodAdd),
+                ),
+              ),
+            ),
+          ],
         ),
       );
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(Spacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Shared payment method section (chip style)
-          _buildSharedSection(context, sharedMethods, ref, l10n),
+    return RefreshIndicator(
+      onRefresh: () => _refreshPaymentMethods(ref, userId),
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(Spacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Shared payment method section (chip style)
+            _buildSharedSection(context, sharedMethods, ref, l10n),
 
-          // 2. Auto-collect section (card list, Android only)
-          if (isAndroid) ...[
-            const SizedBox(height: Spacing.lg),
-            _buildAutoCollectSection(context, autoCollectMethods, ref, l10n),
+            // 2. Auto-collect section (card list, Android only)
+            if (isAndroid) ...[
+              const SizedBox(height: Spacing.lg),
+              _buildAutoCollectSection(context, autoCollectMethods, ref, l10n),
+            ],
           ],
-        ],
+        ),
       ),
     );
+  }
+
+  Future<void> _refreshPaymentMethods(WidgetRef ref, String userId) async {
+    // Invalidate providers to trigger refresh
+    ref.invalidate(sharedPaymentMethodsProvider);
+    ref.invalidate(autoCollectPaymentMethodsByOwnerProvider(userId));
+    // Wait for the new data to load
+    await Future.wait([
+      ref.read(sharedPaymentMethodsProvider.future),
+      ref.read(autoCollectPaymentMethodsByOwnerProvider(userId).future),
+    ]);
   }
 
   /// Shared payment method section (chip style)
@@ -692,9 +718,12 @@ class _PaymentMethodListView extends ConsumerWidget {
               } catch (e) {
                 if (parentContext.mounted) {
                   final errorMsg = e.toString().toLowerCase();
+                  // 권한 관련 에러 키워드 (영어 + 한글)
                   if (errorMsg.contains('policy') ||
                       errorMsg.contains('permission') ||
-                      errorMsg.contains('denied')) {
+                      errorMsg.contains('denied') ||
+                      errorMsg.contains('권한') ||
+                      errorMsg.contains('존재하지 않는')) {
                     SnackBarUtils.showError(
                       parentContext,
                       l10n.paymentMethodNoPermissionToDelete,
@@ -1387,7 +1416,7 @@ class _PendingTransactionEditSheetState
       text: widget.transaction.parsedMerchant ?? '',
     );
     _selectedCategoryId = widget.transaction.parsedCategoryId;
-    _transactionType = widget.transaction.parsedType ?? 'expense';
+    _transactionType = 'expense'; // 자동수집은 항상 지출만 처리
     _selectedDate =
         widget.transaction.parsedDate ?? widget.transaction.sourceTimestamp;
   }
@@ -1408,9 +1437,8 @@ class _PendingTransactionEditSheetState
     final dateFormat = DateFormat('yyyy-MM-dd');
 
     // 카테고리 목록 가져오기
-    final categoriesAsync = _transactionType == 'income'
-        ? ref.watch(incomeCategoriesProvider)
-        : ref.watch(expenseCategoriesProvider);
+    // 자동수집은 항상 지출 카테고리만 사용
+    final categoriesAsync = ref.watch(expenseCategoriesProvider);
 
     return DraggableScrollableSheet(
       initialChildSize: 0.85,
@@ -1506,37 +1534,6 @@ class _PendingTransactionEditSheetState
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: Spacing.lg),
-
-                      // 거래 유형 선택
-                      Text(
-                        l10n.transactionTypeLabel,
-                        style: textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: Spacing.sm),
-                      SegmentedButton<String>(
-                        segments: [
-                          ButtonSegment(
-                            value: 'expense',
-                            label: Text(l10n.transactionExpense),
-                            icon: const Icon(Icons.arrow_downward),
-                          ),
-                          ButtonSegment(
-                            value: 'income',
-                            label: Text(l10n.transactionIncome),
-                            icon: const Icon(Icons.arrow_upward),
-                          ),
-                        ],
-                        selected: {_transactionType},
-                        onSelectionChanged: (selected) {
-                          setState(() {
-                            _transactionType = selected.first;
-                            _selectedCategoryId = null; // 카테고리 초기화
-                          });
-                        },
                       ),
                       const SizedBox(height: Spacing.lg),
 
@@ -1656,11 +1653,11 @@ class _PendingTransactionEditSheetState
                     children: [
                       // 거부 버튼
                       Expanded(
-                        child: OutlinedButton(
+                        child: FilledButton(
                           onPressed: _isLoading ? null : _rejectTransaction,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: colorScheme.error,
-                            side: BorderSide(color: colorScheme.error),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: colorScheme.error,
+                            foregroundColor: colorScheme.onError,
                             padding: const EdgeInsets.symmetric(
                               vertical: Spacing.md,
                             ),
@@ -1671,10 +1668,9 @@ class _PendingTransactionEditSheetState
                       const SizedBox(width: Spacing.md),
                       // 저장 버튼
                       Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
+                        child: FilledButton(
                           onPressed: _isLoading ? null : _confirmTransaction,
-                          style: ElevatedButton.styleFrom(
+                          style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
                               vertical: Spacing.md,
                             ),

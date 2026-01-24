@@ -49,11 +49,11 @@ class _PaymentMethodWizardPageState
 
   bool get isEdit => widget.paymentMethod != null;
 
-  // Notification type selection (sms | push)
-  String _notificationType = 'sms';
-
   // Auto save mode selection (suggest | auto)
   AutoSaveMode _autoSaveMode = AutoSaveMode.suggest;
+
+  // Notification type for auto-collect (sms or push)
+  String _notificationType = 'sms';
 
   // Analyzed format
   LearnedSmsFormat? _generatedFormat;
@@ -179,18 +179,17 @@ class _PaymentMethodWizardPageState
   }
 
   void _changeNotificationType(String type) {
-    if (_selectedTemplate == null) return;
-
     setState(() {
       _notificationType = type;
-      if (type == 'sms') {
-        _sampleController.text = _selectedTemplate!.defaultSampleSms;
-      } else {
-        _sampleController.text =
-            _selectedTemplate!.defaultSamplePush ??
-            _selectedTemplate!.defaultSampleSms;
+      // Update sample when switching types
+      if (_selectedTemplate != null) {
+        if (type == 'sms') {
+          _sampleController.text = _selectedTemplate!.defaultSampleSms;
+        } else {
+          _sampleController.text = _selectedTemplate!.defaultSamplePush ?? '';
+        }
+        _analyzeSampleImmediate();
       }
-      _analyzeSampleImmediate();
     });
   }
 
@@ -757,6 +756,7 @@ class _PaymentMethodWizardPageState
   /// Auto-collect configuration screen (after template selection)
   Widget _buildAutoCollectConfiguration() {
     final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -801,73 +801,37 @@ class _PaymentMethodWizardPageState
           ),
           const SizedBox(height: 24),
 
-          // 2. Sample editor (collection settings)
+          // 2. Notification type selection (SMS / Push)
           Text(
-            l10n.paymentMethodWizardAutoCollectRuleTitle,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            l10n.paymentMethodWizardCollectSource,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 40,
-            child: Row(
-              children: [
-                Expanded(
-                  child: Visibility(
-                    visible: _notificationType == 'sms',
-                    maintainSize: true,
-                    maintainAnimation: true,
-                    maintainState: true,
-                    child: TextButton.icon(
-                      onPressed: _showSmsImportDialog,
-                      icon: const Icon(Icons.sms_outlined),
-                      label: Text(l10n.paymentMethodWizardImportFromSms),
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        alignment: Alignment.centerLeft,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                  ),
-                ),
-                // SMS / Push toggle
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'sms', label: Text('SMS')),
-                    ButtonSegment(value: 'push', label: Text('Push')),
-                  ],
-                  selected: {_notificationType},
-                  onSelectionChanged: (Set<String> newSelection) {
-                    _changeNotificationType(newSelection.first);
-                  },
-                  style: const ButtonStyle(
-                    visualDensity: VisualDensity.compact,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 12),
+          SegmentedButton<String>(
+            segments: [
+              ButtonSegment<String>(
+                value: 'sms',
+                label: Text(l10n.paymentMethodWizardSmsSource),
+                icon: const Icon(Icons.sms_outlined, size: 18),
+              ),
+              ButtonSegment<String>(
+                value: 'push',
+                label: Text(l10n.paymentMethodWizardPushSource),
+                icon: const Icon(Icons.notifications_outlined, size: 18),
+              ),
+            ],
+            selected: {_notificationType},
+            onSelectionChanged: (selected) {
+              _changeNotificationType(selected.first);
+            },
+            style: SegmentedButton.styleFrom(
+              backgroundColor: colorScheme.surfaceContainerHighest,
+              selectedBackgroundColor: colorScheme.primaryContainer,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            l10n.paymentMethodWizardSampleNotice,
-            style: const TextStyle(color: Colors.grey),
-          ),
-          const SizedBox(height: 16),
-
-          TextField(
-            controller: _sampleController,
-            readOnly: true,
-            maxLines: 5,
-            decoration: InputDecoration(
-              border: const OutlineInputBorder(),
-              filled: true,
-              fillColor: Colors.grey[100],
-            ),
-          ),
-
           const SizedBox(height: 24),
 
-          // 3. Analysis result preview (rules)
+          // 3. Collection rule settings (simplified - no sample preview)
           if (_generatedFormat != null)
             Card(
               color: Colors.blue[50],
@@ -913,6 +877,22 @@ class _PaymentMethodWizardPageState
                 ),
               ),
             ),
+
+          // SMS에서 규칙 가져오기 버튼 (SMS 선택 시에만 표시)
+          if (_notificationType == 'sms') ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _showSmsImportDialog,
+                icon: const Icon(Icons.sms_outlined, size: 18),
+                label: Text(l10n.paymentMethodWizardImportFromSms),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ),
+          ],
 
           const SizedBox(height: 24),
 
@@ -1204,7 +1184,8 @@ class _PaymentMethodWizardPageState
                               subtitle: Text(msg.body),
                               trailing: Text('${msg.date.month}/${msg.date.day}'),
                               onTap: () {
-                                _sampleController.text = msg.body;
+                                // SMS를 분석하여 키워드 업데이트
+                                _updateKeywordsFromSms(msg.body);
                                 Navigator.pop(sheetContext);
                               },
                             );
@@ -1220,6 +1201,43 @@ class _PaymentMethodWizardPageState
         },
       ),
     );
+  }
+
+  /// SMS 본문을 분석하여 키워드를 업데이트
+  void _updateKeywordsFromSms(String smsBody) {
+    if (_selectedTemplate == null) return;
+
+    // SMS 분석하여 새 포맷 생성
+    final newFormat = SmsParsingService.generateFormatFromSample(
+      sample: smsBody,
+      paymentMethodId: widget.paymentMethod?.id ?? 'temp_id',
+    );
+
+    setState(() {
+      // 기존 포맷이 있으면 키워드만 병합, 없으면 새로 설정
+      if (_generatedFormat != null) {
+        // 기존 키워드와 새 키워드 병합 (중복 제거)
+        final mergedKeywords = <String>{
+          ..._generatedFormat!.senderKeywords,
+          ...newFormat.senderKeywords,
+        }.toList();
+
+        _generatedFormat = _generatedFormat!.copyWith(
+          senderKeywords: mergedKeywords,
+          sampleSms: smsBody,
+        );
+      } else {
+        _generatedFormat = newFormat;
+      }
+    });
+
+    // 성공 메시지 표시
+    if (mounted) {
+      final l10n = AppLocalizations.of(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.paymentMethodWizardKeywordsUpdated)),
+      );
+    }
   }
 
   /// 개인 결제수단 → 공유 결제수단 변경 시 경고 다이얼로그

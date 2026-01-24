@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 import 'package:notification_listener_service/notification_event.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
@@ -442,7 +440,7 @@ class NotificationListenerWrapper {
     LearnedSmsFormat? learnedFormat,
   }) async {
     // 메시지 내용으로 해시 생성 (중복 수신 방지)
-    final messageHash = _generateMessageHash(packageName, content, timestamp);
+    final messageHash = DuplicateCheckService.generateMessageHash(content, timestamp);
 
     // 최근 10초 이내에 동일한 메시지를 처리했는지 확인
     final cachedTime = _recentlyProcessedMessages[messageHash];
@@ -503,27 +501,26 @@ class NotificationListenerWrapper {
       );
     }
 
-    // 캐시된 값 대신 DB에서 최신 autoSaveMode 조회 (설정 변경 후 캐시 동기화 문제 방지)
-    final freshPaymentMethod = await _paymentMethodRepository.getPaymentMethodById(paymentMethod.id);
-    final autoSaveModeStr = freshPaymentMethod?.autoSaveMode.toJson() ?? paymentMethod.autoSaveMode.toJson();
+    // 캐시에서 최신 autoSaveMode 확인 (refreshPaymentMethods 호출 시 캐시가 갱신됨)
+    // 설정 페이지에서 저장 시 AutoSaveService.refreshPaymentMethods()가 호출되어 캐시 동기화됨
+    final cachedPaymentMethod = _autoSavePaymentMethods
+        .where((pm) => pm.id == paymentMethod.id)
+        .firstOrNull;
+    final autoSaveModeStr = cachedPaymentMethod?.autoSaveMode.toJson() ?? paymentMethod.autoSaveMode.toJson();
     if (kDebugMode) {
-      debugPrint('Notification matched: mode=$autoSaveModeStr (fresh from DB), pm=${paymentMethod.name}');
+      debugPrint('Notification matched: mode=$autoSaveModeStr (from cache), pm=${paymentMethod.name}');
     }
 
-    // 중복 감지 처리: 중복이더라도 pending으로 저장하여 사용자가 확인할 수 있게 함
-    PendingTransactionStatus initialStatus;
-    if (duplicateResult.isDuplicate) {
-      if (kDebugMode) {
-        debugPrint('Duplicate notification detected - saving as pending for user review');
-      }
-      initialStatus = PendingTransactionStatus.pending;
-    } else if (autoSaveModeStr == 'auto') {
-      initialStatus = PendingTransactionStatus.confirmed;
-    } else {
-      initialStatus = PendingTransactionStatus.pending;
+    // 자동 저장 여부 결정: 중복이 아니고 auto 모드일 때만 자동 저장
+    final shouldAutoSave = !duplicateResult.isDuplicate && autoSaveModeStr == 'auto';
+
+    if (duplicateResult.isDuplicate && kDebugMode) {
+      debugPrint('Duplicate notification detected - saving as pending for user review');
     }
 
     try {
+      // 항상 pending 상태로 먼저 생성 (원자성 보장)
+      // 거래 생성 성공 시에만 confirmed로 업데이트
       await _createPendingTransaction(
         packageName: packageName,
         content: content,
@@ -533,7 +530,7 @@ class NotificationListenerWrapper {
         categoryId: categoryId,
         duplicateHash: duplicateResult.duplicateHash,
         isDuplicate: duplicateResult.isDuplicate,
-        status: initialStatus,
+        shouldAutoSave: shouldAutoSave,
         isViewed: false,
       );
     } catch (e) {
@@ -572,18 +569,19 @@ class NotificationListenerWrapper {
     required String? categoryId,
     required String duplicateHash,
     required bool isDuplicate,
-    required PendingTransactionStatus status,
+    required bool shouldAutoSave,
     bool isViewed = false,
   }) async {
     if (kDebugMode) {
       debugPrint('[CreatePending] Creating pending transaction:');
       debugPrint('  - ledgerId: $_currentLedgerId');
       debugPrint('  - paymentMethodId: ${paymentMethod.id}');
-      debugPrint('  - status: ${status.toJson()}');
+      debugPrint('  - shouldAutoSave: $shouldAutoSave');
       debugPrint('  - isDuplicate: $isDuplicate');
     }
 
     try {
+      // 1. 항상 pending 상태로 먼저 생성 (원자성 보장)
       final pendingTx = await _pendingTransactionRepository.createPendingTransaction(
         ledgerId: _currentLedgerId!,
         paymentMethodId: paymentMethod.id,
@@ -599,7 +597,7 @@ class NotificationListenerWrapper {
         parsedDate: parsedResult.date ?? timestamp,
         duplicateHash: duplicateHash,
         isDuplicate: isDuplicate,
-        status: status,
+        status: PendingTransactionStatus.pending,
         isViewed: isViewed,
       );
 
@@ -607,8 +605,8 @@ class NotificationListenerWrapper {
         debugPrint('[CreatePending] Success! ID: ${pendingTx.id}');
       }
 
-      // 자동 저장 모드일 때 실제 거래도 생성
-      if (status == PendingTransactionStatus.confirmed) {
+      // 2. 자동 저장 모드일 때만 거래 생성 시도
+      if (shouldAutoSave) {
         final amount = parsedResult.amount;
         final type = parsedResult.transactionType;
 
@@ -629,31 +627,24 @@ class NotificationListenerWrapper {
               sourceType: SourceType.notification.toJson(),
             );
 
+            // 3. 거래 생성 성공 시에만 confirmed로 업데이트
+            await _pendingTransactionRepository.updateStatus(
+              id: pendingTx.id,
+              status: PendingTransactionStatus.confirmed,
+            );
+
             if (kDebugMode) {
-              debugPrint('[AutoSave] Transaction created successfully!');
+              debugPrint('[AutoSave] Transaction created and status updated to confirmed!');
             }
           } catch (e) {
+            // 거래 생성 실패 시 pending 상태 유지 (이미 pending이므로 추가 작업 불필요)
             if (kDebugMode) {
               debugPrint('[AutoSave] Failed to create transaction: $e');
-              debugPrint('[AutoSave] Rolling back status to pending...');
-            }
-            // 거래 생성 실패 시 status를 pending으로 롤백 (수동 확인 필요)
-            try {
-              await _pendingTransactionRepository.updateStatus(
-                id: pendingTx.id,
-                status: PendingTransactionStatus.pending,
-              );
-              if (kDebugMode) {
-                debugPrint('[AutoSave] Status rolled back to pending');
-              }
-            } catch (rollbackError) {
-              if (kDebugMode) {
-                debugPrint('[AutoSave] Failed to rollback status: $rollbackError');
-              }
+              debugPrint('[AutoSave] Keeping status as pending for manual review');
             }
           }
         } else if (kDebugMode) {
-          debugPrint('[AutoSave] Skipped - missing amount or type');
+          debugPrint('[AutoSave] Skipped auto-save - missing amount or type');
         }
       }
     } catch (e, st) {
@@ -663,30 +654,6 @@ class NotificationListenerWrapper {
       }
       rethrow;
     }
-  }
-
-  /// 메시지 내용으로 고유 해시 생성 (중복 수신 방지용)
-  ///
-  /// 금액 + 내용 일부 + 시간(분 단위)로 해시를 만들어
-  /// SMS와 Push 알림이 동시에 와도 동일한 메시지임을 식별
-  ///
-  /// 주의: sender를 포함하지 않음 (SMS는 전화번호, Push는 패키지명으로 달라서
-  /// 같은 결제 알림이 다른 해시가 되는 문제 방지)
-  String _generateMessageHash(String sender, String content, DateTime timestamp) {
-    final minuteBucket = timestamp.millisecondsSinceEpoch ~/ (60 * 1000);
-
-    // 금액 추출 (SMS/Push 공통으로 금액이 포함됨)
-    final amountMatch = RegExp(r'(\d{1,3}(?:,\d{3})*)\s*원').firstMatch(content);
-    final amount = amountMatch?.group(1)?.replaceAll(',', '') ?? '';
-
-    // 내용에서 핵심 부분만 추출 (sender 제외)
-    final contentPreview = content.length > 80 ? content.substring(0, 80) : content;
-
-    // 금액 + 내용 + 시간으로 해시 (sender 제외하여 SMS/Push 동일 해시)
-    final input = '$amount-$contentPreview-$minuteBucket';
-
-    final bytes = utf8.encode(input);
-    return md5.convert(bytes).toString();
   }
 
   /// 오래된 메시지 캐시 정리

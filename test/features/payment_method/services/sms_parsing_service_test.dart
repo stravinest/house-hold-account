@@ -81,9 +81,9 @@ void main() {
     });
 
     group('parseSms - 지역화폐 SMS 파싱', () {
-      test('경기지역화폐 결제 SMS를 정확히 파싱해야 한다', () {
+      test('수원페이 결제 SMS를 정확히 파싱해야 한다', () {
         const sender = '경기지역화폐';
-        const content = '경기지역화폐 결제 30,000원 이마트 잔액 70,000원';
+        const content = '[경기지역화폐] 30,000원 결제 (이마트 수원점) 잔액: 70,000원';
 
         final result = SmsParsingService.parseSms(sender, content);
 
@@ -92,9 +92,9 @@ void main() {
         expect(result.transactionType, equals('expense'));
       });
 
-      test('경기지역화폐 충전 SMS를 정확히 파싱해야 한다', () {
+      test('수원페이 충전 SMS를 정확히 파싱해야 한다', () {
         const sender = '경기지역화폐';
-        const content = '경기지역화폐 충전 100,000원 잔액 100,000원';
+        const content = '[경기지역화폐] 100,000원 충전 잔액: 100,000원';
 
         final result = SmsParsingService.parseSms(sender, content);
 
@@ -294,14 +294,15 @@ void main() {
       );
     });
 
-    test('경기지역화폐 발신자를 올바르게 식별해야 한다', () {
+    test('수원페이 발신자를 올바르게 식별해야 한다', () {
+      expect(
+        FinancialSmsSenders.identifyFinancialInstitution('수원페이'),
+        equals('수원페이'),
+      );
+      // 경기지역화폐 키워드는 수원페이로 매칭됨 (첫 번째 매칭)
       expect(
         FinancialSmsSenders.identifyFinancialInstitution('경기지역화폐'),
-        equals('경기지역화폐'),
-      );
-      expect(
-        FinancialSmsSenders.identifyFinancialInstitution('경기화폐'),
-        equals('경기지역화폐'),
+        equals('수원페이'),
       );
     });
 

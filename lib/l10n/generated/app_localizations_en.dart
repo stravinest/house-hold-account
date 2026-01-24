@@ -1263,6 +1263,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentMethodWizardImportFromSms => 'Import from SMS';
 
   @override
+  String get paymentMethodWizardKeywordsUpdated =>
+      'Keywords have been updated.';
+
+  @override
+  String get paymentMethodWizardCollectSource => 'Collection Source';
+
+  @override
+  String get paymentMethodWizardSmsSource => 'SMS';
+
+  @override
+  String get paymentMethodWizardPushSource => 'Push Notification';
+
+  @override
   String get paymentMethodWizardSampleNotice =>
       'The message below is an example. Please modify if different from your actual notifications.\nCollection rules will be updated accordingly.';
 

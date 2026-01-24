@@ -1236,6 +1236,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get paymentMethodWizardImportFromSms => '문자에서 가져오기';
 
   @override
+  String get paymentMethodWizardKeywordsUpdated => '키워드가 업데이트되었습니다.';
+
+  @override
+  String get paymentMethodWizardCollectSource => '수집 방식';
+
+  @override
+  String get paymentMethodWizardSmsSource => '문자';
+
+  @override
+  String get paymentMethodWizardPushSource => '푸시 알림';
+
+  @override
   String get paymentMethodWizardSampleNotice =>
       '아래 메시지는 예시입니다. 실제로 받으시는 알림과 다르다면 수정해주세요.\n수정한 내용에 맞춰 수집 규칙이 변경됩니다.';
 

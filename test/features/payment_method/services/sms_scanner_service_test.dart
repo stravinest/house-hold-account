@@ -135,11 +135,11 @@ void main() {
       expect(pattern.institutionType, equals('bank'));
     });
 
-    test('findByName으로 경기지역화폐를 찾을 수 있어야 한다', () {
-      final pattern = KoreanFinancialPatterns.findByName('경기지역화폐');
+    test('findByName으로 수원페이를 찾을 수 있어야 한다', () {
+      final pattern = KoreanFinancialPatterns.findByName('수원페이');
 
       expect(pattern, isNotNull);
-      expect(pattern!.institutionName, equals('경기지역화폐'));
+      expect(pattern!.institutionName, equals('수원페이'));
       expect(pattern.institutionType, equals('local_currency'));
     });
 

@@ -2408,6 +2408,30 @@ abstract class AppLocalizations {
   /// **'문자에서 가져오기'**
   String get paymentMethodWizardImportFromSms;
 
+  /// No description provided for @paymentMethodWizardKeywordsUpdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'키워드가 업데이트되었습니다.'**
+  String get paymentMethodWizardKeywordsUpdated;
+
+  /// No description provided for @paymentMethodWizardCollectSource.
+  ///
+  /// In ko, this message translates to:
+  /// **'수집 방식'**
+  String get paymentMethodWizardCollectSource;
+
+  /// No description provided for @paymentMethodWizardSmsSource.
+  ///
+  /// In ko, this message translates to:
+  /// **'문자'**
+  String get paymentMethodWizardSmsSource;
+
+  /// No description provided for @paymentMethodWizardPushSource.
+  ///
+  /// In ko, this message translates to:
+  /// **'푸시 알림'**
+  String get paymentMethodWizardPushSource;
+
   /// No description provided for @paymentMethodWizardSampleNotice.
   ///
   /// In ko, this message translates to:

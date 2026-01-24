@@ -247,4 +247,31 @@ class DuplicateCheckService {
       return [];
     }
   }
+
+  /// SMS/Push 메시지 해시 생성 (중복 수신 방지용)
+  ///
+  /// 금액 + 내용 일부 + 시간(분 단위)로 해시를 만들어
+  /// SMS와 Push 알림이 동시에 와도 동일한 메시지임을 식별
+  ///
+  /// [content] - 메시지 내용
+  /// [timestamp] - 메시지 수신 시간
+  ///
+  /// 주의: sender를 포함하지 않음 (SMS는 전화번호, Push는 패키지명으로 달라서
+  /// 같은 결제 알림이 다른 해시가 되는 문제 방지)
+  static String generateMessageHash(String content, DateTime timestamp) {
+    final minuteBucket = timestamp.millisecondsSinceEpoch ~/ (60 * 1000);
+
+    // 금액 추출 (SMS/Push 공통으로 금액이 포함됨)
+    final amountMatch = RegExp(r'(\d{1,3}(?:,\d{3})*)\s*원').firstMatch(content);
+    final amount = amountMatch?.group(1)?.replaceAll(',', '') ?? '';
+
+    // 내용에서 핵심 부분만 추출 (sender 제외)
+    final contentPreview = content.length > 80 ? content.substring(0, 80) : content;
+
+    // 금액 + 내용 + 시간으로 해시 (sender 제외하여 SMS/Push 동일 해시)
+    final input = '$amount-$contentPreview-$minuteBucket';
+
+    final bytes = utf8.encode(input);
+    return md5.convert(bytes).toString();
+  }
 }

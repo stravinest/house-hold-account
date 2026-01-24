@@ -55,7 +55,11 @@ class KoreanFinancialPatterns {
     kBank,
 
     // === 지역화폐 ===
-    gyeonggiPay,
+    suwonPay,
+    yonginPay,
+    hwaseongPay,
+    goyangPay,
+    bucheonPay,
     seoulPay,
     incheonPay,
   ];
@@ -336,11 +340,11 @@ class KoreanFinancialPatterns {
 
   // ============ 지역화폐 ============
 
-  /// 경기지역화폐
-  static const gyeonggiPay = FinancialSmsFormat(
-    institutionName: '경기지역화폐',
+  /// 수원페이 (수원시)
+  static const suwonPay = FinancialSmsFormat(
+    institutionName: '수원페이',
     institutionType: 'local_currency',
-    senderPatterns: ['경기', '지역화폐', '경기지역', '경기화폐', '경기페이'],
+    senderPatterns: ['수원페이', '경기지역화폐', '수원시'],
     amountRegex: r'([0-9,]+)\s*원',
     typeKeywords: {
       'expense': ['결제', '사용', '출금'],
@@ -348,7 +352,67 @@ class KoreanFinancialPatterns {
     },
     merchantRegex: r'결제\s+(.+?)(?:\s*\d|$)',
     dateRegex: r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})',
-    sampleSms: '경기지역화폐 결제 30,000원 이마트 잔액 70,000원',
+    sampleSms: '[경기지역화폐] 15,000원 결제 (스타벅스 수원점) 잔액: 35,000원',
+  );
+
+  /// 용인와이페이 (용인시)
+  static const yonginPay = FinancialSmsFormat(
+    institutionName: '용인와이페이',
+    institutionType: 'local_currency',
+    senderPatterns: ['용인와이페이', '용인페이', '경기지역화폐', '용인시'],
+    amountRegex: r'([0-9,]+)\s*원',
+    typeKeywords: {
+      'expense': ['결제', '사용', '출금'],
+      'income': ['충전', '지급', '환급', '캐시백'],
+    },
+    merchantRegex: r'결제\s+(.+?)(?:\s*\d|$)',
+    dateRegex: r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})',
+    sampleSms: '[경기지역화폐] 15,000원 결제 (스타벅스 용인점) 잔액: 35,000원',
+  );
+
+  /// 행복화성지역화폐 (화성시)
+  static const hwaseongPay = FinancialSmsFormat(
+    institutionName: '행복화성지역화폐',
+    institutionType: 'local_currency',
+    senderPatterns: ['행복화성', '화성페이', '경기지역화폐', '화성시'],
+    amountRegex: r'([0-9,]+)\s*원',
+    typeKeywords: {
+      'expense': ['결제', '사용', '출금'],
+      'income': ['충전', '지급', '환급', '캐시백'],
+    },
+    merchantRegex: r'결제\s+(.+?)(?:\s*\d|$)',
+    dateRegex: r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})',
+    sampleSms: '[경기지역화폐] 15,000원 결제 (스타벅스 화성점) 잔액: 35,000원',
+  );
+
+  /// 고양페이 (고양시)
+  static const goyangPay = FinancialSmsFormat(
+    institutionName: '고양페이',
+    institutionType: 'local_currency',
+    senderPatterns: ['고양페이', '경기지역화폐', '고양시'],
+    amountRegex: r'([0-9,]+)\s*원',
+    typeKeywords: {
+      'expense': ['결제', '사용', '출금'],
+      'income': ['충전', '지급', '환급', '캐시백'],
+    },
+    merchantRegex: r'결제\s+(.+?)(?:\s*\d|$)',
+    dateRegex: r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})',
+    sampleSms: '[경기지역화폐] 15,000원 결제 (스타벅스 고양점) 잔액: 35,000원',
+  );
+
+  /// 부천페이 (부천시)
+  static const bucheonPay = FinancialSmsFormat(
+    institutionName: '부천페이',
+    institutionType: 'local_currency',
+    senderPatterns: ['부천페이', '경기지역화폐', '부천시'],
+    amountRegex: r'([0-9,]+)\s*원',
+    typeKeywords: {
+      'expense': ['결제', '사용', '출금'],
+      'income': ['충전', '지급', '환급', '캐시백'],
+    },
+    merchantRegex: r'결제\s+(.+?)(?:\s*\d|$)',
+    dateRegex: r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})',
+    sampleSms: '[경기지역화폐] 15,000원 결제 (스타벅스 부천점) 잔액: 35,000원',
   );
 
   /// 서울사랑상품권
