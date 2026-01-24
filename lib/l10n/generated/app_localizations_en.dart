@@ -2193,6 +2193,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoSaveSettingsModeAuto => 'Auto Save';
 
   @override
+  String get autoSaveSettingsSourceType => 'Source Type';
+
+  @override
+  String get autoSaveSettingsSourceSms => 'SMS';
+
+  @override
+  String get autoSaveSettingsSourcePush => 'Push';
+
+  @override
+  String get autoSaveSettingsSourceSmsDesc =>
+      'Detects payment text messages. Supported by most card companies.';
+
+  @override
+  String get autoSaveSettingsSourcePushDesc =>
+      'Detects push notifications from card apps. Supports KB, Shinhan, Samsung Card, etc.';
+
+  @override
   String get paymentMethodPermissionWarningTitle => 'Confirm Sharing';
 
   @override

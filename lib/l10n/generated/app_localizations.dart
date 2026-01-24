@@ -4063,6 +4063,36 @@ abstract class AppLocalizations {
   /// **'자동 저장'**
   String get autoSaveSettingsModeAuto;
 
+  /// No description provided for @autoSaveSettingsSourceType.
+  ///
+  /// In ko, this message translates to:
+  /// **'수신 방식'**
+  String get autoSaveSettingsSourceType;
+
+  /// No description provided for @autoSaveSettingsSourceSms.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS'**
+  String get autoSaveSettingsSourceSms;
+
+  /// No description provided for @autoSaveSettingsSourcePush.
+  ///
+  /// In ko, this message translates to:
+  /// **'Push 알림'**
+  String get autoSaveSettingsSourcePush;
+
+  /// No description provided for @autoSaveSettingsSourceSmsDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제 문자 메시지를 감지합니다. 대부분의 카드사에서 지원됩니다.'**
+  String get autoSaveSettingsSourceSmsDesc;
+
+  /// No description provided for @autoSaveSettingsSourcePushDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'카드사 앱의 푸시 알림을 감지합니다. KB국민, 신한, 삼성카드 등이 지원됩니다.'**
+  String get autoSaveSettingsSourcePushDesc;
+
   /// No description provided for @paymentMethodPermissionWarningTitle.
   ///
   /// In ko, this message translates to:

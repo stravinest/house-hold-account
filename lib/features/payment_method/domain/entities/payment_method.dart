@@ -19,6 +19,23 @@ enum AutoSaveMode {
   String toJson() => name;
 }
 
+/// 자동 수집 소스 타입 (SMS 또는 Push 알림 중 하나만 선택)
+enum AutoCollectSource {
+  sms,
+  push;
+
+  static AutoCollectSource fromString(String value) {
+    switch (value) {
+      case 'push':
+        return AutoCollectSource.push;
+      default:
+        return AutoCollectSource.sms;
+    }
+  }
+
+  String toJson() => name;
+}
+
 class PaymentMethod extends Equatable {
   final String id;
   final String ledgerId;
@@ -32,6 +49,7 @@ class PaymentMethod extends Equatable {
   final AutoSaveMode autoSaveMode;
   final String? defaultCategoryId;
   final bool canAutoSave; // 자동 수집 지원 여부
+  final AutoCollectSource autoCollectSource; // SMS 또는 Push 중 하나만 선택
 
   const PaymentMethod({
     required this.id,
@@ -46,6 +64,7 @@ class PaymentMethod extends Equatable {
     this.autoSaveMode = AutoSaveMode.manual,
     this.defaultCategoryId,
     this.canAutoSave = true,
+    this.autoCollectSource = AutoCollectSource.sms,
   });
 
   bool get isAutoSaveEnabled => autoSaveMode != AutoSaveMode.manual;
@@ -63,6 +82,7 @@ class PaymentMethod extends Equatable {
     AutoSaveMode? autoSaveMode,
     String? defaultCategoryId,
     bool? canAutoSave,
+    AutoCollectSource? autoCollectSource,
   }) {
     return PaymentMethod(
       id: id ?? this.id,
@@ -77,6 +97,7 @@ class PaymentMethod extends Equatable {
       autoSaveMode: autoSaveMode ?? this.autoSaveMode,
       defaultCategoryId: defaultCategoryId ?? this.defaultCategoryId,
       canAutoSave: canAutoSave ?? this.canAutoSave,
+      autoCollectSource: autoCollectSource ?? this.autoCollectSource,
     );
   }
 
@@ -94,5 +115,6 @@ class PaymentMethod extends Equatable {
     autoSaveMode,
     defaultCategoryId,
     canAutoSave,
+    autoCollectSource,
   ];
 }

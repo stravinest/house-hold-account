@@ -14,6 +14,7 @@ class PaymentMethodModel extends PaymentMethod {
     super.autoSaveMode,
     super.defaultCategoryId,
     super.canAutoSave,
+    super.autoCollectSource,
   });
 
   factory PaymentMethodModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +33,9 @@ class PaymentMethodModel extends PaymentMethod {
       ),
       defaultCategoryId: json['default_category_id'] as String?,
       canAutoSave: (json['can_auto_save'] as bool?) ?? true,
+      autoCollectSource: AutoCollectSource.fromString(
+        (json['auto_collect_source'] as String?) ?? 'sms',
+      ),
     );
   }
 
@@ -49,6 +53,7 @@ class PaymentMethodModel extends PaymentMethod {
       'auto_save_mode': autoSaveMode.toJson(),
       'default_category_id': defaultCategoryId,
       'can_auto_save': canAutoSave,
+      'auto_collect_source': autoCollectSource.toJson(),
     };
   }
 
@@ -76,10 +81,12 @@ class PaymentMethodModel extends PaymentMethod {
   static Map<String, dynamic> toAutoSaveUpdateJson({
     required AutoSaveMode autoSaveMode,
     String? defaultCategoryId,
+    AutoCollectSource? autoCollectSource,
   }) {
     return {
       'auto_save_mode': autoSaveMode.toJson(),
       if (defaultCategoryId != null) 'default_category_id': defaultCategoryId,
+      if (autoCollectSource != null) 'auto_collect_source': autoCollectSource.toJson(),
     };
   }
 }

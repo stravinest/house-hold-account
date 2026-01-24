@@ -251,10 +251,10 @@ class _PendingTransactionCardState
     );
   }
 
-  /// 액션 버튼 빌더
+  /// 액션 버튼 빌더 - Chip 스타일
   ///
-  /// LayoutBuilder로 부모 제약 조건을 확인하여
-  /// 무한 너비 문제를 방지합니다.
+  /// 모든 버튼을 동일한 Chip 스타일로 통일하여
+  /// 일관된 디자인을 제공합니다.
   Widget _buildActionButtons({
     required BuildContext context,
     required AppLocalizations l10n,
@@ -267,93 +267,105 @@ class _PendingTransactionCardState
     if (isDuplicate) {
       // 중복 거래일 때: 거부, 상세, 저장
       if (widget.onReject != null) {
-        buttons.add(_buildRejectButton(l10n, colorScheme));
+        buttons.add(_buildChipButton(
+          label: l10n.commonReject,
+          onPressed: widget.onReject,
+          backgroundColor: colorScheme.errorContainer,
+          foregroundColor: colorScheme.onErrorContainer,
+        ));
       }
-      buttons.add(_buildDetailsButton(l10n, colorScheme));
+      buttons.add(_buildChipButton(
+        label: l10n.confirmDuplicate,
+        onPressed: widget.onEdit,
+        backgroundColor: colorScheme.surfaceContainerHighest,
+        foregroundColor: colorScheme.onSurfaceVariant,
+      ));
       if (widget.onConfirm != null) {
-        buttons.add(_buildSaveButton(l10n, isParsed));
+        buttons.add(_buildChipButton(
+          label: l10n.ignoreDuplicate,
+          onPressed: isParsed ? widget.onConfirm : null,
+          backgroundColor: colorScheme.primaryContainer,
+          foregroundColor: colorScheme.onPrimaryContainer,
+          isDisabled: !isParsed,
+        ));
       }
     } else {
       // 일반 거래일 때: 거부, 수정, 저장
       if (widget.onReject != null) {
-        buttons.add(_buildRejectButton(l10n, colorScheme));
+        buttons.add(_buildChipButton(
+          label: l10n.commonReject,
+          onPressed: widget.onReject,
+          backgroundColor: colorScheme.errorContainer,
+          foregroundColor: colorScheme.onErrorContainer,
+        ));
       }
       if (widget.onEdit != null) {
-        buttons.add(_buildEditButton(l10n));
+        buttons.add(_buildChipButton(
+          label: l10n.commonEdit,
+          onPressed: widget.onEdit,
+          backgroundColor: colorScheme.surfaceContainerHighest,
+          foregroundColor: colorScheme.onSurfaceVariant,
+        ));
       }
       if (widget.onConfirm != null) {
-        buttons.add(_buildSaveButton(l10n, isParsed));
+        buttons.add(_buildChipButton(
+          label: l10n.commonSave,
+          onPressed: isParsed ? widget.onConfirm : null,
+          backgroundColor: colorScheme.primaryContainer,
+          foregroundColor: colorScheme.onPrimaryContainer,
+          isDisabled: !isParsed,
+        ));
       }
     }
 
-    // Wrap을 사용하여 무한 너비 문제 방지
-    // 버튼이 한 줄에 안 들어가면 다음 줄로 넘김
-    return Wrap(
-      alignment: WrapAlignment.end,
-      spacing: Spacing.xs,
-      runSpacing: Spacing.xs,
-      children: buttons,
+    // 오른쪽 정렬 - SizedBox로 감싸서 전체 너비를 차지하도록 함
+    return SizedBox(
+      width: double.infinity,
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        spacing: Spacing.sm,
+        runSpacing: Spacing.xs,
+        children: buttons,
+      ),
     );
   }
 
-  Widget _buildRejectButton(AppLocalizations l10n, ColorScheme colorScheme) {
-    return TextButton(
-      onPressed: widget.onReject,
-      style: TextButton.styleFrom(
-        foregroundColor: colorScheme.error,
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.md,
-          vertical: Spacing.sm,
-        ),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Text(l10n.commonReject),
-    );
-  }
+  /// Chip 스타일 버튼 빌더
+  Widget _buildChipButton({
+    required String label,
+    required VoidCallback? onPressed,
+    required Color backgroundColor,
+    required Color foregroundColor,
+    bool isDisabled = false,
+  }) {
+    final effectiveBgColor = isDisabled
+        ? backgroundColor.withOpacity(0.5)
+        : backgroundColor;
+    final effectiveFgColor = isDisabled
+        ? foregroundColor.withOpacity(0.5)
+        : foregroundColor;
 
-  Widget _buildDetailsButton(AppLocalizations l10n, ColorScheme colorScheme) {
-    return OutlinedButton(
-      onPressed: widget.onEdit,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.md,
-          vertical: Spacing.sm,
+    return Material(
+      color: effectiveBgColor,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        onTap: isDisabled ? null : onPressed,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Spacing.md,
+            vertical: Spacing.sm,
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: effectiveFgColor,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
-      child: Text(l10n.confirmDuplicate),
-    );
-  }
-
-  Widget _buildEditButton(AppLocalizations l10n) {
-    return OutlinedButton(
-      onPressed: widget.onEdit,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.md,
-          vertical: Spacing.sm,
-        ),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Text(l10n.commonEdit),
-    );
-  }
-
-  Widget _buildSaveButton(AppLocalizations l10n, bool isParsed) {
-    return FilledButton(
-      onPressed: isParsed ? widget.onConfirm : null,
-      style: FilledButton.styleFrom(
-        padding: const EdgeInsets.symmetric(
-          horizontal: Spacing.md,
-          vertical: Spacing.sm,
-        ),
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: Text(l10n.commonSave),
     );
   }
 

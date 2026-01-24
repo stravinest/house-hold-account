@@ -234,6 +234,7 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
     required String id,
     required AutoSaveMode autoSaveMode,
     String? defaultCategoryId,
+    AutoCollectSource? autoCollectSource,
   }) async {
     try {
       await safeAsync(
@@ -241,6 +242,7 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
           id: id,
           autoSaveMode: autoSaveMode.toJson(),
           defaultCategoryId: defaultCategoryId,
+          autoCollectSource: autoCollectSource?.toJson(),
         ),
       );
 

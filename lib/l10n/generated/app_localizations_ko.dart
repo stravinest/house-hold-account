@@ -2143,6 +2143,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get autoSaveSettingsModeAuto => '자동 저장';
 
   @override
+  String get autoSaveSettingsSourceType => '수신 방식';
+
+  @override
+  String get autoSaveSettingsSourceSms => 'SMS';
+
+  @override
+  String get autoSaveSettingsSourcePush => 'Push 알림';
+
+  @override
+  String get autoSaveSettingsSourceSmsDesc =>
+      '결제 문자 메시지를 감지합니다. 대부분의 카드사에서 지원됩니다.';
+
+  @override
+  String get autoSaveSettingsSourcePushDesc =>
+      '카드사 앱의 푸시 알림을 감지합니다. KB국민, 신한, 삼성카드 등이 지원됩니다.';
+
+  @override
   String get paymentMethodPermissionWarningTitle => '공유 전환 확인';
 
   @override

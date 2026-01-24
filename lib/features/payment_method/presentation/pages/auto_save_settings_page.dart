@@ -26,6 +26,7 @@ class AutoSaveSettingsPage extends ConsumerStatefulWidget {
 
 class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
   AutoSaveMode? _selectedMode;
+  AutoCollectSource? _selectedSource;
   bool _isLoading = false;
 
   @override
@@ -63,6 +64,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
 
         // Use user-changed mode if available, otherwise use server value
         final currentMode = _selectedMode ?? paymentMethod.autoSaveMode;
+        final currentSource = _selectedSource ?? paymentMethod.autoCollectSource;
 
         return _buildContent(
           context,
@@ -72,6 +74,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
           isAndroid,
           paymentMethod,
           currentMode,
+          currentSource,
         );
       },
     );
@@ -85,6 +88,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
     bool isAndroid,
     PaymentMethod paymentMethod,
     AutoSaveMode currentMode,
+    AutoCollectSource currentSource,
   ) {
     return Scaffold(
       appBar: AppBar(
@@ -181,6 +185,26 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
               const SizedBox(height: Spacing.lg),
             ],
 
+            // 수신 방식 선택 (SMS / Push)
+            if (isAndroid) ...[
+              Text(
+                l10n.autoSaveSettingsSourceType,
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: Spacing.sm),
+              _buildSourceSelector(context, l10n, colorScheme, currentSource),
+              const SizedBox(height: Spacing.xs),
+              Text(
+                _getSourceDescription(l10n, currentSource),
+                style: textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: Spacing.lg),
+            ],
+
             // Auto process mode selection
             Text(
               l10n.autoSaveSettingsAutoProcessMode,
@@ -240,6 +264,55 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
               ),
       ),
     );
+  }
+
+  /// SegmentedButton으로 SMS/Push 선택
+  Widget _buildSourceSelector(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+    AutoCollectSource currentSource,
+  ) {
+    return SizedBox(
+      width: double.infinity,
+      child: SegmentedButton<AutoCollectSource>(
+        segments: [
+          ButtonSegment<AutoCollectSource>(
+            value: AutoCollectSource.sms,
+            label: Text(l10n.autoSaveSettingsSourceSms),
+            icon: const Icon(Icons.sms_outlined),
+          ),
+          ButtonSegment<AutoCollectSource>(
+            value: AutoCollectSource.push,
+            label: Text(l10n.autoSaveSettingsSourcePush),
+            icon: const Icon(Icons.notifications_outlined),
+          ),
+        ],
+        selected: {currentSource},
+        onSelectionChanged: (Set<AutoCollectSource> newSelection) {
+          setState(() {
+            _selectedSource = newSelection.first;
+          });
+        },
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) {
+              return colorScheme.primaryContainer;
+            }
+            return null;
+          }),
+        ),
+      ),
+    );
+  }
+
+  String _getSourceDescription(AppLocalizations l10n, AutoCollectSource source) {
+    switch (source) {
+      case AutoCollectSource.sms:
+        return l10n.autoSaveSettingsSourceSmsDesc;
+      case AutoCollectSource.push:
+        return l10n.autoSaveSettingsSourcePushDesc;
+    }
   }
 
   Widget _buildModeSelector(BuildContext context, AppLocalizations l10n, bool isAndroid, AutoSaveMode currentMode) {
@@ -355,15 +428,26 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
   Future<void> _saveSettings() async {
     final l10n = AppLocalizations.of(context);
     final selectedMode = _selectedMode;
-    if (selectedMode == null) return;
+    final selectedSource = _selectedSource;
+
+    // 변경사항이 없으면 리턴
+    if (selectedMode == null && selectedSource == null) return;
 
     setState(() {
       _isLoading = true;
     });
 
     try {
+      // 현재 결제수단 정보 가져오기
+      final paymentMethods = ref.read(paymentMethodNotifierProvider).valueOrNull ?? [];
+      final currentPaymentMethod = paymentMethods
+          .where((p) => p.id == widget.paymentMethodId)
+          .firstOrNull;
+
+      final modeToSave = selectedMode ?? currentPaymentMethod?.autoSaveMode ?? AutoSaveMode.manual;
+
       // Check permission if auto save mode is enabled
-      if (selectedMode != AutoSaveMode.manual && Platform.isAndroid) {
+      if (modeToSave != AutoSaveMode.manual && Platform.isAndroid) {
         final hasPermission = await _checkAndRequestPermissions();
         if (!hasPermission) {
           if (mounted) {
@@ -377,7 +461,8 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
           .read(paymentMethodNotifierProvider.notifier)
           .updateAutoSaveSettings(
             id: widget.paymentMethodId,
-            autoSaveMode: selectedMode,
+            autoSaveMode: modeToSave,
+            autoCollectSource: selectedSource,
           );
 
       // Immediately reflect changed settings to the service

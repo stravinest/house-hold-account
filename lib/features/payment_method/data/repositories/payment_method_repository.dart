@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -65,6 +67,27 @@ class PaymentMethodRepository {
       ownerUserId: ownerUserId,
       canAutoSave: true,
     );
+  }
+
+  // ID로 단일 결제수단 조회 (백그라운드 알림 처리용 - 타임아웃 포함)
+  Future<PaymentMethodModel?> getPaymentMethodById(String id) async {
+    try {
+      final response = await _client
+          .from('payment_methods')
+          .select()
+          .eq('id', id)
+          .maybeSingle()
+          .timeout(const Duration(seconds: 5));
+
+      if (response == null) return null;
+      return PaymentMethodModel.fromJson(response);
+    } on TimeoutException {
+      debugPrint('getPaymentMethodById timeout - will use cached value');
+      return null;
+    } catch (e) {
+      debugPrint('Failed to get payment method by id: $e');
+      return null;
+    }
   }
 
   // 결제수단 생성
@@ -209,10 +232,14 @@ class PaymentMethodRepository {
     required String id,
     required String autoSaveMode,
     String? defaultCategoryId,
+    String? autoCollectSource,
   }) async {
     final updates = <String, dynamic>{'auto_save_mode': autoSaveMode};
     if (defaultCategoryId != null) {
       updates['default_category_id'] = defaultCategoryId;
+    }
+    if (autoCollectSource != null) {
+      updates['auto_collect_source'] = autoCollectSource;
     }
 
     final response = await _client

@@ -9,6 +9,7 @@ import 'package:notification_listener_service/notification_listener_service.dart
 
 import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../domain/entities/learned_sms_format.dart';
+import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../models/learned_sms_format_model.dart';
 import '../models/payment_method_model.dart';
@@ -373,6 +374,11 @@ class NotificationListenerWrapper {
     }
 
     for (final pm in _autoSavePaymentMethods) {
+      // Push 소스로 설정된 결제수단만 매칭 (SMS로 설정된 결제수단은 무시)
+      if (pm.autoCollectSource != AutoCollectSource.push) {
+        continue;
+      }
+
       final formats = _learnedFormatsCache[pm.id];
       if (kDebugMode) {
         debugPrint('[Matching] Checking PM: ${pm.name}, formats: ${formats?.length ?? 0}');
@@ -497,9 +503,11 @@ class NotificationListenerWrapper {
       );
     }
 
-    final autoSaveModeStr = paymentMethod.autoSaveMode.toJson();
+    // 캐시된 값 대신 DB에서 최신 autoSaveMode 조회 (설정 변경 후 캐시 동기화 문제 방지)
+    final freshPaymentMethod = await _paymentMethodRepository.getPaymentMethodById(paymentMethod.id);
+    final autoSaveModeStr = freshPaymentMethod?.autoSaveMode.toJson() ?? paymentMethod.autoSaveMode.toJson();
     if (kDebugMode) {
-      debugPrint('Notification matched: mode=$autoSaveModeStr, pm=${paymentMethod.name}');
+      debugPrint('Notification matched: mode=$autoSaveModeStr (fresh from DB), pm=${paymentMethod.name}');
     }
 
     // 중복 감지 처리: 중복이더라도 pending으로 저장하여 사용자가 확인할 수 있게 함
@@ -659,14 +667,24 @@ class NotificationListenerWrapper {
 
   /// 메시지 내용으로 고유 해시 생성 (중복 수신 방지용)
   ///
-  /// 발신자 + 내용 일부 + 시간(분 단위)로 해시를 만들어
+  /// 금액 + 내용 일부 + 시간(분 단위)로 해시를 만들어
   /// SMS와 Push 알림이 동시에 와도 동일한 메시지임을 식별
+  ///
+  /// 주의: sender를 포함하지 않음 (SMS는 전화번호, Push는 패키지명으로 달라서
+  /// 같은 결제 알림이 다른 해시가 되는 문제 방지)
   String _generateMessageHash(String sender, String content, DateTime timestamp) {
     final minuteBucket = timestamp.millisecondsSinceEpoch ~/ (60 * 1000);
-    final contentPreview = content.length > 100 ? content.substring(0, 100) : content;
-    final input = '$sender-$contentPreview-$minuteBucket';
 
-    // md5 해시 (결정적 해시, duplicate_check_service와 동일한 방식)
+    // 금액 추출 (SMS/Push 공통으로 금액이 포함됨)
+    final amountMatch = RegExp(r'(\d{1,3}(?:,\d{3})*)\s*원').firstMatch(content);
+    final amount = amountMatch?.group(1)?.replaceAll(',', '') ?? '';
+
+    // 내용에서 핵심 부분만 추출 (sender 제외)
+    final contentPreview = content.length > 80 ? content.substring(0, 80) : content;
+
+    // 금액 + 내용 + 시간으로 해시 (sender 제외하여 SMS/Push 동일 해시)
+    final input = '$amount-$contentPreview-$minuteBucket';
+
     final bytes = utf8.encode(input);
     return md5.convert(bytes).toString();
   }
