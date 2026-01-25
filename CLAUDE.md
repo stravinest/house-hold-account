@@ -239,6 +239,12 @@ Supabase PostgreSQL 사용. 마이그레이션 파일 위치: `supabase/migratio
 - `038_fix_pending_transactions_rls.sql`: pending_transactions RLS 정책 수정
 - `039_update_payment_method_sharing_policy.sql`: 결제수단 공유 정책 업데이트
 - `040_add_increment_match_count_rpc.sql`: SMS 포맷 매칭 카운트 원자적 증가 RPC 함수
+- `041_add_is_duplicate_column.sql`: 중복 거래 감지용 컬럼 추가
+- `042_add_auto_collect_source.sql`: 자동수집 소스(SMS/Push) 선택 컬럼 추가
+- `043_fix_payment_method_unique_constraint.sql`: 자동수집 결제수단 사용자별 독립 관리
+  - 기존 `UNIQUE(ledger_id, name)` 제거
+  - 공유 결제수단: `UNIQUE(ledger_id, name) WHERE can_auto_save=false`
+  - 자동수집 결제수단: `UNIQUE(ledger_id, owner_user_id, name) WHERE can_auto_save=true`
 
 RLS (Row Level Security) 정책이 모든 테이블에 적용되어 있음.
 
