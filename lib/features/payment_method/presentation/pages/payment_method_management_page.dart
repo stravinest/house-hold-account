@@ -22,6 +22,7 @@ import '../providers/payment_method_provider.dart';
 import '../providers/pending_transaction_provider.dart';
 import '../widgets/pending_transaction_card.dart';
 import '../widgets/permission_request_dialog.dart';
+import '../widgets/permission_status_banner.dart';
 import 'payment_method_wizard_page.dart';
 
 /// Platform check for Android (cached at app startup)
@@ -592,49 +593,8 @@ class _PaymentMethodListView extends ConsumerWidget {
   }
 
   Widget _buildPermissionBanner(BuildContext context, AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.all(Spacing.md),
-      decoration: BoxDecoration(
-        color: colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.security,
-                color: colorScheme.onPrimaryContainer,
-              ),
-              const SizedBox(width: Spacing.sm),
-              Text(
-                l10n.autoSaveSettingsRequiredPermissions,
-                style: textTheme.titleSmall?.copyWith(
-                  color: colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.sm),
-          Text(
-            l10n.autoSaveSettingsPermissionDesc,
-            style: textTheme.bodySmall?.copyWith(
-              color: colorScheme.onPrimaryContainer,
-            ),
-          ),
-          const SizedBox(height: Spacing.sm),
-          OutlinedButton.icon(
-            onPressed: () => _showPermissionDialog(context),
-            icon: const Icon(Icons.settings),
-            label: Text(l10n.autoSaveSettingsPermissionButton),
-          ),
-        ],
-      ),
+    return PermissionStatusBanner(
+      onPermissionDialogRequested: () => _showPermissionDialog(context),
     );
   }
 

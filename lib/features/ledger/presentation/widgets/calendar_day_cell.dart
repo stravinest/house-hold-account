@@ -26,12 +26,29 @@ class CalendarConstants {
   static const double daysOfWeekHeight = 28.0;
 }
 
+/// 캘린더에 표시할 거래 타입
+enum TransactionDisplayType {
+  /// 수입 (primary 색상)
+  income,
+
+  /// 지출 (error 색상)
+  expense,
+
+  /// 자산 (tertiary 색상)
+  asset,
+}
+
 /// 금액 항목 데이터 클래스
 class AmountItem {
   final Color color;
   final int amount;
+  final TransactionDisplayType type;
 
-  const AmountItem({required this.color, required this.amount});
+  const AmountItem({
+    required this.color,
+    required this.amount,
+    required this.type,
+  });
 }
 
 /// 캘린더 날짜 셀 위젯
@@ -352,17 +369,29 @@ class _UserAmountList extends StatelessWidget {
 
       // 수입이 있으면 추가
       if (income > 0) {
-        allItems.add(AmountItem(color: color, amount: income));
+        allItems.add(AmountItem(
+          color: color,
+          amount: income,
+          type: TransactionDisplayType.income,
+        ));
       }
 
       // 지출이 있으면 추가
       if (expense > 0) {
-        allItems.add(AmountItem(color: color, amount: expense));
+        allItems.add(AmountItem(
+          color: color,
+          amount: expense,
+          type: TransactionDisplayType.expense,
+        ));
       }
 
       // 자산이 있으면 추가
       if (saving > 0) {
-        allItems.add(AmountItem(color: color, amount: saving));
+        allItems.add(AmountItem(
+          color: color,
+          amount: saving,
+          type: TransactionDisplayType.asset,
+        ));
       }
     }
 
@@ -379,6 +408,7 @@ class _UserAmountList extends StatelessWidget {
         _UserAmountRow(
           color: item.color,
           amount: item.amount,
+          type: item.type,
           isSelected: isSelected,
           colorScheme: colorScheme,
           showAmount: showAmount,
@@ -441,6 +471,7 @@ class _MoreIndicator extends StatelessWidget {
 class _UserAmountRow extends StatelessWidget {
   final Color color;
   final int amount;
+  final TransactionDisplayType type;
   final bool isSelected;
   final ColorScheme colorScheme;
   final bool showAmount;
@@ -448,6 +479,7 @@ class _UserAmountRow extends StatelessWidget {
   const _UserAmountRow({
     required this.color,
     required this.amount,
+    required this.type,
     required this.isSelected,
     required this.colorScheme,
     required this.showAmount,
@@ -461,6 +493,20 @@ class _UserAmountRow extends StatelessWidget {
       height: CalendarConstants.dotSize,
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
     );
+
+    // 거래 타입에 따라 금액 색상 결정 (거래 리스트와 동일한 색상 사용)
+    final Color amountColor;
+    switch (type) {
+      case TransactionDisplayType.income:
+        amountColor = colorScheme.primary;
+        break;
+      case TransactionDisplayType.expense:
+        amountColor = colorScheme.error;
+        break;
+      case TransactionDisplayType.asset:
+        amountColor = colorScheme.tertiary;
+        break;
+    }
 
     return SizedBox(
       height: CalendarConstants.amountRowHeight,
@@ -476,8 +522,7 @@ class _UserAmountRow extends StatelessWidget {
                 NumberFormatUtils.currency.format(amount),
                 style: TextStyle(
                   fontSize: CalendarConstants.amountFontSize,
-                  // 선택 여부와 관계없이 동일한 색상 사용
-                  color: colorScheme.onSurface.withAlpha(179),
+                  color: amountColor,
                   fontWeight: FontWeight.w500,
                 ),
                 overflow: TextOverflow.ellipsis,

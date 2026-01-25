@@ -74,6 +74,7 @@ class NotificationListenerWrapper {
     'com.hyundaicard.appcard', // 현대카드 메인 앱
     'com.hyundaicard.weather', // 현대카드 웨더
     'com.hyundaicard.cultureapp', // 현대카드 DIVE
+    'com.hyundaicard.hyundaicardmpoint', // 현대카드 M몰
 
     // 롯데카드
     'com.lcacapp', // 디지로카 (롯데카드 메인 앱)
