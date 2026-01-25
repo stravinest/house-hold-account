@@ -306,24 +306,19 @@ class NotificationListenerWrapper {
       return;
     }
 
-    // SMS 앱 알림 제외 - SmsListenerService가 SMS를 직접 처리함 (중복 방지)
-    // SmsListener와 NotificationListener가 각각 독립적인 중복 캐시를 가지므로
-    // 같은 SMS를 두 번 처리하는 것을 방지하기 위해 SMS 앱 알림은 무조건 스킵
+    // SMS 앱 알림 제외 - SmsListenerService가 직접 처리하므로 중복 방지
     final packageLower = packageName.toLowerCase();
     if (_smsAppPackages.any((pkg) => packageLower.contains(pkg))) {
       if (kDebugMode) {
-        debugPrint('[NotificationListener] Skipping SMS app notification: $packageName');
-        debugPrint('[NotificationListener] Reason: SmsListenerService handles SMS directly');
+        debugPrint('[NotificationListener] Skipping SMS app: $packageName (handled by SmsListenerService)');
       }
       return;
     }
 
-    // 자기 앱 알림 제외 - 순환 푸시 알림 방지
-    // 공유 가계부에서 다른 사용자가 거래 등록 시 받는 FCM 푸시가
-    // 자동수집에서 감지되어 중복 거래가 생성되는 것을 방지
+    // 자기 앱 푸시 알림 제외 - 공유 가계부의 FCM 알림 중복 방지
     if (packageLower.contains(_ownAppPackage)) {
       if (kDebugMode) {
-        debugPrint('[NotificationListener] Skipping own app notification: $packageName');
+        debugPrint('[NotificationListener] Skipping own app: $packageName');
       }
       return;
     }
@@ -561,8 +556,7 @@ class NotificationListenerWrapper {
       );
     }
 
-    // 캐시에서 최신 autoSaveMode 확인 (refreshPaymentMethods 호출 시 캐시가 갱신됨)
-    // 설정 페이지에서 저장 시 AutoSaveService.refreshPaymentMethods()가 호출되어 캐시 동기화됨
+    // 캐시에서 최신 autoSaveMode 확인 (refreshPaymentMethods()로 동기화됨)
     final cachedPaymentMethod = _autoSavePaymentMethods
         .where((pm) => pm.id == paymentMethod.id)
         .firstOrNull;

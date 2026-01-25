@@ -69,6 +69,9 @@ class SmsListenerService {
   final Map<String, DateTime> _recentlyProcessedMessages = {};
   static const Duration _messageCacheDuration = Duration(seconds: 10);
 
+  // 동시성 제어: 현재 처리 중인 SMS 추적
+  final Set<String> _processingMessages = {};
+
   final _onSmsProcessedController =
       StreamController<SmsProcessedEvent>.broadcast();
   Stream<SmsProcessedEvent> get onSmsProcessed =>
@@ -154,11 +157,14 @@ class SmsListenerService {
   }
 
   void startListening() {
-    // 프로덕션에서도 로그 출력 (디버깅용)
-    debugPrint('[SmsListener] startListening called: isAndroid=$isAndroid, isInitialized=$_isInitialized, isListening=$_isListening');
+    if (kDebugMode) {
+      debugPrint('[SmsListener] startListening called: isAndroid=$isAndroid, isInitialized=$_isInitialized, isListening=$_isListening');
+    }
 
     if (!isAndroid || !_isInitialized || _isListening) {
-      debugPrint('[SmsListener] ❌ Cannot start listening: isAndroid=$isAndroid, isInitialized=$_isInitialized, isListening=$_isListening');
+      if (kDebugMode) {
+        debugPrint('[SmsListener] Cannot start listening: isAndroid=$isAndroid, isInitialized=$_isInitialized, isListening=$_isListening');
+      }
       return;
     }
 
@@ -169,11 +175,13 @@ class SmsListenerService {
     );
 
     _isListening = true;
-    debugPrint('[SmsListener] ✅ SMS listener started successfully');
-    debugPrint('[SmsListener] Listening for SMS with ${_autoSavePaymentMethods.length} payment methods');
-    for (final pm in _autoSavePaymentMethods) {
-      if (pm.autoCollectSource == AutoCollectSource.sms) {
-        debugPrint('  - ${pm.name} (mode: ${pm.autoSaveMode.toJson()})');
+    if (kDebugMode) {
+      debugPrint('[SmsListener] SMS listener started successfully');
+      debugPrint('[SmsListener] Listening for SMS with ${_autoSavePaymentMethods.length} payment methods');
+      for (final pm in _autoSavePaymentMethods) {
+        if (pm.autoCollectSource == AutoCollectSource.sms) {
+          debugPrint('  - ${pm.name} (mode: ${pm.autoSaveMode.toJson()})');
+        }
       }
     }
   }
@@ -185,14 +193,31 @@ class SmsListenerService {
 
   @visibleForTesting
   Future<void> onSmsReceived(SmsMessage message) async {
+    // 동시성 제어: 메시지 고유 ID 생성
+    final messageId = '${message.address}_${message.date ?? DateTime.now().millisecondsSinceEpoch}';
+
+    // 이미 처리 중인 SMS면 스킵
+    if (_processingMessages.contains(messageId)) {
+      if (kDebugMode) {
+        debugPrint('[SmsListener] Already processing: $messageId');
+      }
+      return;
+    }
+
+    _processingMessages.add(messageId);
+    try {
+      await _processSmsMessage(message);
+    } finally {
+      _processingMessages.remove(messageId);
+    }
+  }
+
+  Future<void> _processSmsMessage(SmsMessage message) async {
     if (kDebugMode) {
       debugPrint('========================================');
-      debugPrint('[SmsListener] 📨 SMS 수신!');
-      debugPrint('  - 발신자: ${message.address}');
-      final bodyPreview = (message.body ?? '').length > 50
-          ? '${message.body!.substring(0, 50)}...'
-          : message.body;
-      debugPrint('  - 내용 미리보기: $bodyPreview');
+      debugPrint('[SmsListener] SMS received');
+      debugPrint('  - Sender: ${message.address}');
+      debugPrint('  - Content length: ${message.body?.length ?? 0}');
       debugPrint('========================================');
     }
 
@@ -580,6 +605,7 @@ class SmsListenerService {
     _currentLedgerId = null;
     _learnedFormatsCache.clear();
     _recentlyProcessedMessages.clear();
+    _processingMessages.clear();
     _instance = null;
   }
 }

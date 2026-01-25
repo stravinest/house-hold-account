@@ -8,8 +8,15 @@ import '../../../../shared/themes/design_tokens.dart';
 import '../../data/services/notification_listener_wrapper.dart';
 import '../../data/services/sms_listener_service.dart';
 
-/// AppLifecycleListener를 사용하여 앱 재개 시 권한 재확인
-mixin _AppLifecycleHandler<T extends StatefulWidget> on State<T> {
+/// 권한 확인 상태
+enum _PermissionCheckStatus {
+  granted,  // 권한 허용됨
+  denied,   // 권한 거부됨
+  error,    // 권한 확인 실패 (시스템 오류)
+}
+
+/// 앱 재개 시 권한을 재확인하기 위한 라이프사이클 핸들러
+mixin _PermissionResumeHandler<T extends StatefulWidget> on State<T> {
   late final AppLifecycleListener _lifecycleListener;
 
   void onAppResumed();
@@ -62,9 +69,9 @@ class PermissionStatusBanner extends StatefulWidget {
 }
 
 class _PermissionStatusBannerState extends State<PermissionStatusBanner>
-    with _AppLifecycleHandler {
-  bool _smsPermissionGranted = false;
-  bool _notificationPermissionGranted = false;
+    with _PermissionResumeHandler {
+  _PermissionCheckStatus _smsPermissionStatus = _PermissionCheckStatus.error;
+  _PermissionCheckStatus _notificationPermissionStatus = _PermissionCheckStatus.error;
   bool _isLoading = true;
   bool _shouldCheckOnResume = false;
 
@@ -91,31 +98,34 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
       return;
     }
 
-    bool smsGranted = false;
-    bool notificationGranted = false;
+    _PermissionCheckStatus smsStatus = _PermissionCheckStatus.error;
+    _PermissionCheckStatus notificationStatus = _PermissionCheckStatus.error;
 
     // 각 권한을 독립적으로 체크 (하나 실패해도 다른 것은 계속 체크)
     try {
-      smsGranted = await SmsListenerService.instance.checkPermissions();
+      final granted = await SmsListenerService.instance.checkPermissions();
+      smsStatus = granted ? _PermissionCheckStatus.granted : _PermissionCheckStatus.denied;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('SMS 권한 체크 실패: $e');
       }
+      smsStatus = _PermissionCheckStatus.error;
     }
 
     try {
-      notificationGranted =
-          await NotificationListenerWrapper.instance.isPermissionGranted();
+      final granted = await NotificationListenerWrapper.instance.isPermissionGranted();
+      notificationStatus = granted ? _PermissionCheckStatus.granted : _PermissionCheckStatus.denied;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('알림 권한 체크 실패: $e');
       }
+      notificationStatus = _PermissionCheckStatus.error;
     }
 
     if (mounted) {
       setState(() {
-        _smsPermissionGranted = smsGranted;
-        _notificationPermissionGranted = notificationGranted;
+        _smsPermissionStatus = smsStatus;
+        _notificationPermissionStatus = notificationStatus;
         _isLoading = false;
       });
     }
@@ -129,18 +139,20 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
       final granted = await SmsListenerService.instance.requestPermissions();
       if (mounted) {
         setState(() {
-          _smsPermissionGranted = granted;
-          _shouldCheckOnResume = false; // 즉시 결과를 받았으므로 플래그 해제
+          _smsPermissionStatus = granted
+              ? _PermissionCheckStatus.granted
+              : _PermissionCheckStatus.denied;
+          _shouldCheckOnResume = false;
         });
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('SMS 권한 요청 중 에러 (무시됨): $e');
+        debugPrint('SMS 권한 요청 중 에러: $e');
       }
       if (mounted) {
         setState(() {
-          _smsPermissionGranted = false;
-          _shouldCheckOnResume = false; // 에러 발생 시에도 플래그 해제
+          _smsPermissionStatus = _PermissionCheckStatus.error;
+          _shouldCheckOnResume = false;
         });
       }
     }
@@ -206,7 +218,8 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
       );
     }
 
-    final allGranted = _smsPermissionGranted && _notificationPermissionGranted;
+    final allGranted = _smsPermissionStatus == _PermissionCheckStatus.granted &&
+        _notificationPermissionStatus == _PermissionCheckStatus.granted;
 
     return Container(
       padding: const EdgeInsets.all(Spacing.md),
@@ -253,8 +266,9 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             icon: Icons.sms_outlined,
             title: 'SMS 읽기',
             description: '문자 메시지에서 거래 정보를 읽습니다',
-            isGranted: _smsPermissionGranted,
+            status: _smsPermissionStatus,
             onRequest: _requestSmsPermission,
+            onRetry: _checkPermissions,
             colorScheme: colorScheme,
             textTheme: textTheme,
           ),
@@ -267,8 +281,9 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             icon: Icons.notifications_outlined,
             title: '알림 접근',
             description: '푸시 알림에서 거래 정보를 읽습니다',
-            isGranted: _notificationPermissionGranted,
+            status: _notificationPermissionStatus,
             onRequest: _requestNotificationPermission,
+            onRetry: _checkPermissions,
             isNotificationPermission: true,
             colorScheme: colorScheme,
             textTheme: textTheme,
@@ -315,12 +330,16 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     required IconData icon,
     required String title,
     required String description,
-    required bool isGranted,
+    required _PermissionCheckStatus status,
     required VoidCallback onRequest,
+    required VoidCallback onRetry,
     required ColorScheme colorScheme,
     required TextTheme textTheme,
     bool isNotificationPermission = false,
   }) {
+    final isGranted = status == _PermissionCheckStatus.granted;
+    final isError = status == _PermissionCheckStatus.error;
+
     return Container(
       padding: const EdgeInsets.all(Spacing.sm),
       decoration: BoxDecoration(
@@ -347,7 +366,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
               borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
             ),
             child: Icon(
-              isGranted ? Icons.check : Icons.warning_amber_rounded,
+              isGranted ? Icons.check : (isError ? Icons.error_outline : Icons.warning_amber_rounded),
               color: isGranted ? colorScheme.onPrimary : colorScheme.onError,
               size: IconSize.sm,
             ),
@@ -428,7 +447,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
           if (!isGranted) ...[
             const SizedBox(width: Spacing.xs),
             TextButton(
-              onPressed: onRequest,
+              onPressed: isError ? onRetry : onRequest,
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: Spacing.sm,
@@ -442,7 +461,9 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                 foregroundColor: colorScheme.error,
               ),
               child: Text(
-                isNotificationPermission ? '설정 열기' : '허용',
+                isError
+                    ? '재시도'
+                    : (isNotificationPermission ? '설정 열기' : '허용'),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
