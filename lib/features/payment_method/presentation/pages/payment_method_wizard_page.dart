@@ -12,6 +12,7 @@ import '../../domain/entities/financial_service_template.dart';
 import '../../data/services/sms_parsing_service.dart';
 import '../../data/services/sms_listener_service.dart';
 import '../../data/services/sms_scanner_service.dart';
+import '../../data/services/auto_save_service.dart';
 import '../providers/payment_method_provider.dart';
 
 /// Payment method add mode
@@ -79,6 +80,9 @@ class _PaymentMethodWizardPageState
 
       // Initialize autoSaveMode from existing payment method
       _autoSaveMode = widget.paymentMethod!.autoSaveMode;
+
+      // Initialize notification type (SMS/Push) from existing payment method
+      _notificationType = widget.paymentMethod!.autoCollectSource.name;
 
       // Try template matching for auto-collect mode
       if (_selectedMode == PaymentMethodAddMode.autoCollect) {
@@ -260,11 +264,12 @@ class _PaymentMethodWizardPageState
           canAutoSave: canAutoSave,
         );
 
-        // 2. Update autoSaveMode (only for auto-collect mode)
+        // 2. Update autoSaveMode and autoCollectSource (only for auto-collect mode)
         if (canAutoSave) {
           await notifier.updateAutoSaveSettings(
             id: widget.paymentMethod!.id,
             autoSaveMode: _autoSaveMode,
+            autoCollectSource: AutoCollectSource.fromString(_notificationType),
           );
         }
 
@@ -303,11 +308,12 @@ class _PaymentMethodWizardPageState
           canAutoSave: canAutoSave,
         );
 
-        // 2. Update autoSaveMode (only for auto-collect mode)
+        // 2. Update autoSaveMode and autoCollectSource (only for auto-collect mode)
         if (canAutoSave) {
           await notifier.updateAutoSaveSettings(
             id: paymentMethod.id,
             autoSaveMode: _autoSaveMode,
+            autoCollectSource: AutoCollectSource.fromString(_notificationType),
           );
         }
 
@@ -332,12 +338,14 @@ class _PaymentMethodWizardPageState
       ref.invalidate(sharedPaymentMethodsProvider);
       ref.invalidate(paymentMethodsProvider);
 
-      // For auto-collect payment method, also refresh the user's provider
+      // For auto-collect payment method, also refresh the user's provider and listeners
       if (canAutoSave) {
         final currentUserId = ref.read(currentUserProvider)?.id;
         if (currentUserId != null) {
           ref.invalidate(autoCollectPaymentMethodsByOwnerProvider(currentUserId));
         }
+        // Refresh SMS/Push listener caches to apply new autoCollectSource setting
+        await AutoSaveService.instance.refreshPaymentMethods();
       }
 
       if (mounted) {
@@ -860,18 +868,37 @@ class _PaymentMethodWizardPageState
                       ],
                     ),
                     const Divider(),
-                    _buildRuleRow(
-                      l10n.paymentMethodWizardDetectionKeywordsOr,
-                      _generatedFormat!.senderKeywords.join(', '),
-                    ),
-                    _buildRuleRow(
-                      l10n.paymentMethodWizardAmountPatternRequired,
-                      _getFriendlyAmountPattern(_generatedFormat!.amountRegex),
+                    // 감지 키워드 - Chip 형태로 표시
+                    Text(
+                      l10n.paymentMethodWizardDetectionKeywords,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                     ),
                     const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _generatedFormat!.senderKeywords
+                          .map((keyword) => Chip(
+                                label: Text(
+                                  keyword,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                backgroundColor: Colors.white,
+                                side: BorderSide(color: Colors.blue[200]!),
+                                visualDensity: VisualDensity.compact,
+                              ))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    // 금액 패턴
                     Text(
-                      l10n.paymentMethodWizardAmountPatternNote,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      l10n.paymentMethodWizardAmountPattern,
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getFriendlyAmountPattern(_generatedFormat!.amountRegex),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
@@ -1008,27 +1035,6 @@ class _PaymentMethodWizardPageState
     );
   }
 
-  Widget _buildRuleRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(label, style: const TextStyle(color: Colors.grey)),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _getFriendlyAmountPattern(String regex) {
     // Provide user-friendly description for common patterns
     if (regex.contains('Won') && regex.contains('[0-9,]+')) {
@@ -1043,65 +1049,18 @@ class _PaymentMethodWizardPageState
   Future<void> _showEditKeywordsDialog() async {
     if (_generatedFormat == null) return;
 
-    _keywordsController.text = _generatedFormat!.senderKeywords.join(', ');
+    // 현재 키워드 복사본 생성
+    final currentKeywords = List<String>.from(_generatedFormat!.senderKeywords);
+    _keywordsController.clear();
 
     if (!mounted) return;
 
     final result = await showDialog<List<String>>(
       context: context,
       builder: (dialogContext) {
-        final dialogL10n = AppLocalizations.of(dialogContext);
-        return AlertDialog(
-          title: Text(dialogL10n.paymentMethodWizardEditKeywordsTitle),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                dialogL10n.paymentMethodWizardEditKeywordsDescription,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _keywordsController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: dialogL10n.paymentMethodWizardEditKeywordsHint,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  helperText: dialogL10n.paymentMethodWizardEditKeywordsHelper,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-              child: Text(dialogL10n.commonCancel),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final keywords = _keywordsController.text
-                    .split(',')
-                    .map((k) => k.trim())
-                    .where((k) => k.isNotEmpty)
-                    .toList();
-
-                if (keywords.isEmpty) {
-                  ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    SnackBar(content: Text(dialogL10n.paymentMethodWizardEditKeywordsMinError)),
-                  );
-                  return;
-                }
-
-                Navigator.pop(dialogContext, keywords);
-              },
-              child: Text(dialogL10n.commonSave),
-            ),
-          ],
+        return _KeywordEditDialog(
+          initialKeywords: currentKeywords,
+          keywordsController: _keywordsController,
         );
       },
     );
@@ -1259,6 +1218,157 @@ class _PaymentMethodWizardPageState
           ),
         ],
       ),
+    );
+  }
+}
+
+/// 키워드 수정을 위한 Chip 기반 다이얼로그
+class _KeywordEditDialog extends StatefulWidget {
+  final List<String> initialKeywords;
+  final TextEditingController keywordsController;
+
+  const _KeywordEditDialog({
+    required this.initialKeywords,
+    required this.keywordsController,
+  });
+
+  @override
+  State<_KeywordEditDialog> createState() => _KeywordEditDialogState();
+}
+
+class _KeywordEditDialogState extends State<_KeywordEditDialog> {
+  late List<String> _keywords;
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _keywords = List<String>.from(widget.initialKeywords);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _addKeyword() {
+    final newKeyword = widget.keywordsController.text.trim();
+    if (newKeyword.isEmpty) return;
+
+    final l10n = AppLocalizations.of(context);
+
+    // 중복 확인
+    if (_keywords.contains(newKeyword)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.paymentMethodWizardKeywordDuplicate)),
+      );
+      return;
+    }
+
+    setState(() {
+      _keywords.add(newKeyword);
+      widget.keywordsController.clear();
+    });
+
+    // 포커스 유지
+    _focusNode.requestFocus();
+  }
+
+  void _removeKeyword(String keyword) {
+    setState(() {
+      _keywords.remove(keyword);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return AlertDialog(
+      title: Text(l10n.paymentMethodWizardEditKeywordsTitle),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              l10n.paymentMethodWizardEditKeywordsDescription,
+              style: TextStyle(
+                fontSize: 13,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // 등록된 키워드 Chip 리스트
+            if (_keywords.isNotEmpty) ...[
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _keywords
+                    .map((keyword) => InputChip(
+                          label: Text(keyword),
+                          deleteIcon: const Icon(Icons.close, size: 18),
+                          onDeleted: () => _removeKeyword(keyword),
+                          backgroundColor: colorScheme.surfaceContainerHighest,
+                        ))
+                    .toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
+
+            // 키워드 입력 필드
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: widget.keywordsController,
+                    focusNode: _focusNode,
+                    decoration: InputDecoration(
+                      hintText: l10n.paymentMethodWizardKeywordInputHint,
+                      border: const OutlineInputBorder(),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
+                      isDense: true,
+                    ),
+                    onSubmitted: (_) => _addKeyword(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                FilledButton.tonal(
+                  onPressed: _addKeyword,
+                  child: Text(l10n.paymentMethodWizardKeywordAdd),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.commonCancel),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (_keywords.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.paymentMethodWizardEditKeywordsMinError),
+                ),
+              );
+              return;
+            }
+            Navigator.pop(context, _keywords);
+          },
+          child: Text(l10n.commonSave),
+        ),
+      ],
     );
   }
 }

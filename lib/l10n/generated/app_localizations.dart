@@ -140,6 +140,12 @@ abstract class AppLocalizations {
   /// **'수정'**
   String get commonEdit;
 
+  /// No description provided for @commonDetail.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세'**
+  String get commonDetail;
+
   /// No description provided for @commonReject.
   ///
   /// In ko, this message translates to:
@@ -2216,17 +2222,23 @@ abstract class AppLocalizations {
   /// **'모든 내역이 삭제되었습니다'**
   String get pendingTransactionDeleteAllSuccess;
 
-  /// No description provided for @pendingTransactionEdit.
+  /// No description provided for @pendingTransactionDetail.
   ///
   /// In ko, this message translates to:
-  /// **'거래 수정'**
-  String get pendingTransactionEdit;
+  /// **'수집 내역 상세'**
+  String get pendingTransactionDetail;
 
   /// No description provided for @pendingTransactionReject.
   ///
   /// In ko, this message translates to:
   /// **'거부'**
   String get pendingTransactionReject;
+
+  /// No description provided for @pendingTransactionUpdate.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정'**
+  String get pendingTransactionUpdate;
 
   /// No description provided for @pendingTransactionConfirm.
   ///
@@ -2239,6 +2251,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'거래가 저장되었습니다'**
   String get pendingTransactionConfirmed;
+
+  /// No description provided for @pendingTransactionUpdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정되었습니다'**
+  String get pendingTransactionUpdated;
 
   /// No description provided for @pendingTransactionRejected.
   ///
@@ -2444,23 +2462,17 @@ abstract class AppLocalizations {
   /// **'현재 규칙으로 수집되는 정보'**
   String get paymentMethodWizardCurrentRules;
 
-  /// No description provided for @paymentMethodWizardDetectionKeywordsOr.
+  /// No description provided for @paymentMethodWizardDetectionKeywords.
   ///
   /// In ko, this message translates to:
-  /// **'감지 키워드 (OR 조건)'**
-  String get paymentMethodWizardDetectionKeywordsOr;
+  /// **'감지 키워드'**
+  String get paymentMethodWizardDetectionKeywords;
 
-  /// No description provided for @paymentMethodWizardAmountPatternRequired.
+  /// No description provided for @paymentMethodWizardAmountPattern.
   ///
   /// In ko, this message translates to:
-  /// **'금액 패턴 (필수)'**
-  String get paymentMethodWizardAmountPatternRequired;
-
-  /// No description provided for @paymentMethodWizardAmountPatternNote.
-  ///
-  /// In ko, this message translates to:
-  /// **'금액 패턴은 수정할 수 없습니다'**
-  String get paymentMethodWizardAmountPatternNote;
+  /// **'금액 패턴'**
+  String get paymentMethodWizardAmountPattern;
 
   /// No description provided for @paymentMethodWizardSaveButton.
   ///
@@ -2483,25 +2495,31 @@ abstract class AppLocalizations {
   /// No description provided for @paymentMethodWizardEditKeywordsDescription.
   ///
   /// In ko, this message translates to:
-  /// **'메시지에 포함되면 자동으로 감지할 키워드를 입력하세요.'**
+  /// **'이 키워드가 포함된 알림이 수집됩니다.'**
   String get paymentMethodWizardEditKeywordsDescription;
 
-  /// No description provided for @paymentMethodWizardEditKeywordsHint.
+  /// No description provided for @paymentMethodWizardKeywordInputHint.
   ///
   /// In ko, this message translates to:
-  /// **'예: KB국민, KB국민카드\n쉼표로 구분해서 입력하세요'**
-  String get paymentMethodWizardEditKeywordsHint;
+  /// **'새 키워드 입력'**
+  String get paymentMethodWizardKeywordInputHint;
 
-  /// No description provided for @paymentMethodWizardEditKeywordsHelper.
+  /// No description provided for @paymentMethodWizardKeywordAdd.
   ///
   /// In ko, this message translates to:
-  /// **'최소 1개 이상의 키워드를 입력해야 합니다'**
-  String get paymentMethodWizardEditKeywordsHelper;
+  /// **'추가'**
+  String get paymentMethodWizardKeywordAdd;
+
+  /// No description provided for @paymentMethodWizardKeywordDuplicate.
+  ///
+  /// In ko, this message translates to:
+  /// **'이미 등록된 키워드입니다'**
+  String get paymentMethodWizardKeywordDuplicate;
 
   /// No description provided for @paymentMethodWizardEditKeywordsMinError.
   ///
   /// In ko, this message translates to:
-  /// **'최소 1개 이상의 키워드를 입력해주세요'**
+  /// **'최소 1개 이상의 키워드가 필요합니다'**
   String get paymentMethodWizardEditKeywordsMinError;
 
   /// No description provided for @paymentMethodWizardSelectSmsTitle.

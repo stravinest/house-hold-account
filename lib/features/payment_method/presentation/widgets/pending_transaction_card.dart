@@ -301,7 +301,7 @@ class _PendingTransactionCardState
       }
       if (widget.onEdit != null) {
         buttons.add(_buildChipButton(
-          label: l10n.commonEdit,
+          label: l10n.commonDetail,
           onPressed: widget.onEdit,
           backgroundColor: colorScheme.surfaceContainerHighest,
           foregroundColor: colorScheme.onSurfaceVariant,

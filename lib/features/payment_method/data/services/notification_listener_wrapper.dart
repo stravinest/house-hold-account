@@ -288,7 +288,7 @@ class NotificationListenerWrapper {
       debugPrint('[NotificationListener] Processing: $packageName');
       debugPrint('[NotificationListener] Auto-save PM count: ${_autoSavePaymentMethods.length}');
       for (final pm in _autoSavePaymentMethods) {
-        debugPrint('  - ${pm.name} (mode: ${pm.autoSaveMode.toJson()})');
+        debugPrint('  - ${pm.name} (mode: ${pm.autoSaveMode.toJson()}, source: ${pm.autoCollectSource.toJson()})');
       }
     }
 

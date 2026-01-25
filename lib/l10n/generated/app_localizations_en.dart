@@ -31,6 +31,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonEdit => 'Edit';
 
   @override
+  String get commonDetail => 'Detail';
+
+  @override
   String get commonReject => 'Reject';
 
   @override
@@ -1158,16 +1161,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pendingTransactionDeleteAllSuccess => 'All items deleted';
 
   @override
-  String get pendingTransactionEdit => 'Edit Transaction';
+  String get pendingTransactionDetail => 'Collection Detail';
 
   @override
   String get pendingTransactionReject => 'Reject';
+
+  @override
+  String get pendingTransactionUpdate => 'Update';
 
   @override
   String get pendingTransactionConfirm => 'Save';
 
   @override
   String get pendingTransactionConfirmed => 'Transaction saved';
+
+  @override
+  String get pendingTransactionUpdated => 'Updated';
 
   @override
   String get pendingTransactionRejected => 'Transaction rejected';
@@ -1284,16 +1293,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Information collected with current rules';
 
   @override
-  String get paymentMethodWizardDetectionKeywordsOr =>
-      'Detection Keywords (OR)';
+  String get paymentMethodWizardDetectionKeywords => 'Detection Keywords';
 
   @override
-  String get paymentMethodWizardAmountPatternRequired =>
-      'Amount Pattern (Required)';
-
-  @override
-  String get paymentMethodWizardAmountPatternNote =>
-      'Amount pattern cannot be modified';
+  String get paymentMethodWizardAmountPattern => 'Amount Pattern';
 
   @override
   String get paymentMethodWizardSaveButton => 'Save';
@@ -1306,19 +1309,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get paymentMethodWizardEditKeywordsDescription =>
-      'Enter keywords to automatically detect when included in messages.';
+      'Notifications containing these keywords will be collected.';
 
   @override
-  String get paymentMethodWizardEditKeywordsHint =>
-      'e.g., Chase, Bank of America\nSeparate with commas';
+  String get paymentMethodWizardKeywordInputHint => 'Enter new keyword';
 
   @override
-  String get paymentMethodWizardEditKeywordsHelper =>
-      'At least 1 keyword is required';
+  String get paymentMethodWizardKeywordAdd => 'Add';
+
+  @override
+  String get paymentMethodWizardKeywordDuplicate =>
+      'This keyword is already registered';
 
   @override
   String get paymentMethodWizardEditKeywordsMinError =>
-      'Please enter at least 1 keyword';
+      'At least 1 keyword is required';
 
   @override
   String get paymentMethodWizardSelectSmsTitle => 'Select SMS to import';

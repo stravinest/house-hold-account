@@ -1474,7 +1474,7 @@ class _PendingTransactionEditSheetState
                 child: Row(
                   children: [
                     Text(
-                      l10n.pendingTransactionEdit,
+                      l10n.pendingTransactionDetail,
                       style: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -1651,13 +1651,13 @@ class _PendingTransactionEditSheetState
                   top: false,
                   child: Row(
                     children: [
-                      // 거부 버튼
+                      // 거부 버튼 (연한 분홍 배경 + 빨간 텍스트)
                       Expanded(
                         child: FilledButton(
                           onPressed: _isLoading ? null : _rejectTransaction,
                           style: FilledButton.styleFrom(
-                            backgroundColor: colorScheme.error,
-                            foregroundColor: colorScheme.onError,
+                            backgroundColor: const Color(0xFFFFE4E4),
+                            foregroundColor: const Color(0xFFD32F2F),
                             padding: const EdgeInsets.symmetric(
                               vertical: Spacing.md,
                             ),
@@ -1665,24 +1665,41 @@ class _PendingTransactionEditSheetState
                           child: Text(l10n.pendingTransactionReject),
                         ),
                       ),
-                      const SizedBox(width: Spacing.md),
-                      // 저장 버튼
+                      const SizedBox(width: Spacing.sm),
+                      // 수정 버튼 (연한 회색 배경 + 회색 텍스트)
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: _isLoading ? null : _updateTransaction,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFE8E8E8),
+                            foregroundColor: const Color(0xFF666666),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: Spacing.md,
+                            ),
+                          ),
+                          child: Text(l10n.pendingTransactionUpdate),
+                        ),
+                      ),
+                      const SizedBox(width: Spacing.sm),
+                      // 저장 버튼 (연한 초록 배경 + 초록 텍스트)
                       Expanded(
                         child: FilledButton(
                           onPressed: _isLoading ? null : _confirmTransaction,
                           style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFFE4F5E4),
+                            foregroundColor: const Color(0xFF2E7D32),
                             padding: const EdgeInsets.symmetric(
                               vertical: Spacing.md,
                             ),
                           ),
                           child: _isLoading
-                              ? SizedBox(
+                              ? const SizedBox(
                                   height: 20,
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      colorScheme.onPrimary,
+                                      Color(0xFF2E7D32),
                                     ),
                                   ),
                                 )
@@ -1757,6 +1774,60 @@ class _PendingTransactionEditSheetState
     }
   }
 
+  /// 수정 버튼: 변경 내용만 저장하고 대기중 상태 유지
+  Future<void> _updateTransaction() async {
+    final l10n = AppLocalizations.of(context);
+    final amountText =
+        _amountController.text.replaceAll(',', '').replaceAll(' ', '');
+    final amount = int.tryParse(amountText);
+
+    if (amount == null || amount <= 0) {
+      SnackBarUtils.showError(context, l10n.transactionAmountRequired);
+      return;
+    }
+
+    // 최대 금액 제한 (1억원)
+    const maxAmount = 100000000;
+    if (amount > maxAmount) {
+      SnackBarUtils.showError(context, l10n.transactionAmountRequired);
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      // 파싱 데이터만 업데이트하고 상태는 pending 유지
+      await ref
+          .read(pendingTransactionNotifierProvider.notifier)
+          .updateParsedData(
+            id: widget.transaction.id,
+            parsedAmount: amount,
+            parsedType: _transactionType,
+            parsedMerchant: _merchantController.text.trim().isEmpty
+                ? null
+                : _merchantController.text.trim(),
+            parsedCategoryId: _selectedCategoryId,
+            parsedDate: _selectedDate,
+          );
+
+      if (mounted) {
+        Navigator.pop(context);
+        SnackBarUtils.showSuccess(context, l10n.pendingTransactionUpdated);
+        // 대기중 상태 유지이므로 탭 이동 없음
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
+    }
+  }
+
+  /// 저장 버튼: 거래 생성 및 확인됨 상태로 변경
   Future<void> _confirmTransaction() async {
     final l10n = AppLocalizations.of(context);
     final amountText =

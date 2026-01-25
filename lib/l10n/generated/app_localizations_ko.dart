@@ -30,6 +30,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get commonEdit => '수정';
 
   @override
+  String get commonDetail => '상세';
+
+  @override
   String get commonReject => '거부';
 
   @override
@@ -1134,16 +1137,22 @@ class AppLocalizationsKo extends AppLocalizations {
   String get pendingTransactionDeleteAllSuccess => '모든 내역이 삭제되었습니다';
 
   @override
-  String get pendingTransactionEdit => '거래 수정';
+  String get pendingTransactionDetail => '수집 내역 상세';
 
   @override
   String get pendingTransactionReject => '거부';
+
+  @override
+  String get pendingTransactionUpdate => '수정';
 
   @override
   String get pendingTransactionConfirm => '저장';
 
   @override
   String get pendingTransactionConfirmed => '거래가 저장되었습니다';
+
+  @override
+  String get pendingTransactionUpdated => '수정되었습니다';
 
   @override
   String get pendingTransactionRejected => '거래가 거부되었습니다';
@@ -1255,13 +1264,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get paymentMethodWizardCurrentRules => '현재 규칙으로 수집되는 정보';
 
   @override
-  String get paymentMethodWizardDetectionKeywordsOr => '감지 키워드 (OR 조건)';
+  String get paymentMethodWizardDetectionKeywords => '감지 키워드';
 
   @override
-  String get paymentMethodWizardAmountPatternRequired => '금액 패턴 (필수)';
-
-  @override
-  String get paymentMethodWizardAmountPatternNote => '금액 패턴은 수정할 수 없습니다';
+  String get paymentMethodWizardAmountPattern => '금액 패턴';
 
   @override
   String get paymentMethodWizardSaveButton => '저장하기';
@@ -1274,17 +1280,19 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get paymentMethodWizardEditKeywordsDescription =>
-      '메시지에 포함되면 자동으로 감지할 키워드를 입력하세요.';
+      '이 키워드가 포함된 알림이 수집됩니다.';
 
   @override
-  String get paymentMethodWizardEditKeywordsHint =>
-      '예: KB국민, KB국민카드\n쉼표로 구분해서 입력하세요';
+  String get paymentMethodWizardKeywordInputHint => '새 키워드 입력';
 
   @override
-  String get paymentMethodWizardEditKeywordsHelper => '최소 1개 이상의 키워드를 입력해야 합니다';
+  String get paymentMethodWizardKeywordAdd => '추가';
 
   @override
-  String get paymentMethodWizardEditKeywordsMinError => '최소 1개 이상의 키워드를 입력해주세요';
+  String get paymentMethodWizardKeywordDuplicate => '이미 등록된 키워드입니다';
+
+  @override
+  String get paymentMethodWizardEditKeywordsMinError => '최소 1개 이상의 키워드가 필요합니다';
 
   @override
   String get paymentMethodWizardSelectSmsTitle => '가져올 문자 선택';
