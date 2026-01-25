@@ -426,6 +426,8 @@
   "paymentMethodWizardNoFinancialSms": "No financial SMS found.",
   "paymentMethodWizardDuplicateName": "A payment method with this name already exists",
   "paymentMethodWizardSaveFailed": "Failed to save payment method",
+  "paymentMethodWizardKeywordsSaved": "Detection keywords saved successfully",
+  "paymentMethodWizardKeywordsSaveFailed": "Failed to save detection keywords",
   "errorGeneric": "An error occurred",
   "errorNetwork": "Please check your network connection.",
   "errorSessionExpired": "Your session has expired. Please log in again.",

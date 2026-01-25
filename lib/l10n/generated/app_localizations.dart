@@ -2552,6 +2552,18 @@ abstract class AppLocalizations {
   /// **'결제수단 저장에 실패했습니다'**
   String get paymentMethodWizardSaveFailed;
 
+  /// No description provided for @paymentMethodWizardKeywordsSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'감지 키워드가 저장되었습니다'**
+  String get paymentMethodWizardKeywordsSaved;
+
+  /// No description provided for @paymentMethodWizardKeywordsSaveFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'감지 키워드 저장에 실패했습니다'**
+  String get paymentMethodWizardKeywordsSaveFailed;
+
   /// No description provided for @errorGeneric.
   ///
   /// In ko, this message translates to:

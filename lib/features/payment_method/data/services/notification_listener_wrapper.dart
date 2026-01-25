@@ -52,27 +52,61 @@ class NotificationListenerWrapper {
   final Map<String, DateTime> _recentlyProcessedMessages = {};
   static const Duration _messageCacheDuration = Duration(seconds: 10);
 
-  // 소문자로 사전 변환하여 비교 최적화
+  // 소문자로 사전 변환하여 비교 최적화 (2026-01-25 웹 서치로 검증됨)
   static final Set<String> _financialAppPackagesLower = {
-    'com.kbcard.cxh.appcard',
-    'com.kbstar.kbbank',
-    'com.shinhan.sbanking',
-    'com.shinhancard.smartshinhan',
-    'com.samsung.android.spay',
-    'com.samsungcard.app',
-    'com.hyundaicard.appcard',
-    'com.lottecard.app',
-    'com.wooricard.smartapp',
-    'com.hanacard.app',
-    'nh.smart.nhallone',
-    'nh.smart.banking',
-    'com.ibk.neobanking',
-    'com.kakaobank.channel',
-    'viva.republica.toss',
-    'com.kbank.kbankapp',
-    'com.nhn.android.search',
-    'com.naver.pay.app',
-    'com.kakaopay.app',
+    // KB 카드/은행
+    'com.kbcard.cxh.appcard', // KB Pay (KB국민카드 앱)
+    'com.kbstar.kbbank', // KB국민은행
+
+    // 신한 카드/은행
+    'com.shinhan.sbanking', // 신한은행
+    'com.shcard.smartpay', // 신한 SOL페이 (메인 카드 앱)
+    'com.shinhancard.wallet', // 신한카드 올댓
+    'com.shinhancard.smartshinhan', // 구 신한카드 앱
+
+    // 삼성 카드/페이
+    'com.samsung.android.spay', // 삼성페이
+    'kr.co.samsungcard.mpocket', // 삼성카드 메인 앱
+    'net.ib.android.smcard', // monimo (삼성금융네트웍스)
+    'com.samsungcard.shopping', // 삼성카드 쇼핑
+
+    // 현대카드
+    'com.hyundaicard.appcard', // 현대카드 메인 앱
+    'com.hyundaicard.weather', // 현대카드 웨더
+    'com.hyundaicard.cultureapp', // 현대카드 DIVE
+
+    // 롯데카드
+    'com.lcacapp', // 디지로카 (롯데카드 메인 앱)
+    'com.lottecard.lcap', // 롯데카드 인슈플러스
+
+    // 우리/하나 카드
+    'com.wooricard.smartapp', // 우리카드
+    'com.hanacard.app', // 하나카드
+
+    // NH농협
+    'nh.smart.nhallone', // NH스마트올원
+    'nh.smart.banking', // NH스마트뱅킹
+
+    // 기타 은행
+    'com.ibk.neobanking', // IBK기업은행
+
+    // 인터넷 전문 은행
+    'com.kakaobank.channel', // 카카오뱅크
+    'viva.republica.toss', // 토스뱅크
+    'com.kbank.kbankapp', // 케이뱅크
+
+    // 간편결제
+    'com.naver.pay.app', // 네이버페이
+    'com.naverfin.payapp', // 네이버페이 (대체)
+    'com.kakaopay.app', // 카카오페이
+    'com.komsco.kpay', // K-Pay
+
+    // 경기지역화폐 (실제 확인된 패키지명)
+    'gov.gyeonggi.ggcard', // 경기지역화폐 공식 앱 (확인됨!)
+    'kr.or.ggc', // 경기지역화폐 공통
+    'com.ggc', // 경기지역화폐 앱
+    'kr.suwon.pay', // 수원페이
+    'com.gyeonggi.currency', // 경기화폐
   };
 
   // 테스트용 패키지 (디버그 모드에서만 사용)
@@ -207,16 +241,19 @@ class NotificationListenerWrapper {
 
   @visibleForTesting
   Future<void> onNotificationReceived(ServiceNotificationEvent event) async {
+    // 디버그 모드에서 모든 알림의 패키지명을 출력 (금융 앱 패키지명 확인용)
     if (kDebugMode) {
-      debugPrint('[NotificationListener] Received notification:');
-      debugPrint('  - packageName: ${event.packageName}');
-      debugPrint('  - title: ${event.title}');
+      debugPrint('========================================');
+      debugPrint('[NotificationListener] 알림 수신:');
+      debugPrint('  - 패키지명: ${event.packageName}');
+      debugPrint('  - 제목: ${event.title}');
       // content는 금액/가맹점 정보 포함 - 일부만 출력
       final contentPreview = (event.content ?? '').length > 30
           ? '${event.content!.substring(0, 30)}...'
           : event.content;
-      debugPrint('  - content preview: $contentPreview');
-      debugPrint('  - hasRemoved: ${event.hasRemoved}');
+      debugPrint('  - 내용 미리보기: $contentPreview');
+      debugPrint('  - 삭제됨: ${event.hasRemoved}');
+      debugPrint('========================================');
     }
 
     if (_currentUserId == null || _currentLedgerId == null) {

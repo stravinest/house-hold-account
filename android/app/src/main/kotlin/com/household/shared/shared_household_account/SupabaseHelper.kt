@@ -45,30 +45,173 @@ class SupabaseHelper(private val context: Context) {
         }
     }
 
-    fun getAuthToken(): String? {
+    private fun getAuthTokenKey(): String? {
         val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
-        
         val allKeys = prefs.all.keys
         for (key in allKeys) {
             if (key.contains("auth-token")) {
-                val tokenJson = prefs.getString(key, null)
-                if (tokenJson != null) {
-                    try {
-                        val json = JSONObject(tokenJson)
-                        val accessToken = json.optString("access_token", null)
-                        if (accessToken != null) {
-                            Log.d(TAG, "Found auth token with key: $key")
-                            return accessToken
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "Failed to parse auth token JSON", e)
-                    }
-                }
+                return key
             }
         }
-        
-        Log.w(TAG, "No auth token found in SharedPreferences")
         return null
+    }
+
+    private fun getSessionJson(): JSONObject? {
+        val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        val tokenKey = getAuthTokenKey() ?: return null
+
+        val tokenJson = prefs.getString(tokenKey, null) ?: return null
+        return try {
+            JSONObject(tokenJson)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to parse session JSON", e)
+            null
+        }
+    }
+
+    fun getAuthToken(): String? {
+        val session = getSessionJson() ?: return null
+        val accessToken = session.optString("access_token", null)
+
+        if (accessToken != null) {
+            Log.d(TAG, "Found access token")
+            return accessToken
+        }
+
+        Log.w(TAG, "No access token found in session")
+        return null
+    }
+
+    private fun getRefreshToken(): String? {
+        val session = getSessionJson() ?: return null
+        val refreshToken = session.optString("refresh_token", null)
+
+        if (refreshToken != null) {
+            Log.d(TAG, "Found refresh token")
+            return refreshToken
+        }
+
+        Log.w(TAG, "No refresh token found in session")
+        return null
+    }
+
+    private fun isTokenExpired(token: String): Boolean {
+        return try {
+            val parts = token.split(".")
+            if (parts.size < 2) return true
+
+            val payload = String(Base64.decode(parts[1], Base64.URL_SAFE or Base64.NO_WRAP))
+            val json = JSONObject(payload)
+
+            val exp = json.optLong("exp", 0)
+            if (exp == 0L) return true
+
+            val now = System.currentTimeMillis() / 1000
+            val isExpired = now >= exp
+
+            if (isExpired) {
+                Log.d(TAG, "Token expired at $exp, now is $now")
+            } else {
+                val remainingSeconds = exp - now
+                Log.d(TAG, "Token valid for $remainingSeconds seconds")
+            }
+
+            isExpired
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to check token expiration", e)
+            true
+        }
+    }
+
+    private suspend fun refreshAccessToken(refreshToken: String): JSONObject? = withContext(Dispatchers.IO) {
+        try {
+            val baseUrl = supabaseUrl ?: return@withContext null
+            val apiKey = anonKey ?: return@withContext null
+
+            Log.d(TAG, "Attempting to refresh access token")
+
+            val json = JSONObject().apply {
+                put("refresh_token", refreshToken)
+            }
+
+            val requestBody = json.toString().toRequestBody("application/json".toMediaType())
+
+            val request = Request.Builder()
+                .url("$baseUrl/auth/v1/token?grant_type=refresh_token")
+                .post(requestBody)
+                .addHeader("apikey", apiKey)
+                .addHeader("Content-Type", "application/json")
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string() ?: return@withContext null
+                val responseJson = JSONObject(responseBody)
+
+                Log.d(TAG, "Token refresh successful")
+                return@withContext responseJson
+            } else {
+                val errorBody = response.body?.string() ?: "No error body"
+                Log.e(TAG, "Token refresh failed: ${response.code} ${response.message}\n$errorBody")
+                return@withContext null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during token refresh", e)
+            return@withContext null
+        }
+    }
+
+    private fun saveNewSession(newSession: JSONObject): Boolean {
+        return try {
+            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            val tokenKey = getAuthTokenKey() ?: return false
+
+            prefs.edit()
+                .putString(tokenKey, newSession.toString())
+                .apply()
+
+            Log.d(TAG, "New session saved to SharedPreferences")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save new session", e)
+            false
+        }
+    }
+
+    suspend fun getValidToken(): String? {
+        val currentToken = getAuthToken()
+
+        if (currentToken != null && !isTokenExpired(currentToken)) {
+            Log.d(TAG, "Current token is valid")
+            return currentToken
+        }
+
+        Log.d(TAG, "Token expired or missing, attempting refresh")
+
+        val refreshToken = getRefreshToken()
+        if (refreshToken == null) {
+            Log.w(TAG, "No refresh token available")
+            return null
+        }
+
+        val newSession = refreshAccessToken(refreshToken)
+        if (newSession == null) {
+            Log.e(TAG, "Failed to refresh token")
+            return null
+        }
+
+        if (!saveNewSession(newSession)) {
+            Log.e(TAG, "Failed to save new session")
+            return null
+        }
+
+        val newAccessToken = newSession.optString("access_token", null)
+        if (newAccessToken != null) {
+            Log.d(TAG, "Successfully refreshed and saved new token")
+        }
+
+        return newAccessToken
     }
 
     fun getUserIdFromToken(token: String): String? {
@@ -94,7 +237,7 @@ class SupabaseHelper(private val context: Context) {
         try {
             val baseUrl = supabaseUrl ?: return@withContext emptyList()
             val apiKey = anonKey ?: return@withContext emptyList()
-            val token = getAuthToken() ?: return@withContext emptyList()
+            val token = getValidToken() ?: return@withContext emptyList()
             
             val url = "$baseUrl/rest/v1/categories?ledger_id=eq.$ledgerId&type=eq.expense&select=id,name,icon,color&order=sort_order.asc"
             
@@ -148,7 +291,7 @@ class SupabaseHelper(private val context: Context) {
         try {
             val baseUrl = supabaseUrl ?: return@withContext false
             val apiKey = anonKey ?: return@withContext false
-            val token = getAuthToken() ?: return@withContext false
+            val token = getValidToken() ?: return@withContext false
             
             val json = JSONObject().apply {
                 put("ledger_id", ledgerId)
@@ -200,7 +343,7 @@ class SupabaseHelper(private val context: Context) {
         try {
             val baseUrl = supabaseUrl ?: return@withContext null
             val apiKey = anonKey ?: return@withContext null
-            val token = getAuthToken() ?: return@withContext null
+            val token = getValidToken() ?: return@withContext null
 
             val calendar = java.util.Calendar.getInstance()
             val year = calendar.get(java.util.Calendar.YEAR)

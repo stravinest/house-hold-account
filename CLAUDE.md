@@ -45,19 +45,49 @@ flutter run
 
 `scripts/` 디렉토리에 개발 및 테스트를 위한 유틸리티 스크립트들이 있습니다.
 
-### SMS 자동수집 테스트
+### SMS/Push 자동수집 테스트
 
 ```bash
 # 일반 SMS 시뮬레이션 (ADB)
 ./scripts/simulate_sms.sh
 
-# 수원페이 SMS/Push 시뮬레이션
+# 수원페이(경기지역화폐) SMS/Push 시뮬레이션
 ./scripts/simulate_suwonpay.sh sms [금액] [가맹점]
 ./scripts/simulate_suwonpay.sh push [금액] [가맹점]
 ./scripts/simulate_suwonpay.sh both [금액] [가맹점]
 
-# 푸시 알림 시뮬레이션
-./scripts/simulate_push.sh
+# KB Pay Push 시뮬레이션
+./scripts/simulate_kbpay.sh [금액] [가맹점] [카드끝4자리]
+
+# 실물 기기에 Push 전송
+./scripts/simulate_push_to_device.sh kbpay [금액] [가맹점] [기기ID]
+./scripts/simulate_push_to_device.sh suwonpay [금액] [가맹점] [기기ID]
+```
+
+### 알림 패키지명 확인 도구 (NEW)
+
+```bash
+# 금융 앱 패키지 자동 검색
+./scripts/find_financial_packages.sh [기기ID]
+
+# 실시간 알림 패키지명 모니터링
+./scripts/monitor_notifications.sh [기기ID]
+
+# 빠른 모니터링 (R3CT90TAG8Z 전용)
+./scripts/quick_monitor.sh
+
+# 전체 설정 가이드
+./scripts/setup_notification_monitoring.sh [기기ID]
+
+# 패키지 확인
+./scripts/check_device_packages.sh [기기ID]
+```
+
+**사용 예시:**
+```bash
+# 실물 핸드폰에서 KB Pay로 결제 후 패키지명 확인
+./scripts/quick_monitor.sh
+# 로그에 'packageName: com.kbcard.cxh.appcard' 출력됨
 ```
 
 ### Maestro 테스트 도구
@@ -291,6 +321,62 @@ SUPABASE_ANON_KEY=your_anon_key
 - `READ_SMS`, `RECEIVE_SMS`: SMS 자동수집
 - `POST_NOTIFICATIONS`: 푸시 알림 (Android 13+)
 - `INTERNET`, `ACCESS_NETWORK_STATE`: 네트워크 통신
+
+## 금융 앱 패키지명 (2026-01-25 검증됨)
+
+실제 Google Play 스토어에서 확인된 정확한 패키지명입니다.
+
+### 주요 금융 앱
+
+**KB 카드/은행**
+- `com.kbcard.cxh.appcard` - KB Pay (KB국민카드 앱)
+- `com.kbstar.kbbank` - KB국민은행
+
+**신한 카드/은행**
+- `com.shcard.smartpay` - 신한 SOL페이 (메인 카드 앱)
+- `com.shinhancard.wallet` - 신한카드 올댓
+- `com.shinhan.sbanking` - 신한은행
+
+**삼성 카드/페이**
+- `kr.co.samsungcard.mpocket` - 삼성카드 메인 앱
+- `com.samsung.android.spay` - 삼성페이
+- `net.ib.android.smcard` - monimo (삼성금융네트웍스)
+
+**현대카드**
+- `com.hyundaicard.appcard` - 현대카드 메인 앱
+- `com.hyundaicard.weather` - 현대카드 웨더
+- `com.hyundaicard.cultureapp` - 현대카드 DIVE
+
+**롯데카드**
+- `com.lcacapp` - 디지로카 (롯데카드 메인 앱)
+- `com.lottecard.lcap` - 롯데카드 인슈플러스
+
+**경기지역화폐**
+- `gov.gyeonggi.ggcard` - 경기지역화폐 공식 앱 (실제 기기에서 확인됨)
+
+**간편결제**
+- `com.kakaopay.app` - 카카오페이
+- `com.naverfin.payapp` - 네이버페이
+- `viva.republica.toss` - 토스
+
+자세한 내용은 `docs/updates_2026-01-25.md` 참고.
+
+### 새로운 금융 앱 추가 방법
+
+1. 실물 기기에서 패키지명 확인
+   ```bash
+   ./scripts/quick_monitor.sh
+   # 실제 결제 후 로그에서 패키지명 확인
+   ```
+
+2. `notification_listener_wrapper.dart`에 추가
+   ```dart
+   static final Set<String> _financialAppPackagesLower = {
+     'com.new.app.package',  // 확인된 패키지명 추가
+   };
+   ```
+
+3. 앱 재빌드 및 테스트
 
 ## 코드 컨벤션
 

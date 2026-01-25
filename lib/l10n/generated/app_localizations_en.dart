@@ -1343,6 +1343,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentMethodWizardSaveFailed => 'Failed to save payment method';
 
   @override
+  String get paymentMethodWizardKeywordsSaved =>
+      'Detection keywords saved successfully';
+
+  @override
+  String get paymentMethodWizardKeywordsSaveFailed =>
+      'Failed to save detection keywords';
+
+  @override
   String get errorGeneric => 'An error occurred';
 
   @override

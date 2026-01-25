@@ -754,7 +754,7 @@ class _PaymentMethodListView extends ConsumerWidget {
   }
 }
 
-/// Shared payment method chip
+/// Shared payment method chip (with delete button)
 class _SharedPaymentMethodChip extends StatelessWidget {
   final PaymentMethod paymentMethod;
   final VoidCallback onTap;
@@ -776,91 +776,93 @@ class _SharedPaymentMethodChip extends StatelessWidget {
     return Semantics(
       label: '${paymentMethod.name}${paymentMethod.isDefault ? ', ${l10n.paymentMethodDefault}' : ''}',
       button: true,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          onLongPress: () => _showOptions(context),
-          borderRadius: BorderRadius.circular(BorderRadiusToken.circular),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Spacing.md,
-              vertical: Spacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: paymentColor.withValues(alpha: 0.15),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // Chip content
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
               borderRadius: BorderRadius.circular(BorderRadiusToken.circular),
-              border: Border.all(
-                color: paymentColor.withValues(alpha: 0.5),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  paymentMethod.name,
-                  style: TextStyle(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.w500,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: Spacing.md,
+                  vertical: Spacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: paymentColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(BorderRadiusToken.circular),
+                  border: Border.all(
+                    color: paymentColor.withValues(alpha: 0.5),
                   ),
                 ),
-                if (paymentMethod.isDefault) ...[
-                  const SizedBox(width: Spacing.xs),
-                  Icon(
-                    Icons.star,
-                    size: _starIconSize,
-                    color: Colors.amber[700],
-                    semanticLabel: l10n.paymentMethodDefault,
-                  ),
-                ],
-              ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      paymentMethod.name,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (paymentMethod.isDefault) ...[
+                      const SizedBox(width: Spacing.xs),
+                      Icon(
+                        Icons.star,
+                        size: _starIconSize,
+                        color: Colors.amber[700],
+                        semanticLabel: l10n.paymentMethodDefault,
+                      ),
+                    ],
+                    const SizedBox(width: Spacing.md),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showOptions(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    showModalBottomSheet(
-      context: context,
-      builder: (sheetContext) => SafeArea(
-        child: Semantics(
-          label: l10n.paymentMethodOptions,
-          explicitChildNodes: true,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: Icon(
-                  Icons.edit,
-                  semanticLabel: l10n.commonEdit,
+          // Delete button (top-right corner)
+          Positioned(
+            top: -6,
+            right: -6,
+            child: Semantics(
+              label: l10n.commonDelete,
+              button: true,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onDelete,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: colorScheme.error,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorScheme.surface,
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.close,
+                      size: 14,
+                      color: colorScheme.onError,
+                    ),
+                  ),
                 ),
-                title: Text(l10n.commonEdit),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  onTap();
-                },
               ),
-              ListTile(
-                leading: Icon(
-                  Icons.delete,
-                  color: Theme.of(sheetContext).colorScheme.error,
-                  semanticLabel: l10n.commonDelete,
-                ),
-                title: Text(
-                  l10n.commonDelete,
-                  style: TextStyle(color: Theme.of(sheetContext).colorScheme.error),
-                ),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  onDelete();
-                },
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

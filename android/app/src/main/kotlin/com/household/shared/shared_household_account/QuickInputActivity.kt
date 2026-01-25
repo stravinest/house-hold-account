@@ -77,23 +77,23 @@ class QuickInputActivity : Activity() {
                     Toast.makeText(this@QuickInputActivity, "가계부를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-                
-                val token = supabaseHelper.getAuthToken()
+
+                val token = supabaseHelper.getValidToken()
                 if (token.isNullOrBlank()) {
-                    Toast.makeText(this@QuickInputActivity, "로그인이 필요합니다", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@QuickInputActivity, "로그인이 만료되었습니다. 앱을 먼저 실행해주세요", Toast.LENGTH_LONG).show()
                     finish()
                     return@launch
                 }
-                
+
                 val userId = supabaseHelper.getUserIdFromToken(token)
                 if (userId.isNullOrBlank()) {
                     Toast.makeText(this@QuickInputActivity, "사용자 정보를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
                     return@launch
                 }
-                
+
                 val title = titleInput.text?.toString()?.takeIf { it.isNotBlank() }
                 val today = supabaseHelper.getTodayDate()
-                
+
                 val success = supabaseHelper.createExpenseTransaction(
                     ledgerId = ledgerId,
                     userId = userId,
@@ -102,13 +102,13 @@ class QuickInputActivity : Activity() {
                     categoryId = null,
                     date = today
                 )
-                
+
                 if (success) {
                     updateWidgetData(ledgerId)
                     Toast.makeText(this@QuickInputActivity, "저장 완료", Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
-                    Toast.makeText(this@QuickInputActivity, "저장 실패", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@QuickInputActivity, "저장 실패. 네트워크를 확인해주세요", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@QuickInputActivity, "오류: ${e.message}", Toast.LENGTH_SHORT).show()

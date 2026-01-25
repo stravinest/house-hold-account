@@ -1310,6 +1310,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get paymentMethodWizardSaveFailed => '결제수단 저장에 실패했습니다';
 
   @override
+  String get paymentMethodWizardKeywordsSaved => '감지 키워드가 저장되었습니다';
+
+  @override
+  String get paymentMethodWizardKeywordsSaveFailed => '감지 키워드 저장에 실패했습니다';
+
+  @override
   String get errorGeneric => '오류가 발생했습니다';
 
   @override

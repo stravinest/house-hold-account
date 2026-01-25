@@ -96,6 +96,10 @@ class _PaymentMethodWizardPageState
         if (_selectedTemplate != null) {
           _sampleController.text = _selectedTemplate!.defaultSampleSms;
         }
+
+        // Load existing learned_sms_format from DB
+        // DB 로드 완료 후 샘플 분석 실행 (순서 보장)
+        _loadExistingFormatThenAnalyze();
       }
     } else if (widget.initialMode != null) {
       // When initialMode is specified
@@ -111,11 +115,6 @@ class _PaymentMethodWizardPageState
 
     // Re-analyze format when sample text changes (with debounce)
     _sampleController.addListener(_onSampleTextChanged);
-
-    // Run initial analysis
-    if (_sampleController.text.isNotEmpty) {
-      _analyzeSampleImmediate();
-    }
   }
 
   @override
@@ -148,6 +147,46 @@ class _PaymentMethodWizardPageState
         paymentMethodId: widget.paymentMethod?.id ?? 'temp_id',
       );
     });
+  }
+
+  /// Edit 모드에서 DB에서 기존 learned_sms_format 로드
+  Future<void> _loadExistingFormat() async {
+    if (!isEdit || widget.paymentMethod == null) return;
+
+    final formatRepository = ref.read(learnedSmsFormatRepositoryProvider);
+    final existingFormats = await formatRepository.getFormatsByPaymentMethod(
+      widget.paymentMethod!.id,
+    );
+
+    if (existingFormats.isNotEmpty && mounted) {
+      setState(() {
+        _generatedFormat = existingFormats.first;
+      });
+    }
+  }
+
+  /// Edit 모드에서 DB 로드 완료 후 샘플 분석 실행 (순서 보장)
+  Future<void> _loadExistingFormatThenAnalyze() async {
+    if (!isEdit || widget.paymentMethod == null) return;
+
+    // 1. 먼저 DB에서 기존 포맷 로드
+    final formatRepository = ref.read(learnedSmsFormatRepositoryProvider);
+    final existingFormats = await formatRepository.getFormatsByPaymentMethod(
+      widget.paymentMethod!.id,
+    );
+
+    if (!mounted) return;
+
+    // 2. DB에 기존 포맷이 있으면 사용
+    if (existingFormats.isNotEmpty) {
+      setState(() {
+        _generatedFormat = existingFormats.first;
+      });
+    }
+    // 3. DB에 없고 샘플이 있으면 샘플 분석 실행
+    else if (_sampleController.text.isNotEmpty) {
+      _analyzeSampleImmediate();
+    }
   }
 
   void _selectMode(PaymentMethodAddMode mode) {
@@ -1066,11 +1105,38 @@ class _PaymentMethodWizardPageState
     );
 
     if (result != null && mounted) {
+      // 메모리상 _generatedFormat 업데이트
       setState(() {
         _generatedFormat = _generatedFormat!.copyWith(
           senderKeywords: result,
         );
       });
+
+      // Edit 모드이고 DB에 저장된 포맷이 있으면 즉시 DB 업데이트
+      if (isEdit && _generatedFormat!.id != null && _generatedFormat!.id.isNotEmpty) {
+        try {
+          final formatRepository = ref.read(learnedSmsFormatRepositoryProvider);
+          await formatRepository.updateFormat(
+            id: _generatedFormat!.id,
+            senderKeywords: result,
+          );
+
+          if (mounted) {
+            final l10n = AppLocalizations.of(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.paymentMethodWizardKeywordsSaved)),
+            );
+          }
+        } catch (e) {
+          debugPrint('Failed to update keywords in DB: $e');
+          if (mounted) {
+            final l10n = AppLocalizations.of(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(l10n.paymentMethodWizardKeywordsSaveFailed)),
+            );
+          }
+        }
+      }
     }
   }
 

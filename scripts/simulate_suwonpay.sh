@@ -100,14 +100,18 @@ send_sms() {
     echo "SMS 전송 완료!"
 }
 
-# Push 알림 전송
+# Push 알림 전송 (실제 경기지역화폐 알림 형식)
 send_push() {
     local TITLE="경기지역화폐"
-    local CONTENT="결제알림 ${FORMATTED_AMOUNT}원 결제 완료 가맹점: ${MERCHANT} 잔액: ${FORMATTED_BALANCE}원"
+    local CONTENT="결제 완료 ${FORMATTED_AMOUNT}원
+${MERCHANT}
+수원페이 충전형 인센티브 441원
+수원페이(수원이) 총 보유 잔액 ${FORMATTED_BALANCE}원"
 
     echo "Push 알림 전송 중..."
     echo "제목: $TITLE"
-    echo "내용: $CONTENT"
+    echo "내용:"
+    echo "$CONTENT"
     echo "------------------------------------------------"
 
     adb -s $EMULATOR_ID shell "cmd notification post -t '$TITLE' 'suwonpay_test' '$CONTENT'"

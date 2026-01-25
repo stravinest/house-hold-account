@@ -91,6 +91,7 @@ class FinancialSmsSenders {
   static const Map<String, List<String>> senderPatterns = {
     // 카드사
     'KB국민카드': ['KB국민', 'KB카드', '국민카드', '15881688', '15449999'],
+    'KB Pay': ['KB Pay', 'KBPay', 'KB페이'], // KB Pay 앱 추가
     '신한카드': ['신한카드', '신한', '15447200', '15444000'],
     '삼성카드': ['삼성카드', '15881000'],
     '현대카드': ['현대카드', '15776200'],
@@ -163,13 +164,17 @@ class SmsParsingService {
     String? knownMerchant,
   }) {
     // 1. 발신자/금융사 식별 및 키워드 추출
-    final potentialKeywords = <String>{};
+    // 순서 보장을 위해 List 사용 (중복 제거는 수동으로 처리)
+    final potentialKeywords = <String>[];
 
     // 대괄호 안의 내용 우선 추출 (사용자가 직접 수정한 경우 강력한 힌트)
     final bracketPattern = RegExp(r'\[([^\]]+)\]');
     final bracketMatch = bracketPattern.firstMatch(sample);
     if (bracketMatch != null && bracketMatch.group(1) != null) {
-      potentialKeywords.add(bracketMatch.group(1)!);
+      final keyword = bracketMatch.group(1)!;
+      if (!potentialKeywords.contains(keyword)) {
+        potentialKeywords.add(keyword);
+      }
     }
 
     // 기존에 정의된 금융사 패턴 매칭
@@ -177,10 +182,16 @@ class SmsParsingService {
       sample,
     );
     if (knownSender != null) {
-      potentialKeywords.add(knownSender);
+      if (!potentialKeywords.contains(knownSender)) {
+        potentialKeywords.add(knownSender);
+      }
       final keywords = FinancialSmsSenders.senderPatterns[knownSender];
       if (keywords != null) {
-        potentialKeywords.addAll(keywords.where((k) => sample.contains(k)));
+        for (final k in keywords.where((k) => sample.contains(k))) {
+          if (!potentialKeywords.contains(k)) {
+            potentialKeywords.add(k);
+          }
+        }
       }
     }
 
@@ -188,8 +199,9 @@ class SmsParsingService {
     final generalPattern = RegExp(r'([가-힣\w]+(?:카드|은행|페이|화폐|뱅크))');
     final matches = generalPattern.allMatches(sample);
     for (final match in matches) {
-      if (match.group(1) != null) {
-        potentialKeywords.add(match.group(1)!);
+      final keyword = match.group(1);
+      if (keyword != null && !potentialKeywords.contains(keyword)) {
+        potentialKeywords.add(keyword);
       }
     }
 
