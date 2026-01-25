@@ -690,6 +690,8 @@
     }
   },
   "autoSaveSettingsPermissionRequired": "Required permissions not granted. Please allow permissions.",
+  "permissionSettingsSnackbar": "Please allow permissions in Settings and return to the app",
+  "permissionCheckingStatus": "Checking permission status...",
   "autoSaveSettingsModeManual": "Manual Entry",
   "autoSaveSettingsModeSuggest": "Suggest Mode",
   "autoSaveSettingsModeAuto": "Auto Save",

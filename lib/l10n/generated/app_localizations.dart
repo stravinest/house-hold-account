@@ -4099,6 +4099,18 @@ abstract class AppLocalizations {
   /// **'필요한 권한이 없습니다. 권한을 허용해주세요.'**
   String get autoSaveSettingsPermissionRequired;
 
+  /// No description provided for @permissionSettingsSnackbar.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정에서 권한을 허용한 후 앱으로 돌아와주세요'**
+  String get permissionSettingsSnackbar;
+
+  /// No description provided for @permissionCheckingStatus.
+  ///
+  /// In ko, this message translates to:
+  /// **'권한 상태 확인 중...'**
+  String get permissionCheckingStatus;
+
   /// No description provided for @autoSaveSettingsModeManual.
   ///
   /// In ko, this message translates to:

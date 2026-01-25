@@ -2160,6 +2160,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get autoSaveSettingsPermissionRequired => '필요한 권한이 없습니다. 권한을 허용해주세요.';
 
   @override
+  String get permissionSettingsSnackbar => '설정에서 권한을 허용한 후 앱으로 돌아와주세요';
+
+  @override
+  String get permissionCheckingStatus => '권한 상태 확인 중...';
+
+  @override
   String get autoSaveSettingsModeManual => '수동 입력';
 
   @override

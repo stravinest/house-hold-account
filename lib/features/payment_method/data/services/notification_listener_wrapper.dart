@@ -151,9 +151,19 @@ class NotificationListenerWrapper {
     if (!isAndroid) return false;
 
     try {
-      return await NotificationListenerService.requestPermission();
+      // dynamic으로 받아서 타입 에러 방지
+      final dynamic result = await NotificationListenerService.requestPermission();
+      // bool로 안전하게 변환
+      if (result is bool) {
+        return result;
+      }
+      return false;
     } catch (e) {
-      debugPrint('Notification permission request failed: $e');
+      if (kDebugMode) {
+        debugPrint('Notification permission request failed: $e');
+      }
+      // Reply already submitted 에러는 무시 (플러그인 버그)
+      // 설정 화면은 정상적으로 열렸으므로 false 반환
       return false;
     }
   }
@@ -162,9 +172,18 @@ class NotificationListenerWrapper {
     if (!isAndroid) return;
 
     try {
-      await NotificationListenerService.requestPermission();
+      // dynamic으로 받아서 타입 에러 방지
+      final dynamic result = await NotificationListenerService.requestPermission();
+      // 반환값을 명시적으로 처리하여 타입 에러 방지
+      if (kDebugMode) {
+        debugPrint('Notification settings opened, result: $result');
+      }
     } catch (e) {
-      debugPrint('Failed to open notification settings: $e');
+      if (kDebugMode) {
+        debugPrint('Failed to open notification settings: $e');
+      }
+      // Reply already submitted 에러는 무시 (플러그인 버그)
+      // 설정 화면은 정상적으로 열렸으므로 에러를 무시
     }
   }
 
@@ -288,10 +307,13 @@ class NotificationListenerWrapper {
     }
 
     // SMS 앱 알림 제외 - SmsListenerService가 SMS를 직접 처리함 (중복 방지)
+    // SmsListener와 NotificationListener가 각각 독립적인 중복 캐시를 가지므로
+    // 같은 SMS를 두 번 처리하는 것을 방지하기 위해 SMS 앱 알림은 무조건 스킵
     final packageLower = packageName.toLowerCase();
     if (_smsAppPackages.any((pkg) => packageLower.contains(pkg))) {
       if (kDebugMode) {
         debugPrint('[NotificationListener] Skipping SMS app notification: $packageName');
+        debugPrint('[NotificationListener] Reason: SmsListenerService handles SMS directly');
       }
       return;
     }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -5,6 +7,27 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../data/services/notification_listener_wrapper.dart';
 import '../../data/services/sms_listener_service.dart';
+
+/// AppLifecycleListener를 사용하여 앱 재개 시 권한 재확인
+mixin _AppLifecycleHandler<T extends StatefulWidget> on State<T> {
+  late final AppLifecycleListener _lifecycleListener;
+
+  void onAppResumed();
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycleListener = AppLifecycleListener(
+      onResume: onAppResumed,
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycleListener.dispose();
+    super.dispose();
+  }
+}
 
 /// 투명도 상수
 class _OpacityConstants {
@@ -17,9 +40,7 @@ class _OpacityConstants {
 /// 안드로이드 플랫폼 여부
 bool get _isAndroidPlatform {
   try {
-    return Theme.of(
-      WidgetsBinding.instance.platformDispatcher.views.first as BuildContext,
-    ).platform == TargetPlatform.android;
+    return Platform.isAndroid;
   } catch (_) {
     return false;
   }
@@ -40,15 +61,26 @@ class PermissionStatusBanner extends StatefulWidget {
   State<PermissionStatusBanner> createState() => _PermissionStatusBannerState();
 }
 
-class _PermissionStatusBannerState extends State<PermissionStatusBanner> {
+class _PermissionStatusBannerState extends State<PermissionStatusBanner>
+    with _AppLifecycleHandler {
   bool _smsPermissionGranted = false;
   bool _notificationPermissionGranted = false;
   bool _isLoading = true;
+  bool _shouldCheckOnResume = false;
 
   @override
   void initState() {
     super.initState();
     _checkPermissions();
+  }
+
+  @override
+  void onAppResumed() {
+    // 설정 화면에서 돌아올 때만 권한 재확인
+    if (_shouldCheckOnResume) {
+      _checkPermissions();
+      _shouldCheckOnResume = false;
+    }
   }
 
   Future<void> _checkPermissions() async {
@@ -59,50 +91,84 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner> {
       return;
     }
 
-    try {
-      final smsGranted = await SmsListenerService.instance.checkPermissions();
-      final notificationGranted =
-          await NotificationListenerWrapper.instance.isPermissionGranted();
+    bool smsGranted = false;
+    bool notificationGranted = false;
 
-      if (mounted) {
-        setState(() {
-          _smsPermissionGranted = smsGranted;
-          _notificationPermissionGranted = notificationGranted;
-          _isLoading = false;
-        });
-      }
+    // 각 권한을 독립적으로 체크 (하나 실패해도 다른 것은 계속 체크)
+    try {
+      smsGranted = await SmsListenerService.instance.checkPermissions();
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('권한 체크 실패: $e');
-      }
-      if (mounted) {
-        setState(() => _isLoading = false);
+        debugPrint('SMS 권한 체크 실패: $e');
       }
     }
-  }
 
-  Future<void> _requestSmsPermission() async {
-    final granted = await SmsListenerService.instance.requestPermissions();
+    try {
+      notificationGranted =
+          await NotificationListenerWrapper.instance.isPermissionGranted();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('알림 권한 체크 실패: $e');
+      }
+    }
+
     if (mounted) {
       setState(() {
-        _smsPermissionGranted = granted;
+        _smsPermissionGranted = smsGranted;
+        _notificationPermissionGranted = notificationGranted;
+        _isLoading = false;
       });
     }
   }
 
+  Future<void> _requestSmsPermission() async {
+    // 권한 요청 다이얼로그가 표시되므로 돌아올 때 재확인
+    _shouldCheckOnResume = true;
+
+    try {
+      final granted = await SmsListenerService.instance.requestPermissions();
+      if (mounted) {
+        setState(() {
+          _smsPermissionGranted = granted;
+          _shouldCheckOnResume = false; // 즉시 결과를 받았으므로 플래그 해제
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('SMS 권한 요청 중 에러 (무시됨): $e');
+      }
+      if (mounted) {
+        setState(() {
+          _smsPermissionGranted = false;
+          _shouldCheckOnResume = false; // 에러 발생 시에도 플래그 해제
+        });
+      }
+    }
+  }
+
   Future<void> _requestNotificationPermission() async {
-    await NotificationListenerWrapper.instance.requestPermission();
+    // 설정 화면으로 이동하므로 돌아올 때 권한 재확인 플래그 설정
+    _shouldCheckOnResume = true;
+
+    try {
+      await NotificationListenerWrapper.instance.openSettings();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('설정 화면 열기 중 에러: $e');
+      }
+    }
 
     if (!mounted) return;
 
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('설정에서 권한을 허용한 후 다시 확인해주세요'),
+        content: Text(l10n.permissionSettingsSnackbar),
         action: SnackBarAction(
-          label: '확인',
+          label: l10n.commonConfirm,
           onPressed: _checkPermissions,
         ),
-        duration: const Duration(seconds: 4),
+        duration: const Duration(seconds: 5),
       ),
     );
   }
@@ -130,7 +196,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner> {
             ),
             const SizedBox(height: Spacing.sm),
             Text(
-              '권한 상태 확인 중...',
+              l10n.permissionCheckingStatus,
               style: textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),

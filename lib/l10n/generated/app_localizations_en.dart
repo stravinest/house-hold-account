@@ -2210,6 +2210,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Required permissions not granted. Please allow permissions.';
 
   @override
+  String get permissionSettingsSnackbar =>
+      'Please allow permissions in Settings and return to the app';
+
+  @override
+  String get permissionCheckingStatus => 'Checking permission status...';
+
+  @override
   String get autoSaveSettingsModeManual => 'Manual Entry';
 
   @override

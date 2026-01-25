@@ -19,7 +19,20 @@ import 'sms_parsing_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> backgroundSmsHandler(SmsMessage message) async {
-  debugPrint('Background SMS received: ${message.address}');
+  debugPrint('[BackgroundSMS] SMS received from: ${message.address}');
+
+  // Singleton instance를 통해 처리 시도
+  try {
+    if (SmsListenerService._instance != null &&
+        SmsListenerService.instance.isInitialized) {
+      await SmsListenerService.instance.onSmsReceived(message);
+      debugPrint('[BackgroundSMS] Processed via instance');
+    } else {
+      debugPrint('[BackgroundSMS] Instance not initialized, SMS will be processed when app reopens');
+    }
+  } catch (e) {
+    debugPrint('[BackgroundSMS] Error processing SMS: $e');
+  }
 }
 
 class SmsListenerService {
@@ -141,7 +154,13 @@ class SmsListenerService {
   }
 
   void startListening() {
-    if (!isAndroid || !_isInitialized || _isListening) return;
+    // 프로덕션에서도 로그 출력 (디버깅용)
+    debugPrint('[SmsListener] startListening called: isAndroid=$isAndroid, isInitialized=$_isInitialized, isListening=$_isListening');
+
+    if (!isAndroid || !_isInitialized || _isListening) {
+      debugPrint('[SmsListener] ❌ Cannot start listening: isAndroid=$isAndroid, isInitialized=$_isInitialized, isListening=$_isListening');
+      return;
+    }
 
     _telephony.listenIncomingSms(
       onNewMessage: onSmsReceived,
@@ -150,7 +169,13 @@ class SmsListenerService {
     );
 
     _isListening = true;
-    debugPrint('SMS listener started');
+    debugPrint('[SmsListener] ✅ SMS listener started successfully');
+    debugPrint('[SmsListener] Listening for SMS with ${_autoSavePaymentMethods.length} payment methods');
+    for (final pm in _autoSavePaymentMethods) {
+      if (pm.autoCollectSource == AutoCollectSource.sms) {
+        debugPrint('  - ${pm.name} (mode: ${pm.autoSaveMode.toJson()})');
+      }
+    }
   }
 
   void stopListening() {
@@ -160,7 +185,23 @@ class SmsListenerService {
 
   @visibleForTesting
   Future<void> onSmsReceived(SmsMessage message) async {
-    if (_currentUserId == null || _currentLedgerId == null) return;
+    if (kDebugMode) {
+      debugPrint('========================================');
+      debugPrint('[SmsListener] 📨 SMS 수신!');
+      debugPrint('  - 발신자: ${message.address}');
+      final bodyPreview = (message.body ?? '').length > 50
+          ? '${message.body!.substring(0, 50)}...'
+          : message.body;
+      debugPrint('  - 내용 미리보기: $bodyPreview');
+      debugPrint('========================================');
+    }
+
+    if (_currentUserId == null || _currentLedgerId == null) {
+      if (kDebugMode) {
+        debugPrint('[SmsListener] Skipping: userId or ledgerId is null');
+      }
+      return;
+    }
 
     final sender = message.address ?? '';
     final content = message.body ?? '';
@@ -168,17 +209,33 @@ class SmsListenerService {
         ? DateTime.fromMillisecondsSinceEpoch(message.date!)
         : DateTime.now();
 
-    if (sender.isEmpty || content.isEmpty) return;
+    if (sender.isEmpty || content.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('[SmsListener] Skipping: sender or content is empty');
+      }
+      return;
+    }
 
     // 발신자 또는 본문에서 금융사 패턴 확인
     if (!FinancialSmsSenders.isFinancialSender(sender, content)) {
+      if (kDebugMode) {
+        debugPrint('[SmsListener] Skipping: not a financial SMS');
+      }
       return;
     }
 
     final matchResult = _findMatchingPaymentMethod(sender, content);
     if (matchResult == null) {
-      debugPrint('No matching payment method found for sender: $sender');
+      if (kDebugMode) {
+        debugPrint('[SmsListener] ❌ No matching payment method found');
+        debugPrint('[SmsListener] Sender: $sender');
+        debugPrint('[SmsListener] Available SMS-source payment methods: ${_autoSavePaymentMethods.where((pm) => pm.autoCollectSource == AutoCollectSource.sms).length}');
+      }
       return;
+    }
+
+    if (kDebugMode) {
+      debugPrint('[SmsListener] ✅ Found match: ${matchResult.paymentMethod.name}');
     }
 
     await _processSms(
