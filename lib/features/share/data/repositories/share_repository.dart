@@ -325,30 +325,11 @@ class ShareRepository {
     required String ledgerId,
     required String userId,
   }) async {
-    final response = await _client.rpc(
-      'delete_ledger_member',
-      params: {'target_ledger_id': ledgerId, 'target_user_id': userId},
-    );
-
-    final result = response as Map<String, dynamic>;
-    if (result['success'] != true) {
-      final errorCode = result['error_code'];
-      String message;
-      switch (errorCode) {
-        case 'NOT_FOUND':
-          message = '더 이상 가계부 멤버가 아닙니다.';
-          break;
-        case 'PERMISSION_DENIED':
-          message = '멤버를 관리할 권한이 없습니다.';
-          break;
-        case 'UNAUTHORIZED':
-          message = '인증 정보가 없습니다. 다시 로그인해 주세요.';
-          break;
-        default:
-          message = result['error'] ?? '멤버 제거 중 오류가 발생했습니다.';
-      }
-      throw Exception(message);
-    }
+    await _client
+        .from('ledger_members')
+        .delete()
+        .eq('ledger_id', ledgerId)
+        .eq('user_id', userId);
   }
 
   // 가계부 나가기

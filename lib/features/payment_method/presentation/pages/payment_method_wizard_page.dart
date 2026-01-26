@@ -1123,17 +1123,13 @@ class _PaymentMethodWizardPageState
 
           if (mounted) {
             final l10n = AppLocalizations.of(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.paymentMethodWizardKeywordsSaved)),
-            );
+            SnackBarUtils.showSuccess(context, l10n.paymentMethodWizardKeywordsSaved);
           }
         } catch (e) {
           debugPrint('Failed to update keywords in DB: $e');
           if (mounted) {
             final l10n = AppLocalizations.of(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.paymentMethodWizardKeywordsSaveFailed)),
-            );
+            SnackBarUtils.showError(context, l10n.paymentMethodWizardKeywordsSaveFailed);
           }
         }
       }
@@ -1149,9 +1145,7 @@ class _PaymentMethodWizardPageState
       final granted = await SmsListenerService.instance.requestPermissions();
       if (!granted) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(l10n.paymentMethodWizardSmsPermissionRequired)));
+          SnackBarUtils.showError(context, l10n.paymentMethodWizardSmsPermissionRequired);
         }
         return;
       }
@@ -1259,9 +1253,7 @@ class _PaymentMethodWizardPageState
     // 성공 메시지 표시
     if (mounted) {
       final l10n = AppLocalizations.of(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.paymentMethodWizardKeywordsUpdated)),
-      );
+      SnackBarUtils.showSuccess(context, l10n.paymentMethodWizardKeywordsUpdated);
     }
   }
 
@@ -1326,9 +1318,7 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
 
     // 중복 확인
     if (_keywords.contains(newKeyword)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.paymentMethodWizardKeywordDuplicate)),
-      );
+      SnackBarUtils.showError(context, l10n.paymentMethodWizardKeywordDuplicate);
       return;
     }
 
@@ -1423,11 +1413,7 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
         FilledButton(
           onPressed: () {
             if (_keywords.isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.paymentMethodWizardEditKeywordsMinError),
-                ),
-              );
+              SnackBarUtils.showError(context, l10n.paymentMethodWizardEditKeywordsMinError);
               return;
             }
             Navigator.pop(context, _keywords);

@@ -270,11 +270,11 @@ final myOwnedLedgersWithInvitesProvider =
       final currentUserId = SupabaseConfig.auth.currentUser?.id;
       if (currentUserId == null) return [];
 
-      final ledgersAsync = ref.watch(ledgersProvider);
+      final ledgersAsync = ref.watch(ledgerNotifierProvider);
       final selectedLedgerId = ref.watch(selectedLedgerIdProvider);
       final repository = ref.watch(shareRepositoryProvider);
 
-      // ledgersProvider가 아직 데이터를 가지고 있지 않으면 빈 리스트 반환
+      // ledgerNotifierProvider가 아직 데이터를 가지고 있지 않으면 빈 리스트 반환
       // isLoading/hasError는 FutureProvider가 자동으로 처리
       final ledgers = ledgersAsync.valueOrNull;
       if (ledgers == null) return [];

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -369,15 +370,21 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
                       if (!isOwner) ...[
                         const SizedBox(width: Spacing.sm),
                         TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _showRemoveMemberDialog(
+                          onPressed: () async {
+                            debugPrint('[RemoveMember] Button pressed in bottom sheet');
+                            // 바텀시트를 먼저 닫지 않고, 다이얼로그를 위에 표시
+                            await _showRemoveMemberDialog(
                               context,
                               ref,
                               ledgerInfo.ledger.id,
                               member.userId,
                               displayName,
                             );
+                            // 다이얼로그가 닫힌 후에만 바텀시트 닫기
+                            if (context.mounted) {
+                              debugPrint('[RemoveMember] Closing bottom sheet');
+                              Navigator.pop(context);
+                            }
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: colorScheme.error,
@@ -420,6 +427,7 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String userId,
     String memberName,
   ) async {
+    debugPrint('[RemoveMember] Dialog opened for user: $userId, member: $memberName');
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -428,11 +436,17 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
         content: Text(l10n.shareMemberRemoveConfirm(memberName)),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () {
+              debugPrint('[RemoveMember] Cancel button pressed');
+              Navigator.pop(context, false);
+            },
             child: Text(l10n.commonCancel),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () {
+              debugPrint('[RemoveMember] Confirm button pressed');
+              Navigator.pop(context, true);
+            },
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
@@ -442,7 +456,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
       ),
     );
 
+    debugPrint('[RemoveMember] Dialog result: $confirmed, context.mounted: ${context.mounted}');
     if (confirmed == true && context.mounted) {
+      debugPrint('[RemoveMember] Calling _removeMember');
       await _removeMember(context, ref, ledgerId, userId);
     }
   }
@@ -453,18 +469,25 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String ledgerId,
     String userId,
   ) async {
+    debugPrint('[RemoveMember] Starting removal - ledgerId: $ledgerId, userId: $userId');
     final l10n = AppLocalizations.of(context);
     try {
+      debugPrint('[RemoveMember] Calling repository removeMember');
       await ref
           .read(shareNotifierProvider.notifier)
           .removeMember(ledgerId: ledgerId, userId: userId);
+      debugPrint('[RemoveMember] Repository call successful');
       if (context.mounted) {
+        debugPrint('[RemoveMember] Showing success message');
         SnackBarUtils.showSuccess(context, l10n.shareMemberRemoved);
         if (mounted) {
+          debugPrint('[RemoveMember] Invalidating providers');
           ref.invalidate(myOwnedLedgersWithInvitesProvider);
         }
       }
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[RemoveMember] Error: $e');
+      debugPrint('[RemoveMember] StackTrace: $st');
       if (context.mounted) {
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }

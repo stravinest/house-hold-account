@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../data/services/notification_listener_wrapper.dart';
@@ -173,14 +174,13 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     if (!mounted) return;
 
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(l10n.permissionSettingsSnackbar),
-        action: SnackBarAction(
-          label: l10n.commonConfirm,
-          onPressed: _checkPermissions,
-        ),
-        duration: const Duration(seconds: 5),
+    SnackBarUtils.showInfo(
+      context,
+      l10n.permissionSettingsSnackbar,
+      duration: const Duration(seconds: 5),
+      action: SnackBarAction(
+        label: l10n.commonConfirm,
+        onPressed: _checkPermissions,
       ),
     );
   }

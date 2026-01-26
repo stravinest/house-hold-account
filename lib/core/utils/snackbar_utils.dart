@@ -33,10 +33,12 @@ class SnackBarUtils {
   /// [context] - BuildContext (내부적으로 mounted 체크 수행)
   /// [message] - 표시할 메시지
   /// [duration] - 표시 시간 (기본값: SnackBarDuration.short = 2초)
+  /// [action] - 선택적 액션 버튼
   static void showSuccess(
     BuildContext context,
     String message, {
     Duration? duration,
+    SnackBarAction? action,
   }) {
     if (!context.mounted) return;
 
@@ -45,6 +47,7 @@ class SnackBarUtils {
         content: Text(message),
         duration: duration ?? SnackBarDuration.short,
         backgroundColor: Colors.green[700],
+        action: action,
       ),
     );
   }
@@ -54,10 +57,12 @@ class SnackBarUtils {
   /// [context] - BuildContext (내부적으로 mounted 체크 수행)
   /// [message] - 표시할 메시지
   /// [duration] - 표시 시간 (기본값: SnackBarDuration.short = 2초)
+  /// [action] - 선택적 액션 버튼
   static void showError(
     BuildContext context,
     String message, {
     Duration? duration,
+    SnackBarAction? action,
   }) {
     if (!context.mounted) return;
 
@@ -66,6 +71,7 @@ class SnackBarUtils {
         content: Text(message),
         duration: duration ?? SnackBarDuration.short,
         backgroundColor: Colors.red[700],
+        action: action,
       ),
     );
   }
@@ -75,10 +81,12 @@ class SnackBarUtils {
   /// [context] - BuildContext (내부적으로 mounted 체크 수행)
   /// [message] - 표시할 메시지
   /// [duration] - 표시 시간 (기본값: SnackBarDuration.short = 2초)
+  /// [action] - 선택적 액션 버튼
   static void showInfo(
     BuildContext context,
     String message, {
     Duration? duration,
+    SnackBarAction? action,
   }) {
     if (!context.mounted) return;
 
@@ -86,6 +94,7 @@ class SnackBarUtils {
       SnackBar(
         content: Text(message),
         duration: duration ?? SnackBarDuration.short,
+        action: action,
       ),
     );
   }

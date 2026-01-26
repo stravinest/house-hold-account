@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../auth/presentation/providers/auth_provider.dart';
 import '../../providers/statistics_provider.dart';
@@ -71,15 +72,10 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
         errorMessage.contains('refresh') ||
         errorMessage.contains('invalid') ||
         error.statusCode == '401') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.errorSessionExpired ??
-                'Session expired. Please log in again.',
-          ),
-          duration: const Duration(seconds: 4),
-          behavior: SnackBarBehavior.floating,
-        ),
+      SnackBarUtils.showError(
+        context,
+        l10n.errorSessionExpired ?? 'Session expired. Please log in again.',
+        duration: const Duration(seconds: 4),
       );
 
       Future.delayed(const Duration(seconds: 1), () async {
@@ -90,14 +86,10 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
 
   void _showNetworkError() {
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          l10n.errorNetwork ?? 'Please check your network connection.',
-        ),
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-      ),
+    SnackBarUtils.showError(
+      context,
+      l10n.errorNetwork ?? 'Please check your network connection.',
+      duration: const Duration(seconds: 3),
     );
   }
 
