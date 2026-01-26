@@ -191,7 +191,7 @@ class ShareRepository {
         .toList();
   }
 
-  // 보낸 초대 목록 조회
+  // 보낸 초대 목록 조회 (left 상태 제외 - 방출된 멤버)
   Future<List<LedgerInvite>> getSentInvites(String ledgerId) async {
     final response = await _client
         .from('ledger_invites')
@@ -199,6 +199,7 @@ class ShareRepository {
           '*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)',
         )
         .eq('ledger_id', ledgerId)
+        .neq('status', 'left') // 방출된 멤버의 초대는 제외
         .order('created_at', ascending: false);
 
     return (response as List)
@@ -320,16 +321,35 @@ class ShareRepository {
         .eq('user_id', userId);
   }
 
-  // 멤버 제거 (방출 또는 탈퇴)
+  // 멤버 제거 (소유자가 다른 멤버를 방출)
   Future<void> removeMember({
     required String ledgerId,
     required String userId,
   }) async {
+    // 1. 멤버에서 제거
     await _client
         .from('ledger_members')
         .delete()
         .eq('ledger_id', ledgerId)
         .eq('user_id', userId);
+
+    // 2. 해당 사용자의 이메일 조회
+    final userProfile = await _client
+        .from('profiles')
+        .select('email')
+        .eq('id', userId)
+        .maybeSingle();
+
+    // 3. 초대 상태를 'left'로 변경 (기록 유지, 다시 초대 가능)
+    if (userProfile != null && userProfile['email'] != null) {
+      final userEmail = (userProfile['email'] as String).toLowerCase().trim();
+      await _client
+          .from('ledger_invites')
+          .update({'status': 'left'})
+          .eq('ledger_id', ledgerId)
+          .eq('invitee_email', userEmail)
+          .eq('status', 'accepted');
+    }
   }
 
   // 가계부 나가기
