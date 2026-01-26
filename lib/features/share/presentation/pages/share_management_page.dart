@@ -506,7 +506,10 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
       ),
     );
 
-    controller.dispose();
+    // 다이얼로그 닫기 애니메이션이 완료된 후 dispose
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
 
     if (newName != null && newName.isNotEmpty && newName != currentName) {
       try {
