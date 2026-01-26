@@ -1,11 +1,14 @@
 package com.household.shared.shared_household_account
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.WindowManager
 import io.flutter.BuildConfig
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
@@ -13,7 +16,33 @@ class MainActivity : FlutterActivity() {
         private const val TAG = "MainActivity"
         private const val KEYBOARD_CHANNEL = "keyboard_control"
         private const val NOTIFICATION_SYNC_CHANNEL = "com.household.shared/notification_sync"
+        private const val NOTIFICATION_EVENT_CHANNEL = "com.household.shared/notification_events"
         private const val ERROR_CODE = "NOTIFICATION_SYNC_ERROR"
+
+        // Flutter로 이벤트를 전달하기 위한 싱글톤 참조
+        @Volatile
+        private var eventSink: EventChannel.EventSink? = null
+        private val mainHandler = Handler(Looper.getMainLooper())
+
+        /**
+         * 네이티브에서 새 알림 수신 시 Flutter로 이벤트 전달
+         * FinancialNotificationListener에서 호출
+         */
+        fun notifyNewNotification(packageName: String, count: Int) {
+            mainHandler.post {
+                val sink = eventSink
+                if (sink != null) {
+                    sink.success(mapOf(
+                        "type" to "new_notification",
+                        "packageName" to packageName,
+                        "pendingCount" to count
+                    ))
+                    Log.d(TAG, "Sent new notification event to Flutter: $packageName, count: $count")
+                } else {
+                    Log.d(TAG, "EventSink is null, Flutter not listening: $packageName, count: $count")
+                }
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +57,7 @@ class MainActivity : FlutterActivity() {
 
         setupKeyboardChannel(flutterEngine)
         setupNotificationSyncChannel(flutterEngine)
+        setupNotificationEventChannel(flutterEngine)
     }
 
     private fun setupKeyboardChannel(flutterEngine: FlutterEngine) {
@@ -40,6 +70,21 @@ class MainActivity : FlutterActivity() {
                 else -> result.notImplemented()
             }
         }
+    }
+
+    private fun setupNotificationEventChannel(flutterEngine: FlutterEngine) {
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, NOTIFICATION_EVENT_CHANNEL)
+            .setStreamHandler(object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                    eventSink = events
+                    Log.d(TAG, "Notification event channel connected")
+                }
+
+                override fun onCancel(arguments: Any?) {
+                    eventSink = null
+                    Log.d(TAG, "Notification event channel disconnected")
+                }
+            })
     }
 
     private fun setupNotificationSyncChannel(flutterEngine: FlutterEngine) {

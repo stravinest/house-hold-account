@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -16,9 +17,60 @@ class NativeNotificationSyncService {
   }
 
   static const String _channelName = 'com.household.shared/notification_sync';
+  static const String _eventChannelName = 'com.household.shared/notification_events';
   static const MethodChannel _channel = MethodChannel(_channelName);
+  static const EventChannel _eventChannel = EventChannel(_eventChannelName);
+
+  StreamSubscription<dynamic>? _eventSubscription;
+  final _onNewNotificationController = StreamController<NewNotificationEvent>.broadcast();
+
+  /// 새 알림 이벤트 스트림 (네이티브에서 실시간으로 전달)
+  Stream<NewNotificationEvent> get onNewNotification => _onNewNotificationController.stream;
 
   bool get isSupported => Platform.isAndroid;
+
+  /// EventChannel 구독 시작 (앱 시작 시 호출)
+  void startListening() {
+    if (!isSupported) return;
+    if (_eventSubscription != null) return;
+
+    _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
+      (dynamic event) {
+        if (event is Map) {
+          final type = event['type'] as String?;
+          if (type == 'new_notification') {
+            final packageName = event['packageName'] as String? ?? '';
+            final pendingCount = (event['pendingCount'] as num?)?.toInt() ?? 0;
+            if (kDebugMode) {
+              debugPrint('[NativeSync] New notification event: $packageName, count: $pendingCount');
+            }
+            _onNewNotificationController.add(NewNotificationEvent(
+              packageName: packageName,
+              pendingCount: pendingCount,
+            ));
+          }
+        }
+      },
+      onError: (error) {
+        if (kDebugMode) {
+          debugPrint('[NativeSync] Event channel error: $error');
+        }
+      },
+    );
+
+    if (kDebugMode) {
+      debugPrint('[NativeSync] Started listening for native notification events');
+    }
+  }
+
+  /// EventChannel 구독 중지
+  void stopListening() {
+    _eventSubscription?.cancel();
+    _eventSubscription = null;
+    if (kDebugMode) {
+      debugPrint('[NativeSync] Stopped listening for native notification events');
+    }
+  }
 
   /// 동기화 대기 중인 알림 목록 조회
   /// 앱 시작 시 호출하여 앱 종료 중 수집된 알림 가져오기
@@ -151,6 +203,23 @@ class NativeNotificationSyncService {
       return 0;
     }
   }
+
+  /// 리소스 정리
+  void dispose() {
+    stopListening();
+    _onNewNotificationController.close();
+  }
+}
+
+/// 네이티브에서 전달된 새 알림 이벤트
+class NewNotificationEvent {
+  final String packageName;
+  final int pendingCount;
+
+  const NewNotificationEvent({
+    required this.packageName,
+    required this.pendingCount,
+  });
 }
 
 /// 네이티브 SQLite에 캐싱된 알림 데이터

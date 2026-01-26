@@ -1369,6 +1369,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get statisticsCategoryRanking => '카테고리별 순위';
 
   @override
+  String get statisticsCategoryComparison => '카테고리별 비교';
+
+  @override
+  String get statisticsFilterCombined => '합쳐서';
+
+  @override
+  String get statisticsFilterOverlay => '겹쳐서';
+
+  @override
   String get statisticsNoData => '데이터가 없습니다';
 
   @override

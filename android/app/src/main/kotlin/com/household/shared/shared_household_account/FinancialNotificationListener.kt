@@ -6,6 +6,7 @@ import android.os.IBinder
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import io.flutter.BuildConfig
 
 /**
  * 금융 앱 알림을 수집하는 커스텀 NotificationListenerService
@@ -17,56 +18,61 @@ class FinancialNotificationListener : NotificationListenerService() {
         private const val TAG = "FinancialNotification"
 
         // 금융 앱 패키지명 목록 (소문자로 저장)
-        private val FINANCIAL_APP_PACKAGES = setOf(
+        private val FINANCIAL_APP_PACKAGES: Set<String> = buildSet {
             // KB 카드/은행
-            "com.kbcard.cxh.appcard",      // KB Pay (KB국민카드 앱)
-            "com.kbstar.kbbank",           // KB국민은행
+            add("com.kbcard.cxh.appcard")      // KB Pay (KB국민카드 앱)
+            add("com.kbstar.kbbank")           // KB국민은행
 
             // 신한 카드/은행
-            "com.shcard.smartpay",         // 신한 SOL페이 (메인 카드 앱)
-            "com.shinhancard.wallet",      // 신한카드 올댓
-            "com.shinhan.sbanking",        // 신한은행
+            add("com.shcard.smartpay")         // 신한 SOL페이 (메인 카드 앱)
+            add("com.shinhancard.wallet")      // 신한카드 올댓
+            add("com.shinhan.sbanking")        // 신한은행
 
             // 삼성 카드/페이
-            "kr.co.samsungcard.mpocket",   // 삼성카드 메인 앱
-            "com.samsung.android.spay",     // 삼성페이
-            "net.ib.android.smcard",       // monimo (삼성금융네트웍스)
+            add("kr.co.samsungcard.mpocket")   // 삼성카드 메인 앱
+            add("com.samsung.android.spay")    // 삼성페이
+            add("net.ib.android.smcard")       // monimo (삼성금융네트웍스)
 
             // 현대카드
-            "com.hyundaicard.appcard",     // 현대카드 메인 앱
-            "com.hyundaicard.weather",     // 현대카드 웨더
-            "com.hyundaicard.cultureapp",  // 현대카드 DIVE
+            add("com.hyundaicard.appcard")     // 현대카드 메인 앱
+            add("com.hyundaicard.weather")     // 현대카드 웨더
+            add("com.hyundaicard.cultureapp")  // 현대카드 DIVE
 
             // 롯데카드
-            "com.lcacapp",                 // 디지로카 (롯데카드 메인 앱)
-            "com.lottecard.lcap",          // 롯데카드 인슈플러스
+            add("com.lcacapp")                 // 디지로카 (롯데카드 메인 앱)
+            add("com.lottecard.lcap")          // 롯데카드 인슈플러스
 
             // 경기지역화폐
-            "gov.gyeonggi.ggcard",         // 경기지역화폐 공식 앱
+            add("gov.gyeonggi.ggcard")         // 경기지역화폐 공식 앱
 
             // 간편결제
-            "com.kakaopay.app",            // 카카오페이
-            "com.naverfin.payapp",         // 네이버페이
-            "viva.republica.toss",         // 토스
+            add("com.kakaopay.app")            // 카카오페이
+            add("com.naverfin.payapp")         // 네이버페이
+            add("viva.republica.toss")         // 토스
 
             // 우리 카드/은행
-            "com.wooricard.smartapp",      // 우리카드
-            "com.wooribank.smart.npib",    // 우리은행
+            add("com.wooricard.smartapp")      // 우리카드
+            add("com.wooribank.smart.npib")    // 우리은행
 
             // 하나 카드/은행
-            "com.hanaskcard.paycla",       // 하나카드
-            "com.hanabank.ebk.channel.android.hananbank",  // 하나은행
+            add("com.hanaskcard.paycla")       // 하나카드
+            add("com.hanabank.ebk.channel.android.hananbank")  // 하나은행
 
             // NH농협
-            "nh.smart.nhallonepay",        // NH올원페이
-            "com.nh.cashcardapp",          // NH카드
+            add("nh.smart.nhallonepay")        // NH올원페이
+            add("com.nh.cashcardapp")          // NH카드
 
             // 기타 은행
-            "com.ibk.neobanking",          // IBK기업은행
-            "com.epost.psf.sdsi",          // 우체국
-            "com.kdb.mobilebank",          // 산업은행
-            "kr.co.citibank.citimobile"    // 씨티은행
-        )
+            add("com.ibk.neobanking")          // IBK기업은행
+            add("com.epost.psf.sdsi")          // 우체국
+            add("com.kdb.mobilebank")          // 산업은행
+            add("kr.co.citibank.citimobile")   // 씨티은행
+
+            // 테스트용 패키지 (디버그 빌드에서만 포함)
+            if (BuildConfig.DEBUG) {
+                add("com.android.shell")       // cmd notification post 테스트용
+            }
+        }
 
         // 결제/거래 관련 키워드 (성능 최적화를 위해 상수로 정의)
         private val PAYMENT_KEYWORDS = listOf(
@@ -176,6 +182,9 @@ class FinancialNotificationListener : NotificationListenerService() {
         // 저장된 알림 수 로그
         val pendingCount = storageHelper.getPendingCount()
         Log.d(TAG, "Total pending notifications: $pendingCount")
+
+        // Flutter로 새 알림 이벤트 전달 (앱이 실행 중인 경우)
+        MainActivity.notifyNewNotification(packageName, pendingCount)
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {

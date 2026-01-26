@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../ledger/presentation/providers/ledger_provider.dart';
@@ -15,18 +16,24 @@ final widgetDataUpdaterProvider = Provider<void>((ref) {
   final monthlyTotalAsync = ref.watch(monthlyTotalProvider);
   final currentLedger = ref.watch(currentLedgerProvider);
 
-  monthlyTotalAsync.whenData((monthlyTotal) async {
+  monthlyTotalAsync.whenData((monthlyTotal) {
     final ledgerName = currentLedger.valueOrNull?.name ?? '가계부';
     final income = monthlyTotal['income'] ?? 0;
     final expense = monthlyTotal['expense'] ?? 0;
 
-    debugPrint('[Widget] Auto update: income=$income, expense=$expense');
+    if (kDebugMode) {
+      debugPrint('[Widget] Auto update: income=$income, expense=$expense');
+    }
 
-    await WidgetDataService.updateWidgetData(
-      monthlyExpense: expense,
-      monthlyIncome: income,
-      ledgerName: ledgerName,
-    );
+    // 현재 프레임 완료 후 위젯 업데이트 실행
+    // Navigator가 잠긴 상태에서 위젯 트리 변경 방지
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      WidgetDataService.updateWidgetData(
+        monthlyExpense: expense,
+        monthlyIncome: income,
+        ledgerName: ledgerName,
+      );
+    });
   });
 });
 

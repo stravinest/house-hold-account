@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
 import '../../../../core/utils/snackbar_utils.dart';
@@ -45,10 +46,17 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     } catch (e) {
       if (mounted) {
         final l10n = AppLocalizations.of(context);
-        SnackBarUtils.showError(
-          context,
-          l10n.authForgotPasswordSendFailed(e.toString()),
-        );
+        String errorMessage;
+        if (e is AuthRetryableFetchException ||
+            e.toString().contains('SocketException') ||
+            e.toString().contains('Failed host lookup') ||
+            e.toString().contains('Network is unreachable')) {
+          // 네트워크 연결 에러
+          errorMessage = l10n.errorNetwork;
+        } else {
+          errorMessage = l10n.authForgotPasswordSendFailed(e.toString());
+        }
+        SnackBarUtils.showError(context, errorMessage);
         setState(() => _isLoading = false);
       }
     }

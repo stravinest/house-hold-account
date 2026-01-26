@@ -2,9 +2,44 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../fixed_expense/presentation/providers/fixed_expense_settings_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
+import '../../../share/presentation/providers/share_provider.dart';
 import '../../data/repositories/statistics_repository.dart';
 import '../../domain/entities/statistics_entities.dart';
 import '../widgets/common/expense_type_filter.dart';
+
+// 공유 통계 필터 모드
+enum SharedStatisticsMode {
+  combined, // 합쳐서 (모든 사용자 합계)
+  overlay, // 겹쳐서 (사용자별 비교)
+  singleUser, // 특정 사용자만
+}
+
+// 공유 통계 상태 클래스
+class SharedStatisticsState {
+  final SharedStatisticsMode mode;
+  final String? selectedUserId; // singleUser 모드일 때 선택된 사용자 ID
+
+  const SharedStatisticsState({
+    this.mode = SharedStatisticsMode.overlay,
+    this.selectedUserId,
+  });
+
+  SharedStatisticsState copyWith({
+    SharedStatisticsMode? mode,
+    String? selectedUserId,
+  }) {
+    return SharedStatisticsState(
+      mode: mode ?? this.mode,
+      selectedUserId: selectedUserId,
+    );
+  }
+}
+
+// 공유 통계 필터 상태 Provider
+final sharedStatisticsStateProvider =
+    StateProvider<SharedStatisticsState>((ref) {
+  return const SharedStatisticsState();
+});
 
 // Repository Provider
 final statisticsRepositoryProvider = Provider<StatisticsRepository>((ref) {
@@ -237,4 +272,47 @@ final monthlyTrendProvider = FutureProvider<List<MonthlyStatistics>>((
   final repository = ref.watch(statisticsRepositoryProvider);
 
   return repository.getMonthlyTrend(ledgerId: ledgerId, months: 6);
+});
+
+// ========== 공유 가계부용 Provider ==========
+
+// 사용자별 카테고리 통계 (공유 가계부용)
+final categoryStatisticsByUserProvider =
+    FutureProvider<Map<String, UserCategoryStatistics>>((ref) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) return {};
+
+  final date = ref.watch(statisticsSelectedDateProvider);
+  final type = ref.watch(selectedStatisticsTypeProvider);
+  final repository = ref.watch(statisticsRepositoryProvider);
+
+  // 지출일 경우에만 고정비/변동비 필터 적용
+  ExpenseTypeFilter? expenseTypeFilter;
+  if (type == 'expense') {
+    expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
+  }
+
+  return repository.getCategoryStatisticsByUser(
+    ledgerId: ledgerId,
+    year: date.year,
+    month: date.month,
+    type: type,
+    expenseTypeFilter: expenseTypeFilter,
+  );
+});
+
+// 공유 가계부 여부 확인
+final isSharedLedgerProvider = Provider<bool>((ref) {
+  final ledgerAsync = ref.watch(currentLedgerProvider);
+  final ledger = ledgerAsync.valueOrNull;
+  final memberCount = ref.watch(currentLedgerMemberCountProvider);
+  return ledger?.isShared == true && memberCount >= 2;
+});
+
+// 총액 (모든 사용자 합계)
+final sharedTotalAmountProvider = Provider<int>((ref) {
+  final userStats = ref.watch(categoryStatisticsByUserProvider).valueOrNull;
+  if (userStats == null || userStats.isEmpty) return 0;
+
+  return userStats.values.fold(0, (sum, user) => sum + user.totalAmount);
 });

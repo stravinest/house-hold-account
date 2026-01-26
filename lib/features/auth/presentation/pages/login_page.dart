@@ -75,6 +75,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             default:
               errorMessage = l10n.errorWithMessage(e.message);
           }
+        } else if (e is AuthRetryableFetchException ||
+            e.toString().contains('SocketException') ||
+            e.toString().contains('Failed host lookup') ||
+            e.toString().contains('Network is unreachable')) {
+          // 네트워크 연결 에러
+          errorMessage = l10n.errorNetwork;
         } else {
           errorMessage = l10n.errorWithMessage(e.toString());
         }
@@ -117,7 +123,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         }
 
         final l10n = AppLocalizations.of(context);
-        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+        String errorMessage;
+        if (e is AuthRetryableFetchException ||
+            e.toString().contains('SocketException') ||
+            e.toString().contains('Failed host lookup') ||
+            e.toString().contains('Network is unreachable')) {
+          // 네트워크 연결 에러
+          errorMessage = l10n.errorNetwork;
+        } else {
+          errorMessage = l10n.errorWithMessage(e.toString());
+        }
+        SnackBarUtils.showError(context, errorMessage);
       }
     } finally {
       if (mounted) {

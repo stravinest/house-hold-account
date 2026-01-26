@@ -20,4 +20,17 @@ class NumberFormatUtils {
   /// 패턴: #,### (예: 1234567 → 1,234,567)
   /// 캘린더 셀, 통계 위젯, 검색 결과 등에서 금액 표시에 사용
   static final NumberFormat currency = NumberFormat(_currencyPattern);
+
+  /// 간략화된 숫자 포맷터 (K, M 표기)
+  ///
+  /// 예: 1500 → 1.5K, 1500000 → 1.5M
+  /// 막대 차트 등 공간이 제한된 곳에서 사용
+  static String compact(int number) {
+    if (number >= 1000000) {
+      return '${(number / 1000000).toStringAsFixed(1)}M';
+    } else if (number >= 1000) {
+      return '${(number / 1000).toStringAsFixed(0)}K';
+    }
+    return currency.format(number);
+  }
 }

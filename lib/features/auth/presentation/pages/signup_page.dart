@@ -83,6 +83,12 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                 errorMessage = l10n.errorWithMessage(e.message);
               }
           }
+        } else if (e is AuthRetryableFetchException ||
+            e.toString().contains('SocketException') ||
+            e.toString().contains('Failed host lookup') ||
+            e.toString().contains('Network is unreachable')) {
+          // 네트워크 연결 에러
+          errorMessage = l10n.errorNetwork;
         } else {
           final errorStr = e.toString();
           if (errorStr.contains('already registered') ||

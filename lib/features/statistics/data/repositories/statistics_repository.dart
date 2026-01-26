@@ -122,6 +122,122 @@ class StatisticsRepository {
     return result;
   }
 
+  // 사용자별 카테고리 통계 조회 (공유 가계부용)
+  Future<Map<String, UserCategoryStatistics>> getCategoryStatisticsByUser({
+    required String ledgerId,
+    required int year,
+    required int month,
+    required String type,
+    ExpenseTypeFilter? expenseTypeFilter,
+  }) async {
+    final startDate = DateTime(year, month, 1);
+    final endDate = DateTime(year, month + 1, 0);
+
+    // user_id와 profiles 정보도 함께 조회
+    var query = _client
+        .from('transactions')
+        .select(
+          'amount, category_id, user_id, is_fixed_expense, categories(name, icon, color), profiles!user_id(display_name, email, color)',
+        )
+        .eq('ledger_id', ledgerId)
+        .eq('type', type)
+        .gte('date', startDate.toIso8601String().split('T').first)
+        .lte('date', endDate.toIso8601String().split('T').first);
+
+    // 지출일 경우에만 고정비/변동비 필터 적용
+    if (type == 'expense' && expenseTypeFilter != null) {
+      switch (expenseTypeFilter) {
+        case ExpenseTypeFilter.fixed:
+          query = query.eq('is_fixed_expense', true);
+          break;
+        case ExpenseTypeFilter.variable:
+          query = query.eq('is_fixed_expense', false);
+          break;
+        case ExpenseTypeFilter.all:
+          break;
+      }
+    }
+
+    final response = await query;
+
+    // 사용자별로 그룹화
+    final Map<String, UserCategoryStatistics> userStats = {};
+
+    for (final row in response as List) {
+      final rowMap = row as Map<String, dynamic>;
+      final userId = rowMap['user_id'] as String?;
+      if (userId == null) continue;
+
+      final amount = (rowMap['amount'] as num?)?.toInt() ?? 0;
+      final categoryId = rowMap['category_id']?.toString() ?? '_uncategorized_';
+      final category = rowMap['categories'] as Map<String, dynamic>?;
+      final profile = rowMap['profiles'] as Map<String, dynamic>?;
+
+      // 사용자 정보 추출
+      final displayName = profile?['display_name'] as String?;
+      final email = profile?['email'] as String?;
+      final userColor = profile?['color'] as String? ?? '#4CAF50';
+      final userName = displayName ?? email?.split('@').first ?? 'Unknown';
+
+      // 카테고리 정보 추출
+      final categoryName = category?['name']?.toString() ?? '미지정';
+      final categoryIcon = category?['icon']?.toString() ?? '';
+      final categoryColor = category?['color']?.toString() ?? '#9E9E9E';
+
+      // 사용자 통계 초기화
+      if (!userStats.containsKey(userId)) {
+        userStats[userId] = UserCategoryStatistics(
+          userId: userId,
+          userName: userName,
+          userColor: userColor,
+          totalAmount: 0,
+          categories: {},
+        );
+      }
+
+      // 총액 누적
+      userStats[userId] = userStats[userId]!.copyWith(
+        totalAmount: userStats[userId]!.totalAmount + amount,
+      );
+
+      // 카테고리별 누적
+      final currentCategories =
+          Map<String, CategoryStatistics>.from(userStats[userId]!.categories);
+      if (currentCategories.containsKey(categoryId)) {
+        currentCategories[categoryId] = currentCategories[categoryId]!.copyWith(
+          amount: currentCategories[categoryId]!.amount + amount,
+        );
+      } else {
+        currentCategories[categoryId] = CategoryStatistics(
+          categoryId: categoryId,
+          categoryName: categoryName,
+          categoryIcon: categoryIcon,
+          categoryColor: categoryColor,
+          amount: amount,
+        );
+      }
+
+      userStats[userId] = userStats[userId]!.copyWith(
+        categories: currentCategories,
+      );
+    }
+
+    // 각 사용자의 카테고리를 금액 기준으로 정렬
+    for (final userId in userStats.keys) {
+      final sortedCategories = userStats[userId]!.categories.values.toList()
+        ..sort((a, b) => b.amount.compareTo(a.amount));
+
+      final sortedMap = <String, CategoryStatistics>{};
+      for (final cat in sortedCategories) {
+        sortedMap[cat.categoryId] = cat;
+      }
+
+      userStats[userId] = userStats[userId]!.copyWith(categories: sortedMap);
+    }
+
+    return userStats;
+  }
+
   // 월별 수입/지출 추세 (최근 6개월) - N+1 쿼리 최적화: 단일 쿼리로 변경
   Future<List<MonthlyStatistics>> getMonthlyTrend({
     required String ledgerId,
@@ -674,4 +790,44 @@ class MonthlyStatistics {
   int get balance => income - expense;
 
   String get monthLabel => '$month월';
+}
+
+// 사용자별 카테고리 통계 모델 (공유 가계부용)
+class UserCategoryStatistics {
+  final String userId;
+  final String userName;
+  final String userColor;
+  final int totalAmount;
+  final Map<String, CategoryStatistics> categories;
+
+  const UserCategoryStatistics({
+    required this.userId,
+    required this.userName,
+    required this.userColor,
+    required this.totalAmount,
+    required this.categories,
+  });
+
+  UserCategoryStatistics copyWith({
+    String? userId,
+    String? userName,
+    String? userColor,
+    int? totalAmount,
+    Map<String, CategoryStatistics>? categories,
+  }) {
+    return UserCategoryStatistics(
+      userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
+      userColor: userColor ?? this.userColor,
+      totalAmount: totalAmount ?? this.totalAmount,
+      categories: categories ?? this.categories,
+    );
+  }
+
+  // 카테고리 리스트로 변환 (정렬된 상태)
+  List<CategoryStatistics> get categoryList {
+    final list = categories.values.toList()
+      ..sort((a, b) => b.amount.compareTo(a.amount));
+    return list;
+  }
 }

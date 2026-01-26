@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' hide Category;
@@ -6,6 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../data/services/auto_save_service.dart';
+import '../../data/services/native_notification_sync_service.dart';
 import '../../../../core/utils/color_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
@@ -99,6 +102,7 @@ class _PaymentMethodManagementPageState
     with TickerProviderStateMixin {
   late final TabController _mainTabController;
   late final TabController _autoCollectTabController;
+  StreamSubscription<NewNotificationEvent>? _nativeNotificationSubscription;
 
   @override
   void initState() {
@@ -111,6 +115,24 @@ class _PaymentMethodManagementPageState
 
     // Listener for FAB state update
     _mainTabController.addListener(_onMainTabChanged);
+
+    // 네이티브 알림 이벤트 구독 (배지 실시간 업데이트)
+    if (_isAndroidPlatform) {
+      _subscribeToNativeNotifications();
+    }
+  }
+
+  void _subscribeToNativeNotifications() {
+    _nativeNotificationSubscription = AutoSaveService
+        .instance
+        .onNativeNotification
+        .listen((event) {
+      if (kDebugMode) {
+        debugPrint('[PaymentMethodPage] Native notification received, refreshing badge...');
+      }
+      // Provider invalidate로 배지 카운트 갱신
+      ref.invalidate(pendingTransactionCountProvider);
+    });
   }
 
   void _onMainTabChanged() {
@@ -155,6 +177,7 @@ class _PaymentMethodManagementPageState
 
   @override
   void dispose() {
+    _nativeNotificationSubscription?.cancel();
     _mainTabController.removeListener(_onMainTabChanged);
     _mainTabController.dispose();
     _autoCollectTabController.dispose();

@@ -9,47 +9,44 @@ import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../auth/presentation/providers/auth_provider.dart';
 import '../../providers/statistics_provider.dart';
 import '../common/expense_type_filter.dart';
+import '../common/shared_user_filter.dart';
 import '../common/statistics_type_filter.dart';
-import 'category_donut_chart.dart';
-import 'category_ranking_list.dart';
-import 'category_summary_card.dart';
-import 'shared_category_tab_view.dart';
+import 'category_comparison_list.dart';
+import 'side_by_side_donut_chart.dart';
+import 'user_ratio_bar.dart';
 
-class CategoryTabView extends ConsumerStatefulWidget {
-  const CategoryTabView({super.key});
+/// 공유 가계부용 카테고리 통계 탭 뷰
+class SharedCategoryTabView extends ConsumerStatefulWidget {
+  const SharedCategoryTabView({super.key});
 
   @override
-  ConsumerState<CategoryTabView> createState() => _CategoryTabViewState();
+  ConsumerState<SharedCategoryTabView> createState() =>
+      _SharedCategoryTabViewState();
 }
 
-class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
-  Future<void> _refreshCategoryData() async {
+class _SharedCategoryTabViewState extends ConsumerState<SharedCategoryTabView> {
+  Future<void> _refreshData() async {
+    ref.invalidate(categoryStatisticsByUserProvider);
     ref.invalidate(categoryExpenseStatisticsProvider);
     ref.invalidate(categoryIncomeStatisticsProvider);
     ref.invalidate(categoryAssetStatisticsProvider);
-    ref.invalidate(monthComparisonProvider);
 
     try {
-      await Future.wait([
-        ref.read(categoryExpenseStatisticsProvider.future),
-        ref.read(categoryIncomeStatisticsProvider.future),
-        ref.read(categoryAssetStatisticsProvider.future),
-        ref.read(monthComparisonProvider.future),
-      ]);
+      await ref.read(categoryStatisticsByUserProvider.future);
     } on AuthException catch (e) {
-      debugPrint('카테고리 통계 새로고침 오류 (인증): $e');
+      debugPrint('공유 통계 새로고침 오류 (인증): $e');
       if (mounted) {
         _handleAuthError(e);
       }
       rethrow;
     } on SocketException catch (e) {
-      debugPrint('카테고리 통계 새로고침 오류 (네트워크): $e');
+      debugPrint('공유 통계 새로고침 오류 (네트워크): $e');
       if (mounted) {
         _showNetworkError();
       }
       rethrow;
     } catch (e) {
-      debugPrint('카테고리 통계 새로고침 오류: $e');
+      debugPrint('공유 통계 새로고침 오류: $e');
       if (mounted && _isNetworkError(e)) {
         _showNetworkError();
       }
@@ -99,15 +96,10 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
     final l10n = AppLocalizations.of(context);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
-
-    // 공유 가계부인 경우 SharedCategoryTabView 표시
-    final isSharedLedger = ref.watch(isSharedLedgerProvider);
-    if (isSharedLedger) {
-      return const SharedCategoryTabView();
-    }
+    final sharedState = ref.watch(sharedStatisticsStateProvider);
 
     return RefreshIndicator(
-      onRefresh: _refreshCategoryData,
+      onRefresh: _refreshData,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -131,45 +123,22 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
             ],
             const SizedBox(height: 16),
 
-            // 요약 카드 (전월 대비 포함)
-            const CategorySummaryCard(),
+            // 사용자 필터 (합쳐서/겹쳐서/개별사용자)
+            const Center(child: SharedUserFilter()),
             const SizedBox(height: 16),
 
-            // 도넛 차트
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.statisticsCategoryDistribution,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    const CategoryDonutChart(),
-                  ],
-                ),
-              ),
-            ),
+            // 겹쳐서 모드일 때만 비율 바 표시
+            if (sharedState.mode == SharedStatisticsMode.overlay) ...[
+              const UserRatioBar(),
+              const SizedBox(height: 16),
+            ],
+
+            // 도넛 차트 (모드에 따라 다르게 표시)
+            const SideBySideDonutChart(),
             const SizedBox(height: 16),
 
-            // 순위 리스트
-            Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Text(
-                      l10n.statisticsCategoryRanking,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  const CategoryRankingList(),
-                ],
-              ),
-            ),
+            // 카테고리별 비교 리스트
+            const CategoryComparisonList(),
           ],
         ),
       ),

@@ -1405,6 +1405,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statisticsCategoryRanking => 'Category Ranking';
 
   @override
+  String get statisticsCategoryComparison => 'Category Comparison';
+
+  @override
+  String get statisticsFilterCombined => 'Combined';
+
+  @override
+  String get statisticsFilterOverlay => 'Compare';
+
+  @override
   String get statisticsNoData => 'No data available';
 
   @override

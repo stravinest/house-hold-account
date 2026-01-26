@@ -2666,6 +2666,24 @@ abstract class AppLocalizations {
   /// **'카테고리별 순위'**
   String get statisticsCategoryRanking;
 
+  /// No description provided for @statisticsCategoryComparison.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리별 비교'**
+  String get statisticsCategoryComparison;
+
+  /// No description provided for @statisticsFilterCombined.
+  ///
+  /// In ko, this message translates to:
+  /// **'합쳐서'**
+  String get statisticsFilterCombined;
+
+  /// No description provided for @statisticsFilterOverlay.
+  ///
+  /// In ko, this message translates to:
+  /// **'겹쳐서'**
+  String get statisticsFilterOverlay;
+
   /// No description provided for @statisticsNoData.
   ///
   /// In ko, this message translates to:

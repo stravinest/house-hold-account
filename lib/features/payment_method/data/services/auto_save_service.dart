@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import 'native_notification_sync_service.dart';
 import 'notification_listener_wrapper.dart';
 import 'sms_listener_service.dart';
 
@@ -28,11 +29,19 @@ class AutoSaveService {
 
   StreamSubscription<SmsProcessedEvent>? _smsSubscription;
   StreamSubscription<NotificationProcessedEvent>? _notificationSubscription;
+  StreamSubscription<NewNotificationEvent>? _nativeNotificationSubscription;
 
   final _onTransactionDetectedController =
       StreamController<TransactionDetectedEvent>.broadcast();
   Stream<TransactionDetectedEvent> get onTransactionDetected =>
       _onTransactionDetectedController.stream;
+
+  /// 네이티브에서 새 알림이 수신되었을 때 발생하는 이벤트 스트림
+  /// UI에서 배지 업데이트 등에 사용
+  final _onNativeNotificationController =
+      StreamController<NewNotificationEvent>.broadcast();
+  Stream<NewNotificationEvent> get onNativeNotification =>
+      _onNativeNotificationController.stream;
 
   final _onStatusChangedController =
       StreamController<AutoSaveStatus>.broadcast();
@@ -157,8 +166,34 @@ class AutoSaveService {
     SmsListenerService.instance.startListening();
     NotificationListenerWrapper.instance.startListening();
 
+    // 네이티브 알림 이벤트 채널 구독 시작
+    _startNativeNotificationListener();
+
     _updateStatus(AutoSaveStatus.running);
     debugPrint('AutoSaveService started');
+  }
+
+  void _startNativeNotificationListener() {
+    if (!isAndroid) return;
+
+    NativeNotificationSyncService.instance.startListening();
+    _nativeNotificationSubscription?.cancel();
+    _nativeNotificationSubscription = NativeNotificationSyncService
+        .instance
+        .onNewNotification
+        .listen((event) async {
+      if (kDebugMode) {
+        debugPrint('[AutoSave] Native notification received: ${event.packageName}');
+      }
+
+      // 네이티브 캐시 동기화 실행
+      if (NotificationListenerWrapper.instance.isInitialized) {
+        await NotificationListenerWrapper.instance.syncCachedNotifications();
+      }
+
+      // UI 업데이트를 위해 이벤트 전파
+      _onNativeNotificationController.add(event);
+    });
   }
 
   void stop() {
@@ -166,6 +201,11 @@ class AutoSaveService {
 
     SmsListenerService.instance.stopListening();
     NotificationListenerWrapper.instance.stopListening();
+
+    // 네이티브 알림 이벤트 구독 정지
+    _nativeNotificationSubscription?.cancel();
+    _nativeNotificationSubscription = null;
+    NativeNotificationSyncService.instance.stopListening();
 
     _updateStatus(AutoSaveStatus.stopped);
     debugPrint('AutoSaveService stopped');
@@ -255,8 +295,10 @@ class AutoSaveService {
     stop();
     _smsSubscription?.cancel();
     _notificationSubscription?.cancel();
+    _nativeNotificationSubscription?.cancel();
     _onTransactionDetectedController.close();
     _onStatusChangedController.close();
+    _onNativeNotificationController.close();
     SmsListenerService.instance.dispose();
     NotificationListenerWrapper.instance.dispose();
     _currentUserId = null;

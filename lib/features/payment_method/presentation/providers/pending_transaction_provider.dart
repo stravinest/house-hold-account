@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -7,6 +10,8 @@ import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../data/models/pending_transaction_model.dart';
 import '../../data/repositories/pending_transaction_repository.dart';
+import '../../data/services/auto_save_service.dart';
+import '../../data/services/notification_listener_wrapper.dart';
 import '../../domain/entities/pending_transaction.dart';
 
 final pendingTransactionRepositoryProvider =
@@ -51,6 +56,7 @@ class PendingTransactionNotifier
   final String? _userId;
   final Ref _ref;
   RealtimeChannel? _subscription;
+  StreamSubscription<dynamic>? _nativeNotificationSubscription;
 
   PendingTransactionNotifier(
     this._repository,
@@ -62,9 +68,26 @@ class PendingTransactionNotifier
     if (_ledgerId != null && _userId != null) {
       loadPendingTransactions();
       _subscribeToChanges();
+      _subscribeToNativeNotifications();
     } else {
       state = const AsyncValue.data([]);
     }
+  }
+
+  void _subscribeToNativeNotifications() {
+    if (!Platform.isAndroid) return;
+
+    _nativeNotificationSubscription = AutoSaveService
+        .instance
+        .onNativeNotification
+        .listen((event) {
+      if (kDebugMode) {
+        debugPrint('[PendingTxNotifier] Native notification event received, reloading...');
+      }
+      // 네이티브 알림이 수신되면 데이터 갱신
+      loadPendingTransactions(silent: true);
+      _ref.invalidate(pendingTransactionCountProvider);
+    });
   }
 
   void _subscribeToChanges() {
@@ -90,6 +113,7 @@ class PendingTransactionNotifier
   @override
   void dispose() {
     _subscription?.unsubscribe();
+    _nativeNotificationSubscription?.cancel();
     super.dispose();
   }
 
@@ -117,6 +141,14 @@ class PendingTransactionNotifier
     }
 
     try {
+      // Android: 네이티브 캐시에 저장된 알림을 먼저 동기화
+      if (Platform.isAndroid && NotificationListenerWrapper.instance.isInitialized) {
+        final syncedCount = await NotificationListenerWrapper.instance.syncCachedNotifications();
+        if (kDebugMode && syncedCount > 0) {
+          debugPrint('[PendingTxNotifier] Synced $syncedCount cached notifications');
+        }
+      }
+
       final transactions = await _repository.getPendingTransactions(
         _ledgerId,
         status: status,
