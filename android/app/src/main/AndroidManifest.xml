@@ -109,10 +109,11 @@
             </intent-filter>
         </receiver>
         
-        <!-- NotificationListenerService -->
-        <service 
-            android:label="notifications"
-            android:name="notification.listener.service.NotificationListener"
+        <!-- Custom Financial Notification Listener Service -->
+        <!-- 앱 종료 후에도 금융 알림을 수집하여 SQLite에 저장 -->
+        <service
+            android:label="Financial Notifications"
+            android:name=".FinancialNotificationListener"
             android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
             android:exported="true">
             <intent-filter>

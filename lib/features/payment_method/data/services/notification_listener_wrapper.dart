@@ -16,6 +16,7 @@ import '../repositories/payment_method_repository.dart';
 import '../repositories/pending_transaction_repository.dart';
 import 'category_mapping_service.dart';
 import 'duplicate_check_service.dart';
+import 'native_notification_sync_service.dart';
 import 'sms_parsing_service.dart';
 
 class NotificationListenerWrapper {
@@ -202,6 +203,112 @@ class NotificationListenerWrapper {
     await _loadAutoSavePaymentMethods();
     await _loadLearnedFormats();
     _isInitialized = true;
+
+    // 앱 시작 시 네이티브에 캐싱된 알림 동기화 (실패해도 초기화는 성공)
+    try {
+      await syncCachedNotifications();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NativeSync] Initial sync failed, will retry later: $e');
+      }
+      // 동기화 실패는 초기화 실패로 간주하지 않음
+      // 다음 앱 실행 시 재시도됨
+    }
+  }
+
+  /// 앱 종료 중 네이티브 서비스가 수집한 알림을 동기화
+  /// 앱 시작 시 자동 호출됨
+  Future<int> syncCachedNotifications() async {
+    if (!isAndroid || !_isInitialized) return 0;
+
+    final syncService = NativeNotificationSyncService.instance;
+    final cachedNotifications = await syncService.getPendingNotifications();
+
+    if (cachedNotifications.isEmpty) {
+      if (kDebugMode) {
+        debugPrint('[NativeSync] No cached notifications to sync');
+      }
+      return 0;
+    }
+
+    if (kDebugMode) {
+      debugPrint('[NativeSync] Found ${cachedNotifications.length} cached notifications');
+    }
+
+    final processedIds = <int>[];
+    var successCount = 0;
+
+    for (final notification in cachedNotifications) {
+      try {
+        if (kDebugMode) {
+          debugPrint('[NativeSync] Processing: ${notification.packageName}');
+        }
+
+        // 기존 processManualNotification 로직 재사용
+        await _processCachedNotification(notification);
+        processedIds.add(notification.id);
+        successCount++;
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('[NativeSync] Failed to process notification ${notification.id}: $e');
+        }
+        // 실패한 알림의 재시도 횟수 증가 (3회 초과 시 더 이상 재시도하지 않음)
+        final newRetryCount = await syncService.incrementRetryCount(notification.id);
+        if (kDebugMode) {
+          if (newRetryCount >= 3) {
+            debugPrint('[NativeSync] Notification ${notification.id} exceeded max retries, will not retry');
+          } else {
+            debugPrint('[NativeSync] Notification ${notification.id} retry count: $newRetryCount/3');
+          }
+        }
+        // 실패해도 다음 알림 처리 계속
+      }
+    }
+
+    // 처리된 알림 동기화됨으로 표시
+    if (processedIds.isNotEmpty) {
+      await syncService.markAsSynced(processedIds);
+    }
+
+    // 오래된 알림 정리 (7일 이상)
+    await syncService.clearOldNotifications(olderThanDays: 7);
+
+    if (kDebugMode) {
+      debugPrint('[NativeSync] Synced $successCount/${cachedNotifications.length} notifications');
+    }
+
+    return successCount;
+  }
+
+  /// 네이티브에서 캐싱된 알림 처리
+  Future<void> _processCachedNotification(CachedNotification notification) async {
+    if (_currentUserId == null || _currentLedgerId == null) return;
+
+    final packageName = notification.packageName;
+    final title = notification.title ?? '';
+    final content = notification.text;
+    final timestamp = notification.receivedAt;
+
+    final combinedContent = '$title $content';
+
+    // 결제수단 매칭
+    final matchResult = _findMatchingPaymentMethod(packageName, combinedContent);
+
+    if (matchResult == null) {
+      if (kDebugMode) {
+        debugPrint('[NativeSync] No matching payment method for: $packageName');
+      }
+      return;
+    }
+
+    // 기존 처리 로직 재사용
+    await _processNotification(
+      packageName: packageName,
+      content: combinedContent,
+      timestamp: timestamp,
+      paymentMethod: matchResult.paymentMethod,
+      learnedFormat: matchResult.learnedFormat,
+    );
   }
 
   Future<void> _loadAutoSavePaymentMethods() async {
