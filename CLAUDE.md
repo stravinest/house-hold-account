@@ -700,3 +700,37 @@ label: Text(l10n.commonSave),
 - `dart format` 정기적 실행
 - 들여쓰기 일관성 유지
 - 불필요한 위젯(SizedBox 등) 조건부 렌더링
+
+---
+
+## [중요] 디자인 시스템
+
+> **UI/디자인 작업 시 반드시 `DESIGN_SYSTEM.md` 파일을 먼저 참조하세요.**
+
+### 참조 파일
+
+| 파일 | 내용 |
+|------|------|
+| `DESIGN_SYSTEM.md` | 색상, 간격, 컴포넌트 스펙, 애니메이션 가이드 |
+| `household.pen` | pencil.dev 디자인 소스 파일 |
+| `lib/shared/themes/design_tokens.dart` | Flutter 디자인 토큰 |
+| `lib/shared/themes/app_theme.dart` | Flutter 테마 정의 |
+
+### household.pen 구조
+
+| 영역 | x 좌표 | 내용 |
+|------|--------|------|
+| Components | 0 | 재사용 컴포넌트 (Button, TextField 등) |
+| Sample Pages | 800-7200 | 현재 앱 디자인 |
+| Dialogs/Modals | 7600-9200 | 다이얼로그, 스낵바 |
+| **Improved Design** | **10000+** | 개선된 디자인 (작업 중) |
+
+### 핵심 규칙
+
+1. **색상**: `colorScheme` 또는 디자인 토큰 사용 (하드코딩 금지)
+2. **간격**: `Spacing.xs/sm/md/lg/xl` 사용
+3. **버튼**: Elevated(Primary) / Outlined(Secondary) / Text 구분
+4. **토스트**: `SnackBarUtils.showSuccess/showError` 사용
+5. **다이얼로그**: `DialogUtils.showConfirmation` 사용
+6. **애니메이션**: 200ms (기본), 300ms (페이지 전환)
+7. **터치 영역**: 최소 44x44px
