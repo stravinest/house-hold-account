@@ -224,39 +224,18 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     return Container(
       padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: allGranted
-            ? colorScheme.primaryContainer
-            : colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
-        border: Border.all(
-          color: allGranted ? colorScheme.primary : colorScheme.outlineVariant,
-        ),
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(BorderRadiusToken.md),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(
-                allGranted ? Icons.check_circle : Icons.info_outline,
-                color: allGranted
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
-                size: IconSize.md,
-              ),
-              const SizedBox(width: Spacing.sm),
-              Expanded(
-                child: Text(
-                  l10n.autoSaveSettingsRequiredPermissions,
-                  style: textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: allGranted
-                        ? colorScheme.onPrimaryContainer
-                        : colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            l10n.autoSaveSettingsRequiredPermissions,
+            style: textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: Spacing.md),
 
@@ -291,28 +270,30 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
 
           if (allGranted) ...[
             const SizedBox(height: Spacing.sm),
-            Container(
-              padding: const EdgeInsets.all(Spacing.sm),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(
-                  alpha: _OpacityConstants.successBannerBackground,
-                ),
-                borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
-              ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: Spacing.xs),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: colorScheme.primary,
-                    size: IconSize.sm,
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF2E7D32),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                      size: 14,
+                    ),
                   ),
-                  const SizedBox(width: Spacing.xs),
+                  const SizedBox(width: Spacing.sm),
                   Expanded(
                     child: Text(
                       '모든 권한이 허용되었습니다',
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: const Color(0xFF1B5E20),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -341,34 +322,25 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     final isError = status == _PermissionCheckStatus.error;
 
     return Container(
-      padding: const EdgeInsets.all(Spacing.sm),
+      padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: isGranted
-            ? colorScheme.primaryContainer.withValues(
-                alpha: _OpacityConstants.permissionItemGrantedBackground,
-              )
-            : colorScheme.errorContainer.withValues(
-                alpha: _OpacityConstants.permissionItemDeniedBackground,
-              ),
-        borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
-        border: Border.all(
-          color: isGranted ? colorScheme.primary : colorScheme.error,
-          width: 1,
-        ),
+        color: const Color(0xFFFFFFFF),
+        borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(Spacing.xs),
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
-              color: isGranted ? colorScheme.primary : colorScheme.error,
+              color: isGranted ? const Color(0xFF2E7D32) : colorScheme.error,
               borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
             ),
             child: Icon(
               isGranted ? Icons.check : (isError ? Icons.error_outline : Icons.warning_amber_rounded),
-              color: isGranted ? colorScheme.onPrimary : colorScheme.onError,
-              size: IconSize.sm,
+              color: Colors.white,
+              size: 16,
             ),
           ),
           const SizedBox(width: Spacing.sm),
@@ -390,20 +362,20 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                     if (isGranted)
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
+                          horizontal: Spacing.sm,
+                          vertical: Spacing.xs,
                         ),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary,
+                          color: const Color(0xFF2E7D32),
                           borderRadius:
                               BorderRadius.circular(BorderRadiusToken.xs),
                         ),
                         child: Text(
                           '허용됨',
                           style: textTheme.labelSmall?.copyWith(
-                            color: colorScheme.onPrimary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),

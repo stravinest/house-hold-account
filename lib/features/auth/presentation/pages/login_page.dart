@@ -147,175 +147,320 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
+    // 디자인 시스템 토큰
+    const inputBorderRadius = 12.0;
+    const buttonHeight = 52.0;
+    const inputHeight = 56.0;
+
+    final inputDecoration = InputDecoration(
+      filled: true,
+      fillColor: colorScheme.surfaceContainerHighest,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(inputBorderRadius),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(inputBorderRadius),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(inputBorderRadius),
+        borderSide: BorderSide(color: colorScheme.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(inputBorderRadius),
+        borderSide: BorderSide(color: colorScheme.error, width: 2),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(inputBorderRadius),
+        borderSide: BorderSide(color: colorScheme.error, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 40),
-
-                // 앱 아이콘 로고
-                Center(
-                  child: Image.asset(
-                    'assets/images/app_icon.png',
-                    width: 120,
-                    height: 120,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // 타이틀
-                Text(
-                  l10n.appTitle,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.appSubtitle,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 32),
-
-                // 이메일 입력
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  textInputAction: TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: l10n.authEmail,
-                    prefixIcon: const Icon(Icons.email_outlined),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return l10n.validationEmailRequired;
-                    }
-                    if (!value.contains('@')) {
-                      return l10n.validationEmailInvalid;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // 비밀번호 입력
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  textInputAction: TextInputAction.done,
-                  onFieldSubmitted: (_) => _handleEmailLogin(),
-                  decoration: InputDecoration(
-                    labelText: l10n.authPassword,
-                    prefixIcon: const Icon(Icons.lock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
+                // 헤더 섹션
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 72, 24, 32),
+                  child: Column(
+                    children: [
+                      // 앱 아이콘 로고
+                      Image.asset(
+                        'assets/images/app_icon.png',
+                        width: 80,
+                        height: 80,
                       ),
-                      tooltip: l10n.tooltipTogglePassword,
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return l10n.validationPasswordRequired;
-                    }
-                    if (value.length < 6) {
-                      return l10n.validationPasswordTooShort;
-                    }
-                    return null;
-                  },
-                ),
-
-                // 비밀번호 찾기
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => context.push(Routes.forgotPassword),
-                    child: Text(l10n.authForgotPassword),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                // 로그인 버튼
-                ElevatedButton(
-                  onPressed: _isLoading ? null : _handleEmailLogin,
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(l10n.authLogin),
-                ),
-
-                const SizedBox(height: 24),
-
-                // 구분선
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        l10n.authOr,
-                        style: TextStyle(color: colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 16),
+                      // 타이틀
+                      Text(
+                        l10n.appTitle,
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF1A1C19),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-
-                const SizedBox(height: 24),
-
-                // Google 로그인
-                ElevatedButton.icon(
-                  onPressed: _isLoading ? null : _handleGoogleLogin,
-                  icon: CachedNetworkImage(
-                    imageUrl: 'https://www.google.com/favicon.ico',
-                    width: 20,
-                    height: 20,
-                    placeholder: (context, url) => const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                    errorWidget: (context, url, error) =>
-                        const Icon(Icons.g_mobiledata, size: 20),
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.appSubtitle,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  label: const Text('Google'),
                 ),
 
-                const SizedBox(height: 32),
+                // 폼 섹션
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      // 이메일 입력
+                      SizedBox(
+                        height: inputHeight,
+                        child: TextFormField(
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          decoration: inputDecoration.copyWith(
+                            hintText: l10n.authEmail,
+                            prefixIcon: Icon(
+                              Icons.mail_outline,
+                              color: colorScheme.onSurfaceVariant,
+                              size: 20,
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return l10n.validationEmailRequired;
+                            }
+                            if (!value.contains('@')) {
+                              return l10n.validationEmailInvalid;
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // 비밀번호 입력
+                      SizedBox(
+                        height: inputHeight,
+                        child: TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          textInputAction: TextInputAction.done,
+                          onFieldSubmitted: (_) => _handleEmailLogin(),
+                          decoration: inputDecoration.copyWith(
+                            hintText: l10n.authPassword,
+                            prefixIcon: Icon(
+                              Icons.lock_outline,
+                              color: colorScheme.onSurfaceVariant,
+                              size: 20,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: colorScheme.onSurfaceVariant,
+                                size: 20,
+                              ),
+                              tooltip: l10n.tooltipTogglePassword,
+                              onPressed: () {
+                                setState(
+                                    () => _obscurePassword = !_obscurePassword);
+                              },
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return l10n.validationPasswordRequired;
+                            }
+                            if (value.length < 6) {
+                              return l10n.validationPasswordTooShort;
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+
+                      // 비밀번호 찾기
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () => context.push(Routes.forgotPassword),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 0, vertical: 8),
+                          ),
+                          child: Text(
+                            l10n.authForgotPassword,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 버튼 섹션
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      // 로그인 버튼
+                      SizedBox(
+                        height: buttonHeight,
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _handleEmailLogin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: colorScheme.primary,
+                            foregroundColor: colorScheme.onPrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(inputBorderRadius),
+                            ),
+                            elevation: 2,
+                            shadowColor: colorScheme.primary.withValues(alpha: 0.3),
+                          ),
+                          child: _isLoading
+                              ? SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: colorScheme.onPrimary,
+                                  ),
+                                )
+                              : Text(
+                                  l10n.authLogin,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // 구분선
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Divider(
+                                color: colorScheme.outlineVariant,
+                              ),
+                            ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text(
+                                l10n.authOr,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Divider(
+                                color: colorScheme.outlineVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      // Google 로그인
+                      SizedBox(
+                        height: buttonHeight,
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _isLoading ? null : _handleGoogleLogin,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: colorScheme.onSurface,
+                            side: BorderSide(color: colorScheme.outline),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(inputBorderRadius),
+                            ),
+                            backgroundColor: colorScheme.surface,
+                          ),
+                          icon: CachedNetworkImage(
+                            imageUrl: 'https://www.google.com/favicon.ico',
+                            width: 20,
+                            height: 20,
+                            placeholder: (context, url) => const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.g_mobiledata, size: 20),
+                          ),
+                          label: const Text(
+                            'Google로 계속하기',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
                 // 회원가입 링크
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      l10n.authNoAccount,
-                      style: TextStyle(color: colorScheme.onSurfaceVariant),
-                    ),
-                    TextButton(
-                      onPressed: () => context.push(Routes.signup),
-                      child: Text(l10n.authSignup),
-                    ),
-                  ],
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        l10n.authNoAccount,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: () => context.push(Routes.signup),
+                        child: Text(
+                          l10n.authSignup,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

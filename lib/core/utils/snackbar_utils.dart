@@ -44,9 +44,29 @@ class SnackBarUtils {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE8F5E9),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: const Color(0xFFC8E6C9),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xFF1B5E20),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
         duration: duration ?? SnackBarDuration.short,
-        backgroundColor: Colors.green[700],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
         action: action,
       ),
     );
@@ -68,9 +88,29 @@ class SnackBarUtils {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFEBEE),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: const Color(0xFFFFCDD2),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xFFB71C1C),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
         duration: duration ?? SnackBarDuration.short,
-        backgroundColor: Colors.red[700],
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
         action: action,
       ),
     );
@@ -92,8 +132,29 @@ class SnackBarUtils {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE3F2FD),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: const Color(0xFFBBDEFB),
+              width: 1,
+            ),
+          ),
+          child: Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xFF0D47A1),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
         duration: duration ?? SnackBarDuration.short,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
         action: action,
       ),
     );

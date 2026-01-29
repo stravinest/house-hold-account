@@ -262,19 +262,64 @@ class _DailyTransactionList extends ConsumerWidget {
         final sortedTransactions = List<Transaction>.from(transactions)
           ..sort((a, b) => b.amount.compareTo(a.amount));
 
+        // 일별 총액 계산
+        int dailyTotal = 0;
+        for (final tx in sortedTransactions) {
+          if (tx.type == 'expense') {
+            dailyTotal -= tx.amount;
+          } else if (tx.type == 'income') {
+            dailyTotal += tx.amount;
+          }
+        }
+
         return ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
-          itemCount: sortedTransactions.length,
+          // impCdDayHeader, impCdTx 디자인 적용: 패딩 제거
+          padding: EdgeInsets.zero,
+          // +1 for date header
+          itemCount: sortedTransactions.length + 1,
           itemBuilder: (context, index) {
-            final tx = sortedTransactions[index];
+            // 첫 번째 아이템: 날짜 헤더 (impCdDayHeader)
+            if (index == 0) {
+              final weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+              final weekday = weekdays[date.weekday - 1];
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                color: colorScheme.surfaceContainer,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${date.month}월 ${date.day}일 ($weekday)',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      '${dailyTotal >= 0 ? '' : ''}${formatter.format(dailyTotal)}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: dailyTotal >= 0
+                            ? colorScheme.primary
+                            : colorScheme.error,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // 거래 항목 (impCdTx1, impCdTx2)
+            final tx = sortedTransactions[index - 1];
             final userName = tx.userName ?? l10n.user;
             final userColor = _parseColor(tx.userColor);
             final categoryDisplay =
                 tx.categoryName ?? l10n.categoryUncategorized;
             final String description = tx.title != null && tx.title!.isNotEmpty
-                ? '$categoryDisplay - ${tx.title}'
-                : categoryDisplay;
+                ? '$userName $categoryDisplay - ${tx.title}'
+                : '$userName $categoryDisplay';
 
             final isIncome = tx.type == 'income';
             final isAssetType = tx.type == 'asset';
@@ -292,62 +337,50 @@ class _DailyTransactionList extends ConsumerWidget {
               amountPrefix = '-';
             }
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: Spacing.xs),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      useSafeArea: true,
-                      builder: (context) =>
-                          TransactionDetailSheet(transaction: tx),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: Spacing.sm,
-                      horizontal: Spacing.xs,
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            color: userColor,
-                            shape: BoxShape.circle,
-                          ),
+            return Material(
+              // impCdTx 디자인: surface 배경색
+              color: colorScheme.surface,
+              child: InkWell(
+                onTap: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    useSafeArea: true,
+                    builder: (context) =>
+                        TransactionDetailSheet(transaction: tx),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: [
+                      // impCdTx 디자인: 사각형 점 (cornerRadius 4)
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: userColor,
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        const SizedBox(width: Spacing.sm),
-                        Text(
-                          userName,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          description,
+                          style: const TextStyle(fontSize: 14),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(width: Spacing.xs),
-                        Flexible(
-                          child: Text(
-                            description,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(color: colorScheme.onSurfaceVariant),
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: amountColor,
                         ),
-                        const SizedBox(width: Spacing.sm),
-                        Text(
-                          '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                color: amountColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

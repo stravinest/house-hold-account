@@ -203,11 +203,9 @@ class _CategoryTile extends ConsumerWidget {
     Category category,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await DialogUtils.showConfirmation(
+    final confirmed = await DialogUtils.showCategoryDeleteConfirmation(
       context,
-      title: l10n.categoryDeleteConfirmTitle,
-      message: '\'${category.name}\'\n\n${l10n.categoryDeleteConfirmMessage}',
-      confirmText: l10n.commonDelete,
+      categoryName: category.name,
     );
 
     if (confirmed == true) {

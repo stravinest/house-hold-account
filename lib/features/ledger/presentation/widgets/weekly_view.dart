@@ -322,7 +322,8 @@ class _WeeklyTransactionList extends ConsumerWidget {
 
     return ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.md),
+      // impCwTransactionList 디자인 적용: 패딩 제거
+      padding: EdgeInsets.zero,
       itemCount: sortedDates.length,
       itemBuilder: (context, index) {
         final date = sortedDates[index];
@@ -342,28 +343,27 @@ class _WeeklyTransactionList extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 날짜 헤더
-            Padding(
-              padding: const EdgeInsets.only(
-                top: Spacing.md,
-                bottom: Spacing.xs,
-              ),
+            // 날짜 헤더 (impCwTransactionList 디자인: surfaceContainer 배경)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              color: colorScheme.surfaceContainer,
               child: Row(
                 children: [
                   Text(
                     dateFormatter.format(date),
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    style: const TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: colorScheme.onSurface,
                     ),
                   ),
                   const Spacer(),
                   if (dayIncome > 0)
                     Text(
                       '+${formatter.format(dayIncome)}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.primary,
+                      style: TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
+                        color: colorScheme.primary,
                       ),
                     ),
                   if (dayIncome > 0 && dayExpense > 0)
@@ -371,9 +371,10 @@ class _WeeklyTransactionList extends ConsumerWidget {
                   if (dayExpense > 0)
                     Text(
                       '-${formatter.format(dayExpense)}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: colorScheme.error,
+                      style: TextStyle(
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
+                        color: colorScheme.error,
                       ),
                     ),
                 ],
@@ -406,70 +407,66 @@ class _WeeklyTransactionList extends ConsumerWidget {
                 amountPrefix = '-';
               }
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: Spacing.xs),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        useSafeArea: true,
-                        builder: (context) =>
-                            TransactionDetailSheet(transaction: tx),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: Spacing.sm,
-                        horizontal: Spacing.xs,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: userColor,
-                              shape: BoxShape.circle,
+              // impCwTransactionList 디자인: surface 배경 + 하단 border
+              return Material(
+                color: colorScheme.surface,
+                child: InkWell(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (context) =>
+                          TransactionDetailSheet(transaction: tx),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        // 유저별 색상 점 (수정하지 않음)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: userColor,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          userName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            description,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: colorScheme.onSurfaceVariant,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: Spacing.sm),
-                          Text(
-                            userName,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: amountColor,
                           ),
-                          const SizedBox(width: Spacing.xs),
-                          Flexible(
-                            child: Text(
-                              description,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: Spacing.sm),
-                          Text(
-                            '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  color: amountColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               );
             }),
-            if (index < sortedDates.length - 1) const Divider(height: 1),
           ],
         );
       },

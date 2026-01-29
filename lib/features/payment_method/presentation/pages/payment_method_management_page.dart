@@ -256,20 +256,6 @@ class _PaymentMethodManagementPageState
           ],
         ),
       ),
-      floatingActionButton: ListenableBuilder(
-        listenable: _mainTabController,
-        builder: (context, child) {
-          return Visibility(
-            visible: _mainTabController.index == _paymentMethodTabIndex,
-            child: child!,
-          );
-        },
-        child: FloatingActionButton(
-          onPressed: () => _showAddDialog(context),
-          tooltip: l10n.paymentMethodAdd,
-          child: const Icon(Icons.add),
-        ),
-      ),
     );
   }
 
@@ -445,7 +431,7 @@ class _PaymentMethodListView extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
         border: Border.all(color: colorScheme.outlineVariant),
       ),
@@ -532,7 +518,7 @@ class _PaymentMethodListView extends ConsumerWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
         border: Border.all(color: colorScheme.outlineVariant),
       ),
@@ -638,13 +624,9 @@ class _PaymentMethodListView extends ConsumerWidget {
   }
 
   void _showAddSharedDialog(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const PaymentMethodWizardPage(
-          initialMode: PaymentMethodAddMode.manual,
-        ),
-      ),
+    showDialog(
+      context: context,
+      builder: (context) => _AddSharedPaymentMethodDialog(),
     );
   }
 
@@ -677,53 +659,133 @@ class _PaymentMethodListView extends ConsumerWidget {
     final l10n = AppLocalizations.of(parentContext);
     showDialog(
       context: parentContext,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.paymentMethodDeleteConfirmTitle),
-        content: Text(
-          '\'${paymentMethod.name}\'\n\n'
-          '${l10n.paymentMethodDeleteConfirmMessage}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
+      builder: (dialogContext) {
+        final theme = Theme.of(dialogContext);
+        final colorScheme = theme.colorScheme;
+        final textTheme = theme.textTheme;
+
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BorderRadiusToken.xl),
           ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(dialogContext);
-              try {
-                await ref
-                    .read(paymentMethodNotifierProvider.notifier)
-                    .deletePaymentMethod(paymentMethod.id);
-                if (parentContext.mounted) {
-                  SnackBarUtils.showSuccess(parentContext, l10n.paymentMethodDeleted);
-                }
-              } catch (e) {
-                if (parentContext.mounted) {
-                  final errorMsg = e.toString().toLowerCase();
-                  // 권한 관련 에러 키워드 (영어 + 한글)
-                  if (errorMsg.contains('policy') ||
-                      errorMsg.contains('permission') ||
-                      errorMsg.contains('denied') ||
-                      errorMsg.contains('권한') ||
-                      errorMsg.contains('존재하지 않는')) {
-                    SnackBarUtils.showError(
-                      parentContext,
-                      l10n.paymentMethodNoPermissionToDelete,
-                    );
-                  } else {
-                    SnackBarUtils.showError(
-                      parentContext,
-                      l10n.paymentMethodDeleteFailed(e.toString()),
-                    );
-                  }
-                }
-              }
-            },
-            child: Text(l10n.commonDelete),
+          child: Container(
+            width: 280,
+            padding: const EdgeInsets.all(Spacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 제목
+                Text(
+                  l10n.paymentMethodDeleteConfirmTitle,
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: Spacing.lg),
+
+                // 결제수단명 박스
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Spacing.md,
+                    vertical: Spacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFCDD2),
+                    borderRadius: BorderRadius.circular(BorderRadiusToken.md),
+                  ),
+                  child: Text(
+                    paymentMethod.name,
+                    style: textTheme.titleMedium?.copyWith(
+                      color: colorScheme.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: Spacing.lg),
+
+                // 메시지
+                Text(
+                  l10n.paymentMethodDeleteConfirmMessage,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: Spacing.lg),
+
+                // 버튼
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // 취소 버튼
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            vertical: Spacing.md,
+                          ),
+                        ),
+                        child: Text(l10n.commonCancel),
+                      ),
+                    ),
+                    const SizedBox(width: Spacing.sm),
+                    // 삭제 버튼
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          Navigator.pop(dialogContext);
+                          try {
+                            await ref
+                                .read(paymentMethodNotifierProvider.notifier)
+                                .deletePaymentMethod(paymentMethod.id);
+                            if (parentContext.mounted) {
+                              SnackBarUtils.showSuccess(
+                                parentContext,
+                                l10n.paymentMethodDeleted,
+                              );
+                            }
+                          } catch (e) {
+                            if (parentContext.mounted) {
+                              final errorMsg = e.toString().toLowerCase();
+                              if (errorMsg.contains('policy') ||
+                                  errorMsg.contains('permission') ||
+                                  errorMsg.contains('denied') ||
+                                  errorMsg.contains('권한') ||
+                                  errorMsg.contains('존재하지 않는')) {
+                                SnackBarUtils.showError(
+                                  parentContext,
+                                  l10n.paymentMethodNoPermissionToDelete,
+                                );
+                              } else {
+                                SnackBarUtils.showError(
+                                  parentContext,
+                                  l10n.paymentMethodDeleteFailed(e.toString()),
+                                );
+                              }
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.error,
+                          foregroundColor: colorScheme.onError,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: Spacing.md,
+                          ),
+                        ),
+                        child: Text(l10n.commonDelete),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -753,7 +815,6 @@ class _SharedPaymentMethodChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final paymentColor = ColorUtils.parseHexColor(paymentMethod.color);
     final l10n = AppLocalizations.of(context);
 
     return Semantics(
@@ -774,10 +835,10 @@ class _SharedPaymentMethodChip extends StatelessWidget {
                   vertical: Spacing.sm,
                 ),
                 decoration: BoxDecoration(
-                  color: paymentColor.withValues(alpha: 0.15),
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(BorderRadiusToken.circular),
                   border: Border.all(
-                    color: paymentColor.withValues(alpha: 0.5),
+                    color: colorScheme.outlineVariant,
                   ),
                 ),
                 child: Row(
@@ -799,7 +860,7 @@ class _SharedPaymentMethodChip extends StatelessWidget {
                         semanticLabel: l10n.paymentMethodDefault,
                       ),
                     ],
-                    const SizedBox(width: Spacing.md),
+                    const SizedBox(width: Spacing.xs),
                   ],
                 ),
               ),
@@ -807,8 +868,8 @@ class _SharedPaymentMethodChip extends StatelessWidget {
           ),
           // Delete button (top-right corner)
           Positioned(
-            top: -6,
-            right: -6,
+            top: -5,
+            right: -5,
             child: Semantics(
               label: l10n.commonDelete,
               button: true,
@@ -816,15 +877,15 @@ class _SharedPaymentMethodChip extends StatelessWidget {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onDelete,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(9),
                   child: Container(
-                    width: 24,
-                    height: 24,
+                    width: 18,
+                    height: 18,
                     decoration: BoxDecoration(
-                      color: colorScheme.error,
+                      color: colorScheme.onSurfaceVariant,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: colorScheme.surface,
+                        color: colorScheme.surfaceContainer,
                         width: 2,
                       ),
                       boxShadow: [
@@ -837,8 +898,8 @@ class _SharedPaymentMethodChip extends StatelessWidget {
                     ),
                     child: Icon(
                       Icons.close,
-                      size: 14,
-                      color: colorScheme.onError,
+                      size: 12,
+                      color: colorScheme.surface,
                     ),
                   ),
                 ),
@@ -1888,6 +1949,101 @@ class _PendingTransactionEditSheetState
           _isLoading = false;
         });
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
+    }
+  }
+}
+
+/// 공유 결제수단 추가 다이얼로그 (카테고리 추가 스타일)
+class _AddSharedPaymentMethodDialog extends ConsumerStatefulWidget {
+  const _AddSharedPaymentMethodDialog();
+
+  @override
+  ConsumerState<_AddSharedPaymentMethodDialog> createState() =>
+      _AddSharedPaymentMethodDialogState();
+}
+
+class _AddSharedPaymentMethodDialogState
+    extends ConsumerState<_AddSharedPaymentMethodDialog> {
+  final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
+    return AlertDialog(
+      title: Text(l10n.sharedPaymentMethodAdd),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          controller: _nameController,
+          autofocus: true,
+          maxLength: 20,
+          decoration: InputDecoration(
+            labelText: l10n.paymentMethodName,
+            hintText: l10n.paymentMethodNameHint,
+            border: const OutlineInputBorder(),
+            counterText: '',
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return l10n.paymentMethodNameRequired;
+            }
+            return null;
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.commonCancel),
+        ),
+        TextButton(
+          onPressed: _submit,
+          child: Text(l10n.commonAdd),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final l10n = AppLocalizations.of(context);
+
+    try {
+      // 공유 결제수단 생성 (canAutoSave = false)
+      await ref.read(paymentMethodNotifierProvider.notifier).createPaymentMethod(
+            name: _nameController.text.trim(),
+            canAutoSave: false,
+          );
+
+      if (mounted) {
+        Navigator.pop(context);
+        SnackBarUtils.showSuccess(
+          context,
+          l10n.paymentMethodAdded,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackBarUtils.showError(
+          context,
+          l10n.errorWithMessage(e.toString()),
+        );
       }
     }
   }

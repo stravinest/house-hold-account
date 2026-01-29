@@ -39,99 +39,109 @@ class OwnedLedgerCard extends ConsumerWidget {
     final activeBackgroundColor = colorScheme.primary.withOpacity(0.08);
     final inactiveBorderColor = colorScheme.outlineVariant;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: ledgerInfo.isCurrentLedger
-            ? activeBackgroundColor
-            : colorScheme.surface,
-        borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-        border: Border.all(
-          color: ledgerInfo.isCurrentLedger
-              ? activeBorderColor
-              : inactiveBorderColor,
-          width: ledgerInfo.isCurrentLedger ? 2.5 : 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: ledgerInfo.isCurrentLedger ? 2 : 0,
+      shadowColor: Colors.black.withOpacity(0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
+        side: ledgerInfo.isCurrentLedger
+            ? BorderSide(color: activeBorderColor, width: 2)
+            : BorderSide(color: inactiveBorderColor, width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(Spacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 상단: 가계부 이름 + 현재 사용 중 배지 + 수정 버튼
+            // 상단: 아이콘 + 가계부 이름 + 배지 + 수정 버튼
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 원형 아이콘 배경
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: ledgerInfo.isCurrentLedger
+                        ? colorScheme.primaryContainer
+                        : colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Icon(
+                    Icons.menu_book,
+                    color: ledgerInfo.isCurrentLedger
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.account_balance_wallet,
-                        size: 20,
-                        color: ledgerInfo.isCurrentLedger
-                            ? activeBorderColor
-                            : inactiveBorderColor,
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          ledgerInfo.ledger.name,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (ledgerInfo.isCurrentLedger) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: activeBorderColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            l10n.shareInUse,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onPrimary,
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              ledgerInfo.ledger.name,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
-                      ],
+                          if (ledgerInfo.isCurrentLedger) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                l10n.shareInUse,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      _buildMemberInfo(context, currentUserId, l10n),
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
                 // 수정 버튼 (우상단)
                 IconButton(
                   onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined, size: 20),
+                  icon: Icon(
+                    Icons.edit,
+                    color: colorScheme.onSurfaceVariant,
+                    size: 20,
+                  ),
                   style: IconButton.styleFrom(
                     foregroundColor: colorScheme.onSurfaceVariant,
                     padding: EdgeInsets.zero,
-                    minimumSize: const Size(32, 32),
+                    minimumSize: const Size(40, 40),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   tooltip: l10n.commonEdit,
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-            // 중간: 멤버 정보
-            _buildMemberInfo(context, currentUserId, l10n),
-            const SizedBox(height: 12),
+            const SizedBox(height: 19),
             // 하단: 초대 상태 + 액션 버튼
             _buildInviteSection(context, l10n),
           ],
@@ -153,64 +163,31 @@ class OwnedLedgerCard extends ConsumerWidget {
       return m.displayName ?? m.email ?? l10n.shareUnknown;
     }).toList();
 
-    // 멤버가 2명 이상이면 탭 가능
-    final isTappable = ledgerInfo.members.length > 1 && onMemberTap != null;
-
-    final content = Row(
+    return Row(
       children: [
         Icon(
-          Icons.people_outline,
-          size: 16,
-          color: colorScheme.onSurface.withOpacity(0.7),
+          Icons.people,
+          size: 14,
+          color: colorScheme.onSurfaceVariant,
         ),
         const SizedBox(width: 4),
-        Text(
-          l10n.shareMemberCount(
-            ledgerInfo.members.length,
-            AppConstants.maxMembersPerLedger,
-          ),
-          style: TextStyle(
-            fontSize: 13,
-            color: colorScheme.onSurface.withOpacity(0.7),
+        Expanded(
+          child: Text(
+            '${l10n.shareMemberCount(
+              ledgerInfo.members.length,
+              AppConstants.maxMembersPerLedger,
+            )} (${memberNames.join(', ')})',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.normal,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (memberNames.isNotEmpty) ...[
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              '(${memberNames.join(', ')})',
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurfaceVariant,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-        if (isTappable) ...[
-          const SizedBox(width: 4),
-          Icon(
-            Icons.chevron_right,
-            size: 18,
-            color: colorScheme.onSurfaceVariant,
-          ),
-        ],
       ],
     );
-
-    if (isTappable) {
-      return InkWell(
-        onTap: onMemberTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: content,
-        ),
-      );
-    }
-
-    return content;
   }
 
   Widget _buildInviteSection(BuildContext context, AppLocalizations l10n) {
@@ -222,31 +199,23 @@ class OwnedLedgerCard extends ConsumerWidget {
         context,
         l10n,
         statusWidgets: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.check_circle,
-                  size: 14,
-                  color: colorScheme.onSurface.withOpacity(0.7),
+          Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                size: 16,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                l10n.shareMemberFull,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w500,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  l10n.shareMemberFull,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: colorScheme.onSurface.withOpacity(0.7),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
         showInviteButton: false,
@@ -330,64 +299,93 @@ class OwnedLedgerCard extends ConsumerWidget {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // 사용 버튼 (사용중이 아닌 경우에만)
-    final useButton = !ledgerInfo.isCurrentLedger
-        ? OutlinedButton(
-            onPressed: onSelectLedger,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: colorScheme.primary,
-              side: BorderSide(color: colorScheme.primary),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              minimumSize: const Size(0, 32),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              textStyle: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            child: Text(l10n.shareUse),
-          )
-        : null;
+    // 버튼들을 먼저 빌드
+    final buttons = <Widget>[];
 
-    final inviteButton = showInviteButton
-        ? OutlinedButton.icon(
-            onPressed: inviteEnabled ? onInviteTap : null,
-            icon: const Icon(Icons.person_add, size: 16),
-            label: Text(l10n.shareInvite),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: inviteEnabled
+    // 사용 버튼 (사용중이 아닌 경우에만)
+    if (!ledgerInfo.isCurrentLedger) {
+      buttons.add(
+        OutlinedButton.icon(
+          onPressed: onSelectLedger,
+          icon: Icon(
+            Icons.check,
+            size: 16,
+            color: colorScheme.primary,
+          ),
+          label: Text(
+            l10n.shareUse,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: colorScheme.primary,
+            ),
+          ),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            side: BorderSide(color: colorScheme.outline),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      );
+    }
+
+    if (showInviteButton) {
+      buttons.add(
+        OutlinedButton.icon(
+          onPressed: inviteEnabled ? onInviteTap : null,
+          icon: Icon(
+            Icons.person_add,
+            size: 16,
+            color: inviteEnabled
+                ? colorScheme.primary
+                : colorScheme.onSurfaceVariant,
+          ),
+          label: Text(
+            l10n.shareInvite,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: inviteEnabled
                   ? colorScheme.primary
                   : colorScheme.onSurfaceVariant,
-              side: BorderSide(
-                color: inviteEnabled
-                    ? colorScheme.primary
-                    : colorScheme.outlineVariant,
-              ),
-              minimumSize: const Size(0, 32),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              textStyle: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
             ),
-          )
-        : null;
+          ),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            side: BorderSide(
+              color: inviteEnabled
+                  ? colorScheme.outline
+                  : colorScheme.outlineVariant,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      );
+    }
 
-    final buttons = <Widget>[
-      if (useButton != null) useButton,
-      if (useButton != null && inviteButton != null) const SizedBox(width: 8),
-      if (inviteButton != null) inviteButton,
-    ];
-
-    // statusWidgets가 없으면 버튼만 오른쪽 정렬
-    if (statusWidgets.isEmpty) {
-      return Row(mainAxisAlignment: MainAxisAlignment.end, children: buttons);
+    // statusWidgets가 없으면 버튼만 표시
+    if (statusWidgets.isEmpty && buttons.isNotEmpty) {
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Wrap(
+          spacing: 8,
+          children: buttons,
+        ),
+      );
     }
 
     // statusWidgets가 있으면 수직 스택으로 배치
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         // 복수 배지를 수직으로 나열
         ...statusWidgets.map(
@@ -396,7 +394,14 @@ class OwnedLedgerCard extends ConsumerWidget {
         ),
         if (buttons.isNotEmpty) ...[
           const SizedBox(height: 4),
-          Row(mainAxisAlignment: MainAxisAlignment.end, children: buttons),
+          // Align 사용 - 버튼을 오른쪽 정렬하되 width 제약 문제 없음
+          Align(
+            alignment: Alignment.centerRight,
+            child: Wrap(
+              spacing: 8,
+              children: buttons,
+            ),
+          ),
         ],
       ],
     );
@@ -411,69 +416,40 @@ class OwnedLedgerCard extends ConsumerWidget {
     VoidCallback? onDelete,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    // 통일된 중립 색상 사용
-    final badgeColor = colorScheme.onSurfaceVariant;
-    final backgroundColor = colorScheme.surfaceContainerHigh;
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: badgeColor.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 아이콘 + 상태 텍스트 배지
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: badgeColor,
-              borderRadius: BorderRadius.circular(4),
+    // pencil 디자인: 간단한 Row (icon + text)
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: colorScheme.primary,
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            '$status: $email',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: colorScheme.primary,
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 12, color: colorScheme.surface),
-                const SizedBox(width: 4),
-                Text(
-                  status,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.surface,
-                  ),
-                ),
-              ],
-            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
+        ),
+        if (showDeleteButton) ...[
           const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              email,
-              style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurface.withOpacity(0.8),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+          GestureDetector(
+            onTap: onDelete,
+            child: Icon(
+              Icons.close,
+              size: 16,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
-          // 삭제 버튼 (X)
-          if (showDeleteButton) ...[
-            const SizedBox(width: 4),
-            GestureDetector(
-              onTap: onDelete,
-              child: Icon(
-                Icons.close,
-                size: 18,
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
         ],
-      ),
+      ],
     );
   }
 }

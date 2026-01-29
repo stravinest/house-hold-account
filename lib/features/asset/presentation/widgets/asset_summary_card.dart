@@ -29,90 +29,73 @@ class AssetSummaryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final theme = Theme.of(context);
     final numberFormat = NumberFormat('#,###');
     final isPositive = monthlyChange >= 0;
-    final goalsAsync = ledgerId != null
-        ? ref.watch(assetGoalNotifierProvider(ledgerId!))
-        : null;
-    final hasGoal = goalsAsync?.value?.isNotEmpty ?? false;
 
-    return Card(
+    return Container(
       margin: const EdgeInsets.all(16),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  l10n.assetTotal,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                if (ledgerId != null && !hasGoal)
-                  OutlinedButton.icon(
-                    onPressed: () => _showGoalFormSheet(context, null),
-                    icon: const Icon(Icons.flag_outlined, size: 16),
-                    label: Text(l10n.assetGoalSet),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-              ],
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.assetTotal,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF44483E),
+              fontWeight: FontWeight.normal,
             ),
-            const SizedBox(height: 8),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                ),
+          ),
+          const SizedBox(height: 16),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
+              style: const TextStyle(
+                fontSize: 32,
+                color: Color(0xFF2E7D32),
+                fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Icon(
-                  isPositive ? Icons.arrow_upward : Icons.arrow_downward,
-                  size: 16,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Icon(
+                isPositive ? Icons.arrow_upward : Icons.arrow_downward,
+                size: 16,
+                color: isPositive
+                    ? const Color(0xFF2E7D32)
+                    : const Color(0xFFBA1A1A),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                l10n.assetThisMonth(
+                  '${isPositive ? '+' : ''}${numberFormat.format(monthlyChange)}',
+                ),
+                style: TextStyle(
+                  fontSize: 13,
                   color: isPositive
-                      ? theme.colorScheme.tertiary
-                      : theme.colorScheme.error,
+                      ? const Color(0xFF2E7D32)
+                      : const Color(0xFFBA1A1A),
+                  fontWeight: FontWeight.normal,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  l10n.assetThisMonth(
-                    '${isPositive ? '+' : ''}${numberFormat.format(monthlyChange)}',
-                  ),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: isPositive
-                        ? theme.colorScheme.tertiary
-                        : theme.colorScheme.error,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            if (ledgerId != null) ...[
-              const SizedBox(height: 16),
-              const Divider(),
-              const SizedBox(height: 16),
-              AssetGoalSection(ledgerId: ledgerId!),
+              ),
             ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

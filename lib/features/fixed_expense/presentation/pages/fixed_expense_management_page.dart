@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/utils/dialog_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/utils/responsive_utils.dart';
@@ -218,46 +219,34 @@ class _CategoryTile extends ConsumerWidget {
     );
   }
 
-  void _showDeleteConfirm(
+  Future<void> _showDeleteConfirm(
     BuildContext context,
     WidgetRef ref,
     FixedExpenseCategory category,
-  ) {
+  ) async {
     final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.fixedExpenseCategoryDelete),
-        content: Text(l10n.fixedExpenseCategoryDeleteConfirm(category.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await ref
-                    .read(fixedExpenseCategoryNotifierProvider.notifier)
-                    .deleteCategory(category.id);
-                if (context.mounted) {
-                  SnackBarUtils.showSuccess(context, l10n.categoryDeleted);
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  SnackBarUtils.showError(
-                    context,
-                    l10n.categoryDeleteFailed(e.toString()),
-                  );
-                }
-              }
-            },
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
+    final confirmed = await DialogUtils.showFixedExpenseCategoryDeleteConfirmation(
+      context,
+      categoryName: category.name,
     );
+
+    if (confirmed == true) {
+      try {
+        await ref
+            .read(fixedExpenseCategoryNotifierProvider.notifier)
+            .deleteCategory(category.id);
+        if (context.mounted) {
+          SnackBarUtils.showSuccess(context, l10n.categoryDeleted);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          SnackBarUtils.showError(
+            context,
+            l10n.categoryDeleteFailed(e.toString()),
+          );
+        }
+      }
+    }
   }
 }
 

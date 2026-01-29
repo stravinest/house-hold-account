@@ -36,6 +36,7 @@ class _LedgerManagementPageState extends ConsumerState<LedgerManagementPage> {
     final l10n = AppLocalizations.of(context);
     final ledgersAsync = ref.watch(ledgerNotifierProvider);
     final selectedId = ref.watch(selectedLedgerIdProvider);
+    final currentUserId = ref.watch(currentUserProvider)?.id;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.ledgerManagement)),
@@ -53,25 +54,70 @@ class _LedgerManagementPageState extends ConsumerState<LedgerManagementPage> {
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(Spacing.md),
-            cacheExtent: 500, // 성능 최적화: 스크롤 시 미리 렌더링
-            itemCount: ledgers.length,
-            itemBuilder: (context, index) {
-              final ledger = ledgers[index];
-              final isSelected = ledger.id == selectedId;
+          // 내 가계부와 초대받은 가계부 분리
+          final myLedgers = ledgers
+              .where((ledger) => ledger.ownerId == currentUserId)
+              .toList();
+          final invitedLedgers = ledgers
+              .where((ledger) => ledger.ownerId != currentUserId)
+              .toList();
 
-              return _LedgerCard(
-                ledger: ledger,
-                isSelected: isSelected,
-                onSelect: () {
-                  ref
-                      .read(ledgerNotifierProvider.notifier)
-                      .selectLedger(ledger.id);
-                },
-                ledgersCount: ledgers.length,
-              );
-            },
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(Spacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 내 가계부 섹션
+                if (myLedgers.isNotEmpty) ...[
+                  _SectionHeader(
+                    icon: Icons.menu_book,
+                    title: l10n.ledgerMyLedgers,
+                  ),
+                  const SizedBox(height: 12),
+                  ...myLedgers.map((ledger) {
+                    final isSelected = ledger.id == selectedId;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _LedgerCard(
+                        ledger: ledger,
+                        isSelected: isSelected,
+                        onSelect: () {
+                          ref
+                              .read(ledgerNotifierProvider.notifier)
+                              .selectLedger(ledger.id);
+                        },
+                        ledgersCount: ledgers.length,
+                      ),
+                    );
+                  }),
+                ],
+                // 초대받은 가계부 섹션
+                if (invitedLedgers.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  _SectionHeader(
+                    icon: Icons.mail,
+                    title: l10n.ledgerInvitedLedgers,
+                  ),
+                  const SizedBox(height: 12),
+                  ...invitedLedgers.map((ledger) {
+                    final isSelected = ledger.id == selectedId;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _LedgerCard(
+                        ledger: ledger,
+                        isSelected: isSelected,
+                        onSelect: () {
+                          ref
+                              .read(ledgerNotifierProvider.notifier)
+                              .selectLedger(ledger.id);
+                        },
+                        ledgersCount: ledgers.length,
+                      ),
+                    );
+                  }),
+                ],
+              ],
+            ),
           );
         },
         loading: () => ListView.builder(
@@ -121,6 +167,39 @@ class _LedgerManagementPageState extends ConsumerState<LedgerManagementPage> {
   }
 }
 
+// 섹션 헤더 위젯
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+
+  const _SectionHeader({
+    required this.icon,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 20,
+          color: colorScheme.primary,
+        ),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _LedgerCard extends ConsumerWidget {
   final Ledger ledger;
   final bool isSelected;
@@ -140,28 +219,45 @@ class _LedgerCard extends ConsumerWidget {
     final currentUserId = ref.watch(currentUserProvider)?.id;
     final isOwner = ledger.ownerId == currentUserId;
     final membersAsync = ref.watch(ledgerMembersProvider(ledger.id));
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
+      elevation: isSelected ? 2 : 0,
+      shadowColor: Colors.black.withOpacity(0.1),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
         side: isSelected
-            ? BorderSide(color: Theme.of(context).colorScheme.primary, width: 2)
-            : BorderSide.none,
+            ? BorderSide(color: colorScheme.primary, width: 2)
+            : BorderSide(color: colorScheme.outlineVariant, width: 1),
       ),
       child: InkWell(
         onTap: onSelect,
-        borderRadius: BorderRadius.circular(BorderRadiusToken.md),
+        borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
         child: Padding(
           padding: const EdgeInsets.all(Spacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    ledger.isShared ? Icons.people : Icons.person,
-                    color: Theme.of(context).colorScheme.primary,
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? colorScheme.primaryContainer
+                          : colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Icon(
+                      ledger.isShared ? Icons.people : Icons.person,
+                      color: isSelected
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -170,35 +266,34 @@ class _LedgerCard extends ConsumerWidget {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              ledger.name,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            Flexible(
+                              child: Text(
+                                ledger.name,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
                             if (isSelected) ...[
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
+                                  horizontal: 10,
+                                  vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.primaryContainer,
+                                  color: colorScheme.primary,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
                                   l10n.ledgerInUse,
                                   style: TextStyle(
-                                    fontSize: 10,
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onPrimaryContainer,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.onPrimary,
                                   ),
                                 ),
                               ),
@@ -211,10 +306,9 @@ class _LedgerCard extends ConsumerWidget {
                               ? l10n.ledgerShared
                               : l10n.ledgerPersonal,
                           style: TextStyle(
-                            fontSize: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.7),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                         if (ledger.isShared)
@@ -227,7 +321,13 @@ class _LedgerCard extends ConsumerWidget {
                       ],
                     ),
                   ),
+                  const SizedBox(width: 8),
                   PopupMenuButton<String>(
+                    icon: Icon(
+                      Icons.more_vert,
+                      color: colorScheme.onSurfaceVariant,
+                      size: 20,
+                    ),
                     onSelected: (value) {
                       switch (value) {
                         case 'edit':
@@ -258,14 +358,12 @@ class _LedgerCard extends ConsumerWidget {
                               Icon(
                                 Icons.delete,
                                 size: 20,
-                                color: Theme.of(context).colorScheme.error,
+                                color: colorScheme.error,
                               ),
                               const SizedBox(width: 8),
                               Text(
                                 l10n.commonDelete,
-                                style: TextStyle(
-                                  color: Theme.of(context).colorScheme.error,
-                                ),
+                                style: TextStyle(color: colorScheme.error),
                               ),
                             ],
                           ),
@@ -281,50 +379,169 @@ class _LedgerCard extends ConsumerWidget {
                   ledger.description!,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.7),
+                    color: colorScheme.onSurface.withOpacity(0.7),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              const SizedBox(height: 8),
-              Builder(
-                builder: (context) {
-                  final colorScheme = Theme.of(context).colorScheme;
-                  return Row(
-                    children: [
-                      Icon(
-                        Icons.attach_money,
-                        size: 16,
-                        color: colorScheme.onSurfaceVariant,
+              const SizedBox(height: 12),
+              // 초대받은 가계부일 경우 멤버 참여 상태 표시
+              if (!isOwner && ledger.isShared) ...[
+                Row(
+                  children: [
+                    Icon(
+                      Icons.check_circle,
+                      size: 16,
+                      color: colorScheme.primary,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      l10n.shareMemberParticipating,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.primary,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        ledger.currency,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+              // 버튼 영역
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  // 선택되지 않은 경우 사용 버튼
+                  if (!isSelected)
+                    OutlinedButton.icon(
+                      onPressed: onSelect,
+                      icon: Icon(
+                        Icons.check,
+                        size: 16,
+                        color: colorScheme.primary,
+                      ),
+                      label: Text(
+                        l10n.ledgerUse,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.primary,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Icon(
-                        Icons.calendar_today,
-                        size: 16,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${ledger.createdAt.year}.${ledger.createdAt.month}.${ledger.createdAt.day}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurfaceVariant,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        side: BorderSide(color: colorScheme.outline),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(BorderRadiusToken.md),
                         ),
                       ),
-                    ],
-                  );
-                },
+                    ),
+                  // 내 가계부인 경우 초대 버튼
+                  if (isOwner) ...[
+                    if (!isSelected) const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        // 초대 페이지로 이동 (기존 기능)
+                      },
+                      icon: Icon(
+                        Icons.person_add,
+                        size: 16,
+                        color: colorScheme.primary,
+                      ),
+                      label: Text(
+                        l10n.shareInvite,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        side: BorderSide(color: colorScheme.outline),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(BorderRadiusToken.md),
+                        ),
+                      ),
+                    ),
+                  ],
+                  // 초대받은 가계부인 경우 탈퇴 버튼
+                  if (!isOwner && ledger.isShared) ...[
+                    if (!isSelected) const SizedBox(width: 8),
+                    OutlinedButton(
+                      onPressed: () {
+                        // 탈퇴 확인 다이얼로그 (기존 기능)
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        side: BorderSide(color: colorScheme.error),
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(BorderRadiusToken.md),
+                        ),
+                      ),
+                      child: Text(
+                        l10n.shareLeave,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                height: 1,
+                color: colorScheme.outlineVariant,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    Icons.attach_money,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    ledger.currency,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Icon(
+                    Icons.calendar_today,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${ledger.createdAt.year}.${ledger.createdAt.month}.${ledger.createdAt.day}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -385,17 +602,18 @@ class _LedgerCard extends ConsumerWidget {
       child: Row(
         children: [
           Icon(
-            Icons.people_outline,
+            Icons.people,
             size: 14,
-            color: colorScheme.onSurface.withOpacity(0.7),
+            color: colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 4),
           Expanded(
             child: Text(
               memberText,
               style: TextStyle(
-                fontSize: 12,
-                color: colorScheme.onSurface.withOpacity(0.7),
+                fontSize: 13,
+                fontWeight: FontWeight.normal,
+                color: colorScheme.onSurfaceVariant,
               ),
               overflow: TextOverflow.ellipsis,
             ),

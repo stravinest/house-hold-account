@@ -36,106 +36,118 @@ class InvitedLedgerCard extends StatelessWidget {
     final activeBackgroundColor = colorScheme.primary.withOpacity(0.08);
     final inactiveBorderColor = colorScheme.outlineVariant;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: isCurrentLedger ? activeBackgroundColor : colorScheme.surface,
-        borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-        border: Border.all(
-          color: isCurrentLedger ? activeBorderColor : inactiveBorderColor,
-          width: isCurrentLedger ? 2.5 : 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: isCurrentLedger ? 2 : 0,
+      shadowColor: Colors.black.withOpacity(0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
+        side: isCurrentLedger
+            ? BorderSide(color: activeBorderColor, width: 2)
+            : BorderSide(color: inactiveBorderColor, width: 1),
       ),
       child: Padding(
         padding: const EdgeInsets.all(Spacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 상단: 가계부 이름 + 사용중 배지
+            // 상단: 아이콘 + 가계부 이름 + 배지
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // 원형 아이콘 배경
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: isCurrentLedger
+                        ? colorScheme.primaryContainer
+                        : colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: Icon(
+                    Icons.menu_book,
+                    color: isCurrentLedger
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.account_balance_wallet,
-                        size: 20,
-                        color: isCurrentLedger
-                            ? activeBorderColor
-                            : inactiveBorderColor,
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          invite.ledgerName ?? l10n.ledgerTitle,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (isCurrentLedger) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: activeBorderColor,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            l10n.shareInUse,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: colorScheme.onPrimary,
+                      // 가계부 이름 + 배지 (같은 Row에)
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              invite.ledgerName ?? l10n.ledgerTitle,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
-                      ],
+                          if (isCurrentLedger) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                l10n.shareInUse,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      // 초대자 정보
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.person,
+                            size: 14,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              l10n.shareInviterLedger(
+                                invite.inviterEmail ?? l10n.shareUnknown,
+                              ),
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.normal,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            // 중간: 초대자 정보
-            Row(
-              children: [
-                Icon(
-                  Icons.person_outline,
-                  size: 16,
-                  color: colorScheme.onSurface.withOpacity(0.7),
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    l10n.shareInviterLedger(
-                      invite.inviterEmail ?? l10n.shareUnknown,
-                    ),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.onSurface.withOpacity(0.7),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
+            const SizedBox(height: 19),
             // 하단: 상태별 액션 버튼
-            const SizedBox(height: 12),
             _buildActionRow(context),
           ],
         ),
@@ -146,35 +158,67 @@ class InvitedLedgerCard extends StatelessWidget {
   Widget _buildActionRow(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    // pending 상태: 수락/거부 버튼 (동일한 스타일 + 아이콘 구분)
+    // pending 상태: 수락/거부 버튼
     if (invite.isPending) {
-      final buttonStyle = OutlinedButton.styleFrom(
-        foregroundColor: colorScheme.onSurfaceVariant,
-        side: BorderSide(color: colorScheme.outlineVariant),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        minimumSize: const Size(0, 36),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      );
-
-      return Row(
-        children: [
-          const Spacer(),
-          // 거부 버튼
-          OutlinedButton.icon(
-            onPressed: isLoading ? null : onReject,
-            style: buttonStyle,
-            icon: const Icon(Icons.close, size: 16),
-            label: Text(l10n.shareReject),
-          ),
-          const SizedBox(width: 8),
-          // 수락 버튼
-          OutlinedButton.icon(
-            onPressed: isLoading ? null : onAccept,
-            style: buttonStyle,
-            icon: const Icon(Icons.check, size: 16),
-            label: Text(l10n.shareAccept),
-          ),
-        ],
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Wrap(
+          spacing: 8,
+          children: [
+            // 거부 버튼
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : onReject,
+              icon: Icon(
+                Icons.close,
+                size: 16,
+                color: colorScheme.error,
+              ),
+              label: Text(
+                l10n.shareReject,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.error,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                side: BorderSide(color: colorScheme.error),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+            // 수락 버튼
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : onAccept,
+              icon: Icon(
+                Icons.check,
+                size: 16,
+                color: colorScheme.primary,
+              ),
+              label: Text(
+                l10n.shareAccept,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.primary,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                side: BorderSide(color: colorScheme.outline),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -182,70 +226,86 @@ class InvitedLedgerCard extends StatelessWidget {
     if (invite.isAccepted) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
               Icon(
-                Icons.check_circle_outline,
+                Icons.check,
                 size: 16,
-                color: colorScheme.tertiary,
+                color: colorScheme.primary,
               ),
               const SizedBox(width: 6),
               Text(
                 l10n.shareMemberParticipating,
                 style: TextStyle(
                   fontSize: 13,
-                  color: colorScheme.tertiary,
+                  color: colorScheme.primary,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              // 사용 버튼 (사용중이 아닌 경우에만)
-              if (!isCurrentLedger) ...[
-                OutlinedButton(
-                  onPressed: isLoading ? null : onSelectLedger,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: colorScheme.primary,
-                    side: BorderSide(color: colorScheme.primary),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
+          Align(
+            alignment: Alignment.centerRight,
+            child: Wrap(
+              spacing: 8,
+              children: [
+                // 사용 버튼 (사용중이 아닌 경우에만)
+                if (!isCurrentLedger)
+                  OutlinedButton.icon(
+                    onPressed: isLoading ? null : onSelectLedger,
+                    icon: Icon(
+                      Icons.check,
+                      size: 16,
+                      color: colorScheme.primary,
                     ),
-                    minimumSize: const Size(0, 32),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    textStyle: const TextStyle(
-                      fontSize: 13,
+                    label: Text(
+                      l10n.shareUse,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      side: BorderSide(color: colorScheme.outline),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                OutlinedButton.icon(
+                  onPressed: isLoading ? null : onLeave,
+                  icon: Icon(
+                    Icons.logout,
+                    size: 16,
+                    color: colorScheme.error,
+                  ),
+                  label: Text(
+                    l10n.shareLeave,
+                    style: TextStyle(
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
+                      color: colorScheme.error,
                     ),
                   ),
-                  child: Text(l10n.shareUse),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    side: BorderSide(color: colorScheme.error),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
-                const SizedBox(width: 8),
               ],
-              OutlinedButton(
-                onPressed: isLoading ? null : onLeave,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: colorScheme.error,
-                  side: BorderSide(color: colorScheme.error),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  minimumSize: const Size(0, 32),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                child: Text(l10n.shareLeave),
-              ),
-            ],
+            ),
           ),
         ],
       );

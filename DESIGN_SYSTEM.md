@@ -289,3 +289,4 @@ SnackBarUtils.showSuccess(context, message)     // ✅
 | improved-cal-month | CalendarMonth (개선) | 10400 |
 | improved-cal-week | CalendarWeek (개선) | 10800 |
 | improved-cal-day | CalendarDay (개선) | 11200 |
+| improved-stats | StatisticsPage (개선) | 12536 |

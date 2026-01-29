@@ -103,13 +103,25 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
 
     final l10n = AppLocalizations.of(context);
     return ListView(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+      padding: const EdgeInsets.all(16),
       children: [
         // 내 가계부 섹션
         if (ownedLedgers.isNotEmpty) ...[
-          SectionHeader(
-            title: l10n.shareMyLedgers,
-            icon: Icons.account_balance_wallet,
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Icon(Icons.menu_book, size: 20, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.shareMyLedgers,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
           ...ownedLedgers.map(
             (ledgerInfo) => OwnedLedgerCard(
@@ -149,9 +161,21 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
         // 초대받은 가계부 섹션
         if (receivedInvites.isNotEmpty) ...[
           if (ownedLedgers.isNotEmpty) const SizedBox(height: 24),
-          SectionHeader(
-            title: l10n.shareInvitedLedgers,
-            icon: Icons.mail_outline,
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Icon(Icons.mail_outline, size: 20, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  l10n.shareInvitedLedgers,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
           ),
           ...receivedInvites.map((invite) {
             final shareState = ref.watch(shareNotifierProvider);

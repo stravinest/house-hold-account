@@ -53,22 +53,31 @@ class CategorySummaryCard extends ConsumerWidget {
     final expenseFilter = ref.watch(selectedExpenseTypeFilterProvider);
     final comparisonAsync = ref.watch(monthComparisonProvider);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: comparisonAsync.when(
-          data: (comparison) => _buildContent(
-            context,
-            l10n,
-            selectedType,
-            expenseFilter,
-            comparison,
-            NumberFormatUtils.currency,
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainer,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0D000000),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (error, _) =>
-              Center(child: Text(l10n.errorWithMessage(error.toString()))),
+        ],
+      ),
+      child: comparisonAsync.when(
+        data: (comparison) => _buildContent(
+          context,
+          l10n,
+          selectedType,
+          expenseFilter,
+          comparison,
+          NumberFormatUtils.currency,
         ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) =>
+            Center(child: Text(l10n.errorWithMessage(error.toString()))),
       ),
     );
   }

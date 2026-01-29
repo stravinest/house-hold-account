@@ -842,7 +842,7 @@ class _MonthlyViewContent extends StatelessWidget {
   }
 }
 
-// 날짜 헤더 위젯
+// 날짜 헤더 위젯 (impCdDayHeader 디자인 적용)
 class _DailyDateHeader extends StatelessWidget {
   final DateTime date;
 
@@ -858,17 +858,13 @@ class _DailyDateHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(
-        left: Spacing.md,
-        right: Spacing.md,
-        top: Spacing.md, // 상단 간격 확대 (고정 헤더와의 간격)
-        bottom: Spacing.sm,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: colorScheme.surfaceContainer,
       child: Text(
         dateText,
-        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+        style: const TextStyle(
+          fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: colorScheme.onSurface,
         ),
       ),
     );
@@ -1078,65 +1074,61 @@ class _DailyUserSummary extends ConsumerWidget {
               amountPrefix = '-';
             }
 
+            // 월별 뷰 거래 항목 (일/주 뷰와 일관된 디자인)
             transactionRows.add(
-              Padding(
-                padding: const EdgeInsets.only(bottom: Spacing.xs),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      showModalBottomSheet(
-                        context: context,
-                        isScrollControlled: true,
-                        useSafeArea: true,
-                        builder: (context) =>
-                            TransactionDetailSheet(transaction: tx),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: Spacing.sm,
-                        horizontal: Spacing.xs,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: userColor,
-                              shape: BoxShape.circle,
+              Material(
+                color: colorScheme.surface,
+                child: InkWell(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      useSafeArea: true,
+                      builder: (context) =>
+                          TransactionDetailSheet(transaction: tx),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: userColor,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          userName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            description,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: colorScheme.onSurfaceVariant,
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(width: Spacing.sm),
-                          Text(
-                            userName,
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: amountColor,
                           ),
-                          const SizedBox(width: Spacing.xs),
-                          Flexible(
-                            child: Text(
-                              description,
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: Spacing.sm),
-                          Text(
-                            '$amountPrefix${formatter.format(tx.amount)}${l10n.transactionAmountUnit}',
-                            style: Theme.of(context).textTheme.bodyLarge
-                                ?.copyWith(
-                                  color: amountColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1145,16 +1137,10 @@ class _DailyUserSummary extends ConsumerWidget {
           }
         }
 
-        return Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Spacing.md,
-            vertical: Spacing.sm,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: transactionRows,
-          ),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: transactionRows,
         );
       },
       loading: () => const SizedBox.shrink(),

@@ -649,9 +649,8 @@
   "statisticsTrend": "추이",
   "statisticsPaymentMethod": "결제수단",
   "statisticsCategoryDistribution": "카테고리별 분포",
-  "statisticsCategoryRanking": "카테고리별 순위",
   "statisticsCategoryComparison": "카테고리별 비교",
-  "statisticsFilterCombined": "합쳐서",
+  "statisticsFilterCombined": "합계",
   "statisticsFilterOverlay": "겹쳐서",
   "statisticsNoData": "데이터가 없습니다",
   "statisticsOther": "기타",
@@ -782,6 +781,7 @@
       }
     }
   },
+  "fixedExpenseCategoryDeleteMessage": "이 카테고리로 기록된 고정비는 삭제되지 않습니다.",
   "fixedExpenseCategoryAdd": "고정비 카테고리 추가",
   "fixedExpenseCategoryEdit": "고정비 카테고리 수정",
   "fixedExpenseCategoryNameHint": "예: 월세, 통신비",

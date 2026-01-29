@@ -1402,9 +1402,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statisticsCategoryDistribution => 'Category Distribution';
 
   @override
-  String get statisticsCategoryRanking => 'Category Ranking';
-
-  @override
   String get statisticsCategoryComparison => 'Category Comparison';
 
   @override
@@ -1595,6 +1592,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String fixedExpenseCategoryDeleteConfirm(String name) {
     return 'Delete \'$name\' category?';
   }
+
+  @override
+  String get fixedExpenseCategoryDeleteMessage =>
+      'Fixed expenses with this category will not be deleted.';
 
   @override
   String get fixedExpenseCategoryAdd => 'Add Fixed Expense Category';

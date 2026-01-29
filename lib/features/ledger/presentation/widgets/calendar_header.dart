@@ -39,7 +39,7 @@ class CalendarHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 오늘 버튼
+          // 오늘 버튼 (일/주별 뷰와 동일한 스타일)
           TextButton.icon(
             onPressed: isToday ? null : onTodayPressed,
             icon: const Icon(Icons.today, size: IconSize.sm),

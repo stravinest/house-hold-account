@@ -1366,13 +1366,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get statisticsCategoryDistribution => '카테고리별 분포';
 
   @override
-  String get statisticsCategoryRanking => '카테고리별 순위';
-
-  @override
   String get statisticsCategoryComparison => '카테고리별 비교';
 
   @override
-  String get statisticsFilterCombined => '합쳐서';
+  String get statisticsFilterCombined => '합계';
 
   @override
   String get statisticsFilterOverlay => '겹쳐서';
@@ -1555,6 +1552,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String fixedExpenseCategoryDeleteConfirm(String name) {
     return '\'$name\' 카테고리를 삭제하시겠습니까?';
   }
+
+  @override
+  String get fixedExpenseCategoryDeleteMessage => '이 카테고리로 기록된 고정비는 삭제되지 않습니다.';
 
   @override
   String get fixedExpenseCategoryAdd => '고정비 카테고리 추가';

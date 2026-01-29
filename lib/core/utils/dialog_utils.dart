@@ -68,4 +68,210 @@ class DialogUtils {
       ),
     );
   }
+
+  /// 카테고리 삭제 확인 다이얼로그 (개선된 디자인)
+  ///
+  /// pencil 디자인 (CategoryDeleteDialog)을 따르는 특별한 삭제 확인 다이얼로그
+  ///
+  /// [context] - BuildContext
+  /// [categoryName] - 삭제할 카테고리 이름
+  ///
+  /// 반환값:
+  /// - true: 사용자가 삭제 버튼을 눌렀을 때
+  /// - null: 사용자가 취소 버튼을 누르거나 다이얼로그를 닫았을 때
+  static Future<bool?> showCategoryDeleteConfirmation(
+    BuildContext context, {
+    required String categoryName,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          width: 280,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 제목
+              Text(
+                l10n.categoryDeleteConfirmTitle,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // 카테고리명 강조 박스
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFCDD2), // 연한 빨간색 배경
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  categoryName,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.error,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // 설명 메시지
+              Text(
+                l10n.categoryDeleteConfirmMessage,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // 버튼들 (가운데 정렬)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 취소 버튼 (Outlined)
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(88, 52),
+                    ),
+                    child: Text(l10n.commonCancel),
+                  ),
+                  const SizedBox(width: 8),
+                  // 삭제 버튼 (Elevated, 빨간색)
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.error,
+                      foregroundColor: colorScheme.onError,
+                      minimumSize: const Size(88, 52),
+                    ),
+                    child: Text(l10n.commonDelete),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 고정비 카테고리 삭제 확인 다이얼로그 (개선된 디자인)
+  ///
+  /// pencil 디자인 (CategoryDeleteDialog)을 따르는 고정비 삭제 확인 다이얼로그
+  ///
+  /// [context] - BuildContext
+  /// [categoryName] - 삭제할 고정비 카테고리 이름
+  ///
+  /// 반환값:
+  /// - true: 사용자가 삭제 버튼을 눌렀을 때
+  /// - null: 사용자가 취소 버튼을 누르거나 다이얼로그를 닫았을 때
+  static Future<bool?> showFixedExpenseCategoryDeleteConfirmation(
+    BuildContext context, {
+    required String categoryName,
+  }) {
+    final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          width: 280,
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 제목
+              Text(
+                l10n.fixedExpenseCategoryDelete,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // 카테고리명 강조 박스
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFCDD2), // 연한 빨간색 배경
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  categoryName,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.error,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // 설명 메시지
+              Text(
+                l10n.fixedExpenseCategoryDeleteMessage,
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+
+              // 버튼들 (가운데 정렬)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // 취소 버튼 (Outlined)
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(88, 52),
+                    ),
+                    child: Text(l10n.commonCancel),
+                  ),
+                  const SizedBox(width: 8),
+                  // 삭제 버튼 (Elevated, 빨간색)
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: colorScheme.error,
+                      foregroundColor: colorScheme.onError,
+                      minimumSize: const Size(88, 52),
+                    ),
+                    child: Text(l10n.commonDelete),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

@@ -5,7 +5,7 @@ import '../../../../../l10n/generated/app_localizations.dart';
 /// 지출 유형 필터 (전체/고정비/변동비)
 enum ExpenseTypeFilter { all, fixed, variable }
 
-/// 고정비/변동비 필터 위젯
+/// 고정비/변동비 필터 위젯 - Pencil H3XG5 디자인 적용
 class ExpenseTypeFilterWidget extends StatelessWidget {
   final ExpenseTypeFilter selectedFilter;
   final ValueChanged<ExpenseTypeFilter> onChanged;
@@ -32,21 +32,41 @@ class ExpenseTypeFilterWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return SegmentedButton<ExpenseTypeFilter>(
-      segments: ExpenseTypeFilter.values.map((filter) {
-        return ButtonSegment(
-          value: filter,
-          label: Text(_getLabel(l10n, filter)),
-        );
-      }).toList(),
-      selected: {selectedFilter},
-      onSelectionChanged: enabled
-          ? (selected) => onChanged(selected.first)
-          : null,
-      style: const ButtonStyle(
-        visualDensity: VisualDensity.compact,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: ExpenseTypeFilter.values.map((filter) {
+          final isSelected = selectedFilter == filter;
+
+          return GestureDetector(
+            onTap: enabled ? () => onChanged(filter) : null,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected ? colorScheme.primary : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                _getLabel(l10n, filter),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.normal,
+                  color: !enabled
+                      ? colorScheme.onSurfaceVariant.withOpacity(0.5)
+                      : isSelected
+                          ? colorScheme.onPrimary
+                          : colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

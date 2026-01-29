@@ -10,8 +10,7 @@ import '../../../../auth/presentation/providers/auth_provider.dart';
 import '../../providers/statistics_provider.dart';
 import '../common/expense_type_filter.dart';
 import '../common/statistics_type_filter.dart';
-import 'category_donut_chart.dart';
-import 'category_ranking_list.dart';
+import 'category_distribution_card.dart';
 import 'category_summary_card.dart';
 import 'shared_category_tab_view.dart';
 
@@ -75,7 +74,7 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
         error.statusCode == '401') {
       SnackBarUtils.showError(
         context,
-        l10n.errorSessionExpired ?? 'Session expired. Please log in again.',
+        l10n.errorSessionExpired,
         duration: const Duration(seconds: 4),
       );
 
@@ -89,14 +88,13 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
     final l10n = AppLocalizations.of(context);
     SnackBarUtils.showError(
       context,
-      l10n.errorNetwork ?? 'Please check your network connection.',
+      l10n.errorNetwork,
       duration: const Duration(seconds: 3),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
 
@@ -135,41 +133,8 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
             const CategorySummaryCard(),
             const SizedBox(height: 16),
 
-            // 도넛 차트
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.statisticsCategoryDistribution,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    const SizedBox(height: 8),
-                    const CategoryDonutChart(),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // 순위 리스트
-            Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                    child: Text(
-                      l10n.statisticsCategoryRanking,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  const CategoryRankingList(),
-                ],
-              ),
-            ),
+            // 카테고리 분포 카드 - Pencil Nzqas 디자인 적용
+            const CategoryDistributionCard(),
           ],
         ),
       ),

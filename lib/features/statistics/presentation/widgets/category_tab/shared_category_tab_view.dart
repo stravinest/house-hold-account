@@ -9,11 +9,9 @@ import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../auth/presentation/providers/auth_provider.dart';
 import '../../providers/statistics_provider.dart';
 import '../common/expense_type_filter.dart';
-import '../common/shared_user_filter.dart';
 import '../common/statistics_type_filter.dart';
-import 'category_comparison_list.dart';
-import 'side_by_side_donut_chart.dart';
-import 'user_ratio_bar.dart';
+import 'shared_category_distribution_card.dart';
+import 'shared_category_summary_card.dart';
 
 /// 공유 가계부용 카테고리 통계 탭 뷰
 class SharedCategoryTabView extends ConsumerStatefulWidget {
@@ -72,7 +70,7 @@ class _SharedCategoryTabViewState extends ConsumerState<SharedCategoryTabView> {
         error.statusCode == '401') {
       SnackBarUtils.showError(
         context,
-        l10n.errorSessionExpired ?? 'Session expired. Please log in again.',
+        l10n.errorSessionExpired,
         duration: const Duration(seconds: 4),
       );
 
@@ -86,17 +84,15 @@ class _SharedCategoryTabViewState extends ConsumerState<SharedCategoryTabView> {
     final l10n = AppLocalizations.of(context);
     SnackBarUtils.showError(
       context,
-      l10n.errorNetwork ?? 'Please check your network connection.',
+      l10n.errorNetwork,
       duration: const Duration(seconds: 3),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     final selectedType = ref.watch(selectedStatisticsTypeProvider);
     final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
-    final sharedState = ref.watch(sharedStatisticsStateProvider);
 
     return RefreshIndicator(
       onRefresh: _refreshData,
@@ -123,22 +119,12 @@ class _SharedCategoryTabViewState extends ConsumerState<SharedCategoryTabView> {
             ],
             const SizedBox(height: 16),
 
-            // 사용자 필터 (합쳐서/겹쳐서/개별사용자)
-            const Center(child: SharedUserFilter()),
+            // 요약 카드 - Pencil Oleyd 디자인 (사용자별 내역 포함)
+            const SharedCategorySummaryCard(),
             const SizedBox(height: 16),
 
-            // 겹쳐서 모드일 때만 비율 바 표시
-            if (sharedState.mode == SharedStatisticsMode.overlay) ...[
-              const UserRatioBar(),
-              const SizedBox(height: 16),
-            ],
-
-            // 도넛 차트 (모드에 따라 다르게 표시)
-            const SideBySideDonutChart(),
-            const SizedBox(height: 16),
-
-            // 카테고리별 비교 리스트
-            const CategoryComparisonList(),
+            // 카테고리 분포 카드 - Pencil Nzqas + memberTabs 디자인 적용
+            const SharedCategoryDistributionCard(),
           ],
         ),
       ),

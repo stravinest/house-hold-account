@@ -2660,12 +2660,6 @@ abstract class AppLocalizations {
   /// **'카테고리별 분포'**
   String get statisticsCategoryDistribution;
 
-  /// No description provided for @statisticsCategoryRanking.
-  ///
-  /// In ko, this message translates to:
-  /// **'카테고리별 순위'**
-  String get statisticsCategoryRanking;
-
   /// No description provided for @statisticsCategoryComparison.
   ///
   /// In ko, this message translates to:
@@ -2675,7 +2669,7 @@ abstract class AppLocalizations {
   /// No description provided for @statisticsFilterCombined.
   ///
   /// In ko, this message translates to:
-  /// **'합쳐서'**
+  /// **'합계'**
   String get statisticsFilterCombined;
 
   /// No description provided for @statisticsFilterOverlay.
@@ -3001,6 +2995,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'\'{name}\' 카테고리를 삭제하시겠습니까?'**
   String fixedExpenseCategoryDeleteConfirm(String name);
+
+  /// No description provided for @fixedExpenseCategoryDeleteMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 카테고리로 기록된 고정비는 삭제되지 않습니다.'**
+  String get fixedExpenseCategoryDeleteMessage;
 
   /// No description provided for @fixedExpenseCategoryAdd.
   ///
