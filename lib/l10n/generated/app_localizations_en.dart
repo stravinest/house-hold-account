@@ -1302,6 +1302,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paymentMethodWizardSaveButton => 'Save';
 
   @override
+  String get paymentMethodWizardSaving => 'Saving...';
+
+  @override
   String get paymentMethodWizardAddButton => 'Add';
 
   @override

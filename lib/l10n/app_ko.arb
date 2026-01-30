@@ -612,6 +612,7 @@
   "paymentMethodWizardDetectionKeywords": "감지 키워드",
   "paymentMethodWizardAmountPattern": "금액 패턴",
   "paymentMethodWizardSaveButton": "저장하기",
+  "paymentMethodWizardSaving": "저장 중...",
   "paymentMethodWizardAddButton": "추가하기",
   "paymentMethodWizardEditKeywordsTitle": "감지 키워드 수정",
   "paymentMethodWizardEditKeywordsDescription": "이 키워드가 포함된 알림이 수집됩니다.",

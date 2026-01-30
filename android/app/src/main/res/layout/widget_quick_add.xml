@@ -11,14 +11,52 @@
         android:layout_height="match_parent"
         android:background="@drawable/widget_button_expense"
         android:gravity="center"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="6dp">
 
+        <!-- 앱 아이콘 -->
         <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/widget_icon"
+            android:scaleType="fitCenter"
+            android:contentDescription="가계부 아이콘" />
+
+        <!-- 간격 -->
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="2dp" />
+
+        <!-- 추가 버튼 -->
+        <FrameLayout
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@drawable/ic_add_circle"
-            android:scaleType="fitCenter"
-            android:contentDescription="지출 추가" />
+            android:background="@drawable/button_primary_background">
+
+            <ImageView
+                android:layout_width="14dp"
+                android:layout_height="14dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_add_circle"
+                android:scaleType="fitCenter"
+                android:tint="@android:color/white"
+                android:contentDescription="추가" />
+
+        </FrameLayout>
+
+        <!-- 간격 -->
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="2dp" />
+
+        <!-- 빠른 추가 레이블 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="빠른 추가"
+            android:textSize="9sp"
+            android:textStyle="bold"
+            android:textColor="?android:attr/textColorPrimary" />
 
     </LinearLayout>
 

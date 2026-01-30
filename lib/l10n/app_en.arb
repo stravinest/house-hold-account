@@ -414,6 +414,7 @@
   "paymentMethodWizardDetectionKeywords": "Detection Keywords",
   "paymentMethodWizardAmountPattern": "Amount Pattern",
   "paymentMethodWizardSaveButton": "Save",
+  "paymentMethodWizardSaving": "Saving...",
   "paymentMethodWizardAddButton": "Add",
   "paymentMethodWizardEditKeywordsTitle": "Edit Detection Keywords",
   "paymentMethodWizardEditKeywordsDescription": "Notifications containing these keywords will be collected.",

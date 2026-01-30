@@ -62,6 +62,9 @@ class _PaymentMethodWizardPageState
   // Debounce timer for sample analysis
   Timer? _debounceTimer;
 
+  // Submission loading state
+  bool _isSubmitting = false;
+
   @override
   void initState() {
     super.initState();
@@ -279,6 +282,13 @@ class _PaymentMethodWizardPageState
       return;
     }
 
+    // Prevent double submission
+    if (_isSubmitting) return;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
     try {
       final notifier = ref.read(paymentMethodNotifierProvider.notifier);
       final formatRepository = ref.read(learnedSmsFormatRepositoryProvider);
@@ -314,10 +324,11 @@ class _PaymentMethodWizardPageState
 
         // 3. Save or update learned format (only when template selected in auto-collect mode)
         // Delete all existing formats and create new one to ensure consistency
-        if (canAutoSave && _selectedTemplate != null && _generatedFormat != null) {
-          final existingFormats = await formatRepository.getFormatsByPaymentMethod(
-            widget.paymentMethod!.id,
-          );
+        if (canAutoSave &&
+            _selectedTemplate != null &&
+            _generatedFormat != null) {
+          final existingFormats = await formatRepository
+              .getFormatsByPaymentMethod(widget.paymentMethod!.id);
 
           // Delete all existing formats to prevent inconsistency
           for (final format in existingFormats) {
@@ -357,7 +368,9 @@ class _PaymentMethodWizardPageState
         }
 
         // 3. Save learned format (only when template selected in auto-collect mode)
-        if (canAutoSave && _selectedTemplate != null && _generatedFormat != null) {
+        if (canAutoSave &&
+            _selectedTemplate != null &&
+            _generatedFormat != null) {
           await formatRepository.createFormat(
             paymentMethodId: paymentMethod.id,
             senderPattern: _generatedFormat!.senderPattern,
@@ -381,7 +394,9 @@ class _PaymentMethodWizardPageState
       if (canAutoSave) {
         final currentUserId = ref.read(currentUserProvider)?.id;
         if (currentUserId != null) {
-          ref.invalidate(autoCollectPaymentMethodsByOwnerProvider(currentUserId));
+          ref.invalidate(
+            autoCollectPaymentMethodsByOwnerProvider(currentUserId),
+          );
         }
         // Refresh SMS/Push listener caches to apply new autoCollectSource setting
         await AutoSaveService.instance.refreshPaymentMethods();
@@ -395,10 +410,19 @@ class _PaymentMethodWizardPageState
       if (mounted) {
         final l10n = AppLocalizations.of(context);
         if (e is DuplicateItemException) {
-          SnackBarUtils.showError(context, l10n.paymentMethodWizardDuplicateName);
+          SnackBarUtils.showError(
+            context,
+            l10n.paymentMethodWizardDuplicateName,
+          );
         } else {
           SnackBarUtils.showError(context, l10n.paymentMethodWizardSaveFailed);
         }
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
       }
     }
   }
@@ -425,8 +449,14 @@ class _PaymentMethodWizardPageState
         title: Text(title),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: _goBack,
+          onPressed: _isSubmitting ? null : _goBack,
         ),
+        bottom: _isSubmitting
+            ? const PreferredSize(
+                preferredSize: Size.fromHeight(2),
+                child: LinearProgressIndicator(minHeight: 2),
+              )
+            : null,
       ),
       body: _buildBody(),
       bottomNavigationBar: showBottomButton
@@ -435,35 +465,67 @@ class _PaymentMethodWizardPageState
                 color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 8,
-                    offset: const Offset(0, -2),
+                    color: Colors.black.withValues(alpha: 0.05),
+                    offset: const Offset(0, -1),
+                    blurRadius: 4,
                   ),
                 ],
               ),
               child: SafeArea(
                 top: false,
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: _submit,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                  padding: const EdgeInsets.all(16),
+                  child: ElevatedButton(
+                    onPressed: _isSubmitting ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                      disabledBackgroundColor:
+                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                      disabledForegroundColor:
+                          Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
+                      minimumSize: const Size(double.infinity, 52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        isEdit ? l10n.paymentMethodWizardSaveButton : l10n.paymentMethodWizardAddButton,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
                     ),
+                    child: _isSubmitting
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                l10n.paymentMethodWizardSaving,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          )
+                        : Text(
+                            isEdit
+                                ? l10n.paymentMethodWizardSaveButton
+                                : l10n.paymentMethodWizardAddButton,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -711,7 +773,9 @@ class _PaymentMethodWizardPageState
           Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: localCurrencies.map((t) => _buildTemplateChip(t)).toList(),
+            children: localCurrencies
+                .map((t) => _buildTemplateChip(t))
+                .toList(),
           ),
         ],
       ],
@@ -736,7 +800,8 @@ class _PaymentMethodWizardPageState
   Widget _buildConfiguration() {
     // Manual mode or auto-collect mode without template
     if (_selectedMode == PaymentMethodAddMode.manual ||
-        (_selectedMode == PaymentMethodAddMode.autoCollect && _selectedTemplate == null)) {
+        (_selectedMode == PaymentMethodAddMode.autoCollect &&
+            _selectedTemplate == null)) {
       return _buildManualConfiguration();
     }
 
@@ -768,10 +833,7 @@ class _PaymentMethodWizardPageState
                   Expanded(
                     child: Text(
                       l10n.paymentMethodWizardSharedNotice,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.blue[700],
-                      ),
+                      style: TextStyle(fontSize: 13, color: Colors.blue[700]),
                     ),
                   ),
                 ],
@@ -809,144 +871,179 @@ class _PaymentMethodWizardPageState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Personal use notice badge
+          // Personal use notice badge - 디자인 시스템 적용
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.orange[50],
+              color: const Color(0xFFFFF3E0), // #FFF3E0
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange[200]!),
+              border: Border.all(color: const Color(0xFFFFCC80)), // #FFCC80
             ),
             child: Row(
               children: [
-                Icon(Icons.lock_outline, size: 18, color: Colors.orange[700]),
+                const Icon(
+                  Icons.lock_outline,
+                  size: 18,
+                  color: Color(0xFFE65100),
+                ), // #E65100
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     l10n.paymentMethodWizardPersonalNotice,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
-                      color: Colors.orange[700],
+                      color: Color(0xFFE65100), // #E65100
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // 1. Name setting
+          // 1. Name setting - filled style로 변경
           TextFormField(
             controller: _nameController,
             maxLength: 20,
             decoration: InputDecoration(
               labelText: l10n.paymentMethodWizardAliasLabel,
               helperText: l10n.paymentMethodWizardAliasHelper,
-              border: const OutlineInputBorder(),
+              filled: true,
+              fillColor: const Color(0xFFF5F5F5), // #F5F5F5
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide.none,
+              ),
               counterText: '',
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // 2. Notification type selection (SMS / Push)
+          // 2. Notification type selection (SMS / Push) - 디자인 시스템 적용
           Text(
             l10n.paymentMethodWizardCollectSource,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 12),
-          SegmentedButton<String>(
-            segments: [
-              ButtonSegment<String>(
-                value: 'sms',
-                label: Text(l10n.paymentMethodWizardSmsSource),
-                icon: const Icon(Icons.sms_outlined, size: 18),
-              ),
-              ButtonSegment<String>(
-                value: 'push',
-                label: Text(l10n.paymentMethodWizardPushSource),
-                icon: const Icon(Icons.notifications_outlined, size: 18),
-              ),
-            ],
-            selected: {_notificationType},
-            onSelectionChanged: (selected) {
-              _changeNotificationType(selected.first);
-            },
-            style: SegmentedButton.styleFrom(
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              selectedBackgroundColor: colorScheme.primaryContainer,
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildCollectSourceOption(
+                    value: 'sms',
+                    icon: Icons.sms_outlined,
+                    label: l10n.paymentMethodWizardSmsSource,
+                    isSelected: _notificationType == 'sms',
+                    colorScheme: colorScheme,
+                  ),
+                ),
+                Expanded(
+                  child: _buildCollectSourceOption(
+                    value: 'push',
+                    icon: Icons.notifications_outlined,
+                    label: l10n.paymentMethodWizardPushSource,
+                    isSelected: _notificationType == 'push',
+                    colorScheme: colorScheme,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
-          // 3. Collection rule settings (simplified - no sample preview)
+          // 3. Collection rule settings - 디자인 시스템 적용
           if (_generatedFormat != null)
-            Card(
-              color: Colors.blue[50],
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.auto_awesome, size: 20, color: Colors.blue),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            l10n.paymentMethodWizardCurrentRules,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+            Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFE3F2FD), // #E3F2FD
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF90CAF9)), // #90CAF9
+              ),
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.auto_awesome,
+                        size: 20,
+                        color: Color(0xFF1976D2),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          l10n.paymentMethodWizardCurrentRules,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                         ),
-                        IconButton(
-                          onPressed: _showEditKeywordsDialog,
-                          icon: const Icon(Icons.edit, size: 16),
-                          tooltip: l10n.paymentMethodEditKeywords,
-                          constraints: const BoxConstraints(),
-                          padding: EdgeInsets.zero,
-                        ),
-                      ],
+                      ),
+                      IconButton(
+                        onPressed: _showEditKeywordsDialog,
+                        icon: const Icon(Icons.edit, size: 16),
+                        tooltip: l10n.paymentMethodEditKeywords,
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ],
+                  ),
+                  const Divider(color: Color(0xFF90CAF9)),
+                  // 감지 키워드 - Chip 형태로 표시
+                  Text(
+                    l10n.paymentMethodWizardDetectionKeywords,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF424242),
                     ),
-                    const Divider(),
-                    // 감지 키워드 - Chip 형태로 표시
-                    Text(
-                      l10n.paymentMethodWizardDetectionKeywords,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _generatedFormat!.senderKeywords
+                        .map(
+                          (keyword) => Chip(
+                            label: Text(
+                              keyword,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            backgroundColor: Colors.white,
+                            side: const BorderSide(color: Color(0xFF90CAF9)),
+                            visualDensity: VisualDensity.compact,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  // 금액 패턴
+                  Text(
+                    l10n.paymentMethodWizardAmountPattern,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF424242),
                     ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _generatedFormat!.senderKeywords
-                          .map((keyword) => Chip(
-                                label: Text(
-                                  keyword,
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                                backgroundColor: Colors.white,
-                                side: BorderSide(color: Colors.blue[200]!),
-                                visualDensity: VisualDensity.compact,
-                              ))
-                          .toList(),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _getFriendlyAmountPattern(_generatedFormat!.amountRegex),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
                     ),
-                    const SizedBox(height: 16),
-                    // 금액 패턴
-                    Text(
-                      l10n.paymentMethodWizardAmountPattern,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _getFriendlyAmountPattern(_generatedFormat!.amountRegex),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
 
           // SMS에서 규칙 가져오기 버튼 (SMS 선택 시에만 표시)
           if (_notificationType == 'sms') ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -954,18 +1051,22 @@ class _PaymentMethodWizardPageState
                 icon: const Icon(Icons.sms_outlined, size: 18),
                 label: Text(l10n.paymentMethodWizardImportFromSms),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  minimumSize: const Size(double.infinity, 52),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                 ),
               ),
             ),
           ],
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
 
           // 4. Auto save mode selection (자동 / 제안)
           Text(
             l10n.autoSaveSettingsAutoProcessMode,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           _buildAutoSaveModeSelector(l10n),
@@ -978,8 +1079,6 @@ class _PaymentMethodWizardPageState
 
   /// Auto save mode selector UI (제안 / 자동)
   Widget _buildAutoSaveModeSelector(AppLocalizations l10n) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Column(
       children: [
         _buildAutoSaveModeOption(
@@ -987,7 +1086,6 @@ class _PaymentMethodWizardPageState
           icon: Icons.notifications_active_outlined,
           title: l10n.autoSaveSettingsSuggestModeTitle,
           description: l10n.autoSaveSettingsSuggestModeDesc,
-          colorScheme: colorScheme,
         ),
         const SizedBox(height: 8),
         _buildAutoSaveModeOption(
@@ -995,9 +1093,61 @@ class _PaymentMethodWizardPageState
           icon: Icons.auto_awesome_outlined,
           title: l10n.autoSaveSettingsAutoModeTitle,
           description: l10n.autoSaveSettingsAutoModeDesc,
-          colorScheme: colorScheme,
         ),
       ],
+    );
+  }
+
+  /// 수집방식 옵션 위젯 (SMS/Push)
+  Widget _buildCollectSourceOption({
+    required String value,
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required ColorScheme colorScheme,
+  }) {
+    return InkWell(
+      onTap: () => _changeNotificationType(value),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: isSelected ? colorScheme.primaryContainer : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isSelected)
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Icon(
+                  Icons.check_circle,
+                  size: 16,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+            Icon(
+              icon,
+              size: 20,
+              color: isSelected
+                  ? colorScheme.onPrimaryContainer
+                  : colorScheme.onSurfaceVariant,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                color: isSelected
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1006,67 +1156,94 @@ class _PaymentMethodWizardPageState
     required IconData icon,
     required String title,
     required String description,
-    required ColorScheme colorScheme,
   }) {
     final isSelected = _autoSaveMode == mode;
-    final textTheme = Theme.of(context).textTheme;
+    final isAutoMode = mode == AutoSaveMode.auto;
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      color: isSelected ? colorScheme.primaryContainer : null,
+    // 선택 여부와 모드에 따른 색상 적용
+    final Color backgroundColor;
+    final Color iconBoxColor;
+    final Color iconColor;
+    final Color textColor;
+
+    if (isSelected) {
+      // 선택된 항목: 각 모드의 강조 색상
+      if (isAutoMode) {
+        // 자동 모드 선택: 녹색
+        backgroundColor = const Color(0xFFC8E6C9); // 연한 녹색
+        iconBoxColor = const Color(0xFF4CAF50); // 진한 녹색
+        iconColor = Colors.white;
+        textColor = const Color(0xFF1B5E20); // 진한 녹색 텍스트
+      } else {
+        // 제안 모드 선택: 파란색
+        backgroundColor = const Color(0xFFE3F2FD); // 연한 파란색
+        iconBoxColor = const Color(0xFF2196F3); // 파란색
+        iconColor = Colors.white;
+        textColor = const Color(0xFF0D47A1); // 진한 파란색 텍스트
+      }
+    } else {
+      // 선택 안 된 항목: 회색
+      backgroundColor = const Color(0xFFF5F5F5); // 연한 회색
+      iconBoxColor = const Color(0xFFE0E0E0); // 회색
+      iconColor = const Color(0xFF9E9E9E);
+      textColor = const Color(0xFF757575); // 회색 텍스트
+    }
+
+    final checkColor = isAutoMode
+        ? const Color(0xFF2E7D32) // Darker green
+        : const Color(0xFF1976D2); // Blue
+
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: InkWell(
         onTap: () {
           setState(() {
             _autoSaveMode = mode;
           });
         },
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
           child: Row(
             children: [
               Container(
-                width: 40,
-                height: 40,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? colorScheme.primary
-                      : colorScheme.surfaceContainerHighest,
+                  color: iconBoxColor,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  icon,
-                  color: isSelected
-                      ? colorScheme.onPrimary
-                      : colorScheme.onSurfaceVariant,
-                ),
+                child: Icon(icon, color: iconColor, size: 20),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      style: textTheme.titleSmall?.copyWith(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: isSelected
-                            ? colorScheme.onPrimaryContainer
-                            : null,
+                        fontSize: 14,
+                        color: textColor,
                       ),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       description,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: isSelected
-                            ? colorScheme.onPrimaryContainer
-                            : colorScheme.onSurfaceVariant,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: textColor.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
                 ),
               ),
               if (isSelected)
-                Icon(Icons.check_circle, color: colorScheme.primary),
+                Icon(Icons.check_circle, color: checkColor, size: 20),
             ],
           ),
         ),
@@ -1107,13 +1284,11 @@ class _PaymentMethodWizardPageState
     if (result != null && mounted) {
       // 메모리상 _generatedFormat 업데이트
       setState(() {
-        _generatedFormat = _generatedFormat!.copyWith(
-          senderKeywords: result,
-        );
+        _generatedFormat = _generatedFormat!.copyWith(senderKeywords: result);
       });
 
       // Edit 모드이고 DB에 저장된 포맷이 있으면 즉시 DB 업데이트
-      if (isEdit && _generatedFormat!.id != null && _generatedFormat!.id.isNotEmpty) {
+      if (isEdit && _generatedFormat!.id.isNotEmpty) {
         try {
           final formatRepository = ref.read(learnedSmsFormatRepositoryProvider);
           await formatRepository.updateFormat(
@@ -1123,13 +1298,19 @@ class _PaymentMethodWizardPageState
 
           if (mounted) {
             final l10n = AppLocalizations.of(context);
-            SnackBarUtils.showSuccess(context, l10n.paymentMethodWizardKeywordsSaved);
+            SnackBarUtils.showSuccess(
+              context,
+              l10n.paymentMethodWizardKeywordsSaved,
+            );
           }
         } catch (e) {
           debugPrint('Failed to update keywords in DB: $e');
           if (mounted) {
             final l10n = AppLocalizations.of(context);
-            SnackBarUtils.showError(context, l10n.paymentMethodWizardKeywordsSaveFailed);
+            SnackBarUtils.showError(
+              context,
+              l10n.paymentMethodWizardKeywordsSaveFailed,
+            );
           }
         }
       }
@@ -1145,7 +1326,10 @@ class _PaymentMethodWizardPageState
       final granted = await SmsListenerService.instance.requestPermissions();
       if (!granted) {
         if (mounted) {
-          SnackBarUtils.showError(context, l10n.paymentMethodWizardSmsPermissionRequired);
+          SnackBarUtils.showError(
+            context,
+            l10n.paymentMethodWizardSmsPermissionRequired,
+          );
         }
         return;
       }
@@ -1177,7 +1361,9 @@ class _PaymentMethodWizardPageState
 
                   final messages = snapshot.data?.financialMessages ?? [];
                   if (messages.isEmpty) {
-                    return Center(child: Text(sheetL10n.paymentMethodWizardNoFinancialSms));
+                    return Center(
+                      child: Text(sheetL10n.paymentMethodWizardNoFinancialSms),
+                    );
                   }
 
                   return Column(
@@ -1201,7 +1387,9 @@ class _PaymentMethodWizardPageState
                             return ListTile(
                               title: Text(msg.sender),
                               subtitle: Text(msg.body),
-                              trailing: Text('${msg.date.month}/${msg.date.day}'),
+                              trailing: Text(
+                                '${msg.date.month}/${msg.date.day}',
+                              ),
                               onTap: () {
                                 // SMS를 분석하여 키워드 업데이트
                                 _updateKeywordsFromSms(msg.body);
@@ -1253,7 +1441,10 @@ class _PaymentMethodWizardPageState
     // 성공 메시지 표시
     if (mounted) {
       final l10n = AppLocalizations.of(context);
-      SnackBarUtils.showSuccess(context, l10n.paymentMethodWizardKeywordsUpdated);
+      SnackBarUtils.showSuccess(
+        context,
+        l10n.paymentMethodWizardKeywordsUpdated,
+      );
     }
   }
 
@@ -1318,7 +1509,10 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
 
     // 중복 확인
     if (_keywords.contains(newKeyword)) {
-      SnackBarUtils.showError(context, l10n.paymentMethodWizardKeywordDuplicate);
+      SnackBarUtils.showError(
+        context,
+        l10n.paymentMethodWizardKeywordDuplicate,
+      );
       return;
     }
 
@@ -1365,12 +1559,14 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
                 spacing: 8,
                 runSpacing: 8,
                 children: _keywords
-                    .map((keyword) => InputChip(
-                          label: Text(keyword),
-                          deleteIcon: const Icon(Icons.close, size: 18),
-                          onDeleted: () => _removeKeyword(keyword),
-                          backgroundColor: colorScheme.surfaceContainerHighest,
-                        ))
+                    .map(
+                      (keyword) => InputChip(
+                        label: Text(keyword),
+                        deleteIcon: const Icon(Icons.close, size: 18),
+                        onDeleted: () => _removeKeyword(keyword),
+                        backgroundColor: colorScheme.surfaceContainerHighest,
+                      ),
+                    )
                     .toList(),
               ),
               const SizedBox(height: 16),
@@ -1413,7 +1609,10 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
         FilledButton(
           onPressed: () {
             if (_keywords.isEmpty) {
-              SnackBarUtils.showError(context, l10n.paymentMethodWizardEditKeywordsMinError);
+              SnackBarUtils.showError(
+                context,
+                l10n.paymentMethodWizardEditKeywordsMinError,
+              );
               return;
             }
             Navigator.pop(context, _keywords);

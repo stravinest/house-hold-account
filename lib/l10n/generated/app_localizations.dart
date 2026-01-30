@@ -2480,6 +2480,12 @@ abstract class AppLocalizations {
   /// **'저장하기'**
   String get paymentMethodWizardSaveButton;
 
+  /// No description provided for @paymentMethodWizardSaving.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 중...'**
+  String get paymentMethodWizardSaving;
+
   /// No description provided for @paymentMethodWizardAddButton.
   ///
   /// In ko, this message translates to:

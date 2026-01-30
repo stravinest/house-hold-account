@@ -1273,6 +1273,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get paymentMethodWizardSaveButton => '저장하기';
 
   @override
+  String get paymentMethodWizardSaving => '저장 중...';
+
+  @override
   String get paymentMethodWizardAddButton => '추가하기';
 
   @override
