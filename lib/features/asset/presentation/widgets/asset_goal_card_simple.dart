@@ -12,10 +12,7 @@ import 'asset_goal_form_sheet.dart';
 class AssetGoalCardSimple extends ConsumerWidget {
   final String ledgerId;
 
-  const AssetGoalCardSimple({
-    super.key,
-    required this.ledgerId,
-  });
+  const AssetGoalCardSimple({super.key, required this.ledgerId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,8 +33,9 @@ class AssetGoalCardSimple extends ConsumerWidget {
           });
 
         final goal = sortedGoals.first;
-        final currentAmountAsync =
-            ref.watch(assetGoalCurrentAmountProvider(goal));
+        final currentAmountAsync = ref.watch(
+          assetGoalCurrentAmountProvider(goal),
+        );
         final progress = ref.watch(assetGoalProgressProvider(goal));
 
         return currentAmountAsync.when(
@@ -186,12 +184,13 @@ class AssetGoalCardSimple extends ConsumerWidget {
                 ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    // 진행률이 작을 때도 막대가 보이도록 최소 너비 보장
-                    final progressWidth = constraints.maxWidth * progress.clamp(0.0, 1.0);
-                    const minWidth = 30.0;
-                    final displayWidth = progress > 0 && progressWidth < minWidth
-                        ? minWidth
-                        : progressWidth;
+                    // 0~1% 범위는 1%로 표시 (너무 작아서 안 보이는 문제 해결)
+                    final clampedProgress = progress.clamp(0.0, 1.0);
+                    // 실제 표시할 너비: 0~1%일 때 1%, 그 이상일 때는 실제 진행률
+                    final displayProgress = progress >= 0.01
+                        ? clampedProgress
+                        : 0.01;
+                    final displayWidth = constraints.maxWidth * displayProgress;
 
                     return Align(
                       alignment: Alignment.centerLeft,
@@ -213,8 +212,10 @@ class AssetGoalCardSimple extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFEBEE),
                       borderRadius: BorderRadius.circular(12),

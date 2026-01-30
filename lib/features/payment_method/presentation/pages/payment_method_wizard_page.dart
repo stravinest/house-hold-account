@@ -480,10 +480,12 @@ class _PaymentMethodWizardPageState
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                       foregroundColor: Theme.of(context).colorScheme.onPrimary,
-                      disabledBackgroundColor:
-                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
-                      disabledForegroundColor:
-                          Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.8),
+                      disabledBackgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.6),
+                      disabledForegroundColor: Theme.of(
+                        context,
+                      ).colorScheme.onPrimary.withValues(alpha: 0.8),
                       minimumSize: const Size(double.infinity, 52),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -901,13 +903,12 @@ class _PaymentMethodWizardPageState
           ),
           const SizedBox(height: 16),
 
-          // 1. Name setting - filled style로 변경
+          // 1. Name setting - 자동수집은 수정 불가 (읽기 전용)
           TextFormField(
             controller: _nameController,
             maxLength: 20,
+            enabled: false, // 자동수집 결제수단은 이름 수정 불가
             decoration: InputDecoration(
-              labelText: l10n.paymentMethodWizardAliasLabel,
-              helperText: l10n.paymentMethodWizardAliasHelper,
               filled: true,
               fillColor: const Color(0xFFF5F5F5), // #F5F5F5
               border: OutlineInputBorder(
@@ -915,6 +916,10 @@ class _PaymentMethodWizardPageState
                 borderSide: BorderSide.none,
               ),
               counterText: '',
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
           const SizedBox(height: 16),

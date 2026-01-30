@@ -109,7 +109,10 @@ class AssetGoalCard extends ConsumerWidget {
   ) {
     final progressColor = _getProgressColor(progress);
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // 0~1% 범위는 1%로 표시 (너무 작아서 안 보이는 문제 해결)
     final clampedProgress = progress.clamp(0.0, 1.0);
+    // 실제 표시할 너비: 0~1%일 때 1%, 그 이상일 때는 실제 진행률
+    final displayProgress = progress >= 0.01 ? clampedProgress : 0.01;
     final isCompleted = progress >= 1.0;
 
     // 배경 트랙 색상 - 미달성 영역을 명확하게 표시
@@ -208,7 +211,7 @@ class AssetGoalCard extends ConsumerWidget {
                 // 진행률 바 (그라데이션) - 달성 영역
                 FractionallySizedBox(
                   alignment: Alignment.centerLeft,
-                  widthFactor: clampedProgress,
+                  widthFactor: displayProgress,
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(8),
