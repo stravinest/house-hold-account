@@ -7,6 +7,7 @@ import '../../../../core/providers/safe_notifier.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/payment_method_repository.dart';
 import '../../data/repositories/learned_sms_format_repository.dart';
+import '../../data/repositories/learned_push_format_repository.dart';
 import '../../data/services/sms_scanner_service.dart';
 import '../../domain/entities/payment_method.dart';
 
@@ -21,6 +22,11 @@ final learnedSmsFormatRepositoryProvider = Provider<LearnedSmsFormatRepository>(
     return LearnedSmsFormatRepository();
   },
 );
+
+final learnedPushFormatRepositoryProvider =
+    Provider<LearnedPushFormatRepository>((ref) {
+      return LearnedPushFormatRepository();
+    });
 
 final smsScannerServiceProvider = Provider<SmsScannerService>((ref) {
   final repository = ref.watch(learnedSmsFormatRepositoryProvider);
@@ -53,14 +59,15 @@ final paymentMethodsByOwnerProvider =
     });
 
 // 공유 결제수단 목록 (직접입력, can_auto_save = false)
-final sharedPaymentMethodsProvider =
-    FutureProvider<List<PaymentMethod>>((ref) async {
-      final ledgerId = ref.watch(selectedLedgerIdProvider);
-      if (ledgerId == null) return [];
+final sharedPaymentMethodsProvider = FutureProvider<List<PaymentMethod>>((
+  ref,
+) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) return [];
 
-      final repository = ref.watch(paymentMethodRepositoryProvider);
-      return repository.getSharedPaymentMethods(ledgerId);
-    });
+  final repository = ref.watch(paymentMethodRepositoryProvider);
+  return repository.getSharedPaymentMethods(ledgerId);
+});
 
 // 특정 멤버의 자동수집 결제수단 목록 (can_auto_save = true)
 final autoCollectPaymentMethodsByOwnerProvider =

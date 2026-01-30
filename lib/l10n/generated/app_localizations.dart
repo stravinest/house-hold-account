@@ -2054,11 +2054,35 @@ abstract class AppLocalizations {
   /// **'제안'**
   String get autoSaveModeSuggest;
 
+  /// No description provided for @autoSaveModeSuggestSms.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS 제안'**
+  String get autoSaveModeSuggestSms;
+
+  /// No description provided for @autoSaveModeSuggestPush.
+  ///
+  /// In ko, this message translates to:
+  /// **'푸시 제안'**
+  String get autoSaveModeSuggestPush;
+
   /// No description provided for @autoSaveModeAuto.
   ///
   /// In ko, this message translates to:
   /// **'자동'**
   String get autoSaveModeAuto;
+
+  /// No description provided for @autoSaveModeAutoSms.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS 자동'**
+  String get autoSaveModeAutoSms;
+
+  /// No description provided for @autoSaveModeAutoPush.
+  ///
+  /// In ko, this message translates to:
+  /// **'푸시 자동'**
+  String get autoSaveModeAutoPush;
 
   /// No description provided for @pendingTransactionTab.
   ///

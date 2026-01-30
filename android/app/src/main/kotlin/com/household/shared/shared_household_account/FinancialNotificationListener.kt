@@ -7,15 +7,19 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import io.flutter.BuildConfig
+import kotlinx.coroutines.*
 
 /**
- * 금융 앱 알림을 수집하는 커스텀 NotificationListenerService
+ * 금융 앱 Push 알림을 수집하는 NotificationListenerService (SMS는 SmsBroadcastReceiver에서 처리)
  * 앱이 종료되어도 시스템 서비스로서 계속 동작하며, SQLite에 알림 저장
+ * 
+ * 현재: SQLite 저장 -> Flutter 동기화
+ * 향후: Kotlin에서 직접 파싱 -> Supabase 저장 예정
  */
 class FinancialNotificationListener : NotificationListenerService() {
 
     companion object {
-        private const val TAG = "FinancialNotification"
+        private const val TAG = "FinancialPushListener"
 
         // 금융 앱 패키지명 목록 (소문자로 저장)
         private val FINANCIAL_APP_PACKAGES: Set<String> = buildSet {
@@ -100,6 +104,18 @@ class FinancialNotificationListener : NotificationListenerService() {
         NotificationStorageHelper.getInstance(applicationContext)
     }
 
+    private val supabaseHelper: SupabaseHelper by lazy {
+        SupabaseHelper(applicationContext)
+    }
+
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
+    // Cache for learned formats and payment methods (refreshed periodically)
+    private var learnedFormatsCache: List<LearnedPushFormat> = emptyList()
+    private var paymentMethodsCache: List<SupabaseHelper.PaymentMethodInfo> = emptyList()
+    private var lastFormatsFetchTime: Long = 0
+    private val FORMATS_CACHE_DURATION = 5 * 60 * 1000L  // 5 minutes
+
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -109,6 +125,7 @@ class FinancialNotificationListener : NotificationListenerService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        serviceScope.cancel()
         instance = null
         Log.d(TAG, "FinancialNotificationListener service destroyed")
     }
@@ -121,6 +138,9 @@ class FinancialNotificationListener : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
         Log.d(TAG, "Notification listener connected")
+        
+        SmsContentObserver.register(applicationContext)
+        Log.d(TAG, "SmsContentObserver registered via NotificationListener")
     }
 
     override fun onListenerDisconnected() {
@@ -133,14 +153,10 @@ class FinancialNotificationListener : NotificationListenerService() {
 
         val packageName = sbn.packageName?.lowercase() ?: return
 
-        // 금융 앱인지 확인
-        if (!isFinancialApp(packageName)) {
-            return
-        }
+        if (!isFinancialApp(packageName)) return
 
         Log.d(TAG, "Financial notification received from: $packageName")
 
-        // 알림 내용 추출
         val notification = sbn.notification ?: return
         val extras = notification.extras ?: return
 
@@ -148,47 +164,192 @@ class FinancialNotificationListener : NotificationListenerService() {
         val text = extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
         val bigText = extras.getCharSequence(Notification.EXTRA_BIG_TEXT)?.toString()
 
-        // 텍스트 내용이 있어야 저장
         val content = bigText ?: text
         if (content.isNullOrBlank()) {
             Log.d(TAG, "Notification has no text content, skipping")
             return
         }
 
-        // 결제/거래 관련 키워드 확인 (선택적 필터링)
         if (!containsPaymentKeyword(content)) {
-            // 민감 정보 로깅 방지 - 내용은 출력하지 않음
             Log.d(TAG, "Notification does not contain payment keywords, skipping")
             return
         }
 
-        // 중복 확인
-        if (storageHelper.isDuplicate(packageName, content)) {
+        val normalizedContent = normalizeContent(content)
+
+        if (storageHelper.isDuplicate(packageName, normalizedContent)) {
             Log.d(TAG, "Duplicate notification, skipping")
             return
         }
 
-        // SQLite에 저장
-        val id = storageHelper.insertNotification(
-            packageName = packageName,
-            title = title,
-            text = content,
-            receivedAt = sbn.postTime
-        )
+        val combinedContent = if (title != null) "$title $normalizedContent" else normalizedContent
+        val timestamp = sbn.postTime
 
-        // 민감 정보(금액, 가맹점명 등)는 로그에 출력하지 않음
-        Log.d(TAG, "Notification saved with id: $id from $packageName")
-
-        // 저장된 알림 수 로그
-        val pendingCount = storageHelper.getPendingCount()
-        Log.d(TAG, "Total pending notifications: $pendingCount")
-
-        // Flutter로 새 알림 이벤트 전달 (앱이 실행 중인 경우)
-        MainActivity.notifyNewNotification(packageName, pendingCount)
+        serviceScope.launch {
+            processNotification(packageName, combinedContent, timestamp, title, normalizedContent)
+        }
     }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification?) {
         // 알림 제거 시에는 별도 처리 없음
+    }
+
+    private suspend fun processNotification(
+        packageName: String,
+        combinedContent: String,
+        timestamp: Long,
+        title: String?,
+        originalContent: String
+    ) {
+        val sqliteId = storageHelper.insertNotification(
+            packageName = packageName,
+            title = title,
+            text = originalContent,
+            receivedAt = timestamp
+        )
+        Log.d(TAG, "Notification saved to SQLite with id: $sqliteId")
+
+        if (!supabaseHelper.isInitialized) {
+            Log.d(TAG, "Supabase not initialized, using SQLite only")
+            notifyFlutter(packageName)
+            return
+        }
+
+        val ledgerId = supabaseHelper.getCurrentLedgerId()
+        val token = supabaseHelper.getValidToken()
+        val userId = token?.let { supabaseHelper.getUserIdFromToken(it) }
+
+        if (ledgerId == null || userId == null) {
+            Log.d(TAG, "No ledger or user, using SQLite only")
+            notifyFlutter(packageName)
+            return
+        }
+
+        refreshFormatsCache(ledgerId)
+
+        val matchingFormat = learnedFormatsCache.find { format ->
+            format.packageName.equals(packageName, ignoreCase = true) ||
+            format.appKeywords.any { keyword ->
+                combinedContent.contains(keyword, ignoreCase = true)
+            }
+        }
+
+        val parsed = if (matchingFormat != null) {
+            FinancialMessageParser.parseWithFormat(combinedContent, matchingFormat)
+        } else {
+            FinancialMessageParser.parse(packageName, combinedContent)
+        }
+
+        if (!parsed.isParsed) {
+            Log.d(TAG, "Failed to parse notification, keeping in SQLite for Flutter sync")
+            notifyFlutter(packageName)
+            return
+        }
+
+        var paymentMethodId = matchingFormat?.paymentMethodId ?: ""
+        var matchedPaymentMethod: SupabaseHelper.PaymentMethodInfo? = null
+        
+        // learned_push_formats에서 매칭 안 되면 결제수단 이름으로 fallback 매칭
+        if (paymentMethodId.isEmpty()) {
+            matchedPaymentMethod = paymentMethodsCache.find { pm ->
+                pm.autoCollectSource == "push" && combinedContent.contains(pm.name, ignoreCase = true)
+            }
+            if (matchedPaymentMethod != null) {
+                paymentMethodId = matchedPaymentMethod.id
+                Log.d(TAG, "Fallback matched by payment method name: ${matchedPaymentMethod.name}")
+            }
+        }
+
+        val duplicateHash = FinancialMessageParser.generateDuplicateHash(
+            parsed.amount ?: 0,
+            paymentMethodId.ifEmpty { null },
+            timestamp
+        )
+        
+        // 매칭되는 결제수단이 없으면 스킵 (SQLite는 synced 처리하여 Flutter에서 재처리 방지)
+        if (paymentMethodId.isEmpty()) {
+            Log.d(TAG, "No matching payment method found, skipping push notification collection")
+            storageHelper.markAsSynced(listOf(sqliteId))
+            notifyFlutter(packageName)
+            return
+        }
+
+        val settings = matchedPaymentMethod?.let {
+            SupabaseHelper.PaymentMethodAutoSettings(it.autoSaveMode, it.autoCollectSource)
+        } ?: supabaseHelper.getPaymentMethodAutoSettings(paymentMethodId)
+
+        // SMS 모드로 설정된 결제수단이면 Push 스킵 (SQLite는 synced 처리)
+        if (settings != null && !settings.isPushSource) {
+            Log.d(TAG, "Payment method is set to SMS mode, skipping push notification collection")
+            storageHelper.markAsSynced(listOf(sqliteId))
+            notifyFlutter(packageName)
+            return
+        }
+
+        val success = if (settings?.isAutoMode == true) {
+            Log.d(TAG, "Auto mode enabled for payment method: $paymentMethodId, creating confirmed transaction")
+            supabaseHelper.createConfirmedTransaction(
+                ledgerId = ledgerId,
+                userId = userId,
+                paymentMethodId = paymentMethodId,
+                sourceType = "notification",
+                sourceSender = packageName,
+                sourceContent = combinedContent,
+                sourceTimestamp = timestamp,
+                parsedAmount = parsed.amount,
+                parsedType = parsed.transactionType,
+                parsedMerchant = parsed.merchant,
+                parsedCategoryId = null
+            )
+        } else {
+            Log.d(TAG, "Suggest mode for payment method: $paymentMethodId, creating pending transaction")
+            supabaseHelper.createPendingTransaction(
+                ledgerId = ledgerId,
+                userId = userId,
+                paymentMethodId = paymentMethodId,
+                sourceType = "notification",
+                sourceSender = packageName,
+                sourceContent = combinedContent,
+                sourceTimestamp = timestamp,
+                parsedAmount = parsed.amount,
+                parsedType = parsed.transactionType,
+                parsedMerchant = parsed.merchant,
+                parsedCategoryId = null,
+                duplicateHash = duplicateHash,
+                isDuplicate = false
+            )
+        }
+
+        if (success) {
+            Log.d(TAG, "Notification saved to Supabase, marking SQLite as synced")
+            storageHelper.markAsSynced(listOf(sqliteId))
+        } else {
+            Log.d(TAG, "Supabase save failed, keeping in SQLite for later sync")
+        }
+
+        notifyFlutter(packageName)
+    }
+
+    private suspend fun refreshFormatsCache(ledgerId: String) {
+        val now = System.currentTimeMillis()
+        if (now - lastFormatsFetchTime < FORMATS_CACHE_DURATION && learnedFormatsCache.isNotEmpty()) {
+            return
+        }
+
+        try {
+            learnedFormatsCache = supabaseHelper.getLearnedPushFormats(ledgerId)
+            paymentMethodsCache = supabaseHelper.getPaymentMethodsByLedger(ledgerId)
+            lastFormatsFetchTime = now
+            Log.d(TAG, "Refreshed ${learnedFormatsCache.size} learned push formats, ${paymentMethodsCache.size} payment methods")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to refresh formats cache", e)
+        }
+    }
+
+    private fun notifyFlutter(packageName: String) {
+        val pendingCount = storageHelper.getPendingCount()
+        Log.d(TAG, "Total pending notifications: $pendingCount")
+        MainActivity.notifyNewNotification(packageName, pendingCount)
     }
 
     /**
@@ -207,6 +368,15 @@ class FinancialNotificationListener : NotificationListenerService() {
         return PAYMENT_KEYWORDS.any { keyword ->
             lowerText.contains(keyword)
         }
+    }
+    
+    private fun normalizeContent(content: String): String {
+        return content
+            .replace("\r\n", " ")
+            .replace("\n", " ")
+            .replace("\r", " ")
+            .replace(Regex("\\s+"), " ")
+            .trim()
     }
 
     // 아래 메서드들은 현재 MainActivity에서 NotificationStorageHelper를 직접 사용하므로

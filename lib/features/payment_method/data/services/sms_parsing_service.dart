@@ -1,3 +1,4 @@
+import '../../../payment_method/domain/entities/learned_push_format.dart';
 import '../../../payment_method/domain/entities/learned_sms_format.dart';
 
 /// SMS 파싱 결과를 담는 클래스
@@ -125,7 +126,10 @@ class FinancialSmsSenders {
   /// 발신자 또는 본문에서 금융사 식별
   /// [sender]: 발신자 (번호 또는 이름)
   /// [content]: 문자 본문 (선택, 제공 시 본문에서도 금융사 패턴 검색)
-  static String? identifyFinancialInstitution(String sender, [String? content]) {
+  static String? identifyFinancialInstitution(
+    String sender, [
+    String? content,
+  ]) {
     final lowerSender = sender.toLowerCase();
     final lowerContent = content?.toLowerCase();
 
@@ -297,11 +301,9 @@ class SmsParsingService {
     );
   }
 
-  /// 학습된 포맷을 사용하여 SMS 파싱
-  static ParsedSmsResult parseSmsWithFormat(
-    String content,
-    LearnedSmsFormat format,
-  ) {
+  /// 학습된 포맷을 사용하여 SMS/Push 파싱
+  /// [format]은 LearnedSmsFormat 또는 LearnedPushFormat을 받을 수 있음
+  static ParsedSmsResult parseSmsWithFormat(String content, dynamic format) {
     int? amount;
     String? transactionType;
     String? merchant;
@@ -375,13 +377,20 @@ class SmsParsingService {
         ) *
         format.confidence;
 
+    // matchedPattern: LearnedSmsFormat은 senderPattern, LearnedPushFormat은 packageName 사용
+    final matchedPattern = (format is LearnedSmsFormat)
+        ? format.senderPattern
+        : (format is LearnedPushFormat)
+        ? format.packageName
+        : null;
+
     return ParsedSmsResult(
       amount: amount,
       transactionType: transactionType,
       merchant: merchant,
       date: date,
       confidence: confidence,
-      matchedPattern: format.senderPattern,
+      matchedPattern: matchedPattern,
     );
   }
 

@@ -9,7 +9,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../data/services/auto_save_service.dart';
 import '../../data/services/native_notification_sync_service.dart';
-import '../../../../core/utils/color_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
@@ -60,7 +59,8 @@ _DateGroup _getDateGroup(DateTime date, DateTime now) {
   if (difference <= 7 && date.year == now.year && date.month == now.month) {
     return _DateGroup.thisWeek;
   }
-  if (date.year == now.year && date.month == now.month) return _DateGroup.thisMonth;
+  if (date.year == now.year && date.month == now.month)
+    return _DateGroup.thisMonth;
   return _DateGroup.older;
 }
 
@@ -127,12 +127,14 @@ class _PaymentMethodManagementPageState
         .instance
         .onNativeNotification
         .listen((event) {
-      if (kDebugMode) {
-        debugPrint('[PaymentMethodPage] Native notification received, refreshing badge...');
-      }
-      // Provider invalidate로 배지 카운트 갱신
-      ref.invalidate(pendingTransactionCountProvider);
-    });
+          if (kDebugMode) {
+            debugPrint(
+              '[PaymentMethodPage] Native notification received, refreshing badge...',
+            );
+          }
+          // Provider invalidate로 배지 카운트 갱신
+          ref.invalidate(pendingTransactionCountProvider);
+        });
   }
 
   void _onMainTabChanged() {
@@ -143,7 +145,8 @@ class _PaymentMethodManagementPageState
     setState(() {});
 
     // Mark as viewed when auto-collect history tab is selected (Android only)
-    if (_isAndroidPlatform && _mainTabController.index == _autoCollectHistoryTabIndex) {
+    if (_isAndroidPlatform &&
+        _mainTabController.index == _autoCollectHistoryTabIndex) {
       _handleAutoCollectTabSelected();
     }
   }
@@ -222,8 +225,9 @@ class _PaymentMethodManagementPageState
                           ),
                           decoration: BoxDecoration(
                             color: colorScheme.error,
-                            borderRadius:
-                                BorderRadius.circular(_badgeBorderRadius),
+                            borderRadius: BorderRadius.circular(
+                              _badgeBorderRadius,
+                            ),
                           ),
                           constraints: const BoxConstraints(minWidth: 18),
                           child: Text(
@@ -308,9 +312,7 @@ class _PaymentMethodManagementPageState
   void _showAddDialog(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const PaymentMethodWizardPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const PaymentMethodWizardPage()),
     );
   }
 }
@@ -336,7 +338,9 @@ class _PaymentMethodListView extends ConsumerWidget {
 
     final userId = currentUser.id;
     final sharedAsync = ref.watch(sharedPaymentMethodsProvider);
-    final autoCollectAsync = ref.watch(autoCollectPaymentMethodsByOwnerProvider(userId));
+    final autoCollectAsync = ref.watch(
+      autoCollectPaymentMethodsByOwnerProvider(userId),
+    );
 
     // Parallel loading handling
     final isLoading = sharedAsync.isLoading || autoCollectAsync.isLoading;
@@ -617,9 +621,7 @@ class _PaymentMethodListView extends ConsumerWidget {
   void _showAddDialog(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const PaymentMethodWizardPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const PaymentMethodWizardPage()),
     );
   }
 
@@ -789,11 +791,15 @@ class _PaymentMethodListView extends ConsumerWidget {
     );
   }
 
-  void _showAutoSaveModeDialog(BuildContext context, PaymentMethod paymentMethod) {
+  void _showAutoSaveModeDialog(
+    BuildContext context,
+    PaymentMethod paymentMethod,
+  ) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PaymentMethodWizardPage(paymentMethod: paymentMethod),
+        builder: (context) =>
+            PaymentMethodWizardPage(paymentMethod: paymentMethod),
       ),
     );
   }
@@ -818,7 +824,8 @@ class _SharedPaymentMethodChip extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Semantics(
-      label: '${paymentMethod.name}${paymentMethod.isDefault ? ', ${l10n.paymentMethodDefault}' : ''}',
+      label:
+          '${paymentMethod.name}${paymentMethod.isDefault ? ', ${l10n.paymentMethodDefault}' : ''}',
       button: true,
       child: Stack(
         clipBehavior: Clip.none,
@@ -836,10 +843,10 @@ class _SharedPaymentMethodChip extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: colorScheme.surface,
-                  borderRadius: BorderRadius.circular(BorderRadiusToken.circular),
-                  border: Border.all(
-                    color: colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(
+                    BorderRadiusToken.circular,
                   ),
+                  border: Border.all(color: colorScheme.outlineVariant),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -952,7 +959,7 @@ class _AutoCollectPaymentMethodCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
                   ),
                   child: Text(
-                    _getAutoSaveModeText(l10n, paymentMethod.autoSaveMode),
+                    _getAutoSaveModeText(l10n, paymentMethod),
                     style: textTheme.labelSmall?.copyWith(
                       color: paymentMethod.isAutoSaveEnabled
                           ? colorScheme.onPrimaryContainer
@@ -987,11 +994,20 @@ class _AutoCollectPaymentMethodCard extends StatelessWidget {
     );
   }
 
-  String _getAutoSaveModeText(AppLocalizations l10n, AutoSaveMode mode) {
-    return switch (mode) {
+  String _getAutoSaveModeText(
+    AppLocalizations l10n,
+    PaymentMethod paymentMethod,
+  ) {
+    return switch (paymentMethod.autoSaveMode) {
       AutoSaveMode.manual => l10n.autoSaveModeOff,
-      AutoSaveMode.suggest => l10n.autoSaveModeSuggest,
-      AutoSaveMode.auto => l10n.autoSaveModeAuto,
+      AutoSaveMode.suggest =>
+        paymentMethod.autoCollectSource == AutoCollectSource.sms
+            ? l10n.autoSaveModeSuggestSms
+            : l10n.autoSaveModeSuggestPush,
+      AutoSaveMode.auto =>
+        paymentMethod.autoCollectSource == AutoCollectSource.sms
+            ? l10n.autoSaveModeAutoSms
+            : l10n.autoSaveModeAutoPush,
     };
   }
 }
@@ -1001,10 +1017,7 @@ class _PendingTransactionListView extends ConsumerStatefulWidget {
   final PendingTransactionStatus status;
   final TabController? tabController;
 
-  const _PendingTransactionListView({
-    required this.status,
-    this.tabController,
-  });
+  const _PendingTransactionListView({required this.status, this.tabController});
 
   @override
   ConsumerState<_PendingTransactionListView> createState() =>
@@ -1033,10 +1046,16 @@ class _PendingTransactionListViewState
     final asyncState = ref.watch(pendingTransactionNotifierProvider);
 
     final filteredTransactions = switch (widget.status) {
-      PendingTransactionStatus.pending => ref.watch(pendingTabTransactionsProvider),
+      PendingTransactionStatus.pending => ref.watch(
+        pendingTabTransactionsProvider,
+      ),
       PendingTransactionStatus.converted ||
-      PendingTransactionStatus.confirmed => ref.watch(confirmedTabTransactionsProvider),
-      PendingTransactionStatus.rejected => ref.watch(rejectedTabTransactionsProvider),
+      PendingTransactionStatus.confirmed => ref.watch(
+        confirmedTabTransactionsProvider,
+      ),
+      PendingTransactionStatus.rejected => ref.watch(
+        rejectedTabTransactionsProvider,
+      ),
     };
 
     // ledgerId나 userId가 없으면 빈 상태 표시
@@ -1091,9 +1110,7 @@ class _PendingTransactionListViewState
 
     // Loading 상태 처리 (초기 로딩만)
     if (asyncState.isLoading && filteredTransactions.isEmpty) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (filteredTransactions.isEmpty) {
@@ -1122,7 +1139,9 @@ class _PendingTransactionListViewState
     // Date grouping (newest first)
     final grouped = _groupTransactionsByDate(filteredTransactions);
     final sortedGroups = grouped.keys.toList()
-      ..sort((a, b) => a.index.compareTo(b.index)); // today(0) -> older(4) order
+      ..sort(
+        (a, b) => a.index.compareTo(b.index),
+      ); // today(0) -> older(4) order
 
     return Column(
       children: [
@@ -1135,10 +1154,7 @@ class _PendingTransactionListViewState
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerLow,
             border: Border(
-              bottom: BorderSide(
-                color: colorScheme.outlineVariant,
-                width: 1,
-              ),
+              bottom: BorderSide(color: colorScheme.outlineVariant, width: 1),
             ),
           ),
           child: Row(
@@ -1151,7 +1167,12 @@ class _PendingTransactionListViewState
                 ),
               ),
               TextButton.icon(
-                onPressed: () => _showDeleteAllConfirm(context, ref, l10n, filteredTransactions.length),
+                onPressed: () => _showDeleteAllConfirm(
+                  context,
+                  ref,
+                  l10n,
+                  filteredTransactions.length,
+                ),
                 icon: Icon(
                   Icons.delete_sweep_outlined,
                   size: IconSize.sm,
@@ -1182,61 +1203,66 @@ class _PendingTransactionListViewState
               padding: const EdgeInsets.all(Spacing.md),
               itemCount: sortedGroups.length,
               itemBuilder: (context, groupIndex) {
-              final group = sortedGroups[groupIndex];
-              // Create new list for immutability and sort by newest first
-              final sortedTransactions = grouped[group]!.toList()
-                ..sort((a, b) => b.sourceTimestamp.compareTo(a.sourceTimestamp));
+                final group = sortedGroups[groupIndex];
+                // Create new list for immutability and sort by newest first
+                final sortedTransactions = grouped[group]!.toList()
+                  ..sort(
+                    (a, b) => b.sourceTimestamp.compareTo(a.sourceTimestamp),
+                  );
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Date group header
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: Spacing.sm,
-                      bottom: Spacing.sm,
-                    ),
-                    child: Text(
-                      _getDateGroupLabel(l10n, group),
-                      style: textTheme.titleSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Date group header
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        top: Spacing.sm,
+                        bottom: Spacing.sm,
+                      ),
+                      child: Text(
+                        _getDateGroupLabel(l10n, group),
+                        style: textTheme.titleSmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                  // Transaction cards
-                  for (final tx in sortedTransactions)
-                    PendingTransactionCard(
-                      key: ValueKey(tx.id),
-                      transaction: tx,
-                      ledgerId: ledgerId,
-                      userId: currentUser.id,
-                      onEdit: widget.status == PendingTransactionStatus.pending
-                          ? () {
-                              if (tx is PendingTransactionModel) {
-                                _showEditSheet(context, ref, tx);
+                    // Transaction cards
+                    for (final tx in sortedTransactions)
+                      PendingTransactionCard(
+                        key: ValueKey(tx.id),
+                        transaction: tx,
+                        ledgerId: ledgerId,
+                        userId: currentUser.id,
+                        onEdit:
+                            widget.status == PendingTransactionStatus.pending
+                            ? () {
+                                if (tx is PendingTransactionModel) {
+                                  _showEditSheet(context, ref, tx);
+                                }
                               }
-                            }
-                          : null,
-                      onReject: widget.status == PendingTransactionStatus.pending
-                          ? () => _rejectTransaction(context, ref, tx.id)
-                          : null,
-                      onConfirm: widget.status == PendingTransactionStatus.pending &&
-                              tx is PendingTransactionModel
-                          ? () => _confirmTransaction(context, ref, tx)
-                          : null,
-                      onDelete: () =>
-                          _deletePendingTransaction(context, ref, tx.id),
-                      onViewOriginal: tx.isDuplicate
-                          ? () {
-                              // 원본 거래로 스크롤하거나 표시
-                              // TODO: 구현 필요
-                            }
-                          : null,
-                    ),
-                ],
-              );
-            },
+                            : null,
+                        onReject:
+                            widget.status == PendingTransactionStatus.pending
+                            ? () => _rejectTransaction(context, ref, tx.id)
+                            : null,
+                        onConfirm:
+                            widget.status == PendingTransactionStatus.pending &&
+                                tx is PendingTransactionModel
+                            ? () => _confirmTransaction(context, ref, tx)
+                            : null,
+                        onDelete: () =>
+                            _deletePendingTransaction(context, ref, tx.id),
+                        onViewOriginal: tx.isDuplicate
+                            ? () {
+                                // 원본 거래로 스크롤하거나 표시
+                                // TODO: 구현 필요
+                              }
+                            : null,
+                      ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -1255,7 +1281,9 @@ class _PendingTransactionListViewState
       context: parentContext,
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.pendingTransactionDeleteAllConfirmTitle),
-        content: Text(l10n.pendingTransactionDeleteAllConfirmMessage(statusText, count)),
+        content: Text(
+          l10n.pendingTransactionDeleteAllConfirmMessage(statusText, count),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -1265,7 +1293,9 @@ class _PendingTransactionListViewState
             onPressed: () async {
               Navigator.pop(dialogContext);
               try {
-                final notifier = ref.read(pendingTransactionNotifierProvider.notifier);
+                final notifier = ref.read(
+                  pendingTransactionNotifierProvider.notifier,
+                );
                 // 확인됨 탭에서는 confirmed + converted 둘 다 삭제
                 if (widget.status == PendingTransactionStatus.converted ||
                     widget.status == PendingTransactionStatus.confirmed) {
@@ -1274,7 +1304,10 @@ class _PendingTransactionListViewState
                   await notifier.deleteAllByStatus(widget.status);
                 }
                 if (parentContext.mounted) {
-                  SnackBarUtils.showSuccess(parentContext, l10n.pendingTransactionDeleteAllSuccess);
+                  SnackBarUtils.showSuccess(
+                    parentContext,
+                    l10n.pendingTransactionDeleteAllSuccess,
+                  );
                 }
               } catch (e) {
                 if (parentContext.mounted) {
@@ -1284,7 +1317,9 @@ class _PendingTransactionListViewState
             },
             child: Text(
               l10n.commonDelete,
-              style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
+              style: TextStyle(
+                color: Theme.of(dialogContext).colorScheme.error,
+              ),
             ),
           ),
         ],
@@ -1292,25 +1327,37 @@ class _PendingTransactionListViewState
     );
   }
 
-  String _getStatusText(AppLocalizations l10n, PendingTransactionStatus status) {
+  String _getStatusText(
+    AppLocalizations l10n,
+    PendingTransactionStatus status,
+  ) {
     return switch (status) {
       PendingTransactionStatus.pending => l10n.pendingTransactionStatusPending,
       PendingTransactionStatus.converted ||
-      PendingTransactionStatus.confirmed => l10n.pendingTransactionStatusConfirmed,
-      PendingTransactionStatus.rejected => l10n.pendingTransactionStatusRejected,
+      PendingTransactionStatus.confirmed =>
+        l10n.pendingTransactionStatusConfirmed,
+      PendingTransactionStatus.rejected =>
+        l10n.pendingTransactionStatusRejected,
     };
   }
 
-  String _getEmptyMessage(AppLocalizations l10n, PendingTransactionStatus status) {
+  String _getEmptyMessage(
+    AppLocalizations l10n,
+    PendingTransactionStatus status,
+  ) {
     return switch (status) {
       PendingTransactionStatus.pending => l10n.pendingTransactionEmptyPending,
       PendingTransactionStatus.converted ||
-      PendingTransactionStatus.confirmed => l10n.pendingTransactionEmptyConfirmed,
+      PendingTransactionStatus.confirmed =>
+        l10n.pendingTransactionEmptyConfirmed,
       PendingTransactionStatus.rejected => l10n.pendingTransactionEmptyRejected,
     };
   }
 
-  String? _getEmptySubtitle(AppLocalizations l10n, PendingTransactionStatus status) {
+  String? _getEmptySubtitle(
+    AppLocalizations l10n,
+    PendingTransactionStatus status,
+  ) {
     if (status == PendingTransactionStatus.pending) {
       return l10n.pendingTransactionEmptySubtitle;
     }
@@ -1547,8 +1594,9 @@ class _PendingTransactionEditSheetState
                         padding: const EdgeInsets.all(Spacing.md),
                         decoration: BoxDecoration(
                           color: colorScheme.surfaceContainerHighest,
-                          borderRadius:
-                              BorderRadius.circular(BorderRadiusToken.sm),
+                          borderRadius: BorderRadius.circular(
+                            BorderRadiusToken.sm,
+                          ),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1556,7 +1604,8 @@ class _PendingTransactionEditSheetState
                             Row(
                               children: [
                                 Icon(
-                                  widget.transaction.sourceType == SourceType.sms
+                                  widget.transaction.sourceType ==
+                                          SourceType.sms
                                       ? Icons.sms_outlined
                                       : Icons.notifications_outlined,
                                   size: IconSize.sm,
@@ -1634,10 +1683,10 @@ class _PendingTransactionEditSheetState
                           colorScheme,
                           textTheme,
                         ),
-                        loading: () => const Center(
-                          child: CircularProgressIndicator(),
-                        ),
-                        error: (e, _) => Text(l10n.errorWithMessage(e.toString())),
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (e, _) =>
+                            Text(l10n.errorWithMessage(e.toString())),
                       ),
                       const SizedBox(height: Spacing.lg),
 
@@ -1651,14 +1700,16 @@ class _PendingTransactionEditSheetState
                       const SizedBox(height: Spacing.sm),
                       InkWell(
                         onTap: () => _selectDate(context),
-                        borderRadius:
-                            BorderRadius.circular(BorderRadiusToken.sm),
+                        borderRadius: BorderRadius.circular(
+                          BorderRadiusToken.sm,
+                        ),
                         child: Container(
                           padding: const EdgeInsets.all(Spacing.md),
                           decoration: BoxDecoration(
                             border: Border.all(color: colorScheme.outline),
-                            borderRadius:
-                                BorderRadius.circular(BorderRadiusToken.sm),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.sm,
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -1823,8 +1874,9 @@ class _PendingTransactionEditSheetState
   /// 수정 버튼: 변경 내용만 저장하고 대기중 상태 유지
   Future<void> _updateTransaction() async {
     final l10n = AppLocalizations.of(context);
-    final amountText =
-        _amountController.text.replaceAll(',', '').replaceAll(' ', '');
+    final amountText = _amountController.text
+        .replaceAll(',', '')
+        .replaceAll(' ', '');
     final amount = int.tryParse(amountText);
 
     if (amount == null || amount <= 0) {
@@ -1876,8 +1928,9 @@ class _PendingTransactionEditSheetState
   /// 저장 버튼: 거래 생성 및 확인됨 상태로 변경
   Future<void> _confirmTransaction() async {
     final l10n = AppLocalizations.of(context);
-    final amountText =
-        _amountController.text.replaceAll(',', '').replaceAll(' ', '');
+    final amountText = _amountController.text
+        .replaceAll(',', '')
+        .replaceAll(' ', '');
     final amount = int.tryParse(amountText);
 
     if (amount == null || amount <= 0) {
@@ -2011,10 +2064,7 @@ class _AddSharedPaymentMethodDialogState
           onPressed: () => Navigator.pop(context),
           child: Text(l10n.commonCancel),
         ),
-        TextButton(
-          onPressed: _submit,
-          child: Text(l10n.commonAdd),
-        ),
+        TextButton(onPressed: _submit, child: Text(l10n.commonAdd)),
       ],
     );
   }
@@ -2026,24 +2076,20 @@ class _AddSharedPaymentMethodDialogState
 
     try {
       // 공유 결제수단 생성 (canAutoSave = false)
-      await ref.read(paymentMethodNotifierProvider.notifier).createPaymentMethod(
+      await ref
+          .read(paymentMethodNotifierProvider.notifier)
+          .createPaymentMethod(
             name: _nameController.text.trim(),
             canAutoSave: false,
           );
 
       if (mounted) {
         Navigator.pop(context);
-        SnackBarUtils.showSuccess(
-          context,
-          l10n.paymentMethodAdded,
-        );
+        SnackBarUtils.showSuccess(context, l10n.paymentMethodAdded);
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(
-          context,
-          l10n.errorWithMessage(e.toString()),
-        );
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
     }
   }

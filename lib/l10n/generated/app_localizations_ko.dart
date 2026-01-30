@@ -1051,7 +1051,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get autoSaveModeSuggest => '제안';
 
   @override
+  String get autoSaveModeSuggestSms => 'SMS 제안';
+
+  @override
+  String get autoSaveModeSuggestPush => '푸시 제안';
+
+  @override
   String get autoSaveModeAuto => '자동';
+
+  @override
+  String get autoSaveModeAutoSms => 'SMS 자동';
+
+  @override
+  String get autoSaveModeAutoPush => '푸시 자동';
 
   @override
   String get pendingTransactionTab => '자동수집내역';

@@ -6,11 +6,14 @@ import 'package:notification_listener_service/notification_event.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 
 import '../../../transaction/data/repositories/transaction_repository.dart';
+import '../../domain/entities/learned_push_format.dart';
 import '../../domain/entities/learned_sms_format.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/pending_transaction.dart';
+import '../models/learned_push_format_model.dart';
 import '../models/learned_sms_format_model.dart';
 import '../models/payment_method_model.dart';
+import '../repositories/learned_push_format_repository.dart';
 import '../repositories/learned_sms_format_repository.dart';
 import '../repositories/payment_method_repository.dart';
 import '../repositories/pending_transaction_repository.dart';
@@ -38,16 +41,17 @@ class NotificationListenerWrapper {
       PaymentMethodRepository();
   final PendingTransactionRepository _pendingTransactionRepository =
       PendingTransactionRepository();
-  final TransactionRepository _transactionRepository =
-      TransactionRepository();
+  final TransactionRepository _transactionRepository = TransactionRepository();
   final LearnedSmsFormatRepository _learnedSmsFormatRepository =
       LearnedSmsFormatRepository();
+  final LearnedPushFormatRepository _learnedPushFormatRepository =
+      LearnedPushFormatRepository();
   final CategoryMappingService _categoryMappingService =
       CategoryMappingService();
   final DuplicateCheckService _duplicateCheckService = DuplicateCheckService();
 
   List<PaymentMethodModel> _autoSavePaymentMethods = [];
-  final Map<String, List<LearnedSmsFormatModel>> _learnedFormatsCache = {};
+  final Map<String, List<LearnedPushFormatModel>> _learnedFormatsCache = {};
 
   // SMS/Push 중복 수신 방지 캐시 (메시지 해시 → 타임스탬프)
   final Map<String, DateTime> _recentlyProcessedMessages = {};
@@ -58,51 +62,41 @@ class NotificationListenerWrapper {
     // KB 카드/은행
     'com.kbcard.cxh.appcard', // KB Pay (KB국민카드 앱)
     'com.kbstar.kbbank', // KB국민은행
-
     // 신한 카드/은행
     'com.shinhan.sbanking', // 신한은행
     'com.shcard.smartpay', // 신한 SOL페이 (메인 카드 앱)
     'com.shinhancard.wallet', // 신한카드 올댓
     'com.shinhancard.smartshinhan', // 구 신한카드 앱
-
     // 삼성 카드/페이
     'com.samsung.android.spay', // 삼성페이
     'kr.co.samsungcard.mpocket', // 삼성카드 메인 앱
     'net.ib.android.smcard', // monimo (삼성금융네트웍스)
     'com.samsungcard.shopping', // 삼성카드 쇼핑
-
     // 현대카드
     'com.hyundaicard.appcard', // 현대카드 메인 앱
     'com.hyundaicard.weather', // 현대카드 웨더
     'com.hyundaicard.cultureapp', // 현대카드 DIVE
     'com.hyundaicard.hyundaicardmpoint', // 현대카드 M몰
-
     // 롯데카드
     'com.lcacapp', // 디지로카 (롯데카드 메인 앱)
     'com.lottecard.lcap', // 롯데카드 인슈플러스
-
     // 우리/하나 카드
     'com.wooricard.smartapp', // 우리카드
     'com.hanacard.app', // 하나카드
-
     // NH농협
     'nh.smart.nhallone', // NH스마트올원
     'nh.smart.banking', // NH스마트뱅킹
-
     // 기타 은행
     'com.ibk.neobanking', // IBK기업은행
-
     // 인터넷 전문 은행
     'com.kakaobank.channel', // 카카오뱅크
     'viva.republica.toss', // 토스뱅크
     'com.kbank.kbankapp', // 케이뱅크
-
     // 간편결제
     'com.naver.pay.app', // 네이버페이
     'com.naverfin.payapp', // 네이버페이 (대체)
     'com.kakaopay.app', // 카카오페이
     'com.komsco.kpay', // K-Pay
-
     // 경기지역화폐 (실제 확인된 패키지명)
     'gov.gyeonggi.ggcard', // 경기지역화폐 공식 앱 (확인됨!)
     'kr.or.ggc', // 경기지역화폐 공통
@@ -126,7 +120,8 @@ class NotificationListenerWrapper {
   // 자기 앱 패키지 - 순환 푸시 알림 방지를 위해 제외
   // 공유 가계부에서 A가 거래 등록 시 B에게 푸시 알림이 가는데,
   // 이 알림이 B의 자동수집에서 감지되어 중복 거래가 생성되는 것을 방지
-  static const String _ownAppPackage = 'com.household.shared.shared_household_account';
+  static const String _ownAppPackage =
+      'com.household.shared.shared_household_account';
 
   final _onNotificationProcessedController =
       StreamController<NotificationProcessedEvent>.broadcast();
@@ -153,7 +148,8 @@ class NotificationListenerWrapper {
 
     try {
       // dynamic으로 받아서 타입 에러 방지
-      final dynamic result = await NotificationListenerService.requestPermission();
+      final dynamic result =
+          await NotificationListenerService.requestPermission();
       // bool로 안전하게 변환
       if (result is bool) {
         return result;
@@ -174,7 +170,8 @@ class NotificationListenerWrapper {
 
     try {
       // dynamic으로 받아서 타입 에러 방지
-      final dynamic result = await NotificationListenerService.requestPermission();
+      final dynamic result =
+          await NotificationListenerService.requestPermission();
       // 반환값을 명시적으로 처리하여 타입 에러 방지
       if (kDebugMode) {
         debugPrint('Notification settings opened, result: $result');
@@ -232,7 +229,9 @@ class NotificationListenerWrapper {
     }
 
     if (kDebugMode) {
-      debugPrint('[NativeSync] Found ${cachedNotifications.length} cached notifications');
+      debugPrint(
+        '[NativeSync] Found ${cachedNotifications.length} cached notifications',
+      );
     }
 
     final processedIds = <int>[];
@@ -250,15 +249,23 @@ class NotificationListenerWrapper {
         successCount++;
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('[NativeSync] Failed to process notification ${notification.id}: $e');
+          debugPrint(
+            '[NativeSync] Failed to process notification ${notification.id}: $e',
+          );
         }
         // 실패한 알림의 재시도 횟수 증가 (3회 초과 시 더 이상 재시도하지 않음)
-        final newRetryCount = await syncService.incrementRetryCount(notification.id);
+        final newRetryCount = await syncService.incrementRetryCount(
+          notification.id,
+        );
         if (kDebugMode) {
           if (newRetryCount >= 3) {
-            debugPrint('[NativeSync] Notification ${notification.id} exceeded max retries, will not retry');
+            debugPrint(
+              '[NativeSync] Notification ${notification.id} exceeded max retries, will not retry',
+            );
           } else {
-            debugPrint('[NativeSync] Notification ${notification.id} retry count: $newRetryCount/3');
+            debugPrint(
+              '[NativeSync] Notification ${notification.id} retry count: $newRetryCount/3',
+            );
           }
         }
         // 실패해도 다음 알림 처리 계속
@@ -274,14 +281,18 @@ class NotificationListenerWrapper {
     await syncService.clearOldNotifications(olderThanDays: 7);
 
     if (kDebugMode) {
-      debugPrint('[NativeSync] Synced $successCount/${cachedNotifications.length} notifications');
+      debugPrint(
+        '[NativeSync] Synced $successCount/${cachedNotifications.length} notifications',
+      );
     }
 
     return successCount;
   }
 
   /// 네이티브에서 캐싱된 알림 처리
-  Future<void> _processCachedNotification(CachedNotification notification) async {
+  Future<void> _processCachedNotification(
+    CachedNotification notification,
+  ) async {
     if (_currentUserId == null || _currentLedgerId == null) return;
 
     final packageName = notification.packageName;
@@ -292,7 +303,10 @@ class NotificationListenerWrapper {
     final combinedContent = '$title $content';
 
     // 결제수단 매칭
-    final matchResult = _findMatchingPaymentMethod(packageName, combinedContent);
+    final matchResult = _findMatchingPaymentMethod(
+      packageName,
+      combinedContent,
+    );
 
     if (matchResult == null) {
       if (kDebugMode) {
@@ -328,7 +342,7 @@ class NotificationListenerWrapper {
 
     for (final pm in _autoSavePaymentMethods) {
       try {
-        final formats = await _learnedSmsFormatRepository.getByPaymentMethodId(
+        final formats = await _learnedPushFormatRepository.getByPaymentMethodId(
           pm.id,
         );
         if (formats.isNotEmpty) {
@@ -385,13 +399,16 @@ class NotificationListenerWrapper {
 
     if (_currentUserId == null || _currentLedgerId == null) {
       if (kDebugMode) {
-        debugPrint('[NotificationListener] Skipping: userId or ledgerId is null');
+        debugPrint(
+          '[NotificationListener] Skipping: userId or ledgerId is null',
+        );
       }
       return;
     }
     // hasRemoved 체크 - 디버그 모드의 테스트 알림은 예외 처리
     final packageName = event.packageName ?? '';
-    final isTestNotification = kDebugMode && packageName.toLowerCase().contains(_testPackage);
+    final isTestNotification =
+        kDebugMode && packageName.toLowerCase().contains(_testPackage);
     if (event.hasRemoved == true && !isTestNotification) {
       if (kDebugMode) {
         debugPrint('[NotificationListener] Skipping: notification removed');
@@ -399,7 +416,9 @@ class NotificationListenerWrapper {
       return;
     }
     if (isTestNotification && kDebugMode) {
-      debugPrint('[NotificationListener] Processing test notification (ignoring hasRemoved)');
+      debugPrint(
+        '[NotificationListener] Processing test notification (ignoring hasRemoved)',
+      );
     }
 
     final title = event.title ?? '';
@@ -408,7 +427,9 @@ class NotificationListenerWrapper {
 
     if (packageName.isEmpty || content.isEmpty) {
       if (kDebugMode) {
-        debugPrint('[NotificationListener] Skipping: packageName or content is empty');
+        debugPrint(
+          '[NotificationListener] Skipping: packageName or content is empty',
+        );
       }
       return;
     }
@@ -417,7 +438,9 @@ class NotificationListenerWrapper {
     final packageLower = packageName.toLowerCase();
     if (_smsAppPackages.any((pkg) => packageLower.contains(pkg))) {
       if (kDebugMode) {
-        debugPrint('[NotificationListener] Skipping SMS app: $packageName (handled by SmsListenerService)');
+        debugPrint(
+          '[NotificationListener] Skipping SMS app: $packageName (handled by SmsListenerService)',
+        );
       }
       return;
     }
@@ -434,23 +457,34 @@ class NotificationListenerWrapper {
 
     // 패키지명 또는 내용에서 금융 관련 여부 확인
     final isFinancial = _isFinancialApp(packageName);
-    final isFinancialSender = FinancialSmsSenders.isFinancialSender(title, content);
+    final isFinancialSender = FinancialSmsSenders.isFinancialSender(
+      title,
+      content,
+    );
     if (kDebugMode) {
-      debugPrint('[NotificationListener] isFinancialApp: $isFinancial, isFinancialSender: $isFinancialSender');
+      debugPrint(
+        '[NotificationListener] isFinancialApp: $isFinancial, isFinancialSender: $isFinancialSender',
+      );
     }
 
     if (!isFinancial && !isFinancialSender) {
       if (kDebugMode) {
-        debugPrint('[NotificationListener] Skipping non-financial: $packageName');
+        debugPrint(
+          '[NotificationListener] Skipping non-financial: $packageName',
+        );
       }
       return;
     }
 
     if (kDebugMode) {
       debugPrint('[NotificationListener] Processing: $packageName');
-      debugPrint('[NotificationListener] Auto-save PM count: ${_autoSavePaymentMethods.length}');
+      debugPrint(
+        '[NotificationListener] Auto-save PM count: ${_autoSavePaymentMethods.length}',
+      );
       for (final pm in _autoSavePaymentMethods) {
-        debugPrint('  - ${pm.name} (mode: ${pm.autoSaveMode.toJson()}, source: ${pm.autoCollectSource.toJson()})');
+        debugPrint(
+          '  - ${pm.name} (mode: ${pm.autoSaveMode.toJson()}, source: ${pm.autoCollectSource.toJson()})',
+        );
       }
     }
 
@@ -541,39 +575,26 @@ class NotificationListenerWrapper {
 
       final formats = _learnedFormatsCache[pm.id];
       if (kDebugMode) {
-        debugPrint('[Matching] Checking PM: ${pm.name}, formats: ${formats?.length ?? 0}');
+        debugPrint(
+          '[Matching] Checking PM: ${pm.name}, formats: ${formats?.length ?? 0}',
+        );
       }
 
       // 1. 학습된 포맷으로 먼저 매칭 시도
       if (formats != null && formats.isNotEmpty) {
         for (final format in formats) {
-          final senderPattern = format.senderPattern.toLowerCase();
           if (kDebugMode) {
-            debugPrint('[Matching] Checking format pattern: $senderPattern');
+            debugPrint('[Matching] Checking format: ${format.packageName}');
           }
 
-          if (packageLower.contains(senderPattern) ||
-              contentLower.contains(senderPattern)) {
+          if (format.matchesNotification(packageLower, contentLower)) {
             if (kDebugMode) {
-              debugPrint('[Matching] Matched by senderPattern!');
+              debugPrint('[Matching] Matched by format!');
             }
             return _PaymentMethodMatchResult(
               paymentMethod: pm,
               learnedFormat: format.toEntity(),
             );
-          }
-
-          for (final keyword in format.senderKeywords) {
-            if (packageLower.contains(keyword.toLowerCase()) ||
-                contentLower.contains(keyword.toLowerCase())) {
-              if (kDebugMode) {
-                debugPrint('[Matching] Matched by keyword: $keyword');
-              }
-              return _PaymentMethodMatchResult(
-                paymentMethod: pm,
-                learnedFormat: format.toEntity(),
-              );
-            }
           }
         }
       }
@@ -582,7 +603,9 @@ class NotificationListenerWrapper {
       final pmName = pm.name.toLowerCase();
       final nameMatches = pmName.length >= 2 && contentLower.contains(pmName);
       if (kDebugMode) {
-        debugPrint('[Matching] Fallback: pmName="$pmName", matches=$nameMatches');
+        debugPrint(
+          '[Matching] Fallback: pmName="$pmName", matches=$nameMatches',
+        );
       }
       if (nameMatches) {
         if (kDebugMode) {
@@ -599,10 +622,13 @@ class NotificationListenerWrapper {
     required String content,
     required DateTime timestamp,
     required PaymentMethodModel paymentMethod,
-    LearnedSmsFormat? learnedFormat,
+    LearnedPushFormat? learnedFormat,
   }) async {
     // 메시지 내용으로 해시 생성 (중복 수신 방지)
-    final messageHash = DuplicateCheckService.generateMessageHash(content, timestamp);
+    final messageHash = DuplicateCheckService.generateMessageHash(
+      content,
+      timestamp,
+    );
 
     // 최근 10초 이내에 동일한 메시지를 처리했는지 확인
     final cachedTime = _recentlyProcessedMessages[messageHash];
@@ -628,7 +654,7 @@ class NotificationListenerWrapper {
         learnedFormat,
       );
 
-      await _learnedSmsFormatRepository.incrementMatchCount(learnedFormat.id);
+      await _learnedPushFormatRepository.incrementMatchCount(learnedFormat.id);
     } else {
       parsedResult = SmsParsingService.parseSms(packageName, content);
     }
@@ -667,16 +693,23 @@ class NotificationListenerWrapper {
     final cachedPaymentMethod = _autoSavePaymentMethods
         .where((pm) => pm.id == paymentMethod.id)
         .firstOrNull;
-    final autoSaveModeStr = cachedPaymentMethod?.autoSaveMode.toJson() ?? paymentMethod.autoSaveMode.toJson();
+    final autoSaveModeStr =
+        cachedPaymentMethod?.autoSaveMode.toJson() ??
+        paymentMethod.autoSaveMode.toJson();
     if (kDebugMode) {
-      debugPrint('Notification matched: mode=$autoSaveModeStr (from cache), pm=${paymentMethod.name}');
+      debugPrint(
+        'Notification matched: mode=$autoSaveModeStr (from cache), pm=${paymentMethod.name}',
+      );
     }
 
     // 자동 저장 여부 결정: 중복이 아니고 auto 모드일 때만 자동 저장
-    final shouldAutoSave = !duplicateResult.isDuplicate && autoSaveModeStr == 'auto';
+    final shouldAutoSave =
+        !duplicateResult.isDuplicate && autoSaveModeStr == 'auto';
 
     if (duplicateResult.isDuplicate && kDebugMode) {
-      debugPrint('Duplicate notification detected - saving as pending for user review');
+      debugPrint(
+        'Duplicate notification detected - saving as pending for user review',
+      );
     }
 
     try {
@@ -696,7 +729,9 @@ class NotificationListenerWrapper {
       );
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[ProcessNotification] Failed to create pending transaction: $e');
+        debugPrint(
+          '[ProcessNotification] Failed to create pending transaction: $e',
+        );
       }
       _onNotificationProcessedController.add(
         NotificationProcessedEvent(
@@ -743,24 +778,25 @@ class NotificationListenerWrapper {
 
     try {
       // 1. 항상 pending 상태로 먼저 생성 (원자성 보장)
-      final pendingTx = await _pendingTransactionRepository.createPendingTransaction(
-        ledgerId: _currentLedgerId!,
-        paymentMethodId: paymentMethod.id,
-        userId: _currentUserId!,
-        sourceType: SourceType.notification,
-        sourceSender: packageName,
-        sourceContent: content,
-        sourceTimestamp: timestamp,
-        parsedAmount: parsedResult.amount,
-        parsedType: parsedResult.transactionType,
-        parsedMerchant: parsedResult.merchant,
-        parsedCategoryId: categoryId,
-        parsedDate: parsedResult.date ?? timestamp,
-        duplicateHash: duplicateHash,
-        isDuplicate: isDuplicate,
-        status: PendingTransactionStatus.pending,
-        isViewed: isViewed,
-      );
+      final pendingTx = await _pendingTransactionRepository
+          .createPendingTransaction(
+            ledgerId: _currentLedgerId!,
+            paymentMethodId: paymentMethod.id,
+            userId: _currentUserId!,
+            sourceType: SourceType.notification,
+            sourceSender: packageName,
+            sourceContent: content,
+            sourceTimestamp: timestamp,
+            parsedAmount: parsedResult.amount,
+            parsedType: parsedResult.transactionType,
+            parsedMerchant: parsedResult.merchant,
+            parsedCategoryId: categoryId,
+            parsedDate: parsedResult.date ?? timestamp,
+            duplicateHash: duplicateHash,
+            isDuplicate: isDuplicate,
+            status: PendingTransactionStatus.pending,
+            isViewed: isViewed,
+          );
 
       if (kDebugMode) {
         debugPrint('[CreatePending] Success! ID: ${pendingTx.id}');
@@ -795,13 +831,17 @@ class NotificationListenerWrapper {
             );
 
             if (kDebugMode) {
-              debugPrint('[AutoSave] Transaction created and status updated to confirmed!');
+              debugPrint(
+                '[AutoSave] Transaction created and status updated to confirmed!',
+              );
             }
           } catch (e) {
             // 거래 생성 실패 시 pending 상태 유지 (이미 pending이므로 추가 작업 불필요)
             if (kDebugMode) {
               debugPrint('[AutoSave] Failed to create transaction: $e');
-              debugPrint('[AutoSave] Keeping status as pending for manual review');
+              debugPrint(
+                '[AutoSave] Keeping status as pending for manual review',
+              );
             }
           }
         } else if (kDebugMode) {
@@ -839,7 +879,7 @@ class NotificationListenerWrapper {
 
 class _PaymentMethodMatchResult {
   final PaymentMethodModel paymentMethod;
-  final LearnedSmsFormat? learnedFormat;
+  final LearnedPushFormat? learnedFormat;
 
   const _PaymentMethodMatchResult({
     required this.paymentMethod,

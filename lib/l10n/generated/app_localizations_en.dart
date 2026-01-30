@@ -1072,7 +1072,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get autoSaveModeSuggest => 'Suggest';
 
   @override
+  String get autoSaveModeSuggestSms => 'SMS Suggest';
+
+  @override
+  String get autoSaveModeSuggestPush => 'Push Suggest';
+
+  @override
   String get autoSaveModeAuto => 'Auto';
+
+  @override
+  String get autoSaveModeAutoSms => 'SMS Auto';
+
+  @override
+  String get autoSaveModeAutoPush => 'Push Auto';
 
   @override
   String get pendingTransactionTab => 'Auto Collect History';

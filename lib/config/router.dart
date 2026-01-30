@@ -13,6 +13,7 @@ import '../features/fixed_expense/presentation/pages/fixed_expense_management_pa
 import '../features/ledger/presentation/pages/home_page.dart';
 import '../features/ledger/presentation/pages/ledger_management_page.dart';
 import '../features/payment_method/presentation/pages/auto_save_settings_page.dart';
+import '../features/payment_method/presentation/pages/debug_test_page.dart';
 import '../features/payment_method/presentation/pages/payment_method_management_page.dart';
 import '../features/payment_method/presentation/pages/pending_transactions_page.dart';
 import '../features/search/presentation/pages/search_page.dart';
@@ -50,6 +51,7 @@ class Routes {
   static const String autoSaveSettings =
       '/settings/payment-methods/:id/auto-save';
   static const String pendingTransactions = '/settings/pending-transactions';
+  static const String debugTest = '/debug-test';
 }
 
 // 인증 상태 변경을 감지하는 Notifier
@@ -251,6 +253,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           key: state.pageKey,
           child: const PendingTransactionsPage(),
         ),
+      ),
+
+      // 디버그 테스트 - 슬라이드 전환 (디버그 모드 전용)
+      GoRoute(
+        path: Routes.debugTest,
+        pageBuilder: (context, state) =>
+            slideTransition(key: state.pageKey, child: const DebugTestPage()),
       ),
 
       // 위젯 딥링크 - 지출 추가 (페이드 전환)

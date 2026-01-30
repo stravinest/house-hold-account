@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../../config/router.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
@@ -182,6 +185,19 @@ class SettingsPage extends ConsumerWidget {
             ),
 
             const Divider(),
+
+            // 개발자 옵션 (디버그 모드에서만 표시)
+            if (kDebugMode) ...[
+              SectionHeader(title: '개발자 옵션'),
+              ListTile(
+                leading: const Icon(Icons.bug_report_outlined),
+                title: const Text('자동수집 디버그'),
+                subtitle: const Text('SMS/Push 시뮬레이션 및 파싱 테스트'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(Routes.debugTest),
+              ),
+              const Divider(),
+            ],
 
             // 정보 섹션
             SectionHeader(title: l10n.settingsInfo),

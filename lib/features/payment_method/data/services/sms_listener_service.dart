@@ -19,22 +19,20 @@ import 'sms_parsing_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> backgroundSmsHandler(SmsMessage message) async {
-  debugPrint('[BackgroundSMS] SMS received from: ${message.address}');
-
-  // Singleton instance를 통해 처리 시도
-  try {
-    if (SmsListenerService._instance != null &&
-        SmsListenerService.instance.isInitialized) {
-      await SmsListenerService.instance.onSmsReceived(message);
-      debugPrint('[BackgroundSMS] Processed via instance');
-    } else {
-      debugPrint('[BackgroundSMS] Instance not initialized, SMS will be processed when app reopens');
-    }
-  } catch (e) {
-    debugPrint('[BackgroundSMS] Error processing SMS: $e');
-  }
+  // 이 함수는 더 이상 호출되지 않습니다.
+  // 백그라운드 SMS 수신은 Kotlin SmsBroadcastReceiver에서 처리합니다.
+  debugPrint(
+    '[BackgroundSMS] This handler is deprecated. Kotlin handles SMS now.',
+  );
 }
 
+/// SMS 리스너 서비스
+///
+/// 실시간 SMS 수신은 Kotlin SmsBroadcastReceiver에서 처리합니다.
+/// 이 서비스는 권한 관리와 과거 SMS 스캔 기능만 제공합니다.
+///
+/// - 권한 체크/요청: [checkPermissions], [requestPermissions]
+/// - 과거 SMS 스캔: [getRecentSms], [processPastSms]
 class SmsListenerService {
   SmsListenerService._();
 
@@ -157,44 +155,30 @@ class SmsListenerService {
   }
 
   void startListening() {
+    // 실시간 SMS 수신은 Kotlin SmsBroadcastReceiver에서 처리
+    // Flutter에서는 더 이상 리스닝하지 않음
     if (kDebugMode) {
-      debugPrint('[SmsListener] startListening called: isAndroid=$isAndroid, isInitialized=$_isInitialized, isListening=$_isListening');
+      debugPrint(
+        '[SmsListener] SMS listening is now handled by Kotlin SmsBroadcastReceiver',
+      );
     }
-
-    if (!isAndroid || !_isInitialized || _isListening) {
-      if (kDebugMode) {
-        debugPrint('[SmsListener] Cannot start listening: isAndroid=$isAndroid, isInitialized=$_isInitialized, isListening=$_isListening');
-      }
-      return;
-    }
-
-    _telephony.listenIncomingSms(
-      onNewMessage: onSmsReceived,
-      onBackgroundMessage: backgroundSmsHandler,
-      listenInBackground: true,
-    );
-
-    _isListening = true;
-    if (kDebugMode) {
-      debugPrint('[SmsListener] SMS listener started successfully');
-      debugPrint('[SmsListener] Listening for SMS with ${_autoSavePaymentMethods.length} payment methods');
-      for (final pm in _autoSavePaymentMethods) {
-        if (pm.autoCollectSource == AutoCollectSource.sms) {
-          debugPrint('  - ${pm.name} (mode: ${pm.autoSaveMode.toJson()})');
-        }
-      }
-    }
+    // Note: _isListening을 true로 설정하지 않음 (실제로 리스닝하지 않으므로)
   }
 
   void stopListening() {
-    _isListening = false;
-    debugPrint('SMS listener stopped');
+    // Kotlin SmsBroadcastReceiver가 처리하므로 no-op
+    if (kDebugMode) {
+      debugPrint(
+        '[SmsListener] stopListening called (no-op, Kotlin handles SMS)',
+      );
+    }
   }
 
   @visibleForTesting
   Future<void> onSmsReceived(SmsMessage message) async {
     // 동시성 제어: 메시지 고유 ID 생성
-    final messageId = '${message.address}_${message.date ?? DateTime.now().millisecondsSinceEpoch}';
+    final messageId =
+        '${message.address}_${message.date ?? DateTime.now().millisecondsSinceEpoch}';
 
     // 이미 처리 중인 SMS면 스킵
     if (_processingMessages.contains(messageId)) {
@@ -213,19 +197,28 @@ class SmsListenerService {
   }
 
   Future<void> _processSmsMessage(SmsMessage message) async {
+    // [AutoCollect-SMS] STEP 1: SMS 수신
     if (kDebugMode) {
       debugPrint('========================================');
-      debugPrint('[SmsListener] SMS received');
+      debugPrint('[AutoCollect-SMS] STEP 1: SMS 수신');
       debugPrint('  - Sender: ${message.address}');
       debugPrint('  - Content length: ${message.body?.length ?? 0}');
       debugPrint('========================================');
     }
 
+    // [AutoCollect-SMS] STEP 2: 초기화 상태 확인
     if (_currentUserId == null || _currentLedgerId == null) {
       if (kDebugMode) {
-        debugPrint('[SmsListener] Skipping: userId or ledgerId is null');
+        debugPrint(
+          '[AutoCollect-SMS] STEP 2: SKIP - userId or ledgerId is null',
+        );
       }
       return;
+    }
+    if (kDebugMode) {
+      debugPrint(
+        '[AutoCollect-SMS] STEP 2: OK - userId=$_currentUserId, ledgerId=$_currentLedgerId',
+      );
     }
 
     final sender = message.address ?? '';
@@ -236,33 +229,45 @@ class SmsListenerService {
 
     if (sender.isEmpty || content.isEmpty) {
       if (kDebugMode) {
-        debugPrint('[SmsListener] Skipping: sender or content is empty');
+        debugPrint(
+          '[AutoCollect-SMS] STEP 2: SKIP - sender or content is empty',
+        );
       }
       return;
     }
 
-    // 발신자 또는 본문에서 금융사 패턴 확인
+    // [AutoCollect-SMS] STEP 3: 금융 SMS 필터링
     if (!FinancialSmsSenders.isFinancialSender(sender, content)) {
       if (kDebugMode) {
-        debugPrint('[SmsListener] Skipping: not a financial SMS');
+        debugPrint('[AutoCollect-SMS] STEP 3: SKIP - not a financial SMS');
       }
       return;
     }
+    if (kDebugMode) {
+      debugPrint('[AutoCollect-SMS] STEP 3: OK - financial SMS detected');
+    }
 
+    // [AutoCollect-SMS] STEP 4: 결제수단 매칭
     final matchResult = _findMatchingPaymentMethod(sender, content);
     if (matchResult == null) {
       if (kDebugMode) {
-        debugPrint('[SmsListener] ❌ No matching payment method found');
-        debugPrint('[SmsListener] Sender: $sender');
-        debugPrint('[SmsListener] Available SMS-source payment methods: ${_autoSavePaymentMethods.where((pm) => pm.autoCollectSource == AutoCollectSource.sms).length}');
+        debugPrint(
+          '[AutoCollect-SMS] STEP 4: FAIL - No matching payment method',
+        );
+        debugPrint('  - Sender: $sender');
+        debugPrint(
+          '  - SMS-source payment methods: ${_autoSavePaymentMethods.where((pm) => pm.autoCollectSource == AutoCollectSource.sms).length}',
+        );
       }
       return;
     }
-
     if (kDebugMode) {
-      debugPrint('[SmsListener] ✅ Found match: ${matchResult.paymentMethod.name}');
+      debugPrint(
+        '[AutoCollect-SMS] STEP 4: OK - matched ${matchResult.paymentMethod.name}',
+      );
     }
 
+    // STEP 5~8은 _processSms에서 처리
     await _processSms(
       sender: sender,
       content: content,
@@ -352,40 +357,52 @@ class SmsListenerService {
     required PaymentMethodModel paymentMethod,
     LearnedSmsFormat? learnedFormat,
   }) async {
-    // 메시지 내용으로 해시 생성 (중복 수신 방지)
-    final messageHash = DuplicateCheckService.generateMessageHash(content, timestamp);
-
-    // 최근 10초 이내에 동일한 메시지를 처리했는지 확인
+    // [AutoCollect-SMS] STEP 5: 중복 메시지 확인 (캐시)
+    final messageHash = DuplicateCheckService.generateMessageHash(
+      content,
+      timestamp,
+    );
     final cachedTime = _recentlyProcessedMessages[messageHash];
     if (cachedTime != null) {
       final timeDiff = DateTime.now().difference(cachedTime);
       if (timeDiff < _messageCacheDuration) {
-        debugPrint(
-          'Duplicate message detected (cached ${timeDiff.inSeconds}s ago) - ignoring',
-        );
+        if (kDebugMode) {
+          debugPrint(
+            '[AutoCollect-SMS] STEP 5: SKIP - duplicate (cached ${timeDiff.inSeconds}s ago)',
+          );
+        }
         return;
       }
     }
-
-    // 메시지 처리 시작 - 캐시에 기록
     _recentlyProcessedMessages[messageHash] = DateTime.now();
     _cleanupMessageCache();
+    if (kDebugMode) {
+      debugPrint('[AutoCollect-SMS] STEP 5: OK - not a cached duplicate');
+    }
 
+    // [AutoCollect-SMS] STEP 6: SMS 파싱
     ParsedSmsResult parsedResult;
-
     if (learnedFormat != null) {
       parsedResult = SmsParsingService.parseSmsWithFormat(
         content,
         learnedFormat,
       );
-
       await _learnedSmsFormatRepository.incrementMatchCount(learnedFormat.id);
+      if (kDebugMode) {
+        debugPrint('[AutoCollect-SMS] STEP 6: Parsed with learned format');
+      }
     } else {
       parsedResult = SmsParsingService.parseSms(sender, content);
+      if (kDebugMode) {
+        debugPrint('[AutoCollect-SMS] STEP 6: Parsed with default parser');
+      }
     }
 
     if (!parsedResult.isParsed) {
-      debugPrint('SMS parsing failed for: $content');
+      if (kDebugMode) {
+        debugPrint('[AutoCollect-SMS] STEP 6: FAIL - parsing failed');
+        debugPrint('  - Result: $parsedResult');
+      }
       _onSmsProcessedController.add(
         SmsProcessedEvent(
           sender: sender,
@@ -396,13 +413,25 @@ class SmsListenerService {
       );
       return;
     }
+    if (kDebugMode) {
+      debugPrint('[AutoCollect-SMS] STEP 6: OK - parsed successfully');
+      debugPrint(
+        '  - Type: ${parsedResult.transactionType}, Merchant: ${parsedResult.merchant}',
+      );
+    }
 
+    // [AutoCollect-SMS] STEP 7: 중복 거래 확인 (DB)
     final duplicateResult = await _duplicateCheckService.checkDuplicate(
       amount: parsedResult.amount!,
       paymentMethodId: paymentMethod.id,
       ledgerId: _currentLedgerId!,
       timestamp: timestamp,
     );
+    if (kDebugMode) {
+      debugPrint(
+        '[AutoCollect-SMS] STEP 7: Duplicate check - isDuplicate=${duplicateResult.isDuplicate}',
+      );
+    }
 
     String? categoryId = paymentMethod.defaultCategoryId;
     if (categoryId == null && parsedResult.merchant != null) {
@@ -412,25 +441,24 @@ class SmsListenerService {
       );
     }
 
-    // 캐시에서 최신 autoSaveMode 확인 (refreshPaymentMethods 호출 시 캐시가 갱신됨)
-    // 설정 페이지에서 저장 시 AutoSaveService.refreshPaymentMethods()가 호출되어 캐시 동기화됨
     final cachedPaymentMethod = _autoSavePaymentMethods
         .where((pm) => pm.id == paymentMethod.id)
         .firstOrNull;
-    final autoSaveModeStr = cachedPaymentMethod?.autoSaveMode.toJson() ?? paymentMethod.autoSaveMode.toJson();
-    debugPrint(
-      'SMS matched with mode: $autoSaveModeStr (from cache) for ${paymentMethod.name}',
-    );
-
-    // 자동 저장 여부 결정: 중복이 아니고 auto 모드일 때만 자동 저장
-    final shouldAutoSave = !duplicateResult.isDuplicate && autoSaveModeStr == 'auto';
-
-    if (duplicateResult.isDuplicate) {
-      debugPrint('Duplicate SMS detected - saving as pending for user review');
+    final autoSaveModeStr =
+        cachedPaymentMethod?.autoSaveMode.toJson() ??
+        paymentMethod.autoSaveMode.toJson();
+    final shouldAutoSave =
+        !duplicateResult.isDuplicate && autoSaveModeStr == 'auto';
+    if (kDebugMode) {
+      debugPrint(
+        '[AutoCollect-SMS] STEP 7: mode=$autoSaveModeStr, shouldAutoSave=$shouldAutoSave',
+      );
     }
 
-    // 항상 pending 상태로 먼저 생성 (원자성 보장)
-    // 거래 생성 성공 시에만 confirmed로 업데이트
+    // [AutoCollect-SMS] STEP 8: pending_transactions 저장
+    if (kDebugMode) {
+      debugPrint('[AutoCollect-SMS] STEP 8: Creating pending transaction...');
+    }
     await _createPendingTransaction(
       sender: sender,
       content: content,
@@ -443,6 +471,9 @@ class SmsListenerService {
       shouldAutoSave: shouldAutoSave,
       isViewed: false,
     );
+    if (kDebugMode) {
+      debugPrint('[AutoCollect-SMS] STEP 8: OK - pending transaction created');
+    }
 
     _onSmsProcessedController.add(
       SmsProcessedEvent(
@@ -470,24 +501,25 @@ class SmsListenerService {
   }) async {
     try {
       // 1. 항상 pending 상태로 먼저 생성 (원자성 보장)
-      final pendingTx = await _pendingTransactionRepository.createPendingTransaction(
-        ledgerId: _currentLedgerId!,
-        paymentMethodId: paymentMethod.id,
-        userId: _currentUserId!,
-        sourceType: SourceType.sms,
-        sourceSender: sender,
-        sourceContent: content,
-        sourceTimestamp: timestamp,
-        parsedAmount: parsedResult.amount,
-        parsedType: parsedResult.transactionType,
-        parsedMerchant: parsedResult.merchant,
-        parsedCategoryId: categoryId,
-        parsedDate: parsedResult.date ?? timestamp,
-        duplicateHash: duplicateHash,
-        isDuplicate: isDuplicate,
-        status: PendingTransactionStatus.pending,
-        isViewed: isViewed,
-      );
+      final pendingTx = await _pendingTransactionRepository
+          .createPendingTransaction(
+            ledgerId: _currentLedgerId!,
+            paymentMethodId: paymentMethod.id,
+            userId: _currentUserId!,
+            sourceType: SourceType.sms,
+            sourceSender: sender,
+            sourceContent: content,
+            sourceTimestamp: timestamp,
+            parsedAmount: parsedResult.amount,
+            parsedType: parsedResult.transactionType,
+            parsedMerchant: parsedResult.merchant,
+            parsedCategoryId: categoryId,
+            parsedDate: parsedResult.date ?? timestamp,
+            duplicateHash: duplicateHash,
+            isDuplicate: isDuplicate,
+            status: PendingTransactionStatus.pending,
+            isViewed: isViewed,
+          );
 
       // 2. 자동 저장 모드일 때만 거래 생성 시도
       if (shouldAutoSave) {
@@ -514,14 +546,20 @@ class SmsListenerService {
               id: pendingTx.id,
               status: PendingTransactionStatus.confirmed,
             );
-            debugPrint('[AutoSave-SMS] Transaction created and status updated to confirmed!');
+            debugPrint(
+              '[AutoSave-SMS] Transaction created and status updated to confirmed!',
+            );
           } catch (e) {
             // 거래 생성 실패 시 pending 상태 유지 (이미 pending이므로 추가 작업 불필요)
             debugPrint('[AutoSave-SMS] Failed to create transaction: $e');
-            debugPrint('[AutoSave-SMS] Keeping status as pending for manual review');
+            debugPrint(
+              '[AutoSave-SMS] Keeping status as pending for manual review',
+            );
           }
         } else {
-          debugPrint('[AutoSave-SMS] Skipped auto-save - missing amount or type');
+          debugPrint(
+            '[AutoSave-SMS] Skipped auto-save - missing amount or type',
+          );
         }
       }
     } catch (e) {
@@ -546,10 +584,10 @@ class SmsListenerService {
       );
 
       return messages
-          .where((m) => FinancialSmsSenders.isFinancialSender(
-                m.address ?? '',
-                m.body,
-              ))
+          .where(
+            (m) =>
+                FinancialSmsSenders.isFinancialSender(m.address ?? '', m.body),
+          )
           .take(count)
           .toList();
     } catch (e) {

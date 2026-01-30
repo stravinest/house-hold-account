@@ -9,10 +9,13 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/learned_sms_format.dart';
 import '../../domain/entities/financial_service_template.dart';
+import '../../data/repositories/learned_sms_format_repository.dart';
+import '../../data/repositories/learned_push_format_repository.dart';
 import '../../data/services/sms_parsing_service.dart';
 import '../../data/services/sms_listener_service.dart';
 import '../../data/services/sms_scanner_service.dart';
 import '../../data/services/auto_save_service.dart';
+import '../../data/services/default_format_generator.dart';
 import '../providers/payment_method_provider.dart';
 
 /// Payment method add mode
@@ -291,7 +294,10 @@ class _PaymentMethodWizardPageState
 
     try {
       final notifier = ref.read(paymentMethodNotifierProvider.notifier);
-      final formatRepository = ref.read(learnedSmsFormatRepositoryProvider);
+      final smsFormatRepository = ref.read(learnedSmsFormatRepositoryProvider);
+      final pushFormatRepository = ref.read(
+        learnedPushFormatRepositoryProvider,
+      );
 
       // Determine canAutoSave: false for manual, true for auto-collect
       final canAutoSave = _selectedMode == PaymentMethodAddMode.autoCollect;
@@ -322,31 +328,14 @@ class _PaymentMethodWizardPageState
           );
         }
 
-        // 3. Save or update learned format (only when template selected in auto-collect mode)
-        // Delete all existing formats and create new one to ensure consistency
-        if (canAutoSave &&
-            _selectedTemplate != null &&
-            _generatedFormat != null) {
-          final existingFormats = await formatRepository
-              .getFormatsByPaymentMethod(widget.paymentMethod!.id);
-
-          // Delete all existing formats to prevent inconsistency
-          for (final format in existingFormats) {
-            await formatRepository.deleteFormat(format.id);
-          }
-
-          // Create new format with updated settings
-          await formatRepository.createFormat(
+        // 3. Save or update learned format for auto-collect mode
+        if (canAutoSave) {
+          await _createOrUpdateLearnedFormat(
             paymentMethodId: widget.paymentMethod!.id,
-            senderPattern: _generatedFormat!.senderPattern,
-            senderKeywords: _generatedFormat!.senderKeywords,
-            amountRegex: _generatedFormat!.amountRegex,
-            typeKeywords: _generatedFormat!.typeKeywords,
-            merchantRegex: _generatedFormat!.merchantRegex,
-            dateRegex: _generatedFormat!.dateRegex,
-            sampleSms: _generatedFormat!.sampleSms,
-            isSystem: false,
-            confidence: _generatedFormat!.confidence,
+            paymentMethodName: trimmedName,
+            smsFormatRepository: smsFormatRepository,
+            pushFormatRepository: pushFormatRepository,
+            isEdit: true,
           );
         }
       } else {
@@ -367,21 +356,14 @@ class _PaymentMethodWizardPageState
           );
         }
 
-        // 3. Save learned format (only when template selected in auto-collect mode)
-        if (canAutoSave &&
-            _selectedTemplate != null &&
-            _generatedFormat != null) {
-          await formatRepository.createFormat(
+        // 3. Save learned format for auto-collect mode
+        if (canAutoSave) {
+          await _createOrUpdateLearnedFormat(
             paymentMethodId: paymentMethod.id,
-            senderPattern: _generatedFormat!.senderPattern,
-            senderKeywords: _generatedFormat!.senderKeywords,
-            amountRegex: _generatedFormat!.amountRegex,
-            typeKeywords: _generatedFormat!.typeKeywords,
-            merchantRegex: _generatedFormat!.merchantRegex,
-            dateRegex: _generatedFormat!.dateRegex,
-            sampleSms: _generatedFormat!.sampleSms,
-            isSystem: false,
-            confidence: _generatedFormat!.confidence,
+            paymentMethodName: trimmedName,
+            smsFormatRepository: smsFormatRepository,
+            pushFormatRepository: pushFormatRepository,
+            isEdit: false,
           );
         }
       }
@@ -424,6 +406,84 @@ class _PaymentMethodWizardPageState
           _isSubmitting = false;
         });
       }
+    }
+  }
+
+  /// 자동수집 결제수단의 learned format 생성/업데이트
+  ///
+  /// [_notificationType]에 따라 SMS 또는 Push format을 생성합니다.
+  /// 템플릿이 선택된 경우 템플릿의 format을 사용하고,
+  /// 템플릿이 없는 경우 결제수단 이름 기반으로 기본 format을 생성합니다.
+  Future<void> _createOrUpdateLearnedFormat({
+    required String paymentMethodId,
+    required String paymentMethodName,
+    required LearnedSmsFormatRepository smsFormatRepository,
+    required LearnedPushFormatRepository pushFormatRepository,
+    required bool isEdit,
+  }) async {
+    // 수정 모드인 경우 기존 format 삭제
+    if (isEdit) {
+      final existingSmsFormats = await smsFormatRepository
+          .getFormatsByPaymentMethod(paymentMethodId);
+      for (final format in existingSmsFormats) {
+        await smsFormatRepository.deleteFormat(format.id);
+      }
+
+      final existingPushFormats = await pushFormatRepository
+          .getFormatsByPaymentMethod(paymentMethodId);
+      for (final format in existingPushFormats) {
+        await pushFormatRepository.deleteFormat(format.id);
+      }
+    }
+
+    // _notificationType에 따라 SMS 또는 Push format 생성
+    if (_notificationType == 'sms') {
+      // 템플릿이 있고 format이 생성된 경우 템플릿 format 사용
+      if (_selectedTemplate != null && _generatedFormat != null) {
+        await smsFormatRepository.createFormat(
+          paymentMethodId: paymentMethodId,
+          senderPattern: _generatedFormat!.senderPattern,
+          senderKeywords: _generatedFormat!.senderKeywords,
+          amountRegex: _generatedFormat!.amountRegex,
+          typeKeywords: _generatedFormat!.typeKeywords,
+          merchantRegex: _generatedFormat!.merchantRegex,
+          dateRegex: _generatedFormat!.dateRegex,
+          sampleSms: _generatedFormat!.sampleSms,
+          isSystem: false,
+          confidence: _generatedFormat!.confidence,
+        );
+      } else {
+        // 템플릿이 없는 경우 결제수단 이름 기반으로 기본 format 생성
+        final defaultFormat = DefaultFormatGenerator.generateSmsFormat(
+          paymentMethodName,
+        );
+        await smsFormatRepository.createFormat(
+          paymentMethodId: paymentMethodId,
+          senderPattern: defaultFormat.senderPattern,
+          senderKeywords: defaultFormat.senderKeywords,
+          amountRegex: r'([0-9,]+)\s*원',
+          typeKeywords: {
+            'income': ['입금', '충전'],
+            'expense': ['출금', '결제', '승인', '이체', '사용'],
+          },
+        );
+      }
+    } else {
+      // Push 알림 모드
+      // 템플릿이 있어도 Push format은 별도로 생성 (SMS format과 다름)
+      final defaultFormat = DefaultFormatGenerator.generatePushFormat(
+        paymentMethodName,
+      );
+      await pushFormatRepository.createFormat(
+        paymentMethodId: paymentMethodId,
+        packageName: defaultFormat.packageName,
+        appKeywords: defaultFormat.appKeywords,
+        amountRegex: r'([0-9,]+)\s*원',
+        typeKeywords: {
+          'income': ['입금', '충전'],
+          'expense': ['출금', '결제', '승인', '이체', '사용'],
+        },
+      );
     }
   }
 
