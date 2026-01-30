@@ -69,6 +69,7 @@ dependencies:
   another_telephony: ^0.4.1
   notification_listener_service: ^0.3.5
   permission_handler: ^11.3.1
+  flutter_app_badger: ^1.5.0
 
 dev_dependencies:
   flutter_test:

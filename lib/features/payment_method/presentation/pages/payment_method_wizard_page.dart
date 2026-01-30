@@ -11,6 +11,7 @@ import '../../domain/entities/learned_sms_format.dart';
 import '../../domain/entities/financial_service_template.dart';
 import '../../data/repositories/learned_sms_format_repository.dart';
 import '../../data/repositories/learned_push_format_repository.dart';
+import '../../data/services/financial_constants.dart';
 import '../../data/services/sms_parsing_service.dart';
 import '../../data/services/sms_listener_service.dart';
 import '../../data/services/sms_scanner_service.dart';
@@ -462,10 +463,7 @@ class _PaymentMethodWizardPageState
           senderPattern: defaultFormat.senderPattern,
           senderKeywords: defaultFormat.senderKeywords,
           amountRegex: r'([0-9,]+)\s*원',
-          typeKeywords: {
-            'income': ['입금', '충전'],
-            'expense': ['출금', '결제', '승인', '이체', '사용'],
-          },
+          typeKeywords: FinancialConstants.defaultTypeKeywords,
         );
       }
     } else {
@@ -479,10 +477,7 @@ class _PaymentMethodWizardPageState
         packageName: defaultFormat.packageName,
         appKeywords: defaultFormat.appKeywords,
         amountRegex: r'([0-9,]+)\s*원',
-        typeKeywords: {
-          'income': ['입금', '충전'],
-          'expense': ['출금', '결제', '승인', '이체', '사용'],
-        },
+        typeKeywords: FinancialConstants.defaultTypeKeywords,
       );
     }
   }

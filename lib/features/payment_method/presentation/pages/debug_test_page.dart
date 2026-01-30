@@ -1,7 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_household_account/features/payment_method/data/repositories/learned_push_format_repository.dart';
+import 'package:shared_household_account/features/payment_method/data/repositories/learned_sms_format_repository.dart';
 import 'package:shared_household_account/features/payment_method/data/services/debug_test_service.dart';
+import 'package:shared_household_account/features/payment_method/domain/entities/learned_push_format.dart';
+import 'package:shared_household_account/features/payment_method/domain/entities/learned_sms_format.dart';
 import 'package:shared_household_account/shared/themes/design_tokens.dart';
 
 class DebugTestPage extends ConsumerStatefulWidget {
@@ -24,11 +28,13 @@ class _DebugTestPageState extends ConsumerState<DebugTestPage>
   final _merchantController = TextEditingController(text: '스타벅스');
   final _customContentController = TextEditingController();
   ParsedResult? _parseResult;
+  List<LearnedSmsFormat> _smsFormats = [];
+  List<LearnedPushFormat> _pushFormats = [];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _loadStatus();
   }
 
@@ -48,9 +54,28 @@ class _DebugTestPageState extends ConsumerState<DebugTestPage>
     try {
       final status = await DebugTestService.getDebugStatus();
       final supabaseStatus = await DebugTestService.getSupabaseStatus();
+
+      List<LearnedSmsFormat> smsFormats = [];
+      List<LearnedPushFormat> pushFormats = [];
+
+      if (supabaseStatus.ledgerId != null) {
+        final smsFormatRepo = LearnedSmsFormatRepository();
+        final pushFormatRepo = LearnedPushFormatRepository();
+        final smsFormatModels = await smsFormatRepo.getAllFormatsForLedger(
+          supabaseStatus.ledgerId!,
+        );
+        final pushFormatModels = await pushFormatRepo.getAllFormatsForLedger(
+          supabaseStatus.ledgerId!,
+        );
+        smsFormats = smsFormatModels.map((m) => m.toEntity()).toList();
+        pushFormats = pushFormatModels.map((m) => m.toEntity()).toList();
+      }
+
       setState(() {
         _status = status;
         _supabaseStatus = supabaseStatus;
+        _smsFormats = smsFormats;
+        _pushFormats = pushFormats;
       });
     } catch (e) {
       _showError('상태 로드 실패: $e');
@@ -195,11 +220,13 @@ Push 전송 완료!
         title: const Text('자동수집 디버그'),
         bottom: TabBar(
           controller: _tabController,
+          isScrollable: true,
           tabs: const [
             Tab(text: '상태'),
             Tab(text: 'SMS'),
             Tab(text: 'Push'),
             Tab(text: '파싱'),
+            Tab(text: '포맷'),
           ],
         ),
         actions: [
@@ -218,6 +245,7 @@ Push 전송 완료!
                 _buildSmsTab(colorScheme),
                 _buildPushTab(colorScheme),
                 _buildParseTab(colorScheme),
+                _buildFormatsTab(colorScheme),
               ],
             ),
     );
@@ -277,7 +305,7 @@ Push 전송 완료!
           ),
           const SizedBox(height: Spacing.md),
           _buildStatusCard(
-            title: 'NotificationListener',
+            title: 'NotificationListener (Push)',
             icon: Icons.notifications,
             items: [
               _StatusItem(
@@ -286,6 +314,24 @@ Push 전송 완료!
                 _status?.notificationListenerActive == true
                     ? colorScheme.primary
                     : colorScheme.error,
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.md),
+          _buildStatusCard(
+            title: 'SmsContentObserver (SMS)',
+            icon: Icons.sms,
+            items: [
+              _StatusItem(
+                '등록 상태',
+                _status?.smsObserverRegistered == true ? '등록됨' : '미등록',
+                _status?.smsObserverRegistered == true
+                    ? colorScheme.primary
+                    : colorScheme.error,
+              ),
+              _StatusItem(
+                '마지막 처리 ID',
+                '${_status?.smsObserverLastProcessedId ?? -1}',
               ),
             ],
           ),
@@ -555,7 +601,94 @@ Push 전송 완료!
                 ),
               ),
             ),
+          if (_parseResult != null && _parseResult!.isParsed) ...[
+            const SizedBox(height: Spacing.md),
+            _buildMatchingFormatsCard(colorScheme),
+          ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildMatchingFormatsCard(ColorScheme colorScheme) {
+    final content = _customContentController.text;
+    if (content.isEmpty) return const SizedBox.shrink();
+
+    final matchingSmsFormats = _smsFormats.where((format) {
+      return format.senderKeywords.any(
+            (keyword) => content.contains(keyword),
+          ) ||
+          content.contains(format.senderPattern);
+    }).toList();
+
+    final matchingPushFormats = _pushFormats.where((format) {
+      return format.appKeywords.any((keyword) => content.contains(keyword));
+    }).toList();
+
+    final hasMatches =
+        matchingSmsFormats.isNotEmpty || matchingPushFormats.isNotEmpty;
+
+    return Card(
+      color: hasMatches
+          ? colorScheme.primaryContainer
+          : colorScheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.all(Spacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  hasMatches ? Icons.link : Icons.link_off,
+                  color: hasMatches
+                      ? colorScheme.onPrimaryContainer
+                      : colorScheme.onErrorContainer,
+                ),
+                const SizedBox(width: Spacing.sm),
+                Text(
+                  hasMatches ? '결제수단 매칭됨' : '매칭되는 결제수단 없음',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: hasMatches
+                        ? colorScheme.onPrimaryContainer
+                        : colorScheme.onErrorContainer,
+                  ),
+                ),
+              ],
+            ),
+            if (hasMatches) ...[
+              const Divider(),
+              if (matchingSmsFormats.isNotEmpty) ...[
+                Text(
+                  'SMS 포맷 (${matchingSmsFormats.length}개)',
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+                const SizedBox(height: Spacing.xs),
+                ...matchingSmsFormats.map(
+                  (f) => Text(
+                    '- ${f.senderPattern}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+              if (matchingPushFormats.isNotEmpty) ...[
+                if (matchingSmsFormats.isNotEmpty)
+                  const SizedBox(height: Spacing.sm),
+                Text(
+                  'Push 포맷 (${matchingPushFormats.length}개)',
+                  style: Theme.of(context).textTheme.labelMedium,
+                ),
+                const SizedBox(height: Spacing.xs),
+                ...matchingPushFormats.map(
+                  (f) => Text(
+                    '- ${f.packageName}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -568,6 +701,144 @@ Push 전송 완료!
         children: [
           Text(label, style: Theme.of(context).textTheme.bodySmall),
           Text(value, style: Theme.of(context).textTheme.bodyMedium),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormatsTab(ColorScheme colorScheme) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(Spacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'SMS 포맷 (${_smsFormats.length}개)',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: Spacing.sm),
+          if (_smsFormats.isEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(Spacing.md),
+                child: Text(
+                  '등록된 SMS 포맷이 없습니다.',
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                ),
+              ),
+            )
+          else
+            ..._smsFormats.map((format) => _buildSmsFormatCard(format)),
+          const SizedBox(height: Spacing.lg),
+          Text(
+            'Push 포맷 (${_pushFormats.length}개)',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: Spacing.sm),
+          if (_pushFormats.isEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(Spacing.md),
+                child: Text(
+                  '등록된 Push 포맷이 없습니다.',
+                  style: TextStyle(color: colorScheme.onSurfaceVariant),
+                ),
+              ),
+            )
+          else
+            ..._pushFormats.map((format) => _buildPushFormatCard(format)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmsFormatCard(LearnedSmsFormat format) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: Spacing.sm),
+      child: ExpansionTile(
+        title: Text(format.senderPattern),
+        subtitle: Text(
+          '신뢰도: ${(format.confidence * 100).toInt()}% | 매칭: ${format.matchCount}회',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(Spacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildFormatDetailRow(
+                  '발신자 키워드',
+                  format.senderKeywords.join(', '),
+                ),
+                _buildFormatDetailRow('금액 정규식', format.amountRegex),
+                _buildFormatDetailRow(
+                  '지출 키워드',
+                  format.typeKeywords['expense']?.join(', ') ?? '-',
+                ),
+                _buildFormatDetailRow(
+                  '수입 키워드',
+                  format.typeKeywords['income']?.join(', ') ?? '-',
+                ),
+                if (format.sampleSms != null)
+                  _buildFormatDetailRow('샘플', format.sampleSms!),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPushFormatCard(LearnedPushFormat format) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: Spacing.sm),
+      child: ExpansionTile(
+        title: Text(format.packageName),
+        subtitle: Text(
+          '신뢰도: ${(format.confidence * 100).toInt()}% | 매칭: ${format.matchCount}회',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(Spacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildFormatDetailRow('앱 키워드', format.appKeywords.join(', ')),
+                _buildFormatDetailRow('금액 정규식', format.amountRegex),
+                _buildFormatDetailRow(
+                  '지출 키워드',
+                  format.typeKeywords['expense']?.join(', ') ?? '-',
+                ),
+                _buildFormatDetailRow(
+                  '수입 키워드',
+                  format.typeKeywords['income']?.join(', ') ?? '-',
+                ),
+                if (format.sampleNotification != null)
+                  _buildFormatDetailRow('샘플', format.sampleNotification!),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFormatDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: Spacing.xs),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),
+          ),
         ],
       ),
     );

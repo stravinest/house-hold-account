@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../domain/entities/learned_push_format.dart';
+import '../services/financial_constants.dart';
 
 class LearnedPushFormatModel extends LearnedPushFormat {
   const LearnedPushFormatModel({
@@ -21,10 +22,9 @@ class LearnedPushFormatModel extends LearnedPushFormat {
 
   factory LearnedPushFormatModel.fromJson(Map<String, dynamic> json) {
     final typeKeywordsRaw = json['type_keywords'];
-    Map<String, List<String>> typeKeywords = {
-      'income': ['입금', '충전'],
-      'expense': ['출금', '결제', '승인', '이체'],
-    };
+    Map<String, List<String>> typeKeywords = Map.from(
+      FinancialConstants.defaultTypeKeywords,
+    );
 
     if (typeKeywordsRaw != null) {
       if (typeKeywordsRaw is String) {
@@ -98,12 +98,7 @@ class LearnedPushFormatModel extends LearnedPushFormat {
       'package_name': packageName,
       'app_keywords': appKeywords,
       'amount_regex': amountRegex,
-      'type_keywords':
-          typeKeywords ??
-          {
-            'income': ['입금', '충전'],
-            'expense': ['출금', '결제', '승인', '이체'],
-          },
+      'type_keywords': typeKeywords ?? FinancialConstants.defaultTypeKeywords,
       if (merchantRegex != null) 'merchant_regex': merchantRegex,
       if (dateRegex != null) 'date_regex': dateRegex,
       if (sampleNotification != null) 'sample_notification': sampleNotification,

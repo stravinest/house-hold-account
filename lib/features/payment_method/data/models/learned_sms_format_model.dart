@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import '../../domain/entities/learned_sms_format.dart';
+import '../services/financial_constants.dart';
 
 class LearnedSmsFormatModel extends LearnedSmsFormat {
   const LearnedSmsFormatModel({
@@ -22,10 +23,9 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
 
   factory LearnedSmsFormatModel.fromJson(Map<String, dynamic> json) {
     final typeKeywordsRaw = json['type_keywords'];
-    Map<String, List<String>> typeKeywords = {
-      'income': ['입금', '충전'],
-      'expense': ['출금', '결제', '승인', '이체'],
-    };
+    Map<String, List<String>> typeKeywords = Map.from(
+      FinancialConstants.defaultTypeKeywords,
+    );
 
     if (typeKeywordsRaw != null) {
       if (typeKeywordsRaw is String) {
@@ -102,12 +102,7 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
       'sender_pattern': senderPattern,
       'sender_keywords': senderKeywords,
       'amount_regex': amountRegex,
-      'type_keywords':
-          typeKeywords ??
-          {
-            'income': ['입금', '충전'],
-            'expense': ['출금', '결제', '승인', '이체'],
-          },
+      'type_keywords': typeKeywords ?? FinancialConstants.defaultTypeKeywords,
       if (merchantRegex != null) 'merchant_regex': merchantRegex,
       if (dateRegex != null) 'date_regex': dateRegex,
       if (sampleSms != null) 'sample_sms': sampleSms,

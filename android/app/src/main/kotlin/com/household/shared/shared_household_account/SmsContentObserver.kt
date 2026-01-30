@@ -111,6 +111,14 @@ class SmsContentObserver(
                 }
             }
         }
+        
+        fun getStatus(): Map<String, Any> {
+            return mapOf(
+                "isRegistered" to isRegistered,
+                "lastProcessedId" to lastProcessedId,
+                "hasInstance" to (instance != null)
+            )
+        }
     }
     
     private val observerScope = CoroutineScope(Dispatchers.IO + SupervisorJob())

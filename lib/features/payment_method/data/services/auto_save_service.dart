@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+import 'app_badge_service.dart';
 import 'native_notification_sync_service.dart';
 import 'notification_listener_wrapper.dart';
 import 'sms_listener_service.dart';
@@ -177,23 +178,52 @@ class AutoSaveService {
     if (!isAndroid) return;
 
     NativeNotificationSyncService.instance.startListening();
+
+    // 앱 시작 시 현재 pending count로 뱃지 초기화
+    _initializeAppBadge();
+
     _nativeNotificationSubscription?.cancel();
     _nativeNotificationSubscription = NativeNotificationSyncService
         .instance
         .onNewNotification
         .listen((event) async {
+          if (kDebugMode) {
+            debugPrint(
+              '[AutoSave] Native notification received: ${event.packageName}',
+            );
+          }
+
+          // 앱 아이콘 뱃지 업데이트
+          await AppBadgeService.instance.updateBadge(event.pendingCount);
+
+          // 네이티브 캐시 동기화 실행
+          if (NotificationListenerWrapper.instance.isInitialized) {
+            await NotificationListenerWrapper.instance
+                .syncCachedNotifications();
+          }
+
+          // UI 업데이트를 위해 이벤트 전파
+          _onNativeNotificationController.add(event);
+        });
+  }
+
+  /// 앱 시작 시 현재 pending count로 뱃지 초기화
+  Future<void> _initializeAppBadge() async {
+    try {
+      await AppBadgeService.instance.initialize();
+      final pendingCount = await NativeNotificationSyncService.instance
+          .getPendingCount();
+      await AppBadgeService.instance.updateBadge(pendingCount);
       if (kDebugMode) {
-        debugPrint('[AutoSave] Native notification received: ${event.packageName}');
+        debugPrint(
+          '[AutoSave] App badge initialized with count: $pendingCount',
+        );
       }
-
-      // 네이티브 캐시 동기화 실행
-      if (NotificationListenerWrapper.instance.isInitialized) {
-        await NotificationListenerWrapper.instance.syncCachedNotifications();
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[AutoSave] Failed to initialize app badge: $e');
       }
-
-      // UI 업데이트를 위해 이벤트 전파
-      _onNativeNotificationController.add(event);
-    });
+    }
   }
 
   void stop() {

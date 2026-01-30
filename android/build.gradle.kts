@@ -33,10 +33,12 @@ subprojects {
                     sourceCompatibility = JavaVersion.VERSION_17
                     targetCompatibility = JavaVersion.VERSION_17
                 }
+                if (namespace == null) {
+                    namespace = project.group.toString()
+                }
             }
         }
 
-        // Kotlin JVM 타겟을 전역으로 설정
         tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
             compilerOptions {
                 jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)

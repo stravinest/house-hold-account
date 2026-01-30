@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+import 'app_badge_service.dart';
+
 /// 네이티브 SQLite에 저장된 알림을 Flutter로 동기화하는 서비스
 /// 앱이 종료되어도 네이티브 서비스가 금융 알림을 수집하여 저장하고,
 /// 앱 재시작 시 이 서비스를 통해 Flutter로 동기화
@@ -17,15 +19,18 @@ class NativeNotificationSyncService {
   }
 
   static const String _channelName = 'com.household.shared/notification_sync';
-  static const String _eventChannelName = 'com.household.shared/notification_events';
+  static const String _eventChannelName =
+      'com.household.shared/notification_events';
   static const MethodChannel _channel = MethodChannel(_channelName);
   static const EventChannel _eventChannel = EventChannel(_eventChannelName);
 
   StreamSubscription<dynamic>? _eventSubscription;
-  final _onNewNotificationController = StreamController<NewNotificationEvent>.broadcast();
+  final _onNewNotificationController =
+      StreamController<NewNotificationEvent>.broadcast();
 
   /// 새 알림 이벤트 스트림 (네이티브에서 실시간으로 전달)
-  Stream<NewNotificationEvent> get onNewNotification => _onNewNotificationController.stream;
+  Stream<NewNotificationEvent> get onNewNotification =>
+      _onNewNotificationController.stream;
 
   bool get isSupported => Platform.isAndroid;
 
@@ -42,12 +47,17 @@ class NativeNotificationSyncService {
             final packageName = event['packageName'] as String? ?? '';
             final pendingCount = (event['pendingCount'] as num?)?.toInt() ?? 0;
             if (kDebugMode) {
-              debugPrint('[NativeSync] New notification event: $packageName, count: $pendingCount');
+              debugPrint(
+                '[NativeSync] New notification event: $packageName, count: $pendingCount',
+              );
             }
-            _onNewNotificationController.add(NewNotificationEvent(
-              packageName: packageName,
-              pendingCount: pendingCount,
-            ));
+            _onNewNotificationController.add(
+              NewNotificationEvent(
+                packageName: packageName,
+                pendingCount: pendingCount,
+              ),
+            );
+            AppBadgeService.instance.updateBadge(pendingCount);
           }
         }
       },
@@ -59,7 +69,9 @@ class NativeNotificationSyncService {
     );
 
     if (kDebugMode) {
-      debugPrint('[NativeSync] Started listening for native notification events');
+      debugPrint(
+        '[NativeSync] Started listening for native notification events',
+      );
     }
   }
 
@@ -68,7 +80,9 @@ class NativeNotificationSyncService {
     _eventSubscription?.cancel();
     _eventSubscription = null;
     if (kDebugMode) {
-      debugPrint('[NativeSync] Stopped listening for native notification events');
+      debugPrint(
+        '[NativeSync] Stopped listening for native notification events',
+      );
     }
   }
 
@@ -78,7 +92,9 @@ class NativeNotificationSyncService {
     if (!isSupported) return [];
 
     try {
-      final result = await _channel.invokeMethod<List<dynamic>>('getPendingNotifications');
+      final result = await _channel.invokeMethod<List<dynamic>>(
+        'getPendingNotifications',
+      );
       if (result == null) return [];
 
       return result.map((item) {
@@ -87,7 +103,9 @@ class NativeNotificationSyncService {
       }).toList();
     } on PlatformException catch (e) {
       if (kDebugMode) {
-        debugPrint('[NativeSync] Error getting pending notifications: ${e.message}');
+        debugPrint(
+          '[NativeSync] Error getting pending notifications: ${e.message}',
+        );
       }
       return [];
     }
@@ -103,7 +121,9 @@ class NativeNotificationSyncService {
         'ids': ids,
       });
       if (kDebugMode) {
-        debugPrint('[NativeSync] Marked ${result ?? 0} notifications as synced');
+        debugPrint(
+          '[NativeSync] Marked ${result ?? 0} notifications as synced',
+        );
       }
       return result ?? 0;
     } on PlatformException catch (e) {
@@ -128,7 +148,9 @@ class NativeNotificationSyncService {
       return result ?? 0;
     } on PlatformException catch (e) {
       if (kDebugMode) {
-        debugPrint('[NativeSync] Error clearing old notifications: ${e.message}');
+        debugPrint(
+          '[NativeSync] Error clearing old notifications: ${e.message}',
+        );
       }
       return 0;
     }
@@ -175,7 +197,9 @@ class NativeNotificationSyncService {
         'id': id,
       });
       if (kDebugMode) {
-        debugPrint('[NativeSync] Incremented retry count for id $id to ${result ?? 0}');
+        debugPrint(
+          '[NativeSync] Incremented retry count for id $id to ${result ?? 0}',
+        );
       }
       return result ?? 0;
     } on PlatformException catch (e) {

@@ -28,6 +28,8 @@ class DebugStatus {
   final bool supabaseHasToken;
   final String? ledgerId;
   final bool notificationListenerActive;
+  final bool smsObserverRegistered;
+  final int smsObserverLastProcessedId;
 
   DebugStatus({
     required this.sqlitePendingCount,
@@ -36,6 +38,8 @@ class DebugStatus {
     required this.supabaseHasToken,
     this.ledgerId,
     required this.notificationListenerActive,
+    required this.smsObserverRegistered,
+    required this.smsObserverLastProcessedId,
   });
 
   factory DebugStatus.fromMap(Map<dynamic, dynamic> map) {
@@ -43,6 +47,7 @@ class DebugStatus {
     final supabase = map['supabase'] as Map<dynamic, dynamic>? ?? {};
     final notificationListener =
         map['notificationListener'] as Map<dynamic, dynamic>? ?? {};
+    final smsObserver = map['smsObserver'] as Map<dynamic, dynamic>? ?? {};
 
     return DebugStatus(
       sqlitePendingCount: sqlite['pendingCount'] as int? ?? 0,
@@ -52,6 +57,9 @@ class DebugStatus {
       ledgerId: supabase['ledgerId'] as String?,
       notificationListenerActive:
           notificationListener['instance'] as bool? ?? false,
+      smsObserverRegistered: smsObserver['isRegistered'] as bool? ?? false,
+      smsObserverLastProcessedId:
+          (smsObserver['lastProcessedId'] as num?)?.toInt() ?? -1,
     );
   }
 }

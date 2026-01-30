@@ -21,6 +21,7 @@ import 'features/notification/services/firebase_messaging_service.dart';
 import 'features/notification/services/local_notification_service.dart';
 import 'features/widget/data/services/widget_data_service.dart';
 import 'features/payment_method/presentation/providers/auto_save_manager.dart';
+import 'features/payment_method/data/services/app_badge_service.dart';
 import 'shared/themes/app_theme.dart';
 import 'shared/themes/theme_provider.dart';
 
@@ -66,6 +67,13 @@ void main() async {
     debugPrint('로컬 알림 서비스 초기화 완료');
   } catch (e) {
     debugPrint('로컬 알림 서비스 초기화 실패: $e');
+  }
+
+  try {
+    await AppBadgeService.instance.initialize();
+    debugPrint('앱 뱃지 서비스 초기화 완료');
+  } catch (e) {
+    debugPrint('앱 뱃지 서비스 초기화 실패: $e');
   }
 
   final sharedPreferences = await SharedPreferences.getInstance();

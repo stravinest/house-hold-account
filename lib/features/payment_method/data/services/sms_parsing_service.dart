@@ -1,5 +1,7 @@
+import '../../../payment_method/domain/entities/learned_format.dart';
 import '../../../payment_method/domain/entities/learned_push_format.dart';
 import '../../../payment_method/domain/entities/learned_sms_format.dart';
+import 'financial_constants.dart';
 
 /// SMS 파싱 결과를 담는 클래스
 class ParsedSmsResult {
@@ -58,31 +60,9 @@ class KoreanFinancialSmsPatterns {
     RegExp(r'(\d{1,2})월\s*(\d{1,2})일\s*(\d{1,2})시\s*(\d{2})분'),
   ];
 
-  // 지출 키워드
-  static const List<String> expenseKeywords = [
-    '승인',
-    '결제',
-    '사용',
-    '출금',
-    '이체',
-    '지급',
-    '체크',
-    '일시불',
-    '할부',
-  ];
-
-  // 수입 키워드
-  static const List<String> incomeKeywords = [
-    '입금',
-    '받으셨습니다',
-    '지급되었습니다',
-    '충전',
-    '환급',
-    '환불',
-  ];
-
-  // 취소 키워드 (무시해야 함)
-  static const List<String> cancelKeywords = ['취소', '승인취소', '결제취소'];
+  static List<String> get expenseKeywords => FinancialConstants.expenseKeywords;
+  static List<String> get incomeKeywords => FinancialConstants.incomeKeywords;
+  static List<String> get cancelKeywords => FinancialConstants.cancelKeywords;
 }
 
 /// 금융사별 SMS 발신자 패턴
@@ -301,9 +281,10 @@ class SmsParsingService {
     );
   }
 
-  /// 학습된 포맷을 사용하여 SMS/Push 파싱
-  /// [format]은 LearnedSmsFormat 또는 LearnedPushFormat을 받을 수 있음
-  static ParsedSmsResult parseSmsWithFormat(String content, dynamic format) {
+  static ParsedSmsResult parseSmsWithFormat(
+    String content,
+    LearnedFormat format,
+  ) {
     int? amount;
     String? transactionType;
     String? merchant;

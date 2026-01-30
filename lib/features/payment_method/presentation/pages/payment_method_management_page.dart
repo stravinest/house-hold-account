@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
+import '../../data/services/app_badge_service.dart';
 import '../../data/services/auto_save_service.dart';
 import '../../data/services/native_notification_sync_service.dart';
 import '../../../../l10n/generated/app_localizations.dart';
@@ -158,6 +159,9 @@ class _PaymentMethodManagementPageState
     try {
       await _refreshPendingTransactions();
       await _markAsViewed();
+
+      // 수집내역 탭 진입 시 앱 아이콘 뱃지 제거
+      await AppBadgeService.instance.removeBadge();
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[TabChanged] Error: $e');

@@ -332,7 +332,7 @@ void main() {
     });
 
     test('지출 키워드가 올바르게 정의되어야 한다', () {
-      const keywords = KoreanFinancialSmsPatterns.expenseKeywords;
+      final keywords = KoreanFinancialSmsPatterns.expenseKeywords;
 
       expect(keywords.contains('승인'), isTrue);
       expect(keywords.contains('결제'), isTrue);
@@ -341,7 +341,7 @@ void main() {
     });
 
     test('수입 키워드가 올바르게 정의되어야 한다', () {
-      const keywords = KoreanFinancialSmsPatterns.incomeKeywords;
+      final keywords = KoreanFinancialSmsPatterns.incomeKeywords;
 
       expect(keywords.contains('입금'), isTrue);
       expect(keywords.contains('충전'), isTrue);
@@ -349,7 +349,7 @@ void main() {
     });
 
     test('취소 키워드가 올바르게 정의되어야 한다', () {
-      const keywords = KoreanFinancialSmsPatterns.cancelKeywords;
+      final keywords = KoreanFinancialSmsPatterns.cancelKeywords;
 
       expect(keywords.contains('취소'), isTrue);
       expect(keywords.contains('승인취소'), isTrue);

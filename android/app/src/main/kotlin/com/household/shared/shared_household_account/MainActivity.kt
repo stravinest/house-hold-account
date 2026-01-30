@@ -386,7 +386,8 @@ class MainActivity : FlutterActivity() {
                 ),
                 "notificationListener" to mapOf(
                     "instance" to (FinancialNotificationListener.instance != null)
-                )
+                ),
+                "smsObserver" to SmsContentObserver.getStatus()
             )
 
             result.success(status)

@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-class LearnedPushFormat extends Equatable {
+import 'learned_format.dart';
+
+class LearnedPushFormat extends Equatable implements LearnedFormat {
   final String id;
   final String paymentMethodId;
   final String packageName;

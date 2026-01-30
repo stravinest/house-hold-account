@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../../domain/entities/learned_sms_format.dart';
 import '../models/learned_sms_format_model.dart';
 import '../repositories/learned_sms_format_repository.dart';
+import 'financial_constants.dart';
 import 'korean_financial_patterns.dart';
 import 'sms_parsing_service.dart';
 import 'sms_listener_service.dart';
@@ -306,10 +307,7 @@ class SmsScannerService {
       senderPattern: _normalizeSmsSender(sampleSms.sender),
       senderKeywords: [sampleSms.sender],
       amountRegex: r'([0-9,]+)\s*원',
-      typeKeywords: const {
-        'expense': ['승인', '결제', '사용', '출금', '이체'],
-        'income': ['입금', '충전', '환불'],
-      },
+      typeKeywords: FinancialConstants.defaultTypeKeywords,
       sampleSms: sampleSms.body,
       isSystem: false,
       confidence: parseResult.confidence * 0.8, // 범용 패턴은 신뢰도 낮춤

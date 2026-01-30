@@ -26,18 +26,9 @@ object FinancialMessageParser {
         Pattern.compile("(\\d{1,2})월\\s*(\\d{1,2})일\\s*(\\d{1,2})시\\s*(\\d{2})분")  // MM월DD일 HH시MM분
     )
 
-    // 지출 키워드
-    private val EXPENSE_KEYWORDS = listOf(
-        "승인", "결제", "사용", "출금", "이체", "지급", "체크", "일시불", "할부"
-    )
-
-    // 수입 키워드
-    private val INCOME_KEYWORDS = listOf(
-        "입금", "받으셨습니다", "지급되었습니다", "충전", "환급", "환불"
-    )
-
-    // 취소 키워드
-    private val CANCEL_KEYWORDS = listOf("취소", "승인취소", "결제취소")
+    private val EXPENSE_KEYWORDS = FinancialConstants.EXPENSE_KEYWORDS
+    private val INCOME_KEYWORDS = FinancialConstants.INCOME_KEYWORDS
+    private val CANCEL_KEYWORDS = FinancialConstants.CANCEL_KEYWORDS
 
     /**
      * 파싱 결과 데이터 클래스

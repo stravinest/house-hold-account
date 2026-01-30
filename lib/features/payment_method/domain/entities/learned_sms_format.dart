@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
-class LearnedSmsFormat extends Equatable {
+import 'learned_format.dart';
+
+class LearnedSmsFormat extends Equatable implements LearnedFormat {
   final String id;
   final String paymentMethodId;
   final String senderPattern;
