@@ -69,11 +69,15 @@ final authChangeNotifierProvider = Provider<AuthChangeNotifier>(
   (ref) => AuthChangeNotifier(ref),
 );
 
+/// 전역 Navigator 키 - 다이얼로그 표시 등에 사용
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
 // 라우터 프로바이더
 final routerProvider = Provider<GoRouter>((ref) {
   final authChangeNotifier = ref.watch(authChangeNotifierProvider);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: Routes.splash,
     debugLogDiagnostics: true,
     refreshListenable: authChangeNotifier,

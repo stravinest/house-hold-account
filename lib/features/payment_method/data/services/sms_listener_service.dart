@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:another_telephony/telephony.dart';
 import 'package:flutter/foundation.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../domain/entities/learned_sms_format.dart';
@@ -91,12 +92,13 @@ class SmsListenerService {
     }
   }
 
+  /// SMS 권한 상태 확인 (요청하지 않고 확인만)
   Future<bool> checkPermissions() async {
     if (!isAndroid) return false;
 
     try {
-      final smsPermission = await _telephony.requestSmsPermissions;
-      return smsPermission ?? false;
+      final status = await Permission.sms.status;
+      return status.isGranted;
     } catch (e) {
       debugPrint('SMS permission check failed: $e');
       return false;

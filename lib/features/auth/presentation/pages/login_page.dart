@@ -281,7 +281,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               tooltip: l10n.tooltipTogglePassword,
                               onPressed: () {
                                 setState(
-                                    () => _obscurePassword = !_obscurePassword);
+                                  () => _obscurePassword = !_obscurePassword,
+                                );
                               },
                             ),
                           ),
@@ -304,7 +305,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           onPressed: () => context.push(Routes.forgotPassword),
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 0, vertical: 8),
+                              horizontal: 0,
+                              vertical: 8,
+                            ),
                           ),
                           child: Text(
                             l10n.authForgotPassword,
@@ -335,11 +338,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             backgroundColor: colorScheme.primary,
                             foregroundColor: colorScheme.onPrimary,
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(inputBorderRadius),
+                              borderRadius: BorderRadius.circular(
+                                inputBorderRadius,
+                              ),
                             ),
                             elevation: 2,
-                            shadowColor: colorScheme.primary.withValues(alpha: 0.3),
+                            shadowColor: colorScheme.primary.withValues(
+                              alpha: 0.3,
+                            ),
                           ),
                           child: _isLoading
                               ? SizedBox(
@@ -368,13 +374,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         child: Row(
                           children: [
                             Expanded(
-                              child: Divider(
-                                color: colorScheme.outlineVariant,
-                              ),
+                              child: Divider(color: colorScheme.outlineVariant),
                             ),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               child: Text(
                                 l10n.authOr,
                                 style: TextStyle(
@@ -384,9 +389,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ),
                             ),
                             Expanded(
-                              child: Divider(
-                                color: colorScheme.outlineVariant,
-                              ),
+                              child: Divider(color: colorScheme.outlineVariant),
                             ),
                           ],
                         ),
@@ -404,8 +407,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             foregroundColor: colorScheme.onSurface,
                             side: BorderSide(color: colorScheme.outline),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(inputBorderRadius),
+                              borderRadius: BorderRadius.circular(
+                                inputBorderRadius,
+                              ),
                             ),
                             backgroundColor: colorScheme.surface,
                           ),

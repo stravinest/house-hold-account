@@ -10,11 +10,7 @@ import '../../../../config/router.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
-import '../../../../shared/themes/theme_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../payment_method/data/services/notification_listener_wrapper.dart';
-import '../../../payment_method/data/services/sms_listener_service.dart';
-import '../../../payment_method/presentation/widgets/permission_request_dialog.dart';
 import '../../../asset/presentation/providers/asset_goal_provider.dart';
 import '../../../asset/presentation/providers/asset_provider.dart';
 import '../../../asset/presentation/pages/asset_page.dart';
@@ -114,11 +110,6 @@ class _HomePageState extends ConsumerState<HomePage> {
       if (mounted) {
         await _refreshCalendarData();
       }
-
-      // 가계부 초기화 완료 후 초기 권한 요청 다이얼로그 표시
-      if (mounted) {
-        await _showInitialPermissionDialog();
-      }
     } on AuthException catch (e) {
       debugPrint('가계부 초기화 오류 (인증): $e');
       if (mounted) {
@@ -135,44 +126,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         _showNetworkError();
       }
     }
-  }
-
-  /// 앱 최초 실행 시 권한 요청 다이얼로그 표시
-  ///
-  /// - Android 전용 (iOS는 스킵)
-  /// - SharedPreferences 플래그로 한 번만 표시
-  /// - 이미 모든 권한이 허용된 경우 스킵
-  Future<void> _showInitialPermissionDialog() async {
-    // Android 전용
-    if (!Platform.isAndroid) return;
-    if (!mounted) return;
-
-    final prefs = ref.read(sharedPreferencesProvider);
-    const flagKey = 'initial_permission_dialog_shown';
-
-    // 이미 표시한 적 있으면 스킵
-    if (prefs.getBool(flagKey) == true) return;
-
-    // 권한 상태 확인 - 이미 모두 허용되어 있으면 스킵
-    final smsGranted = await SmsListenerService.instance.checkPermissions();
-    if (!mounted) return;
-
-    final notificationGranted = await NotificationListenerWrapper.instance
-        .isPermissionGranted();
-    if (!mounted) return;
-
-    if (smsGranted && notificationGranted) {
-      // 이미 모든 권한이 허용됨 - 플래그만 저장하고 종료
-      await prefs.setBool(flagKey, true);
-      return;
-    }
-
-    // 플래그를 먼저 저장 (다이얼로그 표시 직전) - 앱 종료 대비
-    await prefs.setBool(flagKey, true);
-
-    // 다이얼로그 표시
-    if (!mounted) return;
-    await PermissionRequestDialog.show(context);
   }
 
   Future<void> _refreshCalendarData() async {

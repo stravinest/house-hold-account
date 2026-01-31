@@ -53,7 +53,7 @@ class LocalNotificationService {
 
       if (Platform.isAndroid) {
         await _createAndroidChannel();
-        await _requestAndroidPermission();
+        // 권한 요청은 PermissionRequestDialog에서 통합 처리
       }
 
       _isInitialized = true;
@@ -94,8 +94,37 @@ class LocalNotificationService {
     }
   }
 
-  /// Android 13+ (API 33+)에서 알림 권한 요청
-  Future<void> _requestAndroidPermission() async {
+  /// Android 13+ (API 33+)에서 푸시 알림 권한 확인
+  ///
+  /// Returns: 권한이 허용되었으면 true, 아니면 false
+  Future<bool> checkPushNotificationPermission() async {
+    if (!Platform.isAndroid) return true;
+
+    try {
+      final androidImplementation = _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+      if (androidImplementation != null) {
+        final granted = await androidImplementation.areNotificationsEnabled();
+        return granted ?? false;
+      }
+      return false;
+    } catch (e) {
+      if (kDebugMode) {
+        print('Android 알림 권한 확인 중 에러 발생: $e');
+      }
+      return false;
+    }
+  }
+
+  /// Android 13+ (API 33+)에서 푸시 알림 권한 요청
+  ///
+  /// Returns: 권한이 허용되었으면 true, 아니면 false
+  Future<bool> requestPushNotificationPermission() async {
+    if (!Platform.isAndroid) return true;
+
     try {
       final androidImplementation = _notificationsPlugin
           .resolvePlatformSpecificImplementation<
@@ -113,12 +142,14 @@ class LocalNotificationService {
             print('Android 알림 권한 거부됨');
           }
         }
+        return granted ?? false;
       }
+      return false;
     } catch (e) {
       if (kDebugMode) {
         print('Android 알림 권한 요청 중 에러 발생: $e');
       }
-      // 권한 요청 실패해도 앱은 계속 실행
+      return false;
     }
   }
 

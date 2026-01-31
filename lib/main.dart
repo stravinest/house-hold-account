@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:app_links/app_links.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -19,6 +20,7 @@ import 'features/ledger/presentation/providers/ledger_provider.dart';
 import 'features/notification/presentation/providers/notification_provider.dart';
 import 'features/notification/services/firebase_messaging_service.dart';
 import 'features/notification/services/local_notification_service.dart';
+import 'features/payment_method/presentation/widgets/permission_request_dialog.dart';
 import 'features/widget/data/services/widget_data_service.dart';
 import 'features/payment_method/presentation/providers/auto_save_manager.dart';
 import 'features/payment_method/data/services/app_badge_service.dart';
@@ -109,6 +111,34 @@ class _SharedHouseholdAccountAppState
 
     Future.microtask(() {
       ref.read(ledgerIdPersistenceProvider);
+    });
+
+    // 앱 첫 실행 시 권한 다이얼로그 표시 준비 (Android 전용)
+    _prepareInitialPermissionDialog();
+  }
+
+  /// 앱 첫 실행 시 권한 다이얼로그 표시 준비
+  Future<void> _prepareInitialPermissionDialog() async {
+    // Android가 아니면 스킵
+    if (!Platform.isAndroid) return;
+
+    final prefs = ref.read(sharedPreferencesProvider);
+    const flagKey = 'initial_permission_dialog_shown';
+
+    // 이미 표시한 적이 있으면 스킵
+    if (prefs.getBool(flagKey) == true) return;
+
+    // 앱이 완전히 로드된 후 다이얼로그 표시 (1.5초 대기)
+    // rootNavigatorKey.currentContext를 사용하여 Navigator context 획득
+    Future.delayed(const Duration(milliseconds: 1500), () async {
+      final navigatorContext = rootNavigatorKey.currentContext;
+      if (navigatorContext == null || !navigatorContext.mounted) return;
+
+      // 다이얼로그 표시
+      await PermissionRequestDialog.showInitialPermissions(navigatorContext);
+
+      // 다이얼로그가 실제로 표시된 후 플래그 설정
+      await prefs.setBool(flagKey, true);
     });
   }
 
@@ -295,6 +325,9 @@ class _SharedHouseholdAccountAppState
       ],
       supportedLocales: SupportedLocales.all,
       locale: locale,
+      builder: (context, child) {
+        return child ?? const SizedBox.shrink();
+      },
     );
   }
 }
