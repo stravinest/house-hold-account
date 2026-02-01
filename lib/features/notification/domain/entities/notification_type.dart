@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 enum NotificationType {
   // 기존 (하위 호환성 - deprecated)
-  @Deprecated('Use transactionAdded, transactionUpdated, transactionDeleted instead')
+  @Deprecated(
+    'Use transactionAdded, transactionUpdated, transactionDeleted instead',
+  )
   sharedLedgerChange('shared_ledger_change'),
   inviteReceived('invite_received'),
   inviteAccepted('invite_accepted'),

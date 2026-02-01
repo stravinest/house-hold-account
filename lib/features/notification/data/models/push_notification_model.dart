@@ -78,9 +78,7 @@ class PushNotificationModel extends PushNotification {
 
   /// 읽음 상태 업데이트를 위한 JSON 변환
   static Map<String, dynamic> toReadJson() {
-    return {
-      'is_read': true,
-    };
+    return {'is_read': true};
   }
 
   @override

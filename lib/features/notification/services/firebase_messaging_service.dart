@@ -49,7 +49,7 @@ class FirebaseMessagingService {
       // Firebase 설정 확인
       if (!FirebaseConfig.isAvailable) {
         if (kDebugMode) {
-          print('Firebase 설정이 없습니다. FCM 기능을 사용할 수 없습니다.');
+          debugPrint('Firebase 설정이 없습니다. FCM 기능을 사용할 수 없습니다.');
         }
         return;
       }
@@ -61,7 +61,7 @@ class FirebaseMessagingService {
         _messaging = _getMessagingInstance();
       } catch (e) {
         if (kDebugMode) {
-          print('FirebaseMessaging을 불러올 수 없습니다: $e');
+          debugPrint('FirebaseMessaging을 불러올 수 없습니다: $e');
         }
         return;
       }
@@ -84,7 +84,7 @@ class FirebaseMessagingService {
       _setupMessageHandlers();
     } catch (e) {
       if (kDebugMode) {
-        print('FCM 초기화 중 에러 발생: $e');
+        debugPrint('FCM 초기화 중 에러 발생: $e');
       }
       rethrow;
     }
@@ -110,14 +110,14 @@ class FirebaseMessagingService {
 
       if (kDebugMode) {
         if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-          print('알림 권한이 허용되었습니다.');
+          debugPrint('알림 권한이 허용되었습니다.');
         } else {
-          print('알림 권한이 거부되었습니다.');
+          debugPrint('알림 권한이 거부되었습니다.');
         }
       }
     } catch (e) {
       if (kDebugMode) {
-        print('알림 권한 요청 중 에러 발생: $e');
+        debugPrint('알림 권한 요청 중 에러 발생: $e');
       }
       rethrow;
     }
@@ -132,12 +132,12 @@ class FirebaseMessagingService {
 
       final token = await _messaging!.getToken();
       if (kDebugMode && token != null) {
-        print('FCM token retrieved successfully');
+        debugPrint('FCM token retrieved successfully');
       }
       return token;
     } catch (e) {
       if (kDebugMode) {
-        print('FCM 토큰 획득 중 에러 발생: $e');
+        debugPrint('FCM 토큰 획득 중 에러 발생: $e');
       }
       rethrow;
     }
@@ -160,7 +160,7 @@ class FirebaseMessagingService {
       }
 
       if (kDebugMode) {
-        print('[FCM] Saving token, device type: $deviceType');
+        debugPrint('[FCM] Saving token, device type: $deviceType');
       }
 
       await _tokenRepository.saveFcmToken(
@@ -170,11 +170,11 @@ class FirebaseMessagingService {
       );
 
       if (kDebugMode) {
-        print('[FCM] Token saved successfully');
+        debugPrint('[FCM] Token saved successfully');
       }
     } catch (e) {
       if (kDebugMode) {
-        print('[FCM] Token save FAILED: ${e.runtimeType}');
+        debugPrint('[FCM] Token save FAILED: ${e.runtimeType}');
       }
       rethrow;
     }
@@ -200,7 +200,7 @@ class FirebaseMessagingService {
       await _tokenRefreshSubscription?.cancel();
     } catch (e) {
       if (kDebugMode) {
-        print('FCM 토큰 삭제 중 에러 발생: $e');
+        debugPrint('FCM 토큰 삭제 중 에러 발생: $e');
       }
       rethrow;
     }
@@ -219,12 +219,12 @@ class FirebaseMessagingService {
     ) async {
       try {
         if (kDebugMode) {
-          print('FCM 토큰이 갱신되었습니다.');
+          debugPrint('FCM 토큰이 갱신되었습니다.');
         }
         await _saveToken(userId, newToken);
       } catch (e) {
         if (kDebugMode) {
-          print('토큰 갱신 저장 중 에러 발생: $e');
+          debugPrint('토큰 갱신 저장 중 에러 발생: $e');
         }
       }
     });
@@ -248,15 +248,15 @@ class FirebaseMessagingService {
       final messageId = message.messageId;
 
       if (kDebugMode) {
-        print('[FCM] 포그라운드 메시지 수신: ${message.notification?.title}');
-        print('[FCM] Message ID: $messageId');
+        debugPrint('[FCM] 포그라운드 메시지 수신: ${message.notification?.title}');
+        debugPrint('[FCM] Message ID: $messageId');
       }
 
       // 메시지 ID가 있으면 중복 체크
       if (messageId != null) {
         if (_processedMessageIds.contains(messageId)) {
           if (kDebugMode) {
-            print('[FCM] 중복 메시지 수신 무시 (ID: $messageId)');
+            debugPrint('[FCM] 중복 메시지 수신 무시 (ID: $messageId)');
           }
           return;
         }
@@ -273,7 +273,7 @@ class FirebaseMessagingService {
       final currentUserId = Supabase.instance.client.auth.currentUser?.id;
 
       if (kDebugMode) {
-        print(
+        debugPrint(
           '[FCM] creatorUserId: $creatorUserId, currentUserId: $currentUserId',
         );
       }
@@ -282,7 +282,7 @@ class FirebaseMessagingService {
           currentUserId != null &&
           creatorUserId == currentUserId) {
         if (kDebugMode) {
-          print('[FCM] Ignoring self-created transaction notification');
+          debugPrint('[FCM] Ignoring self-created transaction notification');
         }
         return;
       }
@@ -290,7 +290,7 @@ class FirebaseMessagingService {
       // 로컬 알림으로 표시 (LocalNotificationService 사용)
       if (message.notification != null) {
         if (kDebugMode) {
-          print('[FCM] Showing local notification for foreground message');
+          debugPrint('[FCM] Showing local notification for foreground message');
         }
         LocalNotificationService().showNotification(
           title: message.notification!.title ?? '',
@@ -299,7 +299,7 @@ class FirebaseMessagingService {
         );
       } else {
         if (kDebugMode) {
-          print('[FCM] Message received but no notification object found');
+          debugPrint('[FCM] Message received but no notification object found');
         }
       }
     });
@@ -315,7 +315,7 @@ class FirebaseMessagingService {
   /// 알림 탭 처리
   void _handleNotificationTap(RemoteMessage message) {
     if (kDebugMode) {
-      print('FCM notification tapped');
+      debugPrint('FCM notification tapped');
     }
 
     if (onNotificationTap != null) {
@@ -334,13 +334,13 @@ class FirebaseMessagingService {
       final message = await _messaging!.getInitialMessage();
       if (message != null) {
         if (kDebugMode) {
-          print('Initial FCM message found on app start');
+          debugPrint('Initial FCM message found on app start');
         }
         _handleNotificationTap(message);
       }
     } catch (e) {
       if (kDebugMode) {
-        print('초기 FCM 메시지 확인 중 에러 발생: $e');
+        debugPrint('초기 FCM 메시지 확인 중 에러 발생: $e');
       }
     }
   }
@@ -365,6 +365,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // await Firebase.initializeApp();
 
   if (kDebugMode) {
-    print('백그라운드 메시지 수신: ${message.notification?.title}');
+    debugPrint('백그라운드 메시지 수신: ${message.notification?.title}');
   }
 }

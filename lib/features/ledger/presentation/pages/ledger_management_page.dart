@@ -172,28 +172,18 @@ class _SectionHeader extends StatelessWidget {
   final IconData icon;
   final String title;
 
-  const _SectionHeader({
-    required this.icon,
-    required this.title,
-  });
+  const _SectionHeader({required this.icon, required this.title});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: colorScheme.primary,
-        ),
+        Icon(icon, size: 20, color: colorScheme.primary),
         const SizedBox(width: 8),
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
         ),
       ],
     );
@@ -224,7 +214,7 @@ class _LedgerCard extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: isSelected ? 2 : 0,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
         side: isSelected
@@ -379,7 +369,7 @@ class _LedgerCard extends ConsumerWidget {
                   ledger.description!,
                   style: TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withOpacity(0.7),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -436,8 +426,9 @@ class _LedgerCard extends ConsumerWidget {
                         ),
                         side: BorderSide(color: colorScheme.outline),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(BorderRadiusToken.md),
+                          borderRadius: BorderRadius.circular(
+                            BorderRadiusToken.md,
+                          ),
                         ),
                       ),
                     ),
@@ -468,8 +459,9 @@ class _LedgerCard extends ConsumerWidget {
                         ),
                         side: BorderSide(color: colorScheme.outline),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(BorderRadiusToken.md),
+                          borderRadius: BorderRadius.circular(
+                            BorderRadiusToken.md,
+                          ),
                         ),
                       ),
                     ),
@@ -488,8 +480,9 @@ class _LedgerCard extends ConsumerWidget {
                         ),
                         side: BorderSide(color: colorScheme.error),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(BorderRadiusToken.md),
+                          borderRadius: BorderRadius.circular(
+                            BorderRadiusToken.md,
+                          ),
                         ),
                       ),
                       child: Text(
@@ -505,10 +498,7 @@ class _LedgerCard extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              Container(
-                height: 1,
-                color: colorScheme.outlineVariant,
-              ),
+              Container(height: 1, color: colorScheme.outlineVariant),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -601,11 +591,7 @@ class _LedgerCard extends ConsumerWidget {
       padding: const EdgeInsets.only(top: 4),
       child: Row(
         children: [
-          Icon(
-            Icons.people,
-            size: 14,
-            color: colorScheme.onSurfaceVariant,
-          ),
+          Icon(Icons.people, size: 14, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: 4),
           Expanded(
             child: Text(
@@ -921,7 +907,9 @@ class _MemberInfoWidgetState extends ConsumerState<_MemberInfoWidget> {
               l10n.ledgerMemberLoading,
               style: TextStyle(
                 fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ],

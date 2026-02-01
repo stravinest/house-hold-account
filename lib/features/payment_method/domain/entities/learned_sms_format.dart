@@ -7,12 +7,17 @@ class LearnedSmsFormat extends Equatable implements LearnedFormat {
   final String paymentMethodId;
   final String senderPattern;
   final List<String> senderKeywords;
+  @override
   final String amountRegex;
+  @override
   final Map<String, List<String>> typeKeywords;
+  @override
   final String? merchantRegex;
+  @override
   final String? dateRegex;
   final String? sampleSms;
   final bool isSystem;
+  @override
   final double confidence;
   final int matchCount;
   final DateTime createdAt;

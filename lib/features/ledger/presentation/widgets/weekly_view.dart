@@ -421,7 +421,10 @@ class _WeeklyTransactionList extends ConsumerWidget {
                     );
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: Row(
                       children: [
                         // 유저별 색상 점 (수정하지 않음)

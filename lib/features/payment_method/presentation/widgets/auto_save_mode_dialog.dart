@@ -23,8 +23,7 @@ class AutoSaveModeDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<AutoSaveModeDialog> createState() =>
-      _AutoSaveModeDialogState();
+  ConsumerState<AutoSaveModeDialog> createState() => _AutoSaveModeDialogState();
 }
 
 class _AutoSaveModeDialogState extends ConsumerState<AutoSaveModeDialog> {
@@ -262,17 +261,12 @@ class _AutoSaveModeDialogState extends ConsumerState<AutoSaveModeDialog> {
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.info_outline,
-            color: colorScheme.error,
-          ),
+          Icon(Icons.info_outline, color: colorScheme.error),
           const SizedBox(width: Spacing.md),
           Expanded(
             child: Text(
               l10n.autoSaveSettingsIosNotSupported,
-              style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.error,
-              ),
+              style: textTheme.bodySmall?.copyWith(color: colorScheme.error),
             ),
           ),
         ],

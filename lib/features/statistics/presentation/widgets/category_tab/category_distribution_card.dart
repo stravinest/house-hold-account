@@ -37,10 +37,7 @@ class CategoryDistributionCard extends ConsumerWidget {
           // 헤더
           Text(
             l10n.statisticsCategoryDistribution,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.normal,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
           ),
           const SizedBox(height: 16),
 
@@ -106,10 +103,7 @@ class _CategoryLegendList extends StatelessWidget {
               Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 12),
               // 카테고리명

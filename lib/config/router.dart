@@ -304,7 +304,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
     errorBuilder: (context, state) {
       final l10n = AppLocalizations.of(context);
-      final message = l10n.errorNotFound ?? 'Page not found';
+      final message = l10n.errorNotFound;
       return Scaffold(
         body: Center(child: Text('$message: ${state.matchedLocation}')),
       );

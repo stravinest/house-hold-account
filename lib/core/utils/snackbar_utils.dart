@@ -49,10 +49,7 @@ class SnackBarUtils {
           decoration: BoxDecoration(
             color: const Color(0xFFE8F5E9),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: const Color(0xFFC8E6C9),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFC8E6C9), width: 1),
           ),
           child: Text(
             message,
@@ -93,10 +90,7 @@ class SnackBarUtils {
           decoration: BoxDecoration(
             color: const Color(0xFFFFEBEE),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: const Color(0xFFFFCDD2),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFFFCDD2), width: 1),
           ),
           child: Text(
             message,
@@ -137,10 +131,7 @@ class SnackBarUtils {
           decoration: BoxDecoration(
             color: const Color(0xFFE3F2FD),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: const Color(0xFFBBDEFB),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFBBDEFB), width: 1),
           ),
           child: Text(
             message,

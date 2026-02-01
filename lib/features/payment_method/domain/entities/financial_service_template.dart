@@ -62,8 +62,7 @@ class FinancialServiceTemplate extends Equatable {
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[신한카드] 홍길동님\n15,000원 승인\n신한(1*2*) 일시불\n01/21 13:30\n스타벅스',
-      defaultSamplePush:
-          '신한카드 승인\n홍길동님 15,000원 일시불\n스타벅스',
+      defaultSamplePush: '신한카드 승인\n홍길동님 15,000원 일시불\n스타벅스',
       defaultKeywords: ['신한카드', '신한'],
     ),
     FinancialServiceTemplate(
@@ -74,8 +73,7 @@ class FinancialServiceTemplate extends Equatable {
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[삼성카드] 홍길동님\n15,000원 승인\n삼성(1*2*)\n01/21 13:30 일시불\n스타벅스',
-      defaultSamplePush:
-          '삼성카드 승인\n15,000원 일시불\n스타벅스',
+      defaultSamplePush: '삼성카드 승인\n15,000원 일시불\n스타벅스',
       defaultKeywords: ['삼성카드'],
     ),
     FinancialServiceTemplate(
@@ -86,8 +84,7 @@ class FinancialServiceTemplate extends Equatable {
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[현대카드] 홍길동님\n15,000원 승인\n현대(1*2*)\n01/21 13:30 일시불\n스타벅스',
-      defaultSamplePush:
-          '현대카드 승인\n15,000원 일시불\n스타벅스',
+      defaultSamplePush: '현대카드 승인\n15,000원 일시불\n스타벅스',
       defaultKeywords: ['현대카드'],
     ),
     FinancialServiceTemplate(
@@ -98,8 +95,7 @@ class FinancialServiceTemplate extends Equatable {
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[롯데카드] 홍길동님\n15,000원 승인\n롯데(1*2*)\n01/21 13:30 일시불\n스타벅스',
-      defaultSamplePush:
-          '롯데카드 승인\n15,000원 일시불\n스타벅스',
+      defaultSamplePush: '롯데카드 승인\n15,000원 일시불\n스타벅스',
       defaultKeywords: ['롯데카드'],
     ),
     FinancialServiceTemplate(
@@ -110,8 +106,7 @@ class FinancialServiceTemplate extends Equatable {
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[우리카드] 홍길동님\n15,000원 승인\n우리(1*2*)\n01/21 13:30 일시불\n스타벅스',
-      defaultSamplePush:
-          '우리카드 승인\n15,000원 일시불\n스타벅스',
+      defaultSamplePush: '우리카드 승인\n15,000원 일시불\n스타벅스',
       defaultKeywords: ['우리카드'],
     ),
     FinancialServiceTemplate(
@@ -122,8 +117,7 @@ class FinancialServiceTemplate extends Equatable {
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[하나카드] 홍길동님\n15,000원 승인\n하나(1*2*)\n01/21 13:30 일시불\n스타벅스',
-      defaultSamplePush:
-          '하나카드 승인\n15,000원 일시불\n스타벅스',
+      defaultSamplePush: '하나카드 승인\n15,000원 일시불\n스타벅스',
       defaultKeywords: ['하나카드'],
     ),
     FinancialServiceTemplate(
@@ -134,8 +128,7 @@ class FinancialServiceTemplate extends Equatable {
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[BC카드] 홍길동님\n15,000원 승인\nBC(1*2*)\n01/21 13:30 일시불\n스타벅스',
-      defaultSamplePush:
-          'BC카드 승인\n15,000원 일시불\n스타벅스',
+      defaultSamplePush: 'BC카드 승인\n15,000원 일시불\n스타벅스',
       defaultKeywords: ['BC카드', 'BC'],
     ),
     FinancialServiceTemplate(
@@ -214,8 +207,7 @@ class FinancialServiceTemplate extends Equatable {
       color: '#E60012',
       category: FinancialServiceCategory.localCurrency,
       defaultSampleSms: '[서울사랑상품권] 15,000원 결제\n스타벅스 서울점\n잔액: 35,000원',
-      defaultSamplePush:
-          '서울사랑상품권 결제\n15,000원 결제 완료\n가맹점: 스타벅스\n잔액: 35,000원',
+      defaultSamplePush: '서울사랑상품권 결제\n15,000원 결제 완료\n가맹점: 스타벅스\n잔액: 35,000원',
       defaultKeywords: ['서울사랑', '서울상품권', '서울페이'],
     ),
     FinancialServiceTemplate(
@@ -225,8 +217,7 @@ class FinancialServiceTemplate extends Equatable {
       color: '#005BAC',
       category: FinancialServiceCategory.localCurrency,
       defaultSampleSms: '[인천이음] 15,000원 결제\n스타벅스 인천점\n잔액: 35,000원',
-      defaultSamplePush:
-          '인천이음페이 결제\n15,000원 결제 완료\n가맹점: 스타벅스\n잔액: 35,000원',
+      defaultSamplePush: '인천이음페이 결제\n15,000원 결제 완료\n가맹점: 스타벅스\n잔액: 35,000원',
       defaultKeywords: ['인천이음', '이음페이'],
     ),
   ];

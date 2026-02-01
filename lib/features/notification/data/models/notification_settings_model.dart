@@ -53,12 +53,8 @@ class NotificationSettingsModel extends NotificationSettings {
   }
 
   /// 알림 설정 업데이트를 위한 JSON 변환 (enabled만 수정 가능)
-  static Map<String, dynamic> toUpdateJson({
-    required bool enabled,
-  }) {
-    return {
-      'enabled': enabled,
-    };
+  static Map<String, dynamic> toUpdateJson({required bool enabled}) {
+    return {'enabled': enabled};
   }
 
   @override

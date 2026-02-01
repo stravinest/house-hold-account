@@ -41,8 +41,7 @@ const double _badgePaddingV = 2.0;
 const double _badgeBorderRadius = 10.0;
 const double _starIconSize = 14.0;
 
-/// Tab index constants
-const int _paymentMethodTabIndex = 0;
+/// Tab index constant
 const int _autoCollectHistoryTabIndex = 1;
 
 /// Date group classification enum
@@ -60,8 +59,9 @@ _DateGroup _getDateGroup(DateTime date, DateTime now) {
   if (difference <= 7 && date.year == now.year && date.month == now.month) {
     return _DateGroup.thisWeek;
   }
-  if (date.year == now.year && date.month == now.month)
+  if (date.year == now.year && date.month == now.month) {
     return _DateGroup.thisMonth;
+  }
   return _DateGroup.older;
 }
 
@@ -632,7 +632,7 @@ class _PaymentMethodListView extends ConsumerWidget {
   void _showAddSharedDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => _AddSharedPaymentMethodDialog(),
+      builder: (context) => const _AddSharedPaymentMethodDialog(),
     );
   }
 
@@ -1253,9 +1253,7 @@ class _PendingTransactionListViewState
                         onEdit:
                             widget.status == PendingTransactionStatus.pending
                             ? () {
-                                if (tx is PendingTransactionModel) {
-                                  _showEditSheet(context, ref, tx);
-                                }
+                                _showEditSheet(context, ref, tx);
                               }
                             : null,
                         onReject:
@@ -1263,8 +1261,7 @@ class _PendingTransactionListViewState
                             ? () => _rejectTransaction(context, ref, tx.id)
                             : null,
                         onConfirm:
-                            widget.status == PendingTransactionStatus.pending &&
-                                tx is PendingTransactionModel
+                            widget.status == PendingTransactionStatus.pending
                             ? () => _confirmTransaction(context, ref, tx)
                             : null,
                         onDelete: () =>

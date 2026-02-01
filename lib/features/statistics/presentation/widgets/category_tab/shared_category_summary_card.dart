@@ -83,12 +83,20 @@ class SharedCategorySummaryCard extends ConsumerWidget {
       child: userStatsAsync.when(
         data: (userStats) {
           if (userStats.isEmpty) {
-            return _buildEmptyContent(context, l10n, selectedType, expenseFilter);
+            return _buildEmptyContent(
+              context,
+              l10n,
+              selectedType,
+              expenseFilter,
+            );
           }
 
           final users = userStats.values.toList()
             ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
-          final totalAmount = users.fold(0, (sum, user) => sum + user.totalAmount);
+          final totalAmount = users.fold(
+            0,
+            (sum, user) => sum + user.totalAmount,
+          );
 
           return _buildContent(
             context,
@@ -104,7 +112,8 @@ class SharedCategorySummaryCard extends ConsumerWidget {
           height: 120,
           child: Center(child: CircularProgressIndicator()),
         ),
-        error: (error, stack) => _buildEmptyContent(context, l10n, selectedType, expenseFilter),
+        error: (error, stack) =>
+            _buildEmptyContent(context, l10n, selectedType, expenseFilter),
       ),
     );
   }
@@ -123,10 +132,7 @@ class SharedCategorySummaryCard extends ConsumerWidget {
       children: [
         Text(
           l10n.statisticsTotal(typeLabel),
-          style: TextStyle(
-            fontSize: 14,
-            color: colorScheme.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 8),
         Text(
@@ -160,10 +166,7 @@ class SharedCategorySummaryCard extends ConsumerWidget {
         // 총 금액 라벨
         Text(
           l10n.statisticsTotal(typeLabel),
-          style: TextStyle(
-            fontSize: 14,
-            color: colorScheme.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
         ),
         const SizedBox(height: 4),
 
@@ -228,10 +231,7 @@ class SharedCategorySummaryCard extends ConsumerWidget {
                 // 사용자 이름
                 Text(
                   user.userName,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 14, color: colorScheme.onSurface),
                 ),
 
                 // Spacer
@@ -240,10 +240,7 @@ class SharedCategorySummaryCard extends ConsumerWidget {
                 // 금액
                 Text(
                   '${NumberFormatUtils.currency.format(user.totalAmount)}${l10n.transactionAmountUnit}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: colorScheme.onSurface,
-                  ),
+                  style: TextStyle(fontSize: 14, color: colorScheme.onSurface),
                 ),
                 const SizedBox(width: 8),
 
@@ -273,10 +270,7 @@ class SharedCategorySummaryCard extends ConsumerWidget {
     if (comparison.previousTotal == 0 && comparison.currentTotal == 0) {
       return Text(
         l10n.statisticsNoPreviousData,
-        style: TextStyle(
-          fontSize: 14,
-          color: colorScheme.onSurfaceVariant,
-        ),
+        style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
       );
     }
 
@@ -310,10 +304,7 @@ class SharedCategorySummaryCard extends ConsumerWidget {
             comparison.percentageChange.abs().toStringAsFixed(1),
             changeText,
           ),
-          style: TextStyle(
-            fontSize: 12,
-            color: colorScheme.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant),
         ),
       ],
     );

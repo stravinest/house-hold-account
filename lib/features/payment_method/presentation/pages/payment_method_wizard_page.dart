@@ -641,7 +641,7 @@ class _PaymentMethodWizardPageState
               child: SafeArea(
                 top: false,
                 child: Padding(
-                  padding: EdgeInsets.all(Spacing.md),
+                  padding: const EdgeInsets.all(Spacing.md),
                   child: ElevatedButton(
                     onPressed: _isSubmitting ? null : _submit,
                     style: ElevatedButton.styleFrom(
@@ -717,7 +717,7 @@ class _PaymentMethodWizardPageState
   Widget _buildModeSelection() {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: EdgeInsets.all(Spacing.md),
+      padding: const EdgeInsets.all(Spacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -725,7 +725,7 @@ class _PaymentMethodWizardPageState
             l10n.paymentMethodWizardModeQuestion,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: Spacing.lg),
+          const SizedBox(height: Spacing.lg),
 
           // Manual entry card
           Card(
@@ -733,7 +733,7 @@ class _PaymentMethodWizardPageState
             child: InkWell(
               onTap: () => _selectMode(PaymentMethodAddMode.manual),
               child: Padding(
-                padding: EdgeInsets.all(Spacing.md),
+                padding: const EdgeInsets.all(Spacing.md),
                 child: Row(
                   children: [
                     Container(
@@ -751,7 +751,7 @@ class _PaymentMethodWizardPageState
                         size: 24,
                       ),
                     ),
-                    SizedBox(width: Spacing.md),
+                    const SizedBox(width: Spacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -767,7 +767,7 @@ class _PaymentMethodWizardPageState
                               ),
                               const SizedBox(width: 8),
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: Spacing.sm,
                                   vertical: 2,
                                 ),
@@ -788,7 +788,7 @@ class _PaymentMethodWizardPageState
                               ),
                             ],
                           ),
-                          SizedBox(height: Spacing.xs),
+                          const SizedBox(height: Spacing.xs),
                           Text(
                             l10n.paymentMethodWizardManualDescription,
                             style: TextStyle(
@@ -806,7 +806,7 @@ class _PaymentMethodWizardPageState
             ),
           ),
 
-          SizedBox(height: Spacing.sm + Spacing.xs),
+          const SizedBox(height: Spacing.sm + Spacing.xs),
 
           // Auto-collect card
           Card(
@@ -814,7 +814,7 @@ class _PaymentMethodWizardPageState
             child: InkWell(
               onTap: () => _selectMode(PaymentMethodAddMode.autoCollect),
               child: Padding(
-                padding: EdgeInsets.all(Spacing.md),
+                padding: const EdgeInsets.all(Spacing.md),
                 child: Row(
                   children: [
                     Container(
@@ -832,7 +832,7 @@ class _PaymentMethodWizardPageState
                         size: 24,
                       ),
                     ),
-                    SizedBox(width: Spacing.md),
+                    const SizedBox(width: Spacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -848,7 +848,7 @@ class _PaymentMethodWizardPageState
                               ),
                               const SizedBox(width: 8),
                               Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: Spacing.sm,
                                   vertical: 2,
                                 ),
@@ -869,7 +869,7 @@ class _PaymentMethodWizardPageState
                               ),
                             ],
                           ),
-                          SizedBox(height: Spacing.xs),
+                          const SizedBox(height: Spacing.xs),
                           Text(
                             l10n.paymentMethodWizardAutoCollectDescription,
                             style: TextStyle(
@@ -903,18 +903,18 @@ class _PaymentMethodWizardPageState
         .toList();
 
     return ListView(
-      padding: EdgeInsets.all(Spacing.md),
+      padding: const EdgeInsets.all(Spacing.md),
       children: [
         Text(
           l10n.paymentMethodWizardServiceQuestion,
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
-        SizedBox(height: Spacing.sm),
+        const SizedBox(height: Spacing.sm),
         Text(
           l10n.paymentMethodWizardServiceDescription,
           style: TextStyle(fontSize: 14, color: Colors.grey[600]),
         ),
-        SizedBox(height: Spacing.lg),
+        const SizedBox(height: Spacing.lg),
 
         // 1. Card section
         if (cards.isNotEmpty) ...[
@@ -926,7 +926,7 @@ class _PaymentMethodWizardPageState
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          SizedBox(height: Spacing.sm + Spacing.xs),
+          const SizedBox(height: Spacing.sm + Spacing.xs),
           Wrap(
             spacing: Spacing.sm,
             runSpacing: Spacing.sm,
@@ -934,7 +934,7 @@ class _PaymentMethodWizardPageState
           ),
         ],
 
-        SizedBox(height: Spacing.lg),
+        const SizedBox(height: Spacing.lg),
 
         // 2. Local currency section
         if (localCurrencies.isNotEmpty) ...[
@@ -946,7 +946,7 @@ class _PaymentMethodWizardPageState
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          SizedBox(height: Spacing.sm + Spacing.xs),
+          const SizedBox(height: Spacing.sm + Spacing.xs),
           Wrap(
             spacing: Spacing.sm,
             runSpacing: Spacing.sm,
@@ -969,7 +969,7 @@ class _PaymentMethodWizardPageState
       backgroundColor: colorScheme.surfaceContainerHighest,
       side: BorderSide.none,
       // Increased padding for better touch target (min 48dp)
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: Spacing.sm + Spacing.xs,
         vertical: Spacing.sm,
       ),
@@ -993,14 +993,14 @@ class _PaymentMethodWizardPageState
   Widget _buildManualConfiguration() {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: EdgeInsets.all(Spacing.md),
+      padding: const EdgeInsets.all(Spacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Shared notice badge
           if (_selectedMode == PaymentMethodAddMode.manual) ...[
             Container(
-              padding: EdgeInsets.symmetric(
+              padding: const EdgeInsets.symmetric(
                 horizontal: Spacing.sm + Spacing.xs,
                 vertical: Spacing.sm,
               ),
@@ -1012,7 +1012,7 @@ class _PaymentMethodWizardPageState
               child: Row(
                 children: [
                   Icon(Icons.people_outline, size: 18, color: Colors.blue[700]),
-                  SizedBox(width: Spacing.sm),
+                  const SizedBox(width: Spacing.sm),
                   Expanded(
                     child: Text(
                       l10n.paymentMethodWizardSharedNotice,
@@ -1022,14 +1022,14 @@ class _PaymentMethodWizardPageState
                 ],
               ),
             ),
-            SizedBox(height: Spacing.lg),
+            const SizedBox(height: Spacing.lg),
           ],
 
           Text(
             l10n.paymentMethodWizardNameLabel,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: Spacing.sm),
+          const SizedBox(height: Spacing.sm),
           TextFormField(
             controller: _nameController,
             maxLength: 20,
@@ -1050,13 +1050,13 @@ class _PaymentMethodWizardPageState
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     return SingleChildScrollView(
-      padding: EdgeInsets.all(Spacing.md),
+      padding: const EdgeInsets.all(Spacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Personal use notice badge - 디자인 시스템 적용
           Container(
-            padding: EdgeInsets.symmetric(
+            padding: const EdgeInsets.symmetric(
               horizontal: Spacing.sm + Spacing.xs,
               vertical: Spacing.sm,
             ),
@@ -1072,7 +1072,7 @@ class _PaymentMethodWizardPageState
                   size: 18,
                   color: Color(0xFFE65100),
                 ), // #E65100
-                SizedBox(width: Spacing.sm),
+                const SizedBox(width: Spacing.sm),
                 Expanded(
                   child: Text(
                     l10n.paymentMethodWizardPersonalNotice,
@@ -1085,7 +1085,7 @@ class _PaymentMethodWizardPageState
               ],
             ),
           ),
-          SizedBox(height: Spacing.md),
+          const SizedBox(height: Spacing.md),
 
           // 1. Name setting - 자동수집은 수정 불가 (읽기 전용)
           TextFormField(
@@ -1106,14 +1106,14 @@ class _PaymentMethodWizardPageState
               ),
             ),
           ),
-          SizedBox(height: Spacing.md),
+          const SizedBox(height: Spacing.md),
 
           // 2. Notification type selection (SMS / Push) - 디자인 시스템 적용
           Text(
             l10n.paymentMethodWizardCollectSource,
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
-          SizedBox(height: Spacing.sm),
+          const SizedBox(height: Spacing.sm),
           Container(
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerHighest,
@@ -1143,7 +1143,7 @@ class _PaymentMethodWizardPageState
               ],
             ),
           ),
-          SizedBox(height: Spacing.md),
+          const SizedBox(height: Spacing.md),
 
           // 3. Collection rule settings - 디자인 시스템 적용
           // SMS 또는 Push 포맷이 있을 때 표시
@@ -1156,7 +1156,7 @@ class _PaymentMethodWizardPageState
                 borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
                 border: Border.all(color: const Color(0xFF90CAF9)), // #90CAF9
               ),
-              padding: EdgeInsets.all(Spacing.md),
+              padding: const EdgeInsets.all(Spacing.md),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1167,7 +1167,7 @@ class _PaymentMethodWizardPageState
                         size: 20,
                         color: Color(0xFF1976D2),
                       ),
-                      SizedBox(width: Spacing.sm),
+                      const SizedBox(width: Spacing.sm),
                       Expanded(
                         child: Text(
                           l10n.paymentMethodWizardCurrentRules,
@@ -1195,7 +1195,7 @@ class _PaymentMethodWizardPageState
                       color: Color(0xFF424242),
                     ),
                   ),
-                  SizedBox(height: Spacing.sm),
+                  const SizedBox(height: Spacing.sm),
                   Wrap(
                     spacing: Spacing.sm,
                     runSpacing: Spacing.sm,
@@ -1219,7 +1219,7 @@ class _PaymentMethodWizardPageState
                             )
                             .toList(),
                   ),
-                  SizedBox(height: Spacing.sm + Spacing.xs),
+                  const SizedBox(height: Spacing.sm + Spacing.xs),
                   // 금액 패턴
                   Text(
                     l10n.paymentMethodWizardAmountPattern,
@@ -1228,7 +1228,7 @@ class _PaymentMethodWizardPageState
                       color: Color(0xFF424242),
                     ),
                   ),
-                  SizedBox(height: Spacing.xs),
+                  const SizedBox(height: Spacing.xs),
                   Text(
                     _getFriendlyAmountPattern(
                       _notificationType == AutoCollectSource.push.name
@@ -1246,7 +1246,7 @@ class _PaymentMethodWizardPageState
 
           // SMS에서 규칙 가져오기 버튼 (SMS 선택 시에만 표시)
           if (_notificationType == AutoCollectSource.sms.name) ...[
-            SizedBox(height: Spacing.sm + Spacing.xs),
+            const SizedBox(height: Spacing.sm + Spacing.xs),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
@@ -1255,7 +1255,7 @@ class _PaymentMethodWizardPageState
                 label: Text(l10n.paymentMethodWizardImportFromSms),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, 52),
-                  padding: EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: Spacing.md,
                     vertical: Spacing.sm + Spacing.xs,
                   ),
@@ -1264,17 +1264,17 @@ class _PaymentMethodWizardPageState
             ),
           ],
 
-          SizedBox(height: Spacing.md),
+          const SizedBox(height: Spacing.md),
 
           // 4. Auto save mode selection (자동 / 제안)
           Text(
             l10n.autoSaveSettingsAutoProcessMode,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: Spacing.sm + Spacing.xs),
+          const SizedBox(height: Spacing.sm + Spacing.xs),
           _buildAutoSaveModeSelector(l10n),
 
-          SizedBox(height: Spacing.xl),
+          const SizedBox(height: Spacing.xl),
         ],
       ),
     );
@@ -1290,7 +1290,7 @@ class _PaymentMethodWizardPageState
           title: l10n.autoSaveSettingsSuggestModeTitle,
           description: l10n.autoSaveSettingsSuggestModeDesc,
         ),
-        SizedBox(height: Spacing.sm),
+        const SizedBox(height: Spacing.sm),
         _buildAutoSaveModeOption(
           mode: AutoSaveMode.auto,
           icon: Icons.auto_awesome_outlined,
@@ -1323,7 +1323,7 @@ class _PaymentMethodWizardPageState
           children: [
             if (isSelected)
               Padding(
-                padding: EdgeInsets.only(right: Spacing.sm),
+                padding: const EdgeInsets.only(right: Spacing.sm),
                 child: Icon(
                   Icons.check_circle,
                   size: 16,
@@ -1337,7 +1337,7 @@ class _PaymentMethodWizardPageState
                   ? colorScheme.onPrimaryContainer
                   : colorScheme.onSurfaceVariant,
             ),
-            SizedBox(width: Spacing.sm),
+            const SizedBox(width: Spacing.sm),
             Text(
               label,
               style: TextStyle(
@@ -1409,7 +1409,7 @@ class _PaymentMethodWizardPageState
         },
         borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
         child: Padding(
-          padding: EdgeInsets.all(Spacing.sm + Spacing.xs),
+          padding: const EdgeInsets.all(Spacing.sm + Spacing.xs),
           child: Row(
             children: [
               Container(
@@ -1421,7 +1421,7 @@ class _PaymentMethodWizardPageState
                 ),
                 child: Icon(icon, color: iconColor, size: 20),
               ),
-              SizedBox(width: Spacing.sm + Spacing.xs),
+              const SizedBox(width: Spacing.sm + Spacing.xs),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1434,7 +1434,7 @@ class _PaymentMethodWizardPageState
                         color: textColor,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       description,
                       style: TextStyle(
@@ -1616,7 +1616,7 @@ class _PaymentMethodWizardPageState
                   return Column(
                     children: [
                       Padding(
-                        padding: EdgeInsets.all(Spacing.md),
+                        padding: const EdgeInsets.all(Spacing.md),
                         child: Text(
                           sheetL10n.paymentMethodWizardSelectSmsTitle,
                           style: const TextStyle(
@@ -1798,7 +1798,7 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
                 color: colorScheme.onSurfaceVariant,
               ),
             ),
-            SizedBox(height: Spacing.md),
+            const SizedBox(height: Spacing.md),
 
             // 등록된 키워드 Chip 리스트
             if (_keywords.isNotEmpty) ...[
@@ -1816,7 +1816,7 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
                     )
                     .toList(),
               ),
-              SizedBox(height: Spacing.md),
+              const SizedBox(height: Spacing.md),
             ],
 
             // 키워드 입력 필드
@@ -1829,7 +1829,7 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
                     decoration: InputDecoration(
                       hintText: l10n.paymentMethodWizardKeywordInputHint,
                       border: const OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
+                      contentPadding: const EdgeInsets.symmetric(
                         horizontal: Spacing.sm + Spacing.xs,
                         vertical: Spacing.sm + Spacing.xs,
                       ),
@@ -1838,7 +1838,7 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
                     onSubmitted: (_) => _addKeyword(),
                   ),
                 ),
-                SizedBox(width: Spacing.sm),
+                const SizedBox(width: Spacing.sm),
                 FilledButton.tonal(
                   onPressed: _addKeyword,
                   child: Text(l10n.paymentMethodWizardKeywordAdd),

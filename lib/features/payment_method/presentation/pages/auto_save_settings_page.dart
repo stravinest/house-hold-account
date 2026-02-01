@@ -64,7 +64,8 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
 
         // Use user-changed mode if available, otherwise use server value
         final currentMode = _selectedMode ?? paymentMethod.autoSaveMode;
-        final currentSource = _selectedSource ?? paymentMethod.autoCollectSource;
+        final currentSource =
+            _selectedSource ?? paymentMethod.autoCollectSource;
 
         return _buildContent(
           context,
@@ -126,10 +127,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
                           BorderRadiusToken.md,
                         ),
                       ),
-                      child: const Icon(
-                        Icons.credit_card,
-                        color: Colors.white,
-                      ),
+                      child: const Icon(Icons.credit_card, color: Colors.white),
                     ),
                     const SizedBox(width: Spacing.md),
                     Expanded(
@@ -218,50 +216,50 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
 
             // Permission notice (auto-collect always requires permission)
             if (isAndroid) ...[
-                    const SizedBox(height: Spacing.lg),
-                    Card(
-                      color: colorScheme.primaryContainer,
-                      child: Padding(
-                        padding: const EdgeInsets.all(Spacing.md),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.security,
-                                  color: colorScheme.onPrimaryContainer,
-                                ),
-                                const SizedBox(width: Spacing.sm),
-                                Text(
-                                  l10n.autoSaveSettingsRequiredPermissions,
-                                  style: textTheme.titleSmall?.copyWith(
-                                    color: colorScheme.onPrimaryContainer,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+              const SizedBox(height: Spacing.lg),
+              Card(
+                color: colorScheme.primaryContainer,
+                child: Padding(
+                  padding: const EdgeInsets.all(Spacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.security,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                          const SizedBox(width: Spacing.sm),
+                          Text(
+                            l10n.autoSaveSettingsRequiredPermissions,
+                            style: textTheme.titleSmall?.copyWith(
+                              color: colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.bold,
                             ),
-                            const SizedBox(height: Spacing.sm),
-                            Text(
-                              l10n.autoSaveSettingsPermissionDesc,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onPrimaryContainer,
-                              ),
-                            ),
-                            const SizedBox(height: Spacing.sm),
-                            OutlinedButton.icon(
-                              onPressed: _showPermissionDialog,
-                              icon: const Icon(Icons.settings),
-                              label: Text(l10n.autoSaveSettingsPermissionButton),
-                            ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      Text(
+                        l10n.autoSaveSettingsPermissionDesc,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
                         ),
                       ),
-                    ),
-                  ],
-                ],
+                      const SizedBox(height: Spacing.sm),
+                      OutlinedButton.icon(
+                        onPressed: _showPermissionDialog,
+                        icon: const Icon(Icons.settings),
+                        label: Text(l10n.autoSaveSettingsPermissionButton),
+                      ),
+                    ],
+                  ),
+                ),
               ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -306,7 +304,10 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
     );
   }
 
-  String _getSourceDescription(AppLocalizations l10n, AutoCollectSource source) {
+  String _getSourceDescription(
+    AppLocalizations l10n,
+    AutoCollectSource source,
+  ) {
     switch (source) {
       case AutoCollectSource.sms:
         return l10n.autoSaveSettingsSourceSmsDesc;
@@ -315,7 +316,12 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
     }
   }
 
-  Widget _buildModeSelector(BuildContext context, AppLocalizations l10n, bool isAndroid, AutoSaveMode currentMode) {
+  Widget _buildModeSelector(
+    BuildContext context,
+    AppLocalizations l10n,
+    bool isAndroid,
+    AutoSaveMode currentMode,
+  ) {
     return Column(
       children: [
         _buildModeOption(
@@ -439,19 +445,26 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
 
     try {
       // 현재 결제수단 정보 가져오기
-      final paymentMethods = ref.read(paymentMethodNotifierProvider).valueOrNull ?? [];
+      final paymentMethods =
+          ref.read(paymentMethodNotifierProvider).valueOrNull ?? [];
       final currentPaymentMethod = paymentMethods
           .where((p) => p.id == widget.paymentMethodId)
           .firstOrNull;
 
-      final modeToSave = selectedMode ?? currentPaymentMethod?.autoSaveMode ?? AutoSaveMode.manual;
+      final modeToSave =
+          selectedMode ??
+          currentPaymentMethod?.autoSaveMode ??
+          AutoSaveMode.manual;
 
       // Check permission if auto save mode is enabled
       if (modeToSave != AutoSaveMode.manual && Platform.isAndroid) {
         final hasPermission = await _checkAndRequestPermissions();
         if (!hasPermission) {
           if (mounted) {
-            SnackBarUtils.showError(context, l10n.autoSaveSettingsPermissionRequired);
+            SnackBarUtils.showError(
+              context,
+              l10n.autoSaveSettingsPermissionRequired,
+            );
           }
           return;
         }
@@ -478,7 +491,10 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
       }
     } catch (e) {
       if (mounted) {
-        SnackBarUtils.showError(context, l10n.autoSaveSettingsSaveFailed(e.toString()));
+        SnackBarUtils.showError(
+          context,
+          l10n.autoSaveSettingsSaveFailed(e.toString()),
+        );
       }
     } finally {
       if (mounted) {

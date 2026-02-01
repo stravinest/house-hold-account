@@ -42,11 +42,7 @@ class FcmTokenModel extends FcmToken {
     required String token,
     required String deviceType,
   }) {
-    return {
-      'user_id': userId,
-      'token': token,
-      'device_type': deviceType,
-    };
+    return {'user_id': userId, 'token': token, 'device_type': deviceType};
   }
 
   @override

@@ -36,13 +36,13 @@ class OwnedLedgerCard extends ConsumerWidget {
     // 다크모드 대응: colorScheme 기반 색상
     final activeBorderColor = colorScheme.primary;
     // 배경색을 더 연하게 (primary의 8% 투명도)
-    final activeBackgroundColor = colorScheme.primary.withOpacity(0.08);
+    final activeBackgroundColor = colorScheme.primary.withValues(alpha: 0.08);
     final inactiveBorderColor = colorScheme.outlineVariant;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: ledgerInfo.isCurrentLedger ? 2 : 0,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
         side: ledgerInfo.isCurrentLedger
@@ -165,18 +165,11 @@ class OwnedLedgerCard extends ConsumerWidget {
 
     return Row(
       children: [
-        Icon(
-          Icons.people,
-          size: 14,
-          color: colorScheme.onSurfaceVariant,
-        ),
+        Icon(Icons.people, size: 14, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: 4),
         Expanded(
           child: Text(
-            '${l10n.shareMemberCount(
-              ledgerInfo.members.length,
-              AppConstants.maxMembersPerLedger,
-            )} (${memberNames.join(', ')})',
+            '${l10n.shareMemberCount(ledgerInfo.members.length, AppConstants.maxMembersPerLedger)} (${memberNames.join(', ')})',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.normal,
@@ -201,11 +194,7 @@ class OwnedLedgerCard extends ConsumerWidget {
         statusWidgets: [
           Row(
             children: [
-              Icon(
-                Icons.check_circle,
-                size: 16,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.check_circle, size: 16, color: colorScheme.primary),
               const SizedBox(width: 6),
               Text(
                 l10n.shareMemberFull,
@@ -307,11 +296,7 @@ class OwnedLedgerCard extends ConsumerWidget {
       buttons.add(
         OutlinedButton.icon(
           onPressed: onSelectLedger,
-          icon: Icon(
-            Icons.check,
-            size: 16,
-            color: colorScheme.primary,
-          ),
+          icon: Icon(Icons.check, size: 16, color: colorScheme.primary),
           label: Text(
             l10n.shareUse,
             style: TextStyle(
@@ -375,10 +360,7 @@ class OwnedLedgerCard extends ConsumerWidget {
     if (statusWidgets.isEmpty && buttons.isNotEmpty) {
       return Align(
         alignment: Alignment.centerRight,
-        child: Wrap(
-          spacing: 8,
-          children: buttons,
-        ),
+        child: Wrap(spacing: 8, children: buttons),
       );
     }
 
@@ -397,10 +379,7 @@ class OwnedLedgerCard extends ConsumerWidget {
           // Align 사용 - 버튼을 오른쪽 정렬하되 width 제약 문제 없음
           Align(
             alignment: Alignment.centerRight,
-            child: Wrap(
-              spacing: 8,
-              children: buttons,
-            ),
+            child: Wrap(spacing: 8, children: buttons),
           ),
         ],
       ],
@@ -420,11 +399,7 @@ class OwnedLedgerCard extends ConsumerWidget {
     // pencil 디자인: 간단한 Row (icon + text)
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 16,
-          color: colorScheme.primary,
-        ),
+        Icon(icon, size: 16, color: colorScheme.primary),
         const SizedBox(width: 6),
         Flexible(
           child: Text(

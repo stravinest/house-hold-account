@@ -66,10 +66,7 @@ class SkeletonBox extends StatelessWidget {
 ///
 /// 주로 아바타나 프로필 이미지 로딩 시 사용합니다.
 class SkeletonCircle extends StatelessWidget {
-  const SkeletonCircle({
-    required this.size,
-    super.key,
-  });
+  const SkeletonCircle({required this.size, super.key});
 
   /// 원의 지름
   final double size;
@@ -86,10 +83,7 @@ class SkeletonCircle extends StatelessWidget {
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          color: baseColor,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: baseColor, shape: BoxShape.circle),
       ),
     );
   }
@@ -196,11 +190,7 @@ class SkeletonTransactionItem extends StatelessWidget {
 ///
 /// 여러 개의 스켈레톤 아이템을 리스트로 표시합니다.
 class SkeletonListView extends StatelessWidget {
-  const SkeletonListView({
-    this.itemCount = 5,
-    this.itemBuilder,
-    super.key,
-  });
+  const SkeletonListView({this.itemCount = 5, this.itemBuilder, super.key});
 
   /// 표시할 스켈레톤 아이템 개수
   final int itemCount;
@@ -215,8 +205,8 @@ class SkeletonListView extends StatelessWidget {
       itemCount: itemCount,
       physics: const NeverScrollableScrollPhysics(),
       shrinkWrap: true,
-      itemBuilder: itemBuilder ??
-          (context, index) => const SkeletonTransactionItem(),
+      itemBuilder:
+          itemBuilder ?? (context, index) => const SkeletonTransactionItem(),
     );
   }
 }

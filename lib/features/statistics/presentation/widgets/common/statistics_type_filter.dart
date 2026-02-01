@@ -36,13 +36,15 @@ class StatisticsTypeFilter extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: types.map((type) {
           final isSelected = selectedType == type.$1;
-          final isDisabled = !enabled || (disabledTypes?.contains(type.$1) ?? false);
+          final isDisabled =
+              !enabled || (disabledTypes?.contains(type.$1) ?? false);
 
           return GestureDetector(
             onTap: isDisabled
                 ? null
                 : () {
-                    ref.read(selectedStatisticsTypeProvider.notifier).state = type.$1;
+                    ref.read(selectedStatisticsTypeProvider.notifier).state =
+                        type.$1;
                   },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -56,10 +58,10 @@ class StatisticsTypeFilter extends ConsumerWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
                   color: isDisabled
-                      ? colorScheme.onSurfaceVariant.withOpacity(0.5)
+                      ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
                       : isSelected
-                          ? colorScheme.onPrimary
-                          : colorScheme.onSurfaceVariant,
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
             ),

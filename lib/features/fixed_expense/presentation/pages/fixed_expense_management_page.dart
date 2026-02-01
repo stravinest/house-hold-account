@@ -225,10 +225,11 @@ class _CategoryTile extends ConsumerWidget {
     FixedExpenseCategory category,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final confirmed = await DialogUtils.showFixedExpenseCategoryDeleteConfirmation(
-      context,
-      categoryName: category.name,
-    );
+    final confirmed =
+        await DialogUtils.showFixedExpenseCategoryDeleteConfirmation(
+          context,
+          categoryName: category.name,
+        );
 
     if (confirmed == true) {
       try {

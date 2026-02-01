@@ -86,7 +86,8 @@ class PaymentMethodModel extends PaymentMethod {
     return {
       'auto_save_mode': autoSaveMode.toJson(),
       if (defaultCategoryId != null) 'default_category_id': defaultCategoryId,
-      if (autoCollectSource != null) 'auto_collect_source': autoCollectSource.toJson(),
+      if (autoCollectSource != null)
+        'auto_collect_source': autoCollectSource.toJson(),
     };
   }
 }

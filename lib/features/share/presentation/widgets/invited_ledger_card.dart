@@ -33,13 +33,13 @@ class InvitedLedgerCard extends StatelessWidget {
     // 다크모드 대응: colorScheme 기반 색상
     final activeBorderColor = colorScheme.primary;
     // 배경색을 더 연하게 (primary의 8% 투명도)
-    final activeBackgroundColor = colorScheme.primary.withOpacity(0.08);
+    final activeBackgroundColor = colorScheme.primary.withValues(alpha: 0.08);
     final inactiveBorderColor = colorScheme.outlineVariant;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: isCurrentLedger ? 2 : 0,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(BorderRadiusToken.lg),
         side: isCurrentLedger
@@ -168,11 +168,7 @@ class InvitedLedgerCard extends StatelessWidget {
             // 거부 버튼
             OutlinedButton.icon(
               onPressed: isLoading ? null : onReject,
-              icon: Icon(
-                Icons.close,
-                size: 16,
-                color: colorScheme.error,
-              ),
+              icon: Icon(Icons.close, size: 16, color: colorScheme.error),
               label: Text(
                 l10n.shareReject,
                 style: TextStyle(
@@ -182,7 +178,10 @@ class InvitedLedgerCard extends StatelessWidget {
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 side: BorderSide(color: colorScheme.error),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -194,11 +193,7 @@ class InvitedLedgerCard extends StatelessWidget {
             // 수락 버튼
             OutlinedButton.icon(
               onPressed: isLoading ? null : onAccept,
-              icon: Icon(
-                Icons.check,
-                size: 16,
-                color: colorScheme.primary,
-              ),
+              icon: Icon(Icons.check, size: 16, color: colorScheme.primary),
               label: Text(
                 l10n.shareAccept,
                 style: TextStyle(
@@ -208,7 +203,10 @@ class InvitedLedgerCard extends StatelessWidget {
                 ),
               ),
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 side: BorderSide(color: colorScheme.outline),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -230,11 +228,7 @@ class InvitedLedgerCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.check,
-                size: 16,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.check, size: 16, color: colorScheme.primary),
               const SizedBox(width: 6),
               Text(
                 l10n.shareMemberParticipating,
@@ -270,7 +264,10 @@ class InvitedLedgerCard extends StatelessWidget {
                       ),
                     ),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
                       side: BorderSide(color: colorScheme.outline),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -281,11 +278,7 @@ class InvitedLedgerCard extends StatelessWidget {
                   ),
                 OutlinedButton.icon(
                   onPressed: isLoading ? null : onLeave,
-                  icon: Icon(
-                    Icons.logout,
-                    size: 16,
-                    color: colorScheme.error,
-                  ),
+                  icon: Icon(Icons.logout, size: 16, color: colorScheme.error),
                   label: Text(
                     l10n.shareLeave,
                     style: TextStyle(
@@ -295,7 +288,10 @@ class InvitedLedgerCard extends StatelessWidget {
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     side: BorderSide(color: colorScheme.error),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

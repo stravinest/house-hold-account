@@ -4,13 +4,17 @@ import 'dart:io';
 import 'package:another_telephony/telephony.dart';
 import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../notification/data/services/notification_service.dart';
+import '../../../notification/domain/entities/notification_type.dart';
 import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../domain/entities/learned_sms_format.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../models/learned_sms_format_model.dart';
 import '../models/payment_method_model.dart';
+import '../models/pending_transaction_model.dart';
 import '../repositories/learned_sms_format_repository.dart';
 import '../repositories/payment_method_repository.dart';
 import '../repositories/pending_transaction_repository.dart';
@@ -46,9 +50,10 @@ class SmsListenerService {
   final Telephony _telephony = Telephony.instance;
 
   bool _isInitialized = false;
-  bool _isListening = false;
+  final bool _isListening = false;
   String? _currentUserId;
   String? _currentLedgerId;
+  RealtimeChannel? _paymentMethodsSubscription;
 
   final PaymentMethodRepository _paymentMethodRepository =
       PaymentMethodRepository();
@@ -60,6 +65,7 @@ class SmsListenerService {
   final CategoryMappingService _categoryMappingService =
       CategoryMappingService();
   final DuplicateCheckService _duplicateCheckService = DuplicateCheckService();
+  final NotificationService _notificationService = NotificationService();
 
   List<PaymentMethodModel> _autoSavePaymentMethods = [];
   final Map<String, List<LearnedSmsFormatModel>> _learnedFormatsCache = {};
@@ -119,15 +125,31 @@ class SmsListenerService {
 
     await _loadAutoSavePaymentMethods();
     await _loadLearnedFormats();
+
+    // Realtime 구독 시작: payment_methods 테이블 변경 시 캐시 갱신
+    _paymentMethodsSubscription?.unsubscribe();
+    _paymentMethodsSubscription = _paymentMethodRepository
+        .subscribePaymentMethods(
+          ledgerId: ledgerId,
+          onPaymentMethodChanged: () {
+            if (kDebugMode) {
+              debugPrint(
+                '[Realtime] payment_methods changed - refreshing cache',
+              );
+            }
+            refreshPaymentMethods();
+          },
+        );
+
     _isInitialized = true;
   }
 
   Future<void> _loadAutoSavePaymentMethods() async {
-    if (_currentLedgerId == null) return;
+    if (_currentLedgerId == null || _currentUserId == null) return;
 
     try {
       _autoSavePaymentMethods = await _paymentMethodRepository
-          .getAutoSaveEnabledPaymentMethods(_currentLedgerId!);
+          .getAutoSaveEnabledPaymentMethods(_currentLedgerId!, _currentUserId!);
     } catch (e) {
       debugPrint('Failed to load auto-save payment methods: $e');
       _autoSavePaymentMethods = [];
@@ -461,7 +483,7 @@ class SmsListenerService {
     if (kDebugMode) {
       debugPrint('[AutoCollect-SMS] STEP 8: Creating pending transaction...');
     }
-    await _createPendingTransaction(
+    final pendingTx = await _createPendingTransaction(
       sender: sender,
       content: content,
       timestamp: timestamp,
@@ -477,6 +499,13 @@ class SmsListenerService {
       debugPrint('[AutoCollect-SMS] STEP 8: OK - pending transaction created');
     }
 
+    // 자동수집 알림 전송
+    await _sendAutoCollectNotification(
+      paymentMethod: paymentMethod,
+      pendingTx: pendingTx,
+      autoSaveMode: autoSaveModeStr,
+    );
+
     _onSmsProcessedController.add(
       SmsProcessedEvent(
         sender: sender,
@@ -489,7 +518,7 @@ class SmsListenerService {
     );
   }
 
-  Future<void> _createPendingTransaction({
+  Future<PendingTransactionModel> _createPendingTransaction({
     required String sender,
     required String content,
     required DateTime timestamp,
@@ -564,6 +593,8 @@ class SmsListenerService {
           );
         }
       }
+
+      return pendingTx;
     } catch (e) {
       debugPrint('Failed to create pending transaction: $e');
       rethrow;
@@ -637,8 +668,83 @@ class SmsListenerService {
     });
   }
 
+  /// 자동수집 알림 전송
+  ///
+  /// suggest 모드: '자동수집 거래 확인' 알림 (대기중 탭으로 딥링크)
+  /// auto 모드: '자동수집 거래 저장' 알림 (확인됨 탭으로 딥링크)
+  Future<void> _sendAutoCollectNotification({
+    required PaymentMethodModel paymentMethod,
+    required PendingTransactionModel pendingTx,
+    required String autoSaveMode,
+  }) async {
+    if (_currentUserId == null) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Notification] currentUserId is null - skipping notification',
+        );
+      }
+      return;
+    }
+
+    // manual 모드는 알림 전송하지 않음
+    if (autoSaveMode == 'manual') {
+      return;
+    }
+
+    try {
+      final NotificationType notificationType;
+      final String title;
+      final String body;
+      final String targetTab;
+
+      if (autoSaveMode == 'suggest') {
+        notificationType = NotificationType.autoCollectSuggested;
+        title = '자동수집 거래 확인';
+        body = '새로운 거래가 수집되었습니다. 확인해주세요.';
+        targetTab = 'pending'; // 대기중 탭
+      } else {
+        // auto
+        notificationType = NotificationType.autoCollectSaved;
+        title = '자동수집 거래 저장';
+        body = '새로운 거래가 자동으로 저장되었습니다.';
+        targetTab = 'confirmed'; // 확인됨 탭
+      }
+
+      await _notificationService.sendAutoCollectNotification(
+        userId: _currentUserId!,
+        type: notificationType,
+        title: title,
+        body: body,
+        data: {
+          'pendingId': pendingTx.id,
+          'targetTab': targetTab,
+          'paymentMethodName': paymentMethod.name,
+          'amount': pendingTx.parsedAmount?.toString() ?? '',
+          'merchant': pendingTx.parsedMerchant ?? '',
+        },
+      );
+
+      if (kDebugMode) {
+        debugPrint('[Notification] Auto-collect notification sent:');
+        debugPrint('  - type: $notificationType');
+        debugPrint('  - pendingId: ${pendingTx.id}');
+        debugPrint('  - targetTab: $targetTab');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Notification] Failed to send auto-collect notification: $e',
+        );
+        debugPrint('[Notification] StackTrace: $st');
+      }
+      // 알림 전송 실패는 치명적 에러가 아니므로 rethrow 하지 않음
+    }
+  }
+
   void dispose() {
     stopListening();
+    _paymentMethodsSubscription?.unsubscribe();
+    _paymentMethodsSubscription = null;
     _onSmsProcessedController.close();
     _isInitialized = false;
     _currentUserId = null;

@@ -28,9 +28,7 @@ class FixedExpenseSettingsModel extends FixedExpenseSettings {
     };
   }
 
-  static Map<String, dynamic> toUpdateJson({
-    required bool includeInExpense,
-  }) {
+  static Map<String, dynamic> toUpdateJson({required bool includeInExpense}) {
     return {
       'include_in_expense': includeInExpense,
       'updated_at': DateTime.now().toIso8601String(),

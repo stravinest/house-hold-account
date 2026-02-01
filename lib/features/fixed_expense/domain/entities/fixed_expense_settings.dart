@@ -17,5 +17,11 @@ class FixedExpenseSettings extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, ledgerId, includeInExpense, createdAt, updatedAt];
+  List<Object?> get props => [
+    id,
+    ledgerId,
+    includeInExpense,
+    createdAt,
+    updatedAt,
+  ];
 }

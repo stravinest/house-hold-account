@@ -21,5 +21,13 @@ class FixedExpenseCategory extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, ledgerId, name, icon, color, sortOrder, createdAt];
+  List<Object?> get props => [
+    id,
+    ledgerId,
+    name,
+    icon,
+    color,
+    sortOrder,
+    createdAt,
+  ];
 }

@@ -36,8 +36,9 @@ class SharedStatisticsState {
 }
 
 // 공유 통계 필터 상태 Provider
-final sharedStatisticsStateProvider =
-    StateProvider<SharedStatisticsState>((ref) {
+final sharedStatisticsStateProvider = StateProvider<SharedStatisticsState>((
+  ref,
+) {
   return const SharedStatisticsState();
 });
 
@@ -279,27 +280,27 @@ final monthlyTrendProvider = FutureProvider<List<MonthlyStatistics>>((
 // 사용자별 카테고리 통계 (공유 가계부용)
 final categoryStatisticsByUserProvider =
     FutureProvider<Map<String, UserCategoryStatistics>>((ref) async {
-  final ledgerId = ref.watch(selectedLedgerIdProvider);
-  if (ledgerId == null) return {};
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      if (ledgerId == null) return {};
 
-  final date = ref.watch(statisticsSelectedDateProvider);
-  final type = ref.watch(selectedStatisticsTypeProvider);
-  final repository = ref.watch(statisticsRepositoryProvider);
+      final date = ref.watch(statisticsSelectedDateProvider);
+      final type = ref.watch(selectedStatisticsTypeProvider);
+      final repository = ref.watch(statisticsRepositoryProvider);
 
-  // 지출일 경우에만 고정비/변동비 필터 적용
-  ExpenseTypeFilter? expenseTypeFilter;
-  if (type == 'expense') {
-    expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
-  }
+      // 지출일 경우에만 고정비/변동비 필터 적용
+      ExpenseTypeFilter? expenseTypeFilter;
+      if (type == 'expense') {
+        expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
+      }
 
-  return repository.getCategoryStatisticsByUser(
-    ledgerId: ledgerId,
-    year: date.year,
-    month: date.month,
-    type: type,
-    expenseTypeFilter: expenseTypeFilter,
-  );
-});
+      return repository.getCategoryStatisticsByUser(
+        ledgerId: ledgerId,
+        year: date.year,
+        month: date.month,
+        type: type,
+        expenseTypeFilter: expenseTypeFilter,
+      );
+    });
 
 // 공유 가계부 여부 확인
 final isSharedLedgerProvider = Provider<bool>((ref) {

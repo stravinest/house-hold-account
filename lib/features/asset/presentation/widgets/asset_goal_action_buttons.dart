@@ -86,7 +86,10 @@ class AssetGoalActionButtons extends ConsumerWidget {
         }
       } catch (e) {
         if (context.mounted) {
-          SnackBarUtils.showError(context, l10n.assetGoalDeleteFailed(e.toString()));
+          SnackBarUtils.showError(
+            context,
+            l10n.assetGoalDeleteFailed(e.toString()),
+          );
         }
       }
     }
@@ -99,8 +102,8 @@ class AssetGoalActionButtons extends ConsumerWidget {
     bool isDestructive = false,
   }) {
     final color = isDestructive
-        ? theme.colorScheme.error.withOpacity(0.7)
-        : theme.colorScheme.onSurfaceVariant.withOpacity(0.6);
+        ? theme.colorScheme.error.withValues(alpha: 0.7)
+        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6);
 
     return Material(
       color: Colors.transparent,

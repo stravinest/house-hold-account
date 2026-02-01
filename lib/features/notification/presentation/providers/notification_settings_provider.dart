@@ -9,9 +9,7 @@ part 'notification_settings_provider.g.dart';
 
 /// 알림 설정 Repository Provider
 @riverpod
-NotificationSettingsRepository notificationSettingsRepository(
-  Ref ref,
-) {
+NotificationSettingsRepository notificationSettingsRepository(Ref ref) {
   return NotificationSettingsRepository();
 }
 
@@ -27,9 +25,7 @@ class NotificationSettings extends _$NotificationSettings {
     final user = ref.watch(currentUserProvider);
     if (user == null) {
       // 로그인하지 않은 경우 기본값 반환
-      return {
-        for (var type in NotificationType.values) type: true,
-      };
+      return {for (var type in NotificationType.values) type: true};
     }
 
     final repository = ref.watch(notificationSettingsRepositoryProvider);

@@ -45,15 +45,15 @@ class Ledger extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        name,
-        description,
-        currency,
-        ownerId,
-        isShared,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    name,
+    description,
+    currency,
+    ownerId,
+    isShared,
+    createdAt,
+    updatedAt,
+  ];
 }
 
 class LedgerMember extends Equatable {
@@ -102,14 +102,14 @@ class LedgerMember extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        ledgerId,
-        userId,
-        role,
-        joinedAt,
-        displayName,
-        email,
-        avatarUrl,
-        color,
-      ];
+    id,
+    ledgerId,
+    userId,
+    role,
+    joinedAt,
+    displayName,
+    email,
+    avatarUrl,
+    color,
+  ];
 }

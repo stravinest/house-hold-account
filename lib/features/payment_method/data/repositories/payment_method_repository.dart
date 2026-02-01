@@ -16,7 +16,10 @@ class PaymentMethodRepository {
     String? ownerUserId,
     bool? canAutoSave,
   }) async {
-    var query = _client.from('payment_methods').select().eq('ledger_id', ledgerId);
+    var query = _client
+        .from('payment_methods')
+        .select()
+        .eq('ledger_id', ledgerId);
 
     if (ownerUserId != null) {
       query = query.eq('owner_user_id', ownerUserId);
@@ -41,20 +44,14 @@ class PaymentMethodRepository {
     required String ledgerId,
     required String ownerUserId,
   }) async {
-    return _queryPaymentMethods(
-      ledgerId: ledgerId,
-      ownerUserId: ownerUserId,
-    );
+    return _queryPaymentMethods(ledgerId: ledgerId, ownerUserId: ownerUserId);
   }
 
   // 공유 결제수단 조회 (직접입력, can_auto_save = false)
   Future<List<PaymentMethodModel>> getSharedPaymentMethods(
     String ledgerId,
   ) async {
-    return _queryPaymentMethods(
-      ledgerId: ledgerId,
-      canAutoSave: false,
-    );
+    return _queryPaymentMethods(ledgerId: ledgerId, canAutoSave: false);
   }
 
   // 특정 멤버의 자동수집 결제수단만 조회 (can_auto_save = true)
@@ -252,13 +249,24 @@ class PaymentMethodRepository {
     return PaymentMethodModel.fromJson(response);
   }
 
+  /// 자동수집 활성화된 결제수단 조회
+  ///
+  /// **중요**: 공유 가계부에서 다른 사용자의 결제수단이
+  /// 잘못 매칭되는 것을 방지하기 위해 반드시 owner 필터링 필요
+  ///
+  /// [ledgerId] 가계부 ID
+  /// [ownerUserId] 결제수단 소유자 ID (현재 로그인한 사용자)
+  ///
+  /// Returns: 자기 결제수단 중 auto_save_mode가 manual이 아닌 것들
   Future<List<PaymentMethodModel>> getAutoSaveEnabledPaymentMethods(
     String ledgerId,
+    String ownerUserId,
   ) async {
     final response = await _client
         .from('payment_methods')
         .select()
         .eq('ledger_id', ledgerId)
+        .eq('owner_user_id', ownerUserId)
         .neq('auto_save_mode', 'manual')
         .order('sort_order');
 

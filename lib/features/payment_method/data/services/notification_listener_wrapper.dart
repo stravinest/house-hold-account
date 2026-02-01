@@ -4,17 +4,18 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:notification_listener_service/notification_event.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../notification/data/services/notification_service.dart';
+import '../../../notification/domain/entities/notification_type.dart';
 import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../domain/entities/learned_push_format.dart';
-import '../../domain/entities/learned_sms_format.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../models/learned_push_format_model.dart';
-import '../models/learned_sms_format_model.dart';
 import '../models/payment_method_model.dart';
+import '../models/pending_transaction_model.dart';
 import '../repositories/learned_push_format_repository.dart';
-import '../repositories/learned_sms_format_repository.dart';
 import '../repositories/payment_method_repository.dart';
 import '../repositories/pending_transaction_repository.dart';
 import 'category_mapping_service.dart';
@@ -36,19 +37,19 @@ class NotificationListenerWrapper {
   String? _currentUserId;
   String? _currentLedgerId;
   StreamSubscription<ServiceNotificationEvent>? _subscription;
+  RealtimeChannel? _paymentMethodsSubscription;
 
   final PaymentMethodRepository _paymentMethodRepository =
       PaymentMethodRepository();
   final PendingTransactionRepository _pendingTransactionRepository =
       PendingTransactionRepository();
   final TransactionRepository _transactionRepository = TransactionRepository();
-  final LearnedSmsFormatRepository _learnedSmsFormatRepository =
-      LearnedSmsFormatRepository();
   final LearnedPushFormatRepository _learnedPushFormatRepository =
       LearnedPushFormatRepository();
   final CategoryMappingService _categoryMappingService =
       CategoryMappingService();
   final DuplicateCheckService _duplicateCheckService = DuplicateCheckService();
+  final NotificationService _notificationService = NotificationService();
 
   List<PaymentMethodModel> _autoSavePaymentMethods = [];
   final Map<String, List<LearnedPushFormatModel>> _learnedFormatsCache = {};
@@ -204,6 +205,22 @@ class NotificationListenerWrapper {
 
     await _loadAutoSavePaymentMethods();
     await _loadLearnedFormats();
+
+    // Realtime 구독 시작: payment_methods 테이블 변경 시 캐시 갱신
+    _paymentMethodsSubscription?.unsubscribe();
+    _paymentMethodsSubscription = _paymentMethodRepository
+        .subscribePaymentMethods(
+          ledgerId: ledgerId,
+          onPaymentMethodChanged: () {
+            if (kDebugMode) {
+              debugPrint(
+                '[Realtime] payment_methods changed - refreshing cache',
+              );
+            }
+            refreshPaymentMethods();
+          },
+        );
+
     _isInitialized = true;
 
     // 앱 시작 시 네이티브에 캐싱된 알림 동기화 (실패해도 초기화는 성공)
@@ -332,11 +349,11 @@ class NotificationListenerWrapper {
   }
 
   Future<void> _loadAutoSavePaymentMethods() async {
-    if (_currentLedgerId == null) return;
+    if (_currentLedgerId == null || _currentUserId == null) return;
 
     try {
       _autoSavePaymentMethods = await _paymentMethodRepository
-          .getAutoSaveEnabledPaymentMethods(_currentLedgerId!);
+          .getAutoSaveEnabledPaymentMethods(_currentLedgerId!, _currentUserId!);
     } catch (e) {
       debugPrint('Failed to load auto-save payment methods: $e');
       _autoSavePaymentMethods = [];
@@ -593,6 +610,19 @@ class NotificationListenerWrapper {
             debugPrint('[Matching] Checking format: ${format.packageName}');
           }
 
+          // payment_method_id 일치 여부 검증
+          if (format.paymentMethodId != pm.id) {
+            if (kDebugMode) {
+              debugPrint(
+                '[Matching] WARNING: Format payment_method_id mismatch!',
+              );
+              debugPrint('  Format ID: ${format.id}');
+              debugPrint('  Format PM ID: ${format.paymentMethodId}');
+              debugPrint('  Current PM ID: ${pm.id}');
+            }
+            continue; // 불일치하면 스킵
+          }
+
           if (format.matchesNotification(packageLower, contentLower)) {
             if (kDebugMode) {
               debugPrint('[Matching] Matched by format!');
@@ -608,16 +638,28 @@ class NotificationListenerWrapper {
       // 2. Fallback: 결제수단 이름이 내용에 포함되어 있는지 확인 (이름이 2자 이상인 경우만)
       final pmName = pm.name.toLowerCase();
       final nameMatches = pmName.length >= 2 && contentLower.contains(pmName);
+      final isOwner = pm.ownerUserId == _currentUserId;
+
       if (kDebugMode) {
         debugPrint(
-          '[Matching] Fallback: pmName="$pmName", matches=$nameMatches',
+          '[Matching] Fallback: pmName="$pmName", matches=$nameMatches, isOwner=$isOwner',
         );
       }
-      if (nameMatches) {
+
+      // 이름 매칭 + owner 일치 모두 확인
+      if (nameMatches && isOwner) {
         if (kDebugMode) {
           debugPrint('[Matching] Matched by payment method name!');
         }
         return _PaymentMethodMatchResult(paymentMethod: pm);
+      } else if (nameMatches && !isOwner) {
+        // 이름은 일치하지만 owner가 다른 경우 경고 로그
+        if (kDebugMode) {
+          debugPrint('[Matching] WARNING: Name matched but owner mismatch!');
+          debugPrint('  PM ID: ${pm.id}');
+          debugPrint('  PM Owner: ${pm.ownerUserId}');
+          debugPrint('  Current User: $_currentUserId');
+        }
       }
     }
     return null;
@@ -704,9 +746,18 @@ class NotificationListenerWrapper {
         cachedPaymentMethod?.autoSaveMode.toJson() ??
         paymentMethod.autoSaveMode.toJson();
     if (kDebugMode) {
+      debugPrint('=== AutoSaveMode Decision ===');
+      debugPrint('  PM ID: ${paymentMethod.id}');
+      debugPrint('  PM Name: ${paymentMethod.name}');
+      debugPrint('  PM Owner: ${paymentMethod.ownerUserId}');
+      debugPrint('  Current User: $_currentUserId');
+      debugPrint('  Original mode: ${paymentMethod.autoSaveMode.toJson()}');
       debugPrint(
-        'Notification matched: mode=$autoSaveModeStr (from cache), pm=${paymentMethod.name}',
+        '  Cached mode: ${cachedPaymentMethod?.autoSaveMode.toJson() ?? "not found"}',
       );
+      debugPrint('  Final mode: $autoSaveModeStr');
+      debugPrint('  isDuplicate: ${duplicateResult.isDuplicate}');
+      debugPrint('=============================');
     }
 
     // 자동 저장 여부 결정: 중복이 아니고 auto 모드일 때만 자동 저장
@@ -719,10 +770,11 @@ class NotificationListenerWrapper {
       );
     }
 
+    PendingTransactionModel pendingTx;
     try {
       // 항상 pending 상태로 먼저 생성 (원자성 보장)
       // 거래 생성 성공 시에만 confirmed로 업데이트
-      await _createPendingTransaction(
+      pendingTx = await _createPendingTransaction(
         packageName: packageName,
         content: content,
         timestamp: timestamp,
@@ -752,6 +804,13 @@ class NotificationListenerWrapper {
       return;
     }
 
+    // 자동수집 알림 전송
+    await _sendAutoCollectNotification(
+      paymentMethod: paymentMethod,
+      pendingTx: pendingTx,
+      autoSaveMode: autoSaveModeStr,
+    );
+
     _onNotificationProcessedController.add(
       NotificationProcessedEvent(
         packageName: packageName,
@@ -764,7 +823,7 @@ class NotificationListenerWrapper {
     );
   }
 
-  Future<void> _createPendingTransaction({
+  Future<PendingTransactionModel> _createPendingTransaction({
     required String packageName,
     required String content,
     required DateTime timestamp,
@@ -860,6 +919,8 @@ class NotificationListenerWrapper {
           debugPrint('[AutoSave] Skipped auto-save - missing amount or type');
         }
       }
+
+      return pendingTx;
     } catch (e, st) {
       if (kDebugMode) {
         debugPrint('[CreatePending] ERROR: $e');
@@ -877,8 +938,83 @@ class NotificationListenerWrapper {
     });
   }
 
+  /// 자동수집 알림 전송
+  ///
+  /// suggest 모드: '자동수집 거래 확인' 알림 (대기중 탭으로 딥링크)
+  /// auto 모드: '자동수집 거래 저장' 알림 (확인됨 탭으로 딥링크)
+  Future<void> _sendAutoCollectNotification({
+    required PaymentMethodModel paymentMethod,
+    required PendingTransactionModel pendingTx,
+    required String autoSaveMode,
+  }) async {
+    if (_currentUserId == null) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Notification] currentUserId is null - skipping notification',
+        );
+      }
+      return;
+    }
+
+    // manual 모드는 알림 전송하지 않음
+    if (autoSaveMode == 'manual') {
+      return;
+    }
+
+    try {
+      final NotificationType notificationType;
+      final String title;
+      final String body;
+      final String targetTab;
+
+      if (autoSaveMode == 'suggest') {
+        notificationType = NotificationType.autoCollectSuggested;
+        title = '자동수집 거래 확인';
+        body = '새로운 거래가 수집되었습니다. 확인해주세요.';
+        targetTab = 'pending'; // 대기중 탭
+      } else {
+        // auto
+        notificationType = NotificationType.autoCollectSaved;
+        title = '자동수집 거래 저장';
+        body = '새로운 거래가 자동으로 저장되었습니다.';
+        targetTab = 'confirmed'; // 확인됨 탭
+      }
+
+      await _notificationService.sendAutoCollectNotification(
+        userId: _currentUserId!,
+        type: notificationType,
+        title: title,
+        body: body,
+        data: {
+          'pendingId': pendingTx.id,
+          'targetTab': targetTab,
+          'paymentMethodName': paymentMethod.name,
+          'amount': pendingTx.parsedAmount?.toString() ?? '',
+          'merchant': pendingTx.parsedMerchant ?? '',
+        },
+      );
+
+      if (kDebugMode) {
+        debugPrint('[Notification] Auto-collect notification sent:');
+        debugPrint('  - type: $notificationType');
+        debugPrint('  - pendingId: ${pendingTx.id}');
+        debugPrint('  - targetTab: $targetTab');
+      }
+    } catch (e, st) {
+      if (kDebugMode) {
+        debugPrint(
+          '[Notification] Failed to send auto-collect notification: $e',
+        );
+        debugPrint('[Notification] StackTrace: $st');
+      }
+      // 알림 전송 실패는 치명적 에러가 아니므로 rethrow 하지 않음
+    }
+  }
+
   void dispose() {
     stopListening();
+    _paymentMethodsSubscription?.unsubscribe();
+    _paymentMethodsSubscription = null;
     _onNotificationProcessedController.close();
     _isInitialized = false;
     _currentUserId = null;

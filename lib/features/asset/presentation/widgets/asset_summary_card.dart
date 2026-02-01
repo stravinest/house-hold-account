@@ -3,9 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
-import '../providers/asset_goal_provider.dart';
-import 'asset_goal_form_sheet.dart';
-import 'asset_goal_section.dart';
 
 /// A card widget that displays the total asset amount and monthly change.
 ///
@@ -97,14 +94,6 @@ class AssetSummaryCard extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
-
-  void _showGoalFormSheet(BuildContext context, dynamic goal) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (context) => AssetGoalFormSheet(goal: goal),
     );
   }
 }

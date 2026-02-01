@@ -160,7 +160,7 @@ class AssetRepository {
 
     for (final row in response as List) {
       final rowMap = row as Map<String, dynamic>;
-      final categoryId = rowMap['category_id'].toString() ?? '_uncategorized_';
+      final categoryId = rowMap['category_id'].toString();
 
       if (!groupedByCategory.containsKey(categoryId)) {
         groupedByCategory[categoryId] = [];

@@ -63,7 +63,7 @@ class AssetLineChart extends StatelessWidget {
                 ),
                 belowBarData: BarAreaData(
                   show: true,
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                 ),
               ),
             ],
@@ -120,7 +120,9 @@ class AssetLineChart extends StatelessWidget {
               horizontalInterval: maxY / 4,
               getDrawingHorizontalLine: (value) {
                 return FlLine(
-                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                   strokeWidth: 1,
                 );
               },

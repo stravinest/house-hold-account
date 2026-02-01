@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../shared/themes/design_tokens.dart';
 import '../providers/calendar_view_provider.dart';
 
 class CalendarViewModeSelector extends StatelessWidget {

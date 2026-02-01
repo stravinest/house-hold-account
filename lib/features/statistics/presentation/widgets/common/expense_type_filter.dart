@@ -58,10 +58,10 @@ class ExpenseTypeFilterWidget extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
                   color: !enabled
-                      ? colorScheme.onSurfaceVariant.withOpacity(0.5)
+                      ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
                       : isSelected
-                          ? colorScheme.onPrimary
-                          : colorScheme.onSurfaceVariant,
+                      ? colorScheme.onPrimary
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
             ),

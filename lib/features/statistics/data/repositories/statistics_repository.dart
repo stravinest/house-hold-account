@@ -94,9 +94,9 @@ class StatisticsRepository {
         categoryColor = '#9E9E9E';
 
         if (category != null) {
-          categoryName = category['name'].toString() ?? '미지정';
-          categoryIcon = category['icon'].toString() ?? '';
-          categoryColor = category['color'].toString() ?? '#9E9E9E';
+          categoryName = category['name'].toString();
+          categoryIcon = category['icon'].toString();
+          categoryColor = category['color'].toString();
         }
       }
 
@@ -201,8 +201,9 @@ class StatisticsRepository {
       );
 
       // 카테고리별 누적
-      final currentCategories =
-          Map<String, CategoryStatistics>.from(userStats[userId]!.categories);
+      final currentCategories = Map<String, CategoryStatistics>.from(
+        userStats[userId]!.categories,
+      );
       if (currentCategories.containsKey(categoryId)) {
         currentCategories[categoryId] = currentCategories[categoryId]!.copyWith(
           amount: currentCategories[categoryId]!.amount + amount,
@@ -417,7 +418,9 @@ class StatisticsRepository {
 
     final response = await _client
         .from('transactions')
-        .select('amount, payment_method_id, payment_methods(name, icon, color, can_auto_save)')
+        .select(
+          'amount, payment_method_id, payment_methods(name, icon, color, can_auto_save)',
+        )
         .eq('ledger_id', ledgerId)
         .eq('type', type)
         .gte('date', startDate.toIso8601String().split('T').first)

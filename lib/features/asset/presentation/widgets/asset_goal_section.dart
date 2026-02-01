@@ -45,8 +45,8 @@ class _AssetGoalSectionState extends ConsumerState<AssetGoalSection> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withOpacity(
-                  0.3,
+                color: theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.3,
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -56,13 +56,13 @@ class _AssetGoalSectionState extends ConsumerState<AssetGoalSection> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.flag_rounded,
                       size: 32,
-                      color: theme.colorScheme.primary.withOpacity(0.7),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -112,7 +112,9 @@ class _AssetGoalSectionState extends ConsumerState<AssetGoalSection> {
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -177,7 +179,7 @@ class _AssetGoalSectionState extends ConsumerState<AssetGoalSection> {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surfaceContainerHighest
-                            .withOpacity(0.5),
+                            .withValues(alpha: 0.5),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -209,7 +211,9 @@ class _AssetGoalSectionState extends ConsumerState<AssetGoalSection> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withOpacity(0.1),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.1,
+                              ),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
@@ -268,7 +272,9 @@ class _AssetGoalSectionState extends ConsumerState<AssetGoalSection> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
@@ -297,8 +303,8 @@ class _AssetGoalSectionState extends ConsumerState<AssetGoalSection> {
                       child: Text(
                         l10n.assetGoalTapForDetails,
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                            0.6,
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.6,
                           ),
                         ),
                       ),
@@ -322,7 +328,7 @@ class _AssetGoalSectionState extends ConsumerState<AssetGoalSection> {
             error: (error, stack) => Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: theme.colorScheme.errorContainer.withOpacity(0.3),
+                color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(

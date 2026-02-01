@@ -122,7 +122,9 @@ class AssetGoalCard extends ConsumerWidget {
         : colorScheme.surfaceContainerHighest;
 
     // 내부 그림자 색상
-    final innerShadowColor = colorScheme.shadow.withOpacity(isDark ? 0.4 : 0.1);
+    final innerShadowColor = colorScheme.shadow.withValues(
+      alpha: isDark ? 0.4 : 0.1,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,7 +163,7 @@ class AssetGoalCard extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: progressColor.withOpacity(0.7),
+                      color: progressColor.withValues(alpha: 0.7),
                     ),
                   ),
                   if (isCompleted) ...[
@@ -201,8 +203,8 @@ class AssetGoalCard extends ConsumerWidget {
                 Positioned.fill(
                   child: CustomPaint(
                     painter: _ProgressTrackPainter(
-                      color: colorScheme.onSurfaceVariant.withOpacity(
-                        isDark ? 0.2 : 0.5,
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: isDark ? 0.2 : 0.5,
                       ),
                     ),
                   ),
@@ -226,14 +228,14 @@ class AssetGoalCard extends ConsumerWidget {
                       boxShadow: [
                         // 바 그림자
                         BoxShadow(
-                          color: progressColor.withOpacity(0.4),
+                          color: progressColor.withValues(alpha: 0.4),
                           offset: const Offset(0, 2),
                           blurRadius: 4,
                         ),
                         // 빛나는 효과
                         if (progress > 0)
                           BoxShadow(
-                            color: progressColor.withOpacity(0.2),
+                            color: progressColor.withValues(alpha: 0.2),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),
@@ -254,8 +256,8 @@ class AssetGoalCard extends ConsumerWidget {
                               ),
                               gradient: LinearGradient(
                                 colors: [
-                                  colorScheme.onPrimary.withOpacity(0.35),
-                                  colorScheme.onPrimary.withOpacity(0.0),
+                                  colorScheme.onPrimary.withValues(alpha: 0.35),
+                                  colorScheme.onPrimary.withValues(alpha: 0.0),
                                 ],
                                 begin: Alignment.topCenter,
                                 end: Alignment.bottomCenter,
@@ -276,9 +278,9 @@ class AssetGoalCard extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(8),
                         gradient: LinearGradient(
                           colors: [
-                            colorScheme.onPrimary.withOpacity(0.0),
-                            colorScheme.onPrimary.withOpacity(0.15),
-                            colorScheme.onPrimary.withOpacity(0.0),
+                            colorScheme.onPrimary.withValues(alpha: 0.0),
+                            colorScheme.onPrimary.withValues(alpha: 0.15),
+                            colorScheme.onPrimary.withValues(alpha: 0.0),
                           ],
                           stops: const [0.0, 0.5, 1.0],
                           begin: Alignment.centerLeft,
@@ -326,8 +328,8 @@ class AssetGoalCard extends ConsumerWidget {
         fontSize: 10,
         fontWeight: isPassed ? FontWeight.w600 : FontWeight.w400,
         color: isPassed
-            ? _getProgressColor(progress).withOpacity(0.8)
-            : colorScheme.onSurface.withOpacity(0.3),
+            ? _getProgressColor(progress).withValues(alpha: 0.8)
+            : colorScheme.onSurface.withValues(alpha: 0.3),
       ),
     );
   }
@@ -436,7 +438,7 @@ class AssetGoalCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: chipColor?.withOpacity(0.1),
+        color: chipColor?.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

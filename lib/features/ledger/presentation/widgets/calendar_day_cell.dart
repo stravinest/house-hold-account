@@ -369,29 +369,35 @@ class _UserAmountList extends StatelessWidget {
 
       // 수입이 있으면 추가
       if (income > 0) {
-        allItems.add(AmountItem(
-          color: color,
-          amount: income,
-          type: TransactionDisplayType.income,
-        ));
+        allItems.add(
+          AmountItem(
+            color: color,
+            amount: income,
+            type: TransactionDisplayType.income,
+          ),
+        );
       }
 
       // 지출이 있으면 추가
       if (expense > 0) {
-        allItems.add(AmountItem(
-          color: color,
-          amount: expense,
-          type: TransactionDisplayType.expense,
-        ));
+        allItems.add(
+          AmountItem(
+            color: color,
+            amount: expense,
+            type: TransactionDisplayType.expense,
+          ),
+        );
       }
 
       // 자산이 있으면 추가
       if (saving > 0) {
-        allItems.add(AmountItem(
-          color: color,
-          amount: saving,
-          type: TransactionDisplayType.asset,
-        ));
+        allItems.add(
+          AmountItem(
+            color: color,
+            amount: saving,
+            type: TransactionDisplayType.asset,
+          ),
+        );
       }
     }
 

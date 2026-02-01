@@ -41,10 +41,7 @@ class SharedCategoryDistributionCard extends ConsumerWidget {
           // 헤더
           Text(
             l10n.statisticsCategoryDistribution,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.normal,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.normal),
           ),
           const SizedBox(height: 16),
 
@@ -58,10 +55,7 @@ class SharedCategoryDistributionCard extends ConsumerWidget {
               final users = userStats.values.toList()
                 ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
 
-              return _SharedDonutChart(
-                users: users,
-                sharedState: sharedState,
-              );
+              return _SharedDonutChart(users: users, sharedState: sharedState);
             },
             loading: () => const SizedBox(
               height: 220,
@@ -102,10 +96,7 @@ class SharedCategoryDistributionCard extends ConsumerWidget {
               final users = userStats.values.toList()
                 ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
 
-              return _SharedLegendList(
-                users: users,
-                sharedState: sharedState,
-              );
+              return _SharedLegendList(users: users, sharedState: sharedState);
             },
             loading: () => const SizedBox.shrink(),
             error: (error, stack) => const SizedBox.shrink(),
@@ -122,10 +113,7 @@ class SharedCategoryDistributionCard extends ConsumerWidget {
       child: Center(
         child: Text(
           l10n.statisticsNoData,
-          style: TextStyle(
-            fontSize: 14,
-            color: colorScheme.onSurfaceVariant,
-          ),
+          style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
         ),
       ),
     );
@@ -186,9 +174,11 @@ class _MemberTabs extends StatelessWidget {
               isSelected: sharedState.mode == SharedStatisticsMode.combined,
               userColor: null, // 합계는 유저 색상 없음
               onTap: () {
-                onStateChanged(const SharedStatisticsState(
-                  mode: SharedStatisticsMode.combined,
-                ));
+                onStateChanged(
+                  const SharedStatisticsState(
+                    mode: SharedStatisticsMode.combined,
+                  ),
+                );
               },
             ),
           ),
@@ -197,7 +187,7 @@ class _MemberTabs extends StatelessWidget {
           ...members.map((member) {
             final isSelected =
                 sharedState.mode == SharedStatisticsMode.singleUser &&
-                    sharedState.selectedUserId == member.userId;
+                sharedState.selectedUserId == member.userId;
             final displayName = _getDisplayName(member);
 
             return Expanded(
@@ -207,10 +197,12 @@ class _MemberTabs extends StatelessWidget {
                 isSelected: isSelected,
                 userColor: member.color, // LedgerMember에서 직접 가져옴
                 onTap: () {
-                  onStateChanged(SharedStatisticsState(
-                    mode: SharedStatisticsMode.singleUser,
-                    selectedUserId: member.userId,
-                  ));
+                  onStateChanged(
+                    SharedStatisticsState(
+                      mode: SharedStatisticsMode.singleUser,
+                      selectedUserId: member.userId,
+                    ),
+                  );
                 },
               ),
             );
@@ -267,8 +259,8 @@ class _MemberTabs extends StatelessWidget {
                   color: isSelected
                       ? colorScheme.onPrimary
                       : (userColor != null
-                          ? parsedUserColor
-                          : colorScheme.onSurfaceVariant),
+                            ? parsedUserColor
+                            : colorScheme.onSurfaceVariant),
                 ),
               ),
             ),
@@ -284,10 +276,7 @@ class _SharedDonutChart extends StatelessWidget {
   final List<UserCategoryStatistics> users;
   final SharedStatisticsState sharedState;
 
-  const _SharedDonutChart({
-    required this.users,
-    required this.sharedState,
-  });
+  const _SharedDonutChart({required this.users, required this.sharedState});
 
   Color _parseColor(String colorString) {
     try {
@@ -343,10 +332,7 @@ class _SharedDonutChart extends StatelessWidget {
         child: Center(
           child: Text(
             l10n.statisticsNoData,
-            style: TextStyle(
-              fontSize: 14,
-              color: colorScheme.onSurfaceVariant,
-            ),
+            style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
           ),
         ),
       );
@@ -404,9 +390,10 @@ class _SharedDonutChart extends StatelessWidget {
         if (combinedCategories.containsKey(category.categoryId)) {
           combinedCategories[category.categoryId] =
               combinedCategories[category.categoryId]!.copyWith(
-            amount:
-                combinedCategories[category.categoryId]!.amount + category.amount,
-          );
+                amount:
+                    combinedCategories[category.categoryId]!.amount +
+                    category.amount,
+              );
         } else {
           combinedCategories[category.categoryId] = category;
         }
@@ -451,8 +438,9 @@ class _SharedDonutChart extends StatelessWidget {
     int totalAmount,
   ) {
     return categories.map((category) {
-      final percentage =
-          totalAmount > 0 ? (category.amount / totalAmount) * 100 : 0.0;
+      final percentage = totalAmount > 0
+          ? (category.amount / totalAmount) * 100
+          : 0.0;
       final color = _parseColor(category.categoryColor);
 
       return PieChartSectionData(
@@ -475,10 +463,7 @@ class _SharedLegendList extends StatelessWidget {
   final List<UserCategoryStatistics> users;
   final SharedStatisticsState sharedState;
 
-  const _SharedLegendList({
-    required this.users,
-    required this.sharedState,
-  });
+  const _SharedLegendList({required this.users, required this.sharedState});
 
   Color _parseColor(String colorString) {
     try {
@@ -541,10 +526,7 @@ class _SharedLegendList extends StatelessWidget {
               Container(
                 width: 12,
                 height: 12,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
               ),
               const SizedBox(width: 12),
               // 카테고리명
@@ -588,9 +570,10 @@ class _SharedLegendList extends StatelessWidget {
         if (combinedCategories.containsKey(category.categoryId)) {
           combinedCategories[category.categoryId] =
               combinedCategories[category.categoryId]!.copyWith(
-            amount:
-                combinedCategories[category.categoryId]!.amount + category.amount,
-          );
+                amount:
+                    combinedCategories[category.categoryId]!.amount +
+                    category.amount,
+              );
         } else {
           combinedCategories[category.categoryId] = category;
         }

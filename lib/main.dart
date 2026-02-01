@@ -112,10 +112,6 @@ class _SharedHouseholdAccountAppState
     _initDeepLinks();
     _setupNotificationTapHandlers();
 
-    Future.microtask(() {
-      ref.read(ledgerIdPersistenceProvider);
-    });
-
     // 앱 첫 실행 시 권한 다이얼로그 표시 준비 (Android 전용)
     _prepareInitialPermissionDialog();
 
@@ -345,6 +341,10 @@ class _SharedHouseholdAccountAppState
 
     // autoSaveManagerProvider는 Provider<void>이므로 listen 대신 watch를 사용합니다.
     ref.watch(autoSaveManagerProvider);
+
+    // ledgerIdPersistenceProvider를 watch하여 가계부 ID 저장 리스너 활성화
+    // Provider<void>는 반드시 watch로 호출해야 내부 ref.listen()이 작동함
+    ref.watch(ledgerIdPersistenceProvider);
 
     return MaterialApp.router(
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,

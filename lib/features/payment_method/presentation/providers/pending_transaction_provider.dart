@@ -7,8 +7,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
-import '../../../notification/data/services/notification_service.dart';
-import '../../../notification/domain/entities/notification_type.dart';
 import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../data/models/pending_transaction_model.dart';
 import '../../data/repositories/pending_transaction_repository.dart';
@@ -83,13 +81,15 @@ class PendingTransactionNotifier
         .instance
         .onNativeNotification
         .listen((event) {
-      if (kDebugMode) {
-        debugPrint('[PendingTxNotifier] Native notification event received, reloading...');
-      }
-      // 네이티브 알림이 수신되면 데이터 갱신
-      loadPendingTransactions(silent: true);
-      _ref.invalidate(pendingTransactionCountProvider);
-    });
+          if (kDebugMode) {
+            debugPrint(
+              '[PendingTxNotifier] Native notification event received, reloading...',
+            );
+          }
+          // 네이티브 알림이 수신되면 데이터 갱신
+          loadPendingTransactions(silent: true);
+          _ref.invalidate(pendingTransactionCountProvider);
+        });
   }
 
   void _subscribeToChanges() {
@@ -124,30 +124,39 @@ class PendingTransactionNotifier
     bool silent = false,
   }) async {
     if (kDebugMode) {
-      debugPrint('[PendingTxNotifier] loadPendingTransactions called (silent: $silent)');
+      debugPrint(
+        '[PendingTxNotifier] loadPendingTransactions called (silent: $silent)',
+      );
       debugPrint('[PendingTxNotifier] ledgerId: $_ledgerId, userId: $_userId');
     }
 
     if (_ledgerId == null || _userId == null) {
       if (kDebugMode) {
-        debugPrint('[PendingTxNotifier] ledgerId or userId is null, returning empty');
+        debugPrint(
+          '[PendingTxNotifier] ledgerId or userId is null, returning empty',
+        );
       }
       state = const AsyncValue.data([]);
       return;
     }
 
     // Silent refresh: 이미 데이터가 있으면 loading 상태로 전환하지 않음
-    final hasExistingData = state.hasValue && (state.value?.isNotEmpty ?? false);
+    final hasExistingData =
+        state.hasValue && (state.value?.isNotEmpty ?? false);
     if (!silent || !hasExistingData) {
       state = const AsyncValue.loading();
     }
 
     try {
       // Android: 네이티브 캐시에 저장된 알림을 먼저 동기화
-      if (Platform.isAndroid && NotificationListenerWrapper.instance.isInitialized) {
-        final syncedCount = await NotificationListenerWrapper.instance.syncCachedNotifications();
+      if (Platform.isAndroid &&
+          NotificationListenerWrapper.instance.isInitialized) {
+        final syncedCount = await NotificationListenerWrapper.instance
+            .syncCachedNotifications();
         if (kDebugMode && syncedCount > 0) {
-          debugPrint('[PendingTxNotifier] Synced $syncedCount cached notifications');
+          debugPrint(
+            '[PendingTxNotifier] Synced $syncedCount cached notifications',
+          );
         }
       }
 
@@ -157,7 +166,9 @@ class PendingTransactionNotifier
         userId: _userId,
       );
       if (kDebugMode) {
-        debugPrint('[PendingTxNotifier] Loaded ${transactions.length} transactions');
+        debugPrint(
+          '[PendingTxNotifier] Loaded ${transactions.length} transactions',
+        );
       }
       state = AsyncValue.data(transactions);
     } catch (e, st) {
@@ -168,7 +179,9 @@ class PendingTransactionNotifier
       if (silent && hasExistingData) {
         // 에러를 로깅만 하고 상태는 유지
         if (kDebugMode) {
-          debugPrint('[PendingTxNotifier] Silent refresh failed, keeping existing data');
+          debugPrint(
+            '[PendingTxNotifier] Silent refresh failed, keeping existing data',
+          );
         }
       } else {
         state = AsyncValue.error(e, st);

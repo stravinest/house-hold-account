@@ -42,11 +42,11 @@ class FcmToken extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        token,
-        deviceType,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    token,
+    deviceType,
+    createdAt,
+    updatedAt,
+  ];
 }

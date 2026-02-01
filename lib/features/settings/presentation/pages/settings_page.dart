@@ -188,7 +188,7 @@ class SettingsPage extends ConsumerWidget {
 
             // 개발자 옵션 (디버그 모드에서만 표시)
             if (kDebugMode) ...[
-              SectionHeader(title: '개발자 옵션'),
+              const SectionHeader(title: '개발자 옵션'),
               ListTile(
                 leading: const Icon(Icons.bug_report_outlined),
                 title: const Text('자동수집 디버그'),

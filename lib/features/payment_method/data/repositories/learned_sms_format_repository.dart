@@ -143,7 +143,9 @@ class LearnedSmsFormatRepository {
         }
       } catch (e) {
         // match_count는 핵심 기능이 아니지만 지속적 실패 시 확인 필요
-        debugPrint('[LearnedSmsFormat] incrementMatchCount fallback failed: $e');
+        debugPrint(
+          '[LearnedSmsFormat] incrementMatchCount fallback failed: $e',
+        );
       }
     }
   }

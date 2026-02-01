@@ -31,72 +31,72 @@ class TrendTabView extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 기간 필터 (월별/연별)
-          const Center(child: PeriodFilter()),
-          const SizedBox(height: 12),
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 기간 필터 (월별/연별)
+            const Center(child: PeriodFilter()),
+            const SizedBox(height: 12),
 
-          // 타입 필터 (수입/지출/자산)
-          const Center(child: StatisticsTypeFilter()),
-          const SizedBox(height: 16),
+            // 타입 필터 (수입/지출/자산)
+            const Center(child: StatisticsTypeFilter()),
+            const SizedBox(height: 16),
 
-          // 막대 그래프
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0D000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.statisticsTrend,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                const TrendBarChart(),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // 상세 리스트
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainer,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x0D000000),
-                  blurRadius: 8,
-                  offset: Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(
-                    l10n.statisticsDetail,
+            // 막대 그래프
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0D000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.statisticsTrend,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                ),
-                const TrendDetailList(),
-              ],
+                  const SizedBox(height: 8),
+                  const TrendBarChart(),
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+
+            // 상세 리스트
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainer,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0D000000),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                    child: Text(
+                      l10n.statisticsDetail,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  const TrendDetailList(),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,7 +9,6 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/empty_state.dart';
-import '../../../../shared/widgets/section_header.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../domain/entities/ledger_invite.dart';
@@ -111,7 +109,11 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Row(
               children: [
-                Icon(Icons.menu_book, size: 20, color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  Icons.menu_book,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   l10n.shareMyLedgers,
@@ -165,7 +167,11 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
             padding: const EdgeInsets.only(bottom: 12),
             child: Row(
               children: [
-                Icon(Icons.mail_outline, size: 20, color: Theme.of(context).colorScheme.primary),
+                Icon(
+                  Icons.mail_outline,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   l10n.shareInvitedLedgers,
@@ -395,7 +401,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
                         const SizedBox(width: Spacing.sm),
                         TextButton(
                           onPressed: () async {
-                            debugPrint('[RemoveMember] Button pressed in bottom sheet');
+                            debugPrint(
+                              '[RemoveMember] Button pressed in bottom sheet',
+                            );
                             // 바텀시트를 먼저 닫지 않고, 다이얼로그를 위에 표시
                             await _showRemoveMemberDialog(
                               context,
@@ -451,7 +459,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String userId,
     String memberName,
   ) async {
-    debugPrint('[RemoveMember] Dialog opened for user: $userId, member: $memberName');
+    debugPrint(
+      '[RemoveMember] Dialog opened for user: $userId, member: $memberName',
+    );
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -480,7 +490,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
       ),
     );
 
-    debugPrint('[RemoveMember] Dialog result: $confirmed, context.mounted: ${context.mounted}');
+    debugPrint(
+      '[RemoveMember] Dialog result: $confirmed, context.mounted: ${context.mounted}',
+    );
     if (confirmed == true && context.mounted) {
       debugPrint('[RemoveMember] Calling _removeMember');
       await _removeMember(context, ref, ledgerId, userId);
@@ -493,7 +505,9 @@ class _ShareManagementPageState extends ConsumerState<ShareManagementPage> {
     String ledgerId,
     String userId,
   ) async {
-    debugPrint('[RemoveMember] Starting removal - ledgerId: $ledgerId, userId: $userId');
+    debugPrint(
+      '[RemoveMember] Starting removal - ledgerId: $ledgerId, userId: $userId',
+    );
     final l10n = AppLocalizations.of(context);
     try {
       debugPrint('[RemoveMember] Calling repository removeMember');

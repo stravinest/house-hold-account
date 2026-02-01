@@ -47,13 +47,13 @@ class PushNotification extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        type,
-        title,
-        message,
-        data,
-        isRead,
-        createdAt,
-      ];
+    id,
+    userId,
+    type,
+    title,
+    message,
+    data,
+    isRead,
+    createdAt,
+  ];
 }

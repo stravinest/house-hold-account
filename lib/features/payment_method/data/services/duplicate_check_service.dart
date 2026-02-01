@@ -266,7 +266,9 @@ class DuplicateCheckService {
     final amount = amountMatch?.group(1)?.replaceAll(',', '') ?? '';
 
     // 내용에서 핵심 부분만 추출 (sender 제외)
-    final contentPreview = content.length > 80 ? content.substring(0, 80) : content;
+    final contentPreview = content.length > 80
+        ? content.substring(0, 80)
+        : content;
 
     // 금액 + 내용 + 시간으로 해시 (sender 제외하여 SMS/Push 동일 해시)
     final input = '$amount-$contentPreview-$minuteBucket';

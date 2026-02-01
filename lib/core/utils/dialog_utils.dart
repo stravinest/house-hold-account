@@ -89,9 +89,7 @@ class DialogUtils {
     return showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
           width: 280,
           padding: const EdgeInsets.all(24),
@@ -111,8 +109,10 @@ class DialogUtils {
 
               // 카테고리명 강조 박스
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFCDD2), // 연한 빨간색 배경
                   borderRadius: BorderRadius.circular(12),
@@ -192,9 +192,7 @@ class DialogUtils {
     return showDialog<bool>(
       context: context,
       builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Container(
           width: 280,
           padding: const EdgeInsets.all(24),
@@ -214,8 +212,10 @@ class DialogUtils {
 
               // 카테고리명 강조 박스
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFCDD2), // 연한 빨간색 배경
                   borderRadius: BorderRadius.circular(12),

@@ -218,6 +218,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     final selectedDate = ref.watch(selectedDateProvider);
     final ledgersAsync = ref.watch(ledgersProvider);
 
+    // 가계부 Provider 초기화 및 자동 선택 로직 실행
+    // (앱 시작 시 저장된 가계부 ID 복원 또는 첫 번째 가계부 자동 선택)
+    ref.watch(ledgerNotifierProvider);
+
     // 위젯 데이터 자동 업데이트 (월별 합계 변경 시)
     ref.watch(widgetDataUpdaterProvider);
 

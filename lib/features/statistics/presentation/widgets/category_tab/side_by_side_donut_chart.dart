@@ -1,7 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
@@ -181,7 +180,7 @@ class SideBySideDonutChart extends ConsumerWidget {
               ? BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: userColor.withOpacity(0.3),
+                    color: userColor.withValues(alpha: 0.3),
                     width: 3,
                   ),
                 )
@@ -196,7 +195,10 @@ class SideBySideDonutChart extends ConsumerWidget {
                   PieChartData(
                     sectionsSpace: 2,
                     centerSpaceRadius: size * 0.25,
-                    sections: _buildSections(processedCategories, user.totalAmount),
+                    sections: _buildSections(
+                      processedCategories,
+                      user.totalAmount,
+                    ),
                     pieTouchData: PieTouchData(enabled: false),
                   ),
                 ),
@@ -205,14 +207,10 @@ class SideBySideDonutChart extends ConsumerWidget {
                   width: size * 0.4,
                   height: size * 0.4,
                   decoration: BoxDecoration(
-                    color: userColor.withOpacity(0.1),
+                    color: userColor.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.person,
-                    color: userColor,
-                    size: size * 0.2,
-                  ),
+                  child: Icon(Icons.person, color: userColor, size: size * 0.2),
                 ),
               ],
             ),
@@ -282,9 +280,10 @@ class SideBySideDonutChart extends ConsumerWidget {
         if (combinedCategories.containsKey(category.categoryId)) {
           combinedCategories[category.categoryId] =
               combinedCategories[category.categoryId]!.copyWith(
-            amount: combinedCategories[category.categoryId]!.amount +
-                category.amount,
-          );
+                amount:
+                    combinedCategories[category.categoryId]!.amount +
+                    category.amount,
+              );
         } else {
           combinedCategories[category.categoryId] = category;
         }
@@ -320,7 +319,10 @@ class SideBySideDonutChart extends ConsumerWidget {
                     PieChartData(
                       sectionsSpace: 2,
                       centerSpaceRadius: 60,
-                      sections: _buildSections(processedCategories, totalAmount),
+                      sections: _buildSections(
+                        processedCategories,
+                        totalAmount,
+                      ),
                       pieTouchData: PieTouchData(enabled: false),
                     ),
                   ),
@@ -383,8 +385,9 @@ class SideBySideDonutChart extends ConsumerWidget {
     int totalAmount,
   ) {
     return categories.map((category) {
-      final percentage =
-          totalAmount > 0 ? (category.amount / totalAmount) * 100 : 0.0;
+      final percentage = totalAmount > 0
+          ? (category.amount / totalAmount) * 100
+          : 0.0;
       final color = _parseColor(category.categoryColor);
 
       return PieChartSectionData(

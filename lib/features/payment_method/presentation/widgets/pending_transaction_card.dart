@@ -356,10 +356,10 @@ class _PendingTransactionCardState
     bool isDisabled = false,
   }) {
     final effectiveBgColor = isDisabled
-        ? backgroundColor.withOpacity(0.5)
+        ? backgroundColor.withValues(alpha: 0.5)
         : backgroundColor;
     final effectiveFgColor = isDisabled
-        ? foregroundColor.withOpacity(0.5)
+        ? foregroundColor.withValues(alpha: 0.5)
         : foregroundColor;
 
     return Material(
@@ -394,9 +394,9 @@ class _PendingTransactionCardState
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: colorScheme.errorContainer.withOpacity(0.3),
+        color: colorScheme.errorContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
-        border: Border.all(color: colorScheme.error.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.error.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

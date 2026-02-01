@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
@@ -35,8 +34,10 @@ class UserRatioBar extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
-        final totalAmount =
-            userStats.values.fold(0, (sum, user) => sum + user.totalAmount);
+        final totalAmount = userStats.values.fold(
+          0,
+          (sum, user) => sum + user.totalAmount,
+        );
 
         if (totalAmount == 0) {
           return const SizedBox.shrink();
@@ -73,12 +74,9 @@ class UserRatioBar extends ConsumerWidget {
                 const SizedBox(height: 12),
 
                 // 사용자별 상세 정보
-                ...users.map((user) => _buildUserRow(
-                      context,
-                      l10n,
-                      user,
-                      totalAmount,
-                    )),
+                ...users.map(
+                  (user) => _buildUserRow(context, l10n, user, totalAmount),
+                ),
               ],
             ),
           ),
@@ -132,7 +130,9 @@ class UserRatioBar extends ConsumerWidget {
         height: 24,
         child: Row(
           children: users.map((user) {
-            final ratio = totalAmount > 0 ? user.totalAmount / totalAmount : 0.0;
+            final ratio = totalAmount > 0
+                ? user.totalAmount / totalAmount
+                : 0.0;
             final color = _parseColor(user.userColor);
 
             return Expanded(
@@ -166,7 +166,9 @@ class UserRatioBar extends ConsumerWidget {
   ) {
     final theme = Theme.of(context);
     final color = _parseColor(user.userColor);
-    final ratio = totalAmount > 0 ? (user.totalAmount / totalAmount * 100) : 0.0;
+    final ratio = totalAmount > 0
+        ? (user.totalAmount / totalAmount * 100)
+        : 0.0;
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
@@ -176,10 +178,7 @@ class UserRatioBar extends ConsumerWidget {
           Container(
             width: 12,
             height: 12,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
           // 사용자명

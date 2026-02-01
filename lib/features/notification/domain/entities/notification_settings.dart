@@ -39,11 +39,11 @@ class NotificationSettings extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        notificationType,
-        enabled,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    notificationType,
+    enabled,
+    createdAt,
+    updatedAt,
+  ];
 }

@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 
 import '../../../../config/supabase_config.dart';
 import '../../domain/entities/notification_type.dart';
-import '../repositories/fcm_token_repository.dart';
 import '../repositories/notification_settings_repository.dart';
 import '../../services/local_notification_service.dart';
 
@@ -31,7 +30,9 @@ class NotificationService {
   }) async {
     try {
       // 1. 사용자 알림 설정 조회
-      final settings = await _settingsRepository.getNotificationSettings(userId);
+      final settings = await _settingsRepository.getNotificationSettings(
+        userId,
+      );
 
       // 2. 해당 알림 타입이 활성화되어 있는지 확인
       final isEnabled = settings[type] ?? false;

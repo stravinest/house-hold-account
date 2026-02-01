@@ -7,11 +7,16 @@ class LearnedPushFormat extends Equatable implements LearnedFormat {
   final String paymentMethodId;
   final String packageName;
   final List<String> appKeywords;
+  @override
   final String amountRegex;
+  @override
   final Map<String, List<String>> typeKeywords;
+  @override
   final String? merchantRegex;
+  @override
   final String? dateRegex;
   final String? sampleNotification;
+  @override
   final double confidence;
   final int matchCount;
   final DateTime createdAt;

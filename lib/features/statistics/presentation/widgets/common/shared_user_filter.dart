@@ -43,8 +43,9 @@ class SharedUserFilter extends ConsumerWidget {
                   label: l10n.statisticsFilterCombined,
                   isSelected: sharedState.mode == SharedStatisticsMode.combined,
                   onTap: () {
-                    ref.read(sharedStatisticsStateProvider.notifier).state =
-                        const SharedStatisticsState(
+                    ref
+                        .read(sharedStatisticsStateProvider.notifier)
+                        .state = const SharedStatisticsState(
                       mode: SharedStatisticsMode.combined,
                     );
                   },
@@ -54,7 +55,7 @@ class SharedUserFilter extends ConsumerWidget {
                 ...members.map((member) {
                   final isSelected =
                       sharedState.mode == SharedStatisticsMode.singleUser &&
-                          sharedState.selectedUserId == member.userId;
+                      sharedState.selectedUserId == member.userId;
                   final displayName = _getDisplayName(member);
 
                   return _buildTabButton(
@@ -62,8 +63,9 @@ class SharedUserFilter extends ConsumerWidget {
                     label: displayName,
                     isSelected: isSelected,
                     onTap: () {
-                      ref.read(sharedStatisticsStateProvider.notifier).state =
-                          SharedStatisticsState(
+                      ref
+                          .read(sharedStatisticsStateProvider.notifier)
+                          .state = SharedStatisticsState(
                         mode: SharedStatisticsMode.singleUser,
                         selectedUserId: member.userId,
                       );
@@ -77,8 +79,9 @@ class SharedUserFilter extends ConsumerWidget {
                   label: l10n.statisticsFilterOverlay,
                   isSelected: sharedState.mode == SharedStatisticsMode.overlay,
                   onTap: () {
-                    ref.read(sharedStatisticsStateProvider.notifier).state =
-                        const SharedStatisticsState(
+                    ref
+                        .read(sharedStatisticsStateProvider.notifier)
+                        .state = const SharedStatisticsState(
                       mode: SharedStatisticsMode.overlay,
                     );
                   },

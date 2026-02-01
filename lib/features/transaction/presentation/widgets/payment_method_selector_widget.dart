@@ -42,9 +42,9 @@ class _PaymentMethodSelectorWidgetState
   // 랜덤 색상 생성
   String _generateRandomColor() {
     final random = Random();
-    return PaymentMethodColors.palette[
-      random.nextInt(PaymentMethodColors.palette.length)
-    ];
+    return PaymentMethodColors.palette[random.nextInt(
+      PaymentMethodColors.palette.length,
+    )];
   }
 
   /// 결제수단 추가 다이얼로그 표시

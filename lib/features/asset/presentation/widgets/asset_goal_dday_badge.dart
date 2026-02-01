@@ -31,10 +31,13 @@ class AssetGoalDDayBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [badgeColor.withOpacity(0.15), badgeColor.withOpacity(0.08)],
+          colors: [
+            badgeColor.withValues(alpha: 0.15),
+            badgeColor.withValues(alpha: 0.08),
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: badgeColor.withOpacity(0.3), width: 1),
+        border: Border.all(color: badgeColor.withValues(alpha: 0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -284,7 +284,10 @@ class _DailyTransactionList extends ConsumerWidget {
               final weekdays = ['월', '화', '수', '목', '금', '토', '일'];
               final weekday = weekdays[date.weekday - 1];
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 color: colorScheme.surfaceContainer,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -351,7 +354,10 @@ class _DailyTransactionList extends ConsumerWidget {
                   );
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: Row(
                     children: [
                       // impCdTx 디자인: 사각형 점 (cornerRadius 4)
