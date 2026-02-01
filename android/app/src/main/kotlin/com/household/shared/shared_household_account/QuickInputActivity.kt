@@ -33,7 +33,7 @@ class QuickInputActivity : Activity() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
         
-        supabaseHelper = SupabaseHelper(this)
+        supabaseHelper = SupabaseHelper.getInstance(this)
         
         // 초기화 실패 시 앱을 먼저 실행하라는 메시지 표시
         if (!supabaseHelper.isInitialized) {

@@ -78,6 +78,26 @@ class FinancialNotificationListener : NotificationListenerService() {
             }
         }
 
+        // 메시지 앱 패키지명 목록 (MMS 알림 수집용)
+        // 금융 기관에서 MMS로 보낸 결제 알림을 수집하기 위함
+        private val MESSAGE_APP_PACKAGES: Set<String> = setOf(
+            // 삼성
+            "com.samsung.android.messaging",      // Samsung Messages
+            // Google
+            "com.google.android.apps.messaging",  // Google Messages
+            // Stock Android
+            "com.android.mms",                    // Stock Android MMS
+            // 제조사별
+            "com.sonyericsson.conversations",     // Sony Messages
+            "com.lge.message",                    // LG Messages
+            "com.htc.sense.mms",                  // HTC Messages
+            "com.motorola.messaging",             // Motorola Messages
+            // 서드파티 인기 앱
+            "org.thoughtcrime.securesms",         // Signal
+            "com.textra",                         // Textra SMS
+            "com.jb.gosms",                       // GO SMS
+        )
+
         // 결제/거래 관련 키워드 (성능 최적화를 위해 상수로 정의)
         private val PAYMENT_KEYWORDS = listOf(
             // 금액 관련
@@ -105,16 +125,14 @@ class FinancialNotificationListener : NotificationListenerService() {
     }
 
     private val supabaseHelper: SupabaseHelper by lazy {
-        SupabaseHelper(applicationContext)
+        SupabaseHelper.getInstance(applicationContext)
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    // Cache for learned formats and payment methods (refreshed periodically)
     private var learnedFormatsCache: List<LearnedPushFormat> = emptyList()
     private var paymentMethodsCache: List<SupabaseHelper.PaymentMethodInfo> = emptyList()
     private var lastFormatsFetchTime: Long = 0
-    private val FORMATS_CACHE_DURATION = 5 * 60 * 1000L  // 5 minutes
 
     override fun onCreate() {
         super.onCreate()
@@ -138,9 +156,6 @@ class FinancialNotificationListener : NotificationListenerService() {
     override fun onListenerConnected() {
         super.onListenerConnected()
         Log.d(TAG, "Notification listener connected")
-        
-        SmsContentObserver.register(applicationContext)
-        Log.d(TAG, "SmsContentObserver registered via NotificationListener")
     }
 
     override fun onListenerDisconnected() {
@@ -152,10 +167,11 @@ class FinancialNotificationListener : NotificationListenerService() {
         if (sbn == null) return
 
         val packageName = sbn.packageName?.lowercase() ?: return
+        val isFromMessageApp = isMessageApp(packageName)
 
-        if (!isFinancialApp(packageName)) return
+        if (!isFinancialApp(packageName) && !isFromMessageApp) return
 
-        Log.d(TAG, "Financial notification received from: $packageName")
+        Log.d(TAG, "Financial notification received from: $packageName (messageApp=$isFromMessageApp)")
 
         val notification = sbn.notification ?: return
         val extras = notification.extras ?: return
@@ -176,17 +192,12 @@ class FinancialNotificationListener : NotificationListenerService() {
         }
 
         val normalizedContent = normalizeContent(content)
-
-        if (storageHelper.isDuplicate(packageName, normalizedContent)) {
-            Log.d(TAG, "Duplicate notification, skipping")
-            return
-        }
-
         val combinedContent = if (title != null) "$title $normalizedContent" else normalizedContent
         val timestamp = sbn.postTime
+        val sourceType = if (isFromMessageApp) "sms" else "notification"
 
         serviceScope.launch {
-            processNotification(packageName, combinedContent, timestamp, title, normalizedContent)
+            processNotification(packageName, combinedContent, timestamp, title, normalizedContent, sourceType)
         }
     }
 
@@ -199,15 +210,23 @@ class FinancialNotificationListener : NotificationListenerService() {
         combinedContent: String,
         timestamp: Long,
         title: String?,
-        originalContent: String
+        originalContent: String,
+        sourceType: String
     ) {
-        val sqliteId = storageHelper.insertNotification(
-            packageName = packageName,
-            title = title,
-            text = originalContent,
-            receivedAt = timestamp
-        )
-        Log.d(TAG, "Notification saved to SQLite with id: $sqliteId")
+         val sqliteId = storageHelper.insertNotification(
+             packageName = packageName,
+             title = title,
+             text = originalContent,
+             receivedAt = timestamp,
+             sourceType = sourceType
+         )
+         
+         if (sqliteId == -1L) {
+             Log.d(TAG, "Duplicate notification, skipping")
+             return
+         }
+         
+         Log.d(TAG, "Notification saved to SQLite with id: $sqliteId (sourceType=$sourceType)")
 
         if (!supabaseHelper.isInitialized) {
             Log.d(TAG, "Supabase not initialized, using SQLite only")
@@ -292,7 +311,7 @@ class FinancialNotificationListener : NotificationListenerService() {
                 ledgerId = ledgerId,
                 userId = userId,
                 paymentMethodId = paymentMethodId,
-                sourceType = "notification",
+                sourceType = sourceType,
                 sourceSender = packageName,
                 sourceContent = combinedContent,
                 sourceTimestamp = timestamp,
@@ -307,7 +326,7 @@ class FinancialNotificationListener : NotificationListenerService() {
                 ledgerId = ledgerId,
                 userId = userId,
                 paymentMethodId = paymentMethodId,
-                sourceType = "notification",
+                sourceType = sourceType,
                 sourceSender = packageName,
                 sourceContent = combinedContent,
                 sourceTimestamp = timestamp,
@@ -332,7 +351,7 @@ class FinancialNotificationListener : NotificationListenerService() {
 
     private suspend fun refreshFormatsCache(ledgerId: String) {
         val now = System.currentTimeMillis()
-        if (now - lastFormatsFetchTime < FORMATS_CACHE_DURATION && learnedFormatsCache.isNotEmpty()) {
+        if (now - lastFormatsFetchTime < NotificationConfig.FORMAT_CACHE_DURATION_MS && learnedFormatsCache.isNotEmpty()) {
             return
         }
 
@@ -352,11 +371,12 @@ class FinancialNotificationListener : NotificationListenerService() {
         MainActivity.notifyNewNotification(packageName, pendingCount)
     }
 
-    /**
-     * 금융 앱인지 확인
-     */
     private fun isFinancialApp(packageName: String): Boolean {
         return FINANCIAL_APP_PACKAGES.contains(packageName.lowercase())
+    }
+
+    private fun isMessageApp(packageName: String): Boolean {
+        return MESSAGE_APP_PACKAGES.contains(packageName.lowercase())
     }
 
     /**

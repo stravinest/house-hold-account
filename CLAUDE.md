@@ -734,3 +734,25 @@ label: Text(l10n.commonSave),
 5. **다이얼로그**: `DialogUtils.showConfirmation` 사용
 6. **애니메이션**: 200ms (기본), 300ms (페이지 전환)
 7. **터치 영역**: 최소 44x44px
+
+## Claude Code 설정 업그레이드 이력
+
+### 최근 업그레이드 (2026-02-01)
+
+**적용된 설정**: `.claude/settings.local.json` 생성
+
+**추가된 기능**:
+1. **SessionStart Hook**: 세션 시작 시 `flutter pub get` 자동 실행
+2. **PostToolUse Hook**: Dart 파일 저장 시 `dart format` 자동 실행
+3. **Wildcard Permissions**: flutter, dart, adb, maestro 명령어 자동 승인
+4. **Model 설정**: Sonnet(기본), Haiku(계획), Opus(리뷰)
+5. **언어 설정**: 한국어 출력
+
+**예상 효과**:
+- 수동 작업 시간 약 70% 감소
+- 코드 포맷팅 자동화
+- 개발 워크플로우 개선
+
+**다음 업그레이드 권장일**: 2026-03-01 (월 1회 체크 권장)
+
+**트렌드 참고**: [Claude Code Best Practices 2026](https://www.anthropic.com/engineering/claude-code-best-practices)

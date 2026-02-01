@@ -53,6 +53,7 @@ class PaymentMethodStatistics {
   final String paymentMethodName;
   final String paymentMethodIcon;
   final String paymentMethodColor;
+  final bool canAutoSave;
   final int amount;
   final double percentage;
 
@@ -61,6 +62,7 @@ class PaymentMethodStatistics {
     required this.paymentMethodName,
     required this.paymentMethodIcon,
     required this.paymentMethodColor,
+    this.canAutoSave = false,
     required this.amount,
     required this.percentage,
   });
@@ -70,6 +72,7 @@ class PaymentMethodStatistics {
     String? paymentMethodName,
     String? paymentMethodIcon,
     String? paymentMethodColor,
+    bool? canAutoSave,
     int? amount,
     double? percentage,
   }) {
@@ -78,6 +81,7 @@ class PaymentMethodStatistics {
       paymentMethodName: paymentMethodName ?? this.paymentMethodName,
       paymentMethodIcon: paymentMethodIcon ?? this.paymentMethodIcon,
       paymentMethodColor: paymentMethodColor ?? this.paymentMethodColor,
+      canAutoSave: canAutoSave ?? this.canAutoSave,
       amount: amount ?? this.amount,
       percentage: percentage ?? this.percentage,
     );

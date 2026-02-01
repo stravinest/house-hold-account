@@ -51,9 +51,6 @@ class MainActivity : FlutterActivity() {
         super.onCreate(savedInstanceState)
 
         window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
-        
-        SmsContentObserver.register(applicationContext)
-        Log.d(TAG, "SmsContentObserver registered in onCreate")
     }
 
     private val mainScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -224,7 +221,7 @@ class MainActivity : FlutterActivity() {
         mainScope.launch {
             try {
                 val storageHelper = NotificationStorageHelper.getInstance(applicationContext)
-                val supabaseHelper = SupabaseHelper(applicationContext)
+                val supabaseHelper = SupabaseHelper.getInstance(applicationContext)
                 val timestamp = System.currentTimeMillis()
 
                 val sqliteId = storageHelper.insertNotification(
@@ -299,7 +296,7 @@ class MainActivity : FlutterActivity() {
         mainScope.launch {
             try {
                 val storageHelper = NotificationStorageHelper.getInstance(applicationContext)
-                val supabaseHelper = SupabaseHelper(applicationContext)
+                val supabaseHelper = SupabaseHelper.getInstance(applicationContext)
                 val timestamp = System.currentTimeMillis()
                 val combinedContent = if (title.isNotEmpty()) "$title $text" else text
 
@@ -372,7 +369,7 @@ class MainActivity : FlutterActivity() {
     private fun getDebugStatus(result: MethodChannel.Result) {
         try {
             val storageHelper = NotificationStorageHelper.getInstance(applicationContext)
-            val supabaseHelper = SupabaseHelper(applicationContext)
+            val supabaseHelper = SupabaseHelper.getInstance(applicationContext)
 
             val status = mapOf(
                 "sqlite" to mapOf(
@@ -386,8 +383,7 @@ class MainActivity : FlutterActivity() {
                 ),
                 "notificationListener" to mapOf(
                     "instance" to (FinancialNotificationListener.instance != null)
-                ),
-                "smsObserver" to SmsContentObserver.getStatus()
+                )
             )
 
             result.success(status)
@@ -412,7 +408,7 @@ class MainActivity : FlutterActivity() {
     private fun getSupabaseStatus(result: MethodChannel.Result) {
         mainScope.launch {
             try {
-                val supabaseHelper = SupabaseHelper(applicationContext)
+                val supabaseHelper = SupabaseHelper.getInstance(applicationContext)
                 
                 val tokenValid = withContext(Dispatchers.IO) {
                     supabaseHelper.getValidToken() != null

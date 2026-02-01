@@ -10,7 +10,7 @@ import '../../../../core/utils/color_utils.dart';
 /// 요약 위젯 공통 상수
 class SummaryConstants {
   /// 사용자별 금액 표시 행 높이 (UserAmountIndicator 높이 + padding)
-  static const double userIndicatorRowHeight = 14.0;
+  static const double userIndicatorRowHeight = 15.0;
 }
 
 /// 요약 유형 (수입, 지출, 합계)

@@ -228,7 +228,12 @@ class _PendingTransactionCardState
               // 중복 정보 섹션 (중복일 때만)
               if (isDuplicate) ...[
                 const SizedBox(height: Spacing.sm),
-                _buildDuplicateInfoSection(context, l10n, colorScheme, textTheme),
+                _buildDuplicateInfoSection(
+                  context,
+                  l10n,
+                  colorScheme,
+                  textTheme,
+                ),
               ],
 
               // 액션 버튼
@@ -267,54 +272,66 @@ class _PendingTransactionCardState
     if (isDuplicate) {
       // 중복 거래일 때: 거부, 상세, 저장
       if (widget.onReject != null) {
-        buttons.add(_buildChipButton(
-          label: l10n.commonReject,
-          onPressed: widget.onReject,
-          backgroundColor: colorScheme.errorContainer,
-          foregroundColor: colorScheme.onErrorContainer,
-        ));
+        buttons.add(
+          _buildChipButton(
+            label: l10n.commonReject,
+            onPressed: widget.onReject,
+            backgroundColor: colorScheme.errorContainer,
+            foregroundColor: colorScheme.onErrorContainer,
+          ),
+        );
       }
-      buttons.add(_buildChipButton(
-        label: l10n.confirmDuplicate,
-        onPressed: widget.onEdit,
-        backgroundColor: colorScheme.surfaceContainerHighest,
-        foregroundColor: colorScheme.onSurfaceVariant,
-      ));
+      buttons.add(
+        _buildChipButton(
+          label: l10n.confirmDuplicate,
+          onPressed: widget.onEdit,
+          backgroundColor: colorScheme.surfaceContainerHighest,
+          foregroundColor: colorScheme.onSurfaceVariant,
+        ),
+      );
       if (widget.onConfirm != null) {
-        buttons.add(_buildChipButton(
-          label: l10n.ignoreDuplicate,
-          onPressed: isParsed ? widget.onConfirm : null,
-          backgroundColor: colorScheme.primaryContainer,
-          foregroundColor: colorScheme.onPrimaryContainer,
-          isDisabled: !isParsed,
-        ));
+        buttons.add(
+          _buildChipButton(
+            label: l10n.ignoreDuplicate,
+            onPressed: isParsed ? widget.onConfirm : null,
+            backgroundColor: colorScheme.primaryContainer,
+            foregroundColor: colorScheme.onPrimaryContainer,
+            isDisabled: !isParsed,
+          ),
+        );
       }
     } else {
       // 일반 거래일 때: 거부, 수정, 저장
       if (widget.onReject != null) {
-        buttons.add(_buildChipButton(
-          label: l10n.commonReject,
-          onPressed: widget.onReject,
-          backgroundColor: colorScheme.errorContainer,
-          foregroundColor: colorScheme.onErrorContainer,
-        ));
+        buttons.add(
+          _buildChipButton(
+            label: l10n.commonReject,
+            onPressed: widget.onReject,
+            backgroundColor: colorScheme.errorContainer,
+            foregroundColor: colorScheme.onErrorContainer,
+          ),
+        );
       }
       if (widget.onEdit != null) {
-        buttons.add(_buildChipButton(
-          label: l10n.commonDetail,
-          onPressed: widget.onEdit,
-          backgroundColor: colorScheme.surfaceContainerHighest,
-          foregroundColor: colorScheme.onSurfaceVariant,
-        ));
+        buttons.add(
+          _buildChipButton(
+            label: l10n.commonDetail,
+            onPressed: widget.onEdit,
+            backgroundColor: colorScheme.surfaceContainerHighest,
+            foregroundColor: colorScheme.onSurfaceVariant,
+          ),
+        );
       }
       if (widget.onConfirm != null) {
-        buttons.add(_buildChipButton(
-          label: l10n.commonSave,
-          onPressed: isParsed ? widget.onConfirm : null,
-          backgroundColor: colorScheme.primaryContainer,
-          foregroundColor: colorScheme.onPrimaryContainer,
-          isDisabled: !isParsed,
-        ));
+        buttons.add(
+          _buildChipButton(
+            label: l10n.commonSave,
+            onPressed: isParsed ? widget.onConfirm : null,
+            backgroundColor: colorScheme.primaryContainer,
+            foregroundColor: colorScheme.onPrimaryContainer,
+            isDisabled: !isParsed,
+          ),
+        );
       }
     }
 
@@ -379,9 +396,7 @@ class _PendingTransactionCardState
       decoration: BoxDecoration(
         color: colorScheme.errorContainer.withOpacity(0.3),
         borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
-        border: Border.all(
-          color: colorScheme.error.withOpacity(0.3),
-        ),
+        border: Border.all(color: colorScheme.error.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,11 +411,7 @@ class _PendingTransactionCardState
               padding: const EdgeInsets.all(Spacing.sm),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 16,
-                    color: colorScheme.error,
-                  ),
+                  Icon(Icons.info_outline, size: 16, color: colorScheme.error),
                   const SizedBox(width: Spacing.xs),
                   Expanded(
                     child: Text(
@@ -612,10 +623,10 @@ class _PendingTransactionCardState
   }
 
   String _formatTime(DateTime dateTime) {
-    return _timeFormat.format(dateTime);
+    return _timeFormat.format(dateTime.toLocal());
   }
 
   String _formatDateTime(DateTime dateTime) {
-    return _dateTimeFormat.format(dateTime);
+    return _dateTimeFormat.format(dateTime.toLocal());
   }
 }

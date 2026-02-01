@@ -1,0 +1,145 @@
+name: Supabase Migration Check
+
+on:
+  push:
+    paths:
+      - 'supabase/migrations/**'
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+
+jobs:
+  check-migrations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Supabase CLI
+        run: |
+          npm install -g supabase
+
+      - name: Check migration files syntax
+        run: |
+          echo "Checking migration files..."
+          for file in supabase/migrations/*.sql; do
+            if [ -f "$file" ]; then
+              echo "Checking $file"
+              # SQL 파일 기본 문법 체크 (간단한 검증)
+              if grep -q "CREATE TABLE\|ALTER TABLE\|CREATE FUNCTION\|CREATE POLICY" "$file"; then
+                echo "✓ $file looks valid"
+              else
+                echo "⚠️ $file might be empty or invalid"
+              fi
+            fi
+          done
+
+      - name: List migration files
+        run: |
+          echo "=== Migration Files ==="
+          ls -lh supabase/migrations/
+          echo ""
+          echo "Total migrations: $(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l)"
+
+      - name: Check for dangerous operations
+        run: |
+          echo "Checking for potentially dangerous operations..."
+
+          # DROP TABLE 체크
+          if grep -r "DROP TABLE" supabase/migrations/*.sql; then
+            echo "⚠️ WARNING: DROP TABLE found in migrations"
+            echo "Please review carefully before merging"
+          fi
+
+          # DROP COLUMN 체크
+          if grep -r "DROP COLUMN" supabase/migrations/*.sql; then
+            echo "⚠️ WARNING: DROP COLUMN found in migrations"
+            echo "Please review carefully before merging"
+          fi
+
+          # TRUNCATE 체크
+          if grep -r "TRUNCATE" supabase/migrations/*.sql; then
+            echo "⚠️ WARNING: TRUNCATE found in migrations"
+            echo "Please review carefully before merging"
+          fi
+
+      - name: Check RLS policies
+        run: |
+          echo "Checking Row Level Security policies..."
+
+          # RLS 정책 확인
+          if grep -r "CREATE POLICY\|ALTER POLICY\|DROP POLICY" supabase/migrations/*.sql; then
+            echo "✓ RLS policies found"
+            echo "Please ensure policies are correctly defined"
+          fi
+
+          # RLS 활성화 확인
+          if grep -r "ENABLE ROW LEVEL SECURITY" supabase/migrations/*.sql; then
+            echo "✓ RLS enabled on tables"
+          fi
+
+      - name: Comment migration summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const migrationsDir = 'supabase/migrations';
+            const files = fs.readdirSync(migrationsDir)
+              .filter(f => f.endsWith('.sql'))
+              .sort();
+
+            let body = '## 📊 Supabase Migration Summary\n\n';
+            body += `**Total migrations**: ${files.length}\n\n`;
+            body += '### Migration Files:\n';
+
+            files.forEach(file => {
+              const content = fs.readFileSync(path.join(migrationsDir, file), 'utf8');
+              const lines = content.split('\n').length;
+              body += `- \`${file}\` (${lines} lines)\n`;
+            });
+
+            body += '\n### ⚠️ Review Checklist:\n';
+            body += '- [ ] RLS policies are correctly defined\n';
+            body += '- [ ] No accidental DROP operations\n';
+            body += '- [ ] Tested on development environment\n';
+            body += '- [ ] Backward compatible (if needed)\n';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+  # 선택적: Supabase 로컬 환경에서 실제 마이그레이션 테스트
+  # test-migrations:
+  #   runs-on: ubuntu-latest
+  #
+  #   services:
+  #     postgres:
+  #       image: supabase/postgres:15.1.0.117
+  #       env:
+  #         POSTGRES_PASSWORD: postgres
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
+  #
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Run migrations
+  #       run: |
+  #         # Supabase 로컬 환경에서 마이그레이션 테스트
+  #         echo "Migration test would run here"

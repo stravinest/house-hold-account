@@ -13,6 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart' show AuthChangeEvent;
+
 import 'config/firebase_config.dart';
 import 'config/router.dart';
 import 'config/supabase_config.dart';
@@ -102,6 +104,7 @@ class _SharedHouseholdAccountAppState
     extends ConsumerState<SharedHouseholdAccountApp> {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
+  StreamSubscription<dynamic>? _authSubscription;
 
   @override
   void initState() {
@@ -115,6 +118,9 @@ class _SharedHouseholdAccountAppState
 
     // 앱 첫 실행 시 권한 다이얼로그 표시 준비 (Android 전용)
     _prepareInitialPermissionDialog();
+
+    // 로그인 시 권한 확인 설정 (Android 전용)
+    _setupLoginPermissionCheck();
   }
 
   /// 앱 첫 실행 시 권한 다이얼로그 표시 준비
@@ -128,9 +134,8 @@ class _SharedHouseholdAccountAppState
     // 이미 표시한 적이 있으면 스킵
     if (prefs.getBool(flagKey) == true) return;
 
-    // 앱이 완전히 로드된 후 다이얼로그 표시 (1.5초 대기)
-    // rootNavigatorKey.currentContext를 사용하여 Navigator context 획득
-    Future.delayed(const Duration(milliseconds: 1500), () async {
+    // 첫 프레임 렌더링 완료 후 즉시 다이얼로그 표시
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final navigatorContext = rootNavigatorKey.currentContext;
       if (navigatorContext == null || !navigatorContext.mounted) return;
 
@@ -140,6 +145,36 @@ class _SharedHouseholdAccountAppState
       // 다이얼로그가 실제로 표시된 후 플래그 설정
       await prefs.setBool(flagKey, true);
     });
+  }
+
+  /// 로그인 시 권한 확인 설정
+  void _setupLoginPermissionCheck() {
+    // Android가 아니면 스킵
+    if (!Platform.isAndroid) return;
+
+    // 인증 상태 변경 감지
+    _authSubscription = SupabaseConfig.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      final session = data.session;
+
+      // 로그인 이벤트 (signedIn) 및 세션이 있을 때만 처리
+      if (event == AuthChangeEvent.signedIn && session != null) {
+        // 권한 확인 후 비허용된 권한이 있으면 다이얼로그 표시
+        _checkPermissionsOnLogin();
+      }
+    });
+  }
+
+  /// 로그인 시 권한 확인 및 다이얼로그 표시
+  Future<void> _checkPermissionsOnLogin() async {
+    // 약간의 딜레이 후 확인 (홈 화면 로딩 완료 후)
+    await Future.delayed(const Duration(milliseconds: 2000));
+
+    final navigatorContext = rootNavigatorKey.currentContext;
+    if (navigatorContext == null || !navigatorContext.mounted) return;
+
+    // 비허용된 권한이 있으면 다이얼로그 표시
+    await PermissionRequestDialog.showIfAnyDenied(navigatorContext);
   }
 
   /// 알림 탭 핸들러 설정
@@ -185,6 +220,7 @@ class _SharedHouseholdAccountAppState
   @override
   void dispose() {
     _linkSubscription?.cancel();
+    _authSubscription?.cancel();
     super.dispose();
   }
 

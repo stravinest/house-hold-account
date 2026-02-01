@@ -2828,6 +2828,18 @@ abstract class AppLocalizations {
   /// **'결제수단 통계는 지출 내역만 표시됩니다.'**
   String get statisticsPaymentNotice;
 
+  /// 통계 화면 - 자동수집 결제수단 뱃지
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집'**
+  String get statisticsPaymentMethodAutoSave;
+
+  /// 통계 화면 - 공유 결제수단 뱃지
+  ///
+  /// In ko, this message translates to:
+  /// **'공유'**
+  String get statisticsPaymentMethodShared;
+
   /// No description provided for @assetTitle.
   ///
   /// In ko, this message translates to:

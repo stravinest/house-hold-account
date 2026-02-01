@@ -19,7 +19,7 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
     companion object {
         private const val TAG = "NotificationStorage"
         private const val DATABASE_NAME = "financial_notifications.db"
-        private const val DATABASE_VERSION = 2  // 버전 업그레이드: retry_count 추가
+        private const val DATABASE_VERSION = 4  // 버전 업그레이드: UNIQUE 제약 조건 추가
 
         // 테이블 및 컬럼명
         private const val TABLE_NAME = "cached_notifications"
@@ -30,10 +30,10 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
         private const val COLUMN_RECEIVED_AT = "received_at"
         private const val COLUMN_IS_SYNCED = "is_synced"
         private const val COLUMN_RETRY_COUNT = "retry_count"  // 신규: 재시도 횟수
+        private const val COLUMN_SOURCE_TYPE = "source_type"  // 신규: 알림 소스 타입 (sms, notification)
         private const val COLUMN_CREATED_AT = "created_at"
 
-        // 최대 재시도 횟수 (3회 실패 시 더 이상 재시도하지 않음)
-        private const val MAX_RETRY_COUNT = 3
+        private val MAX_RETRY_COUNT = NotificationConfig.MAX_RETRY_COUNT
 
         @Volatile
         private var instance: NotificationStorageHelper? = null
@@ -57,6 +57,7 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
                 $COLUMN_RECEIVED_AT INTEGER NOT NULL,
                 $COLUMN_IS_SYNCED INTEGER DEFAULT 0,
                 $COLUMN_RETRY_COUNT INTEGER DEFAULT 0,
+                $COLUMN_SOURCE_TYPE TEXT DEFAULT 'notification',
                 $COLUMN_CREATED_AT INTEGER DEFAULT (strftime('%s', 'now'))
             )
         """.trimIndent()
@@ -81,6 +82,22 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
                 db.execSQL("CREATE INDEX idx_retry_count ON $TABLE_NAME($COLUMN_RETRY_COUNT)")
                 Log.d(TAG, "Added retry_count column")
             }
+            if (oldVersion < 3) {
+                // v2 -> v3: source_type 컬럼 추가
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COLUMN_SOURCE_TYPE TEXT DEFAULT 'notification'")
+                Log.d(TAG, "Added source_type column")
+            }
+            if (oldVersion < 4) {
+                // v3 -> v4: UNIQUE 제약 조건 추가 (text + 1분 버킷으로 중복 방지)
+                db.execSQL("""
+                    CREATE UNIQUE INDEX idx_unique_content 
+                    ON $TABLE_NAME (
+                        $COLUMN_TEXT, 
+                        ($COLUMN_RECEIVED_AT / 60000)
+                    )
+                """.trimIndent())
+                Log.d(TAG, "Added UNIQUE index on text + time bucket")
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Migration failed from v$oldVersion to v$newVersion: ${e.message}", e)
             // 마이그레이션 실패 시 테이블 재생성으로 복구
@@ -96,13 +113,15 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
     }
 
     /**
-     * 금융 알림을 저장
+     * 금융 알림을 저장 (중복 시 무시)
+     * @return 저장된 row ID, 중복 시 -1
      */
     fun insertNotification(
         packageName: String,
         title: String?,
         text: String,
-        receivedAt: Long = System.currentTimeMillis()
+        receivedAt: Long = System.currentTimeMillis(),
+        sourceType: String = "notification"
     ): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -112,10 +131,17 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
             put(COLUMN_RECEIVED_AT, receivedAt)
             put(COLUMN_IS_SYNCED, 0)
             put(COLUMN_RETRY_COUNT, 0)
+            put(COLUMN_SOURCE_TYPE, sourceType)
         }
 
-        val id = db.insert(TABLE_NAME, null, values)
-        Log.d(TAG, "Notification inserted with id: $id, package: $packageName")
+        val id = db.insertWithOnConflict(TABLE_NAME, null, values, SQLiteDatabase.CONFLICT_IGNORE)
+        
+        if (id == -1L) {
+            Log.d(TAG, "Duplicate notification ignored: $text")
+        } else {
+            Log.d(TAG, "Notification inserted with id: $id, package: $packageName, sourceType: $sourceType")
+        }
+        
         return id
     }
 
@@ -143,6 +169,9 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
                 val retryCountIndex = it.getColumnIndex(COLUMN_RETRY_COUNT)
                 val retryCount = if (retryCountIndex >= 0) it.getInt(retryCountIndex) else 0
 
+                val sourceTypeIndex = it.getColumnIndex(COLUMN_SOURCE_TYPE)
+                val sourceType = if (sourceTypeIndex >= 0) it.getString(sourceTypeIndex) else "notification"
+
                 val notification = mapOf(
                     "id" to it.getLong(it.getColumnIndexOrThrow(COLUMN_ID)),
                     "packageName" to it.getString(it.getColumnIndexOrThrow(COLUMN_PACKAGE_NAME)),
@@ -150,7 +179,8 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
                     "text" to it.getString(it.getColumnIndexOrThrow(COLUMN_TEXT)),
                     "receivedAt" to it.getLong(it.getColumnIndexOrThrow(COLUMN_RECEIVED_AT)),
                     "isSynced" to (it.getInt(it.getColumnIndexOrThrow(COLUMN_IS_SYNCED)) == 1),
-                    "retryCount" to retryCount
+                    "retryCount" to retryCount,
+                    "sourceType" to sourceType
                 )
                 notifications.add(notification)
             }
@@ -276,33 +306,6 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
         return count
     }
 
-    /**
-     * 중복 알림 확인 (같은 패키지, 같은 텍스트, 5분 이내)
-     */
-    fun isDuplicate(packageName: String, text: String): Boolean {
-        val db = readableDatabase
-        val fiveMinutesAgo = System.currentTimeMillis() - (5 * 60 * 1000)
-
-        val cursor = db.query(
-            TABLE_NAME,
-            arrayOf(COLUMN_ID),
-            "$COLUMN_PACKAGE_NAME = ? AND $COLUMN_TEXT = ? AND $COLUMN_RECEIVED_AT > ?",
-            arrayOf(packageName, text, fiveMinutesAgo.toString()),
-            null,
-            null,
-            null,
-            "1"
-        )
-
-        val isDuplicate = cursor.count > 0
-        cursor.close()
-
-        if (isDuplicate) {
-            Log.d(TAG, "Duplicate notification detected from $packageName")
-        }
-
-        return isDuplicate
-    }
 
     /**
      * 모든 알림 삭제 (테스트/디버그용)

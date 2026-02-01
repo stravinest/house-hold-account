@@ -28,11 +28,7 @@ class PaymentMethodList extends ConsumerWidget {
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final item = statistics[index];
-            return _PaymentMethodItem(
-              rank: index + 1,
-              item: item,
-              l10n: l10n,
-            );
+            return _PaymentMethodItem(rank: index + 1, item: item, l10n: l10n);
           },
         );
       },
@@ -88,11 +84,25 @@ class _PaymentMethodItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // 결제수단명
+              // 결제수단명 + 뱃지
               Expanded(
-                child: Text(
-                  item.paymentMethodName,
-                  style: theme.textTheme.bodyLarge,
+                child: Row(
+                  children: [
+                    // 결제수단명
+                    Flexible(
+                      child: Text(
+                        item.paymentMethodName,
+                        style: theme.textTheme.bodyLarge,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    // 뱃지
+                    _PaymentMethodBadge(
+                      canAutoSave: item.canAutoSave,
+                      l10n: l10n,
+                    ),
+                  ],
                 ),
               ),
               // 비율
@@ -185,12 +195,50 @@ class _SkeletonPaymentMethodItem extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           // 진행 바
-          const SkeletonBox(
-            width: double.infinity,
-            height: 6,
-            borderRadius: 4,
-          ),
+          const SkeletonBox(width: double.infinity, height: 6, borderRadius: 4),
         ],
+      ),
+    );
+  }
+}
+
+/// 결제수단 유형 뱃지 (자동수집 / 공유)
+class _PaymentMethodBadge extends StatelessWidget {
+  final bool canAutoSave;
+  final AppLocalizations l10n;
+
+  const _PaymentMethodBadge({required this.canAutoSave, required this.l10n});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    // 뱃지 색상 및 텍스트 결정
+    final badgeColor = canAutoSave
+        ? theme.colorScheme.primaryContainer
+        : theme.colorScheme.surfaceContainerHighest;
+
+    final textColor = canAutoSave
+        ? theme.colorScheme.onPrimaryContainer
+        : theme.colorScheme.onSurfaceVariant;
+
+    final badgeText = canAutoSave
+        ? l10n.statisticsPaymentMethodAutoSave
+        : l10n.statisticsPaymentMethodShared;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: badgeColor,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        badgeText,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: textColor,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     );
   }

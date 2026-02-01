@@ -225,14 +225,11 @@ class _PendingTransactionsPageState
       return EmptyState(icon: emptyIcon, message: emptyMessage);
     }
 
-    // 날짜별로 그룹화
+    // 날짜별로 그룹화 (로컬 시간 기준)
     final groupedTransactions = <DateTime, List<PendingTransactionModel>>{};
     for (final tx in transactions) {
-      final date = DateTime(
-        tx.sourceTimestamp.year,
-        tx.sourceTimestamp.month,
-        tx.sourceTimestamp.day,
-      );
+      final localTime = tx.sourceTimestamp.toLocal();
+      final date = DateTime(localTime.year, localTime.month, localTime.day);
       groupedTransactions.putIfAbsent(date, () => []).add(tx);
     }
 

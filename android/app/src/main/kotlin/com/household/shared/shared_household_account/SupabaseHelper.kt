@@ -3,8 +3,10 @@ package com.household.shared.shared_household_account
 import android.content.Context
 import android.util.Base64
 import android.util.Log
+import io.flutter.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.ConnectionPool
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -14,6 +16,7 @@ import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 data class Category(
     val id: String,
@@ -44,8 +47,7 @@ data class LearnedSmsFormat(
     val dateRegex: String?
 )
 
-class SupabaseHelper(private val context: Context) {
-    private val client = OkHttpClient()
+class SupabaseHelper private constructor(private val context: Context) {
     private val supabaseUrl: String?
     private val anonKey: String?
     
@@ -55,6 +57,30 @@ class SupabaseHelper(private val context: Context) {
     companion object {
         private const val TAG = "SupabaseHelper"
         private const val SCHEMA = "house"
+        
+        private val client: OkHttpClient by lazy {
+            OkHttpClient.Builder()
+                .connectTimeout(NotificationConfig.NETWORK_CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .readTimeout(NotificationConfig.NETWORK_READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .writeTimeout(NotificationConfig.NETWORK_WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .connectionPool(ConnectionPool(
+                    NotificationConfig.CONNECTION_POOL_MAX_IDLE,
+                    NotificationConfig.CONNECTION_POOL_KEEP_ALIVE_MINUTES,
+                    TimeUnit.MINUTES
+                ))
+                .build()
+        }
+        
+        @Volatile
+        private var instance: SupabaseHelper? = null
+        
+        fun getInstance(context: Context): SupabaseHelper {
+            return instance ?: synchronized(this) {
+                instance ?: SupabaseHelper(context.applicationContext).also {
+                    instance = it
+                }
+            }
+        }
     }
 
     init {
@@ -62,7 +88,7 @@ class SupabaseHelper(private val context: Context) {
         supabaseUrl = prefs.getString("flutter.supabase_url", null)
         anonKey = prefs.getString("flutter.supabase_anon_key", null)
         
-        if (supabaseUrl == null || anonKey == null) {
+        if (BuildConfig.DEBUG && (supabaseUrl == null || anonKey == null)) {
             Log.w(TAG, "Supabase credentials not found. Please open the app first.")
         }
     }
@@ -96,11 +122,15 @@ class SupabaseHelper(private val context: Context) {
         val accessToken = session.optString("access_token", null)
 
         if (accessToken != null) {
-            Log.d(TAG, "Found access token")
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Found access token")
+            }
             return accessToken
         }
 
-        Log.w(TAG, "No access token found in session")
+        if (BuildConfig.DEBUG) {
+            Log.w(TAG, "No access token found in session")
+        }
         return null
     }
 
@@ -109,11 +139,15 @@ class SupabaseHelper(private val context: Context) {
         val refreshToken = session.optString("refresh_token", null)
 
         if (refreshToken != null) {
-            Log.d(TAG, "Found refresh token")
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Found refresh token")
+            }
             return refreshToken
         }
 
-        Log.w(TAG, "No refresh token found in session")
+        if (BuildConfig.DEBUG) {
+            Log.w(TAG, "No refresh token found in session")
+        }
         return null
     }
 
@@ -131,11 +165,13 @@ class SupabaseHelper(private val context: Context) {
             val now = System.currentTimeMillis() / 1000
             val isExpired = now >= exp
 
-            if (isExpired) {
-                Log.d(TAG, "Token expired at $exp, now is $now")
-            } else {
-                val remainingSeconds = exp - now
-                Log.d(TAG, "Token valid for $remainingSeconds seconds")
+            if (BuildConfig.DEBUG) {
+                if (isExpired) {
+                    Log.d(TAG, "Token expired at $exp, now is $now")
+                } else {
+                    val remainingSeconds = exp - now
+                    Log.d(TAG, "Token valid for $remainingSeconds seconds")
+                }
             }
 
             isExpired
@@ -150,7 +186,9 @@ class SupabaseHelper(private val context: Context) {
             val baseUrl = supabaseUrl ?: return@withContext null
             val apiKey = anonKey ?: return@withContext null
 
-            Log.d(TAG, "Attempting to refresh access token")
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Attempting to refresh access token")
+            }
 
             val json = JSONObject().apply {
                 put("refresh_token", refreshToken)
@@ -171,15 +209,21 @@ class SupabaseHelper(private val context: Context) {
                 val responseBody = response.body?.string() ?: return@withContext null
                 val responseJson = JSONObject(responseBody)
 
-                Log.d(TAG, "Token refresh successful")
+                if (BuildConfig.DEBUG) {
+                    Log.d(TAG, "Token refresh successful")
+                }
                 return@withContext responseJson
             } else {
-                val errorBody = response.body?.string() ?: "No error body"
-                Log.e(TAG, "Token refresh failed: ${response.code} ${response.message}\n$errorBody")
+                if (BuildConfig.DEBUG) {
+                    val errorBody = response.body?.string() ?: "No error body"
+                    Log.e(TAG, "Token refresh failed: ${response.code} ${response.message}\n$errorBody")
+                }
                 return@withContext null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Exception during token refresh", e)
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "Exception during token refresh", e)
+            }
             return@withContext null
         }
     }
@@ -193,10 +237,14 @@ class SupabaseHelper(private val context: Context) {
                 .putString(tokenKey, newSession.toString())
                 .apply()
 
-            Log.d(TAG, "New session saved to SharedPreferences")
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "New session saved to SharedPreferences")
+            }
             true
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to save new session", e)
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "Failed to save new session", e)
+            }
             false
         }
     }
@@ -205,31 +253,41 @@ class SupabaseHelper(private val context: Context) {
         val currentToken = getAuthToken()
 
         if (currentToken != null && !isTokenExpired(currentToken)) {
-            Log.d(TAG, "Current token is valid")
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Current token is valid")
+            }
             return currentToken
         }
 
-        Log.d(TAG, "Token expired or missing, attempting refresh")
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "Token expired or missing, attempting refresh")
+        }
 
         val refreshToken = getRefreshToken()
         if (refreshToken == null) {
-            Log.w(TAG, "No refresh token available")
+            if (BuildConfig.DEBUG) {
+                Log.w(TAG, "No refresh token available")
+            }
             return null
         }
 
         val newSession = refreshAccessToken(refreshToken)
         if (newSession == null) {
-            Log.e(TAG, "Failed to refresh token")
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "Failed to refresh token")
+            }
             return null
         }
 
         if (!saveNewSession(newSession)) {
-            Log.e(TAG, "Failed to save new session")
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "Failed to save new session")
+            }
             return null
         }
 
         val newAccessToken = newSession.optString("access_token", null)
-        if (newAccessToken != null) {
+        if (BuildConfig.DEBUG && newAccessToken != null) {
             Log.d(TAG, "Successfully refreshed and saved new token")
         }
 

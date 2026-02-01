@@ -83,7 +83,7 @@ Map<_DateGroup, List<PendingTransactionModel>> _groupTransactionsByDate(
   final now = DateTime.now(); // Create once for consistency
   final grouped = <_DateGroup, List<PendingTransactionModel>>{};
   for (final tx in transactions) {
-    final group = _getDateGroup(tx.sourceTimestamp, now);
+    final group = _getDateGroup(tx.sourceTimestamp.toLocal(), now);
     grouped.putIfAbsent(group, () => []).add(tx);
   }
   return grouped;
@@ -748,6 +748,18 @@ class _PaymentMethodListView extends ConsumerWidget {
                             await ref
                                 .read(paymentMethodNotifierProvider.notifier)
                                 .deletePaymentMethod(paymentMethod.id);
+
+                            // UI 즉시 업데이트를 위해 관련 provider들 invalidate
+                            ref.invalidate(sharedPaymentMethodsProvider);
+                            final currentUser = ref.read(currentUserProvider);
+                            if (currentUser != null) {
+                              ref.invalidate(
+                                autoCollectPaymentMethodsByOwnerProvider(
+                                  currentUser.id,
+                                ),
+                              );
+                            }
+
                             if (parentContext.mounted) {
                               SnackBarUtils.showSuccess(
                                 parentContext,

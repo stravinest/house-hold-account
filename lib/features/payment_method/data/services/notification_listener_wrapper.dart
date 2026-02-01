@@ -108,7 +108,9 @@ class NotificationListenerWrapper {
   // 테스트용 패키지 (디버그 모드에서만 사용)
   static const String _testPackage = 'com.android.shell';
 
-  // SMS 앱 패키지 - NotificationListener에서 제외 (SmsListenerService가 처리)
+  // 메시지 앱 패키지 - Flutter 실시간 알림에서 제외
+  // Kotlin FinancialNotificationListener가 MMS/SMS 알림을 직접 처리하여 SQLite에 저장
+  // Flutter는 SQLite 동기화 시 이 알림들을 처리함 (syncCachedNotifications)
   static final Set<String> _smsAppPackages = {
     'com.google.android.apps.messaging', // Google Messages
     'com.samsung.android.messaging', // Samsung Messages
@@ -322,6 +324,7 @@ class NotificationListenerWrapper {
       timestamp: timestamp,
       paymentMethod: matchResult.paymentMethod,
       learnedFormat: matchResult.learnedFormat,
+      sourceType: notification.sourceType ?? 'notification',
     );
   }
 
@@ -434,12 +437,12 @@ class NotificationListenerWrapper {
       return;
     }
 
-    // SMS 앱 알림 제외 - SmsListenerService가 직접 처리하므로 중복 방지
+    // 메시지 앱 알림 제외 - Kotlin FinancialNotificationListener가 처리하므로 중복 방지
     final packageLower = packageName.toLowerCase();
     if (_smsAppPackages.any((pkg) => packageLower.contains(pkg))) {
       if (kDebugMode) {
         debugPrint(
-          '[NotificationListener] Skipping SMS app: $packageName (handled by SmsListenerService)',
+          '[NotificationListener] Skipping message app: $packageName (handled by Kotlin)',
         );
       }
       return;
@@ -623,6 +626,7 @@ class NotificationListenerWrapper {
     required DateTime timestamp,
     required PaymentMethodModel paymentMethod,
     LearnedPushFormat? learnedFormat,
+    String sourceType = 'notification',
   }) async {
     // 메시지 내용으로 해시 생성 (중복 수신 방지)
     final messageHash = DuplicateCheckService.generateMessageHash(
@@ -726,6 +730,7 @@ class NotificationListenerWrapper {
         isDuplicate: duplicateResult.isDuplicate,
         shouldAutoSave: shouldAutoSave,
         isViewed: false,
+        sourceType: sourceType,
       );
     } catch (e) {
       if (kDebugMode) {
@@ -767,6 +772,7 @@ class NotificationListenerWrapper {
     required bool isDuplicate,
     required bool shouldAutoSave,
     bool isViewed = false,
+    String sourceType = 'notification',
   }) async {
     if (kDebugMode) {
       debugPrint('[CreatePending] Creating pending transaction:');
@@ -778,12 +784,15 @@ class NotificationListenerWrapper {
 
     try {
       // 1. 항상 pending 상태로 먼저 생성 (원자성 보장)
+      final sourceTypeEnum = sourceType == 'sms'
+          ? SourceType.sms
+          : SourceType.notification;
       final pendingTx = await _pendingTransactionRepository
           .createPendingTransaction(
             ledgerId: _currentLedgerId!,
             paymentMethodId: paymentMethod.id,
             userId: _currentUserId!,
-            sourceType: SourceType.notification,
+            sourceType: sourceTypeEnum,
             sourceSender: packageName,
             sourceContent: content,
             sourceTimestamp: timestamp,
@@ -821,7 +830,7 @@ class NotificationListenerWrapper {
               type: type,
               title: parsedResult.merchant ?? '',
               date: parsedResult.date ?? timestamp,
-              sourceType: SourceType.notification.toJson(),
+              sourceType: sourceTypeEnum.toJson(),
             );
 
             // 3. 거래 생성 성공 시에만 confirmed로 업데이트

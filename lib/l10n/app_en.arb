@@ -472,6 +472,14 @@
   "statisticsPaymentDistribution": "Payment Method Distribution",
   "statisticsPaymentRanking": "Payment Method Ranking",
   "statisticsPaymentNotice": "Payment method statistics only show expenses.",
+  "statisticsPaymentMethodAutoSave": "Auto",
+  "@statisticsPaymentMethodAutoSave": {
+    "description": "Statistics screen - Auto-collect payment method badge"
+  },
+  "statisticsPaymentMethodShared": "Shared",
+  "@statisticsPaymentMethodShared": {
+    "description": "Statistics screen - Shared payment method badge"
+  },
   "assetTitle": "Asset",
   "assetTotal": "Total Assets",
   "assetChange": "Asset Change",

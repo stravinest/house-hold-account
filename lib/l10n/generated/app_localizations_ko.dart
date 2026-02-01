@@ -1458,6 +1458,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get statisticsPaymentNotice => '결제수단 통계는 지출 내역만 표시됩니다.';
 
   @override
+  String get statisticsPaymentMethodAutoSave => '자동수집';
+
+  @override
+  String get statisticsPaymentMethodShared => '공유';
+
+  @override
   String get assetTitle => '자산';
 
   @override

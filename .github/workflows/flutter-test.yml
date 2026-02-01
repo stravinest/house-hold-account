@@ -1,0 +1,102 @@
+name: Flutter Tests
+
+on:
+  push:
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+  pull_request:
+    paths:
+      - 'lib/**'
+      - 'test/**'
+      - 'pubspec.yaml'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.10.3'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate code (Riverpod)
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Run unit tests
+        run: flutter test --coverage --reporter expanded
+
+      - name: Check test coverage
+        run: |
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage \
+            --lcov \
+            --in=coverage \
+            --out=coverage/lcov.info \
+            --packages=.packages \
+            --report-on=lib
+
+      - name: Generate coverage report
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            echo "Coverage file exists"
+            lcov --summary coverage/lcov.info
+          else
+            echo "No coverage file found"
+          fi
+
+      - name: Upload coverage
+        if: success()
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  integration-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.10.3'
+          channel: 'stable'
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Generate code
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Run integration tests
+        run: flutter test integration_test/
+        continue-on-error: true
+        # integration_test는 에뮬레이터가 필요하므로 실패해도 계속 진행
+
+      - name: Comment on PR
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '⚠️ Integration tests require an Android emulator. Please run locally with `flutter test integration_test/`'
+            })

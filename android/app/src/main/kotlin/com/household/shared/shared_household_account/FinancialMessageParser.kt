@@ -11,20 +11,32 @@ import java.util.regex.Pattern
 object FinancialMessageParser {
 
     private const val TAG = "FinancialParser"
+    private const val PATTERN_CACHE_MAX_SIZE = 50
 
-    // 금액 패턴 (콤마 포함, 원 단위)
     private val AMOUNT_PATTERN = Pattern.compile("([0-9,]+)\\s*원")
-
-    // 카드 끝자리 패턴
     private val CARD_DIGITS_PATTERN = Pattern.compile("(\\d{4})\\s*[카승]")
-
-    // 날짜 패턴들
     private val DATE_PATTERNS = listOf(
-        Pattern.compile("(\\d{1,2})/(\\d{1,2})\\s+(\\d{1,2}):(\\d{2})"),  // MM/DD HH:MM
-        Pattern.compile("(\\d{1,2})-(\\d{1,2})\\s+(\\d{1,2}):(\\d{2})"),  // MM-DD HH:MM
-        Pattern.compile("(\\d{4})\\.(\\d{1,2})\\.(\\d{1,2})\\s+(\\d{1,2}):(\\d{2})"),  // YYYY.MM.DD HH:MM
-        Pattern.compile("(\\d{1,2})월\\s*(\\d{1,2})일\\s*(\\d{1,2})시\\s*(\\d{2})분")  // MM월DD일 HH시MM분
+        Pattern.compile("(\\d{1,2})/(\\d{1,2})\\s+(\\d{1,2}):(\\d{2})"),
+        Pattern.compile("(\\d{1,2})-(\\d{1,2})\\s+(\\d{1,2}):(\\d{2})"),
+        Pattern.compile("(\\d{4})\\.(\\d{1,2})\\.(\\d{1,2})\\s+(\\d{1,2}):(\\d{2})"),
+        Pattern.compile("(\\d{1,2})월\\s*(\\d{1,2})일\\s*(\\d{1,2})시\\s*(\\d{2})분")
     )
+
+    private val patternCache = object : LinkedHashMap<String, Pattern>(16, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pattern>?): Boolean {
+            return size > PATTERN_CACHE_MAX_SIZE
+        }
+    }
+
+    private fun getCompiledPattern(regex: String): Pattern {
+        return patternCache.getOrPut(regex) {
+            try {
+                Pattern.compile(regex)
+            } catch (e: Exception) {
+                AMOUNT_PATTERN
+            }
+        }
+    }
 
     private val EXPENSE_KEYWORDS = FinancialConstants.EXPENSE_KEYWORDS
     private val INCOME_KEYWORDS = FinancialConstants.INCOME_KEYWORDS
@@ -96,17 +108,16 @@ object FinancialMessageParser {
             return ParsedResult(null, null, null, null, null, 0.0, "cancel")
         }
 
-        // 금액 추출
         val amount = try {
-            val pattern = Pattern.compile(amountRegex)
+            val pattern = getCompiledPattern(amountRegex)
             val matcher = pattern.matcher(content)
             if (matcher.find()) {
                 matcher.group(1)?.replace(",", "")?.toIntOrNull()
             } else {
-                parseAmount(content)  // fallback
+                parseAmount(content)
             }
         } catch (e: Exception) {
-            parseAmount(content)  // fallback on invalid regex
+            parseAmount(content)
         }
 
         // 거래 타입 결정
@@ -126,10 +137,9 @@ object FinancialMessageParser {
             }
         }
 
-        // 상호명 추출
         val merchant = if (merchantRegex != null) {
             try {
-                val pattern = Pattern.compile(merchantRegex)
+                val pattern = getCompiledPattern(merchantRegex)
                 val matcher = pattern.matcher(content)
                 if (matcher.find()) matcher.group(1)?.trim() else parseMerchant(content)
             } catch (e: Exception) {
@@ -139,10 +149,9 @@ object FinancialMessageParser {
             parseMerchant(content)
         }
 
-        // 날짜 추출
         val dateTimeMillis = if (dateRegex != null) {
             try {
-                val pattern = Pattern.compile(dateRegex)
+                val pattern = getCompiledPattern(dateRegex)
                 val matcher = pattern.matcher(content)
                 if (matcher.find()) parseDateFromMatcher(matcher) else parseDate(content)
             } catch (e: Exception) {
@@ -313,11 +322,8 @@ object FinancialMessageParser {
         return score
     }
 
-    /**
-     * 중복 해시 생성 (3분 버킷)
-     */
     fun generateDuplicateHash(amount: Int, paymentMethodId: String?, timestamp: Long): String {
-        val bucket = timestamp / (3 * 60 * 1000)
+        val bucket = timestamp / NotificationConfig.DUPLICATE_BUCKET_DURATION_MS
         val input = "$amount-${paymentMethodId ?: "unknown"}-$bucket"
         return try {
             val md = MessageDigest.getInstance("MD5")

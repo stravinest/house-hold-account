@@ -254,6 +254,7 @@ class CachedNotification {
   final String text;
   final DateTime receivedAt;
   final bool isSynced;
+  final String? sourceType;
 
   const CachedNotification({
     required this.id,
@@ -262,6 +263,7 @@ class CachedNotification {
     required this.text,
     required this.receivedAt,
     required this.isSynced,
+    this.sourceType,
   });
 
   factory CachedNotification.fromMap(Map<String, dynamic> map) {
@@ -275,6 +277,7 @@ class CachedNotification {
         (map['receivedAt'] as num?)?.toInt() ?? 0,
       ),
       isSynced: map['isSynced'] as bool? ?? false,
+      sourceType: map['sourceType'] as String?,
     );
   }
 

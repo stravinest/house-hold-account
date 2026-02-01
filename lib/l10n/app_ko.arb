@@ -711,6 +711,14 @@
   "statisticsPaymentDistribution": "결제수단별 분포",
   "statisticsPaymentRanking": "결제수단별 순위",
   "statisticsPaymentNotice": "결제수단 통계는 지출 내역만 표시됩니다.",
+  "statisticsPaymentMethodAutoSave": "자동수집",
+  "@statisticsPaymentMethodAutoSave": {
+    "description": "통계 화면 - 자동수집 결제수단 뱃지"
+  },
+  "statisticsPaymentMethodShared": "공유",
+  "@statisticsPaymentMethodShared": {
+    "description": "통계 화면 - 공유 결제수단 뱃지"
+  },
   "assetTitle": "자산",
   "assetTotal": "총 자산",
   "assetChange": "자산 변화",

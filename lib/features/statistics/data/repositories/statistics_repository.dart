@@ -417,7 +417,7 @@ class StatisticsRepository {
 
     final response = await _client
         .from('transactions')
-        .select('amount, payment_method_id, payment_methods(name, icon, color)')
+        .select('amount, payment_method_id, payment_methods(name, icon, color, can_auto_save)')
         .eq('ledger_id', ledgerId)
         .eq('type', type)
         .gte('date', startDate.toIso8601String().split('T').first)
@@ -442,11 +442,13 @@ class StatisticsRepository {
       String pmName = '미지정';
       String pmIcon = '';
       String pmColor = '#9E9E9E';
+      bool canAutoSave = false;
 
       if (paymentMethod != null) {
-        pmName = paymentMethod['name'].toString() ?? '미지정';
-        pmIcon = paymentMethod['icon'].toString() ?? '';
-        pmColor = paymentMethod['color'].toString() ?? '#9E9E9E';
+        pmName = paymentMethod['name']?.toString() ?? '미지정';
+        pmIcon = paymentMethod['icon']?.toString() ?? '';
+        pmColor = paymentMethod['color']?.toString() ?? '#9E9E9E';
+        canAutoSave = paymentMethod['can_auto_save'] == true;
       }
 
       if (grouped.containsKey(groupKey)) {
@@ -459,6 +461,7 @@ class StatisticsRepository {
           paymentMethodName: pmName,
           paymentMethodIcon: pmIcon,
           paymentMethodColor: pmColor,
+          canAutoSave: canAutoSave,
           amount: amount,
           percentage: 0,
         );

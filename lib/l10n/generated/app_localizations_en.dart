@@ -1495,6 +1495,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Payment method statistics only show expenses.';
 
   @override
+  String get statisticsPaymentMethodAutoSave => 'Auto';
+
+  @override
+  String get statisticsPaymentMethodShared => 'Shared';
+
+  @override
   String get assetTitle => 'Asset';
 
   @override
