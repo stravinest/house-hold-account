@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../config/supabase_config.dart';
 import '../../../../core/providers/safe_notifier.dart';
 
 import '../../data/repositories/ledger_repository.dart';
@@ -40,29 +41,7 @@ final restoreLedgerIdProvider = FutureProvider<String?>((ref) async {
 // 사용자의 가계부 목록
 final ledgersProvider = FutureProvider<List<Ledger>>((ref) async {
   final repository = ref.watch(ledgerRepositoryProvider);
-  final ledgers = await repository.getLedgers();
-
-  // 선택된 가계부가 없으면 저장된 ID 복원 시도
-  final selectedId = ref.read(selectedLedgerIdProvider);
-  if (selectedId == null && ledgers.isNotEmpty) {
-    // SharedPreferences에서 마지막 선택한 가계부 ID 복원
-    final savedId = await ref.read(restoreLedgerIdProvider.future);
-
-    // 저장된 ID가 유효한지 확인 (가계부 목록에 존재하는지)
-    final isValidSavedId =
-        savedId != null && ledgers.any((ledger) => ledger.id == savedId);
-
-    if (isValidSavedId) {
-      ref.read(selectedLedgerIdProvider.notifier).state = savedId;
-      debugPrint('Restored to saved ledger: $savedId');
-    } else {
-      // 저장된 ID가 없거나 유효하지 않으면 첫 번째 가계부 선택
-      ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
-      debugPrint('No valid saved ledger, selecting first available');
-    }
-  }
-
-  return ledgers;
+  return await repository.getLedgers();
 });
 
 // 현재 선택된 가계부
@@ -112,9 +91,13 @@ class LedgerNotifier extends SafeNotifier<List<Ledger>> {
       });
 
       // ledger_members 테이블 변경 구독 (멤버 나감/들어옴 감지)
-      _membersChannel = _repository.subscribeLedgerMembers(() {
+      _membersChannel = _repository.subscribeLedgerMembers(() async {
         // 로딩 상태 없이 데이터만 새로고침
-        _refreshLedgersQuietly();
+        await _refreshLedgersQuietly();
+
+        // 현재 선택된 가계부 유효성 검증
+        if (!mounted) return;
+        await _validateCurrentSelection();
       });
     } catch (e) {
       // Realtime 구독 실패 시 무시 (기본 기능에는 영향 없음)
@@ -134,6 +117,28 @@ class LedgerNotifier extends SafeNotifier<List<Ledger>> {
     }
   }
 
+  /// 선택된 가계부가 목록에 존재하는지 검증
+  ///
+  /// Realtime 이벤트 발생 시 호출되어 선택된 가계부가
+  /// 삭제되었거나 멤버에서 제외되었는지 확인합니다.
+  /// 무효한 경우 자동으로 복원 로직을 실행합니다.
+  Future<void> _validateCurrentSelection() async {
+    final selectedId = ref.read(selectedLedgerIdProvider);
+    if (selectedId == null) return;
+
+    final ledgers = state.valueOrNull ?? [];
+    final isValid = ledgers.any((ledger) => ledger.id == selectedId);
+
+    if (!isValid) {
+      debugPrint(
+        '[LedgerNotifier] Current ledger no longer accessible: $selectedId',
+      );
+      // 가계부가 삭제되었거나 멤버에서 제외됨 → 자동 복원
+      ref.read(selectedLedgerIdProvider.notifier).state = null;
+      await restoreOrSelectLedger();
+    }
+  }
+
   @override
   void dispose() {
     _ledgersChannel?.unsubscribe();
@@ -148,29 +153,78 @@ class LedgerNotifier extends SafeNotifier<List<Ledger>> {
       if (!mounted) return;
       state = AsyncValue.data(ledgers);
 
-      // 선택된 가계부가 없으면 저장된 ID 복원 시도
-      final selectedId = ref.read(selectedLedgerIdProvider);
-      if (selectedId == null && ledgers.isNotEmpty) {
-        // SharedPreferences에서 마지막 선택한 가계부 ID 복원
-        final savedId = await ref.read(restoreLedgerIdProvider.future);
-
-        // 저장된 ID가 유효한지 확인 (가계부 목록에 존재하는지)
-        final isValidSavedId =
-            savedId != null && ledgers.any((ledger) => ledger.id == savedId);
-
-        if (isValidSavedId) {
-          ref.read(selectedLedgerIdProvider.notifier).state = savedId;
-          debugPrint('Ledger restored from saved ID');
-        } else {
-          // 저장된 ID가 없거나 유효하지 않으면 첫 번째 가계부 선택
-          ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
-          debugPrint('No valid saved ledger, selecting first available');
-        }
-      }
+      // 복원 로직 실행 (단일 진입점)
+      await restoreOrSelectLedger();
     } catch (e, st) {
       if (!mounted) return;
       state = AsyncValue.error(e, st);
     }
+  }
+
+  /// 가계부 자동 선택 및 복원 로직
+  ///
+  /// 다음 순서로 가계부를 선택합니다:
+  /// 1. SharedPreferences에 저장된 가계부 ID 복원
+  /// 2. 복원 실패 시 내 가계부(ownerId == userId) 선택
+  /// 3. 내 가계부 없으면 첫 번째 가계부 선택
+  ///
+  /// 이미 선택된 경우나 가계부 목록이 비어있으면 아무것도 하지 않습니다.
+  Future<void> restoreOrSelectLedger() async {
+    // 1. 이미 선택된 경우 종료
+    final selectedId = ref.read(selectedLedgerIdProvider);
+    if (selectedId != null) {
+      debugPrint('[LedgerNotifier] Ledger already selected: $selectedId');
+      return;
+    }
+
+    // 2. 가계부 목록이 비어있으면 종료
+    final ledgers = state.valueOrNull ?? [];
+    if (ledgers.isEmpty) {
+      debugPrint('[LedgerNotifier] No ledgers available');
+      return;
+    }
+
+    // 3. 현재 사용자 ID 가져오기
+    final userId = SupabaseConfig.client.auth.currentUser?.id;
+    if (userId == null) {
+      debugPrint('[LedgerNotifier] User not logged in');
+      return;
+    }
+
+    // 4. SharedPreferences에서 저장된 ID 복원 시도
+    try {
+      final savedId = await ref.read(restoreLedgerIdProvider.future);
+
+      // 4-1. 저장된 ID가 유효한지 검증
+      if (savedId != null) {
+        final isValid = ledgers.any((ledger) => ledger.id == savedId);
+        if (isValid) {
+          ref.read(selectedLedgerIdProvider.notifier).state = savedId;
+          debugPrint('[LedgerNotifier] Restored saved ledger: $savedId');
+          return;
+        } else {
+          debugPrint(
+            '[LedgerNotifier] Saved ledger not found in list: $savedId',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('[LedgerNotifier] Failed to restore saved ledger: $e');
+    }
+
+    // 5. 내 가계부 찾기 (ownerId == userId)
+    try {
+      final myLedger = ledgers.firstWhere((ledger) => ledger.ownerId == userId);
+      ref.read(selectedLedgerIdProvider.notifier).state = myLedger.id;
+      debugPrint('[LedgerNotifier] Selected my ledger: ${myLedger.id}');
+      return;
+    } catch (_) {
+      debugPrint('[LedgerNotifier] My ledger not found, using first available');
+    }
+
+    // 6. 폴백: 첫 번째 가계부 선택
+    ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
+    debugPrint('[LedgerNotifier] Selected first ledger: ${ledgers.first.id}');
   }
 
   Future<Ledger> createLedger({
@@ -229,15 +283,9 @@ class LedgerNotifier extends SafeNotifier<List<Ledger>> {
 
     await loadLedgers();
 
-    // 삭제 후 남은 가계부가 있고, 삭제된 가계부가 선택되어 있었다면 첫 번째 가계부 자동 선택
+    // 삭제 후 자동 복원
     if (wasSelected) {
-      final currentState = state;
-      if (currentState is AsyncData<List<Ledger>>) {
-        final ledgers = currentState.value;
-        if (ledgers.isNotEmpty) {
-          ref.read(selectedLedgerIdProvider.notifier).state = ledgers.first.id;
-        }
-      }
+      await restoreOrSelectLedger();
     }
   }
 

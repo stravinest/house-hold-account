@@ -85,7 +85,7 @@ class KoreanFinancialPatterns {
   static const shinhanCard = FinancialSmsFormat(
     institutionName: '신한카드',
     institutionType: 'card',
-    senderPatterns: ['신한카드', '신한', '15447200', '15444000'],
+    senderPatterns: ['신한카드', '신한', '15447000', '15447200', '15444000'],
     amountRegex: r'([0-9,]+)\s*원',
     typeKeywords: {
       'expense': ['승인', '결제', '사용'],
@@ -100,7 +100,7 @@ class KoreanFinancialPatterns {
   static const samsungCard = FinancialSmsFormat(
     institutionName: '삼성카드',
     institutionType: 'card',
-    senderPatterns: ['삼성카드', '15881000'],
+    senderPatterns: ['삼성카드', '15888700'],
     amountRegex: r'([0-9,]+)\s*원',
     typeKeywords: {
       'expense': ['승인', '결제', '사용', '일시불'],
@@ -115,7 +115,7 @@ class KoreanFinancialPatterns {
   static const hyundaiCard = FinancialSmsFormat(
     institutionName: '현대카드',
     institutionType: 'card',
-    senderPatterns: ['현대카드', '15776200'],
+    senderPatterns: ['현대카드', '15886474'],
     amountRegex: r'([0-9,]+)\s*원',
     typeKeywords: {
       'expense': ['승인', '결제', '사용'],
@@ -175,7 +175,7 @@ class KoreanFinancialPatterns {
   static const bcCard = FinancialSmsFormat(
     institutionName: 'BC카드',
     institutionType: 'card',
-    senderPatterns: ['BC카드', 'BC', '15880300'],
+    senderPatterns: ['BC카드', 'BC', '15884000'],
     amountRegex: r'([0-9,]+)\s*원',
     typeKeywords: {
       'expense': ['승인', '결제', '사용'],

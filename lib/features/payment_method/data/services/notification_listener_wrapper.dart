@@ -103,6 +103,9 @@ class NotificationListenerWrapper {
     'com.ggc', // 경기지역화폐 앱
     'kr.suwon.pay', // 수원페이
     'com.gyeonggi.currency', // 경기화폐
+    // 서울/인천 지역화폐 (2026-01-25 웹 서치로 검증됨)
+    'com.bizplay.seoul.pay', // 서울사랑상품권 (서울페이+)
+    'gov.incheon.incheonercard', // 인천이음페이
   };
 
   // 테스트용 패키지 (디버그 모드에서만 사용)

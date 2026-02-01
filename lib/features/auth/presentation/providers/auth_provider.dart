@@ -393,6 +393,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
         email: email,
         password: password,
       );
+
+      // 로그인 성공 후 가계부 상태 초기화
+      _ref.read(selectedLedgerIdProvider.notifier).state = null;
+      _ref.invalidate(ledgerNotifierProvider);
+
       state = AsyncValue.data(response.user);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -404,6 +409,11 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     state = const AsyncValue.loading();
     try {
       final response = await _authService.signInWithGoogle();
+
+      // 로그인 성공 후 가계부 상태 초기화
+      _ref.read(selectedLedgerIdProvider.notifier).state = null;
+      _ref.invalidate(ledgerNotifierProvider);
+
       state = AsyncValue.data(response.user);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
