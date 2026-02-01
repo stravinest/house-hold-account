@@ -7,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
+import '../../../notification/data/services/notification_service.dart';
+import '../../../notification/domain/entities/notification_type.dart';
 import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../data/models/pending_transaction_model.dart';
 import '../../data/repositories/pending_transaction_repository.dart';

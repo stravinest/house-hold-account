@@ -1647,7 +1647,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to load notification settings';
 
   @override
-  String get notificationSectionSharedLedger => 'Shared Ledger';
+  String get notificationSectionSharedLedger => 'Shared Ledger Notifications';
 
   @override
   String get notificationSharedLedgerChange => 'Shared Ledger Changes';
@@ -1657,7 +1657,62 @@ class AppLocalizationsEn extends AppLocalizations {
       'Notify when other members add/edit/delete transactions';
 
   @override
-  String get notificationSectionInvite => 'Invitations';
+  String get notificationTransactionAdded => 'Member Transaction Added';
+
+  @override
+  String get notificationTransactionAddedDesc =>
+      'Notify when another member adds a transaction';
+
+  @override
+  String get notificationTransactionUpdated => 'Member Transaction Updated';
+
+  @override
+  String get notificationTransactionUpdatedDesc =>
+      'Notify when another member updates a transaction';
+
+  @override
+  String get notificationTransactionDeleted => 'Member Transaction Deleted';
+
+  @override
+  String get notificationTransactionDeletedDesc =>
+      'Notify when another member deletes a transaction';
+
+  @override
+  String get notificationSectionAutoCollect => 'Auto-Collect Notifications';
+
+  @override
+  String get notificationAutoCollectSuggested => 'Transaction Suggested';
+
+  @override
+  String get notificationAutoCollectSuggestedDesc =>
+      'Notify when a transaction is auto-collected from SMS/notification';
+
+  @override
+  String get notificationAutoCollectSaved => 'Transaction Auto-Saved';
+
+  @override
+  String get notificationAutoCollectSavedDesc =>
+      'Notify when a transaction is automatically saved';
+
+  @override
+  String get notificationAutoCollectSuggestedTitle =>
+      'New Transaction Suggested';
+
+  @override
+  String notificationAutoCollectSuggestedBody(String merchant, int amount) {
+    return 'Transaction of $amount at $merchant has been collected. Please review.';
+  }
+
+  @override
+  String get notificationAutoCollectSavedTitle => 'Transaction Auto-Saved';
+
+  @override
+  String notificationAutoCollectSavedBody(String title, int amount) {
+    return '$title $amount has been automatically saved.';
+  }
+
+  @override
+  String get notificationSectionInvite => 'Invitation Notifications';
 
   @override
   String get notificationInviteReceived => 'Ledger Invite Received';

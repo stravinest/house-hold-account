@@ -522,10 +522,45 @@
   "notificationSettingsDescription": "Select the notifications you want to receive",
   "notificationSettingsSaveFailed": "Failed to save settings: {error}",
   "notificationSettingsLoadFailed": "Failed to load notification settings",
-  "notificationSectionSharedLedger": "Shared Ledger",
+  "notificationSectionSharedLedger": "Shared Ledger Notifications",
   "notificationSharedLedgerChange": "Shared Ledger Changes",
   "notificationSharedLedgerChangeDesc": "Notify when other members add/edit/delete transactions",
-  "notificationSectionInvite": "Invitations",
+  "notificationTransactionAdded": "Member Transaction Added",
+  "notificationTransactionAddedDesc": "Notify when another member adds a transaction",
+  "notificationTransactionUpdated": "Member Transaction Updated",
+  "notificationTransactionUpdatedDesc": "Notify when another member updates a transaction",
+  "notificationTransactionDeleted": "Member Transaction Deleted",
+  "notificationTransactionDeletedDesc": "Notify when another member deletes a transaction",
+  "notificationSectionAutoCollect": "Auto-Collect Notifications",
+  "notificationAutoCollectSuggested": "Transaction Suggested",
+  "notificationAutoCollectSuggestedDesc": "Notify when a transaction is auto-collected from SMS/notification",
+  "notificationAutoCollectSaved": "Transaction Auto-Saved",
+  "notificationAutoCollectSavedDesc": "Notify when a transaction is automatically saved",
+  "notificationAutoCollectSuggestedTitle": "New Transaction Suggested",
+  "notificationAutoCollectSuggestedBody": "Transaction of {amount} at {merchant} has been collected. Please review.",
+  "@notificationAutoCollectSuggestedBody": {
+    "placeholders": {
+      "merchant": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationAutoCollectSavedTitle": "Transaction Auto-Saved",
+  "notificationAutoCollectSavedBody": "{title} {amount} has been automatically saved.",
+  "@notificationAutoCollectSavedBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationSectionInvite": "Invitation Notifications",
   "notificationInviteReceived": "Ledger Invite Received",
   "notificationInviteReceivedDesc": "Notify when another user invites you to a ledger",
   "notificationInviteAccepted": "Invite Accepted",

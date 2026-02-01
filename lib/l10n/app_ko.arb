@@ -810,10 +810,45 @@
     }
   },
   "notificationSettingsLoadFailed": "알림 설정을 불러올 수 없습니다",
-  "notificationSectionSharedLedger": "공유 가계부",
+  "notificationSectionSharedLedger": "공유 가계부 알림",
   "notificationSharedLedgerChange": "공유 가계부 변경",
   "notificationSharedLedgerChangeDesc": "다른 멤버가 거래를 추가/수정/삭제했을 때 알림",
-  "notificationSectionInvite": "초대",
+  "notificationTransactionAdded": "다른 멤버 거래 추가",
+  "notificationTransactionAddedDesc": "다른 멤버가 거래를 추가했을 때 알림을 받습니다",
+  "notificationTransactionUpdated": "다른 멤버 거래 수정",
+  "notificationTransactionUpdatedDesc": "다른 멤버가 거래를 수정했을 때 알림을 받습니다",
+  "notificationTransactionDeleted": "다른 멤버 거래 삭제",
+  "notificationTransactionDeletedDesc": "다른 멤버가 거래를 삭제했을 때 알림을 받습니다",
+  "notificationSectionAutoCollect": "자동수집 알림",
+  "notificationAutoCollectSuggested": "거래 제안",
+  "notificationAutoCollectSuggestedDesc": "SMS/알림으로 거래가 자동수집되어 제안되었을 때 알림을 받습니다",
+  "notificationAutoCollectSaved": "거래 자동저장",
+  "notificationAutoCollectSavedDesc": "거래가 자동으로 저장되었을 때 알림을 받습니다",
+  "notificationAutoCollectSuggestedTitle": "새로운 거래 제안",
+  "notificationAutoCollectSuggestedBody": "{merchant}에서 {amount}원 거래가 수집되었습니다. 확인해주세요.",
+  "@notificationAutoCollectSuggestedBody": {
+    "placeholders": {
+      "merchant": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationAutoCollectSavedTitle": "거래 자동저장 완료",
+  "notificationAutoCollectSavedBody": "{title} {amount}원이 자동으로 저장되었습니다.",
+  "@notificationAutoCollectSavedBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      },
+      "amount": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationSectionInvite": "초대 알림",
   "notificationInviteReceived": "가계부 초대 받음",
   "notificationInviteReceivedDesc": "다른 사용자가 가계부에 초대했을 때 알림",
   "notificationInviteAccepted": "초대 수락됨",

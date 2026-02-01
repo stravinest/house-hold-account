@@ -49,19 +49,62 @@ class NotificationSettingsPage extends ConsumerWidget {
           ),
         ),
 
+        // 1. 공유 가계부 알림
         SectionHeader(title: l10n.notificationSectionSharedLedger),
         _buildNotificationToggle(
           context,
           ref,
-          type: NotificationType.sharedLedgerChange,
-          title: l10n.notificationSharedLedgerChange,
-          subtitle: l10n.notificationSharedLedgerChangeDesc,
-          icon: Icons.people_outline,
-          enabled: settings[NotificationType.sharedLedgerChange] ?? true,
+          type: NotificationType.transactionAdded,
+          title: l10n.notificationTransactionAdded,
+          subtitle: l10n.notificationTransactionAddedDesc,
+          icon: Icons.add_circle_outline,
+          enabled: settings[NotificationType.transactionAdded] ?? true,
+        ),
+        _buildNotificationToggle(
+          context,
+          ref,
+          type: NotificationType.transactionUpdated,
+          title: l10n.notificationTransactionUpdated,
+          subtitle: l10n.notificationTransactionUpdatedDesc,
+          icon: Icons.edit_outlined,
+          enabled: settings[NotificationType.transactionUpdated] ?? true,
+        ),
+        _buildNotificationToggle(
+          context,
+          ref,
+          type: NotificationType.transactionDeleted,
+          title: l10n.notificationTransactionDeleted,
+          subtitle: l10n.notificationTransactionDeletedDesc,
+          icon: Icons.delete_outline,
+          enabled: settings[NotificationType.transactionDeleted] ?? true,
         ),
 
         const Divider(),
 
+        // 2. 자동수집 알림
+        SectionHeader(title: l10n.notificationSectionAutoCollect),
+        _buildNotificationToggle(
+          context,
+          ref,
+          type: NotificationType.autoCollectSuggested,
+          title: l10n.notificationAutoCollectSuggested,
+          subtitle: l10n.notificationAutoCollectSuggestedDesc,
+          icon: Icons.notifications_outlined,
+          enabled: settings[NotificationType.autoCollectSuggested] ?? true,
+        ),
+        _buildNotificationToggle(
+          context,
+          ref,
+          type: NotificationType.autoCollectSaved,
+          title: l10n.notificationAutoCollectSaved,
+          subtitle: l10n.notificationAutoCollectSavedDesc,
+          icon: Icons.save_outlined,
+          enabled: settings[NotificationType.autoCollectSaved] ?? true,
+        ),
+
+        const Divider(),
+
+        // 3. 초대 알림
         SectionHeader(title: l10n.notificationSectionInvite),
         _buildNotificationToggle(
           context,

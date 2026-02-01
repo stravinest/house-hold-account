@@ -356,13 +356,41 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // 4. 알림 설정 확인 (shared_ledger_change_enabled = true인 사용자만)
+    // 4. 알림 설정 확인 (타입별 세분화)
+    // payload.type에 따라 알림 설정 컬럼 및 알림 타입 결정
+    let notificationTypeColumn: string;
+    let notificationType: string;
+
+    switch (payload.type) {
+      case 'INSERT':
+        notificationTypeColumn = 'transaction_added_enabled';
+        notificationType = 'transaction_added';
+        break;
+      case 'UPDATE':
+        notificationTypeColumn = 'transaction_updated_enabled';
+        notificationType = 'transaction_updated';
+        break;
+      case 'DELETE':
+        notificationTypeColumn = 'transaction_deleted_enabled';
+        notificationType = 'transaction_deleted';
+        break;
+      default:
+        console.error(`Unknown operation type: ${payload.type}`);
+        return new Response(JSON.stringify({ error: 'Unknown operation type' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
+    console.log(`Notification type: ${notificationType}, checking column: ${notificationTypeColumn}`);
+
+    // 해당 알림 타입이 활성화된 사용자만 조회
     const { data: settings, error: settingsError } = await supabase
       .schema('house')
       .from('notification_settings')
-      .select('user_id, shared_ledger_change_enabled')
+      .select('user_id')
       .in('user_id', targetUserIds)
-      .eq('shared_ledger_change_enabled', true);
+      .eq(notificationTypeColumn, true);
 
     if (settingsError) {
       console.error('Settings query error:', settingsError);
@@ -373,7 +401,7 @@ Deno.serve(async (req: Request) => {
     }
 
     if (!settings || settings.length === 0) {
-      console.log('No users with notifications enabled');
+      console.log(`No users with ${notificationType} notifications enabled`);
       return new Response(JSON.stringify({ message: 'No enabled users' }), {
         status: 200,
         headers: { 'Content-Type': 'application/json' },
@@ -422,7 +450,7 @@ Deno.serve(async (req: Request) => {
         title,
         body,
         {
-          type: 'shared_ledger_change',
+          type: notificationType,  // 세분화된 타입 사용 (transaction_added/updated/deleted)
           ledger_id: record.ledger_id,
           transaction_id: record.id,
           creator_user_id: record.user_id,
@@ -472,7 +500,7 @@ Deno.serve(async (req: Request) => {
     for (const userId of successfulUserIds) {
       const { error: insertError } = await supabase.schema('house').from('push_notifications').insert({
         user_id: userId,
-        type: 'shared_ledger_change',
+        type: notificationType,  // 세분화된 타입 사용 (transaction_added/updated/deleted)
         title: title,
         body: body,
         data: {

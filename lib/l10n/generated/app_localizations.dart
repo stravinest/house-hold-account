@@ -3095,7 +3095,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSectionSharedLedger.
   ///
   /// In ko, this message translates to:
-  /// **'공유 가계부'**
+  /// **'공유 가계부 알림'**
   String get notificationSectionSharedLedger;
 
   /// No description provided for @notificationSharedLedgerChange.
@@ -3110,10 +3110,100 @@ abstract class AppLocalizations {
   /// **'다른 멤버가 거래를 추가/수정/삭제했을 때 알림'**
   String get notificationSharedLedgerChangeDesc;
 
+  /// No description provided for @notificationTransactionAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 멤버 거래 추가'**
+  String get notificationTransactionAdded;
+
+  /// No description provided for @notificationTransactionAddedDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 멤버가 거래를 추가했을 때 알림을 받습니다'**
+  String get notificationTransactionAddedDesc;
+
+  /// No description provided for @notificationTransactionUpdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 멤버 거래 수정'**
+  String get notificationTransactionUpdated;
+
+  /// No description provided for @notificationTransactionUpdatedDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 멤버가 거래를 수정했을 때 알림을 받습니다'**
+  String get notificationTransactionUpdatedDesc;
+
+  /// No description provided for @notificationTransactionDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 멤버 거래 삭제'**
+  String get notificationTransactionDeleted;
+
+  /// No description provided for @notificationTransactionDeletedDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 멤버가 거래를 삭제했을 때 알림을 받습니다'**
+  String get notificationTransactionDeletedDesc;
+
+  /// No description provided for @notificationSectionAutoCollect.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집 알림'**
+  String get notificationSectionAutoCollect;
+
+  /// No description provided for @notificationAutoCollectSuggested.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 제안'**
+  String get notificationAutoCollectSuggested;
+
+  /// No description provided for @notificationAutoCollectSuggestedDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS/알림으로 거래가 자동수집되어 제안되었을 때 알림을 받습니다'**
+  String get notificationAutoCollectSuggestedDesc;
+
+  /// No description provided for @notificationAutoCollectSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 자동저장'**
+  String get notificationAutoCollectSaved;
+
+  /// No description provided for @notificationAutoCollectSavedDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래가 자동으로 저장되었을 때 알림을 받습니다'**
+  String get notificationAutoCollectSavedDesc;
+
+  /// No description provided for @notificationAutoCollectSuggestedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로운 거래 제안'**
+  String get notificationAutoCollectSuggestedTitle;
+
+  /// No description provided for @notificationAutoCollectSuggestedBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{merchant}에서 {amount}원 거래가 수집되었습니다. 확인해주세요.'**
+  String notificationAutoCollectSuggestedBody(String merchant, int amount);
+
+  /// No description provided for @notificationAutoCollectSavedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 자동저장 완료'**
+  String get notificationAutoCollectSavedTitle;
+
+  /// No description provided for @notificationAutoCollectSavedBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'{title} {amount}원이 자동으로 저장되었습니다.'**
+  String notificationAutoCollectSavedBody(String title, int amount);
+
   /// No description provided for @notificationSectionInvite.
   ///
   /// In ko, this message translates to:
-  /// **'초대'**
+  /// **'초대 알림'**
   String get notificationSectionInvite;
 
   /// No description provided for @notificationInviteReceived.

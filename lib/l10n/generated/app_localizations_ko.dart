@@ -1604,7 +1604,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notificationSettingsLoadFailed => '알림 설정을 불러올 수 없습니다';
 
   @override
-  String get notificationSectionSharedLedger => '공유 가계부';
+  String get notificationSectionSharedLedger => '공유 가계부 알림';
 
   @override
   String get notificationSharedLedgerChange => '공유 가계부 변경';
@@ -1613,7 +1613,57 @@ class AppLocalizationsKo extends AppLocalizations {
   String get notificationSharedLedgerChangeDesc => '다른 멤버가 거래를 추가/수정/삭제했을 때 알림';
 
   @override
-  String get notificationSectionInvite => '초대';
+  String get notificationTransactionAdded => '다른 멤버 거래 추가';
+
+  @override
+  String get notificationTransactionAddedDesc => '다른 멤버가 거래를 추가했을 때 알림을 받습니다';
+
+  @override
+  String get notificationTransactionUpdated => '다른 멤버 거래 수정';
+
+  @override
+  String get notificationTransactionUpdatedDesc => '다른 멤버가 거래를 수정했을 때 알림을 받습니다';
+
+  @override
+  String get notificationTransactionDeleted => '다른 멤버 거래 삭제';
+
+  @override
+  String get notificationTransactionDeletedDesc => '다른 멤버가 거래를 삭제했을 때 알림을 받습니다';
+
+  @override
+  String get notificationSectionAutoCollect => '자동수집 알림';
+
+  @override
+  String get notificationAutoCollectSuggested => '거래 제안';
+
+  @override
+  String get notificationAutoCollectSuggestedDesc =>
+      'SMS/알림으로 거래가 자동수집되어 제안되었을 때 알림을 받습니다';
+
+  @override
+  String get notificationAutoCollectSaved => '거래 자동저장';
+
+  @override
+  String get notificationAutoCollectSavedDesc => '거래가 자동으로 저장되었을 때 알림을 받습니다';
+
+  @override
+  String get notificationAutoCollectSuggestedTitle => '새로운 거래 제안';
+
+  @override
+  String notificationAutoCollectSuggestedBody(String merchant, int amount) {
+    return '$merchant에서 $amount원 거래가 수집되었습니다. 확인해주세요.';
+  }
+
+  @override
+  String get notificationAutoCollectSavedTitle => '거래 자동저장 완료';
+
+  @override
+  String notificationAutoCollectSavedBody(String title, int amount) {
+    return '$title $amount원이 자동으로 저장되었습니다.';
+  }
+
+  @override
+  String get notificationSectionInvite => '초대 알림';
 
   @override
   String get notificationInviteReceived => '가계부 초대 받음';

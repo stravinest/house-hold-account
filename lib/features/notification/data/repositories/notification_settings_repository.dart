@@ -9,6 +9,16 @@ class NotificationSettingsRepository {
     switch (type) {
       case NotificationType.sharedLedgerChange:
         return 'shared_ledger_change_enabled';
+      case NotificationType.transactionAdded:
+        return 'transaction_added_enabled';
+      case NotificationType.transactionUpdated:
+        return 'transaction_updated_enabled';
+      case NotificationType.transactionDeleted:
+        return 'transaction_deleted_enabled';
+      case NotificationType.autoCollectSuggested:
+        return 'auto_collect_suggested_enabled';
+      case NotificationType.autoCollectSaved:
+        return 'auto_collect_saved_enabled';
       case NotificationType.inviteReceived:
         return 'invite_received_enabled';
       case NotificationType.inviteAccepted:
@@ -36,8 +46,22 @@ class NotificationSettingsRepository {
       }
 
       return {
+        // deprecated는 UI에 노출하지 않음
         NotificationType.sharedLedgerChange:
             response['shared_ledger_change_enabled'] as bool? ?? true,
+        // 공유 가계부
+        NotificationType.transactionAdded:
+            response['transaction_added_enabled'] as bool? ?? true,
+        NotificationType.transactionUpdated:
+            response['transaction_updated_enabled'] as bool? ?? true,
+        NotificationType.transactionDeleted:
+            response['transaction_deleted_enabled'] as bool? ?? true,
+        // 자동수집
+        NotificationType.autoCollectSuggested:
+            response['auto_collect_suggested_enabled'] as bool? ?? true,
+        NotificationType.autoCollectSaved:
+            response['auto_collect_saved_enabled'] as bool? ?? true,
+        // 초대
         NotificationType.inviteReceived:
             response['invite_received_enabled'] as bool? ?? true,
         NotificationType.inviteAccepted:
@@ -85,6 +109,11 @@ class NotificationSettingsRepository {
       await _client.from('notification_settings').upsert({
         'user_id': userId,
         'shared_ledger_change_enabled': true,
+        'transaction_added_enabled': true,
+        'transaction_updated_enabled': true,
+        'transaction_deleted_enabled': true,
+        'auto_collect_suggested_enabled': true,
+        'auto_collect_saved_enabled': true,
         'invite_received_enabled': true,
         'invite_accepted_enabled': true,
       }, onConflict: 'user_id');
