@@ -59,9 +59,10 @@ class StatisticsRepository {
       final isFixedExpense = rowMap['is_fixed_expense'] == true;
 
       // 고정비 필터일 때는 fixed_expense_category_id 사용
-      final categoryId = useFixedExpenseCategory
-          ? rowMap['fixed_expense_category_id'].toString()
-          : rowMap['category_id'].toString();
+      final categoryIdValue = useFixedExpenseCategory
+          ? rowMap['fixed_expense_category_id']
+          : rowMap['category_id'];
+      final categoryId = categoryIdValue?.toString();
 
       // 고정비 필터일 때는 fixed_expense_categories 사용
       final category = useFixedExpenseCategory
@@ -88,15 +89,22 @@ class StatisticsRepository {
         categoryColor = '#FF9800'; // 오렌지색
       } else {
         // 기존 로직: 원래 카테고리대로 그룹화
-        groupKey = categoryId ?? '_uncategorized_';
-        categoryName = '미지정';
-        categoryIcon = '';
-        categoryColor = '#9E9E9E';
-
-        if (category != null) {
-          categoryName = category['name'].toString();
-          categoryIcon = category['icon'].toString();
-          categoryColor = category['color'].toString();
+        if (categoryId == null) {
+          groupKey = '_uncategorized_';
+          categoryName = '미지정';
+          categoryIcon = '';
+          categoryColor = '#9E9E9E';
+        } else {
+          groupKey = categoryId;
+          if (category != null) {
+            categoryName = category['name'].toString();
+            categoryIcon = category['icon'].toString();
+            categoryColor = category['color'].toString();
+          } else {
+            categoryName = '미지정';
+            categoryIcon = '';
+            categoryColor = '#9E9E9E';
+          }
         }
       }
 
@@ -341,11 +349,6 @@ class StatisticsRepository {
       previousDate.month,
       1,
     );
-    final previousEndDate = DateTime(
-      previousDate.year,
-      previousDate.month + 1,
-      0,
-    );
 
     // 단일 쿼리로 양쪽 월 데이터 조회
     var query = _client
@@ -432,20 +435,25 @@ class StatisticsRepository {
 
     for (final row in response as List) {
       final rowMap = row as Map<String, dynamic>;
-      final paymentMethodId = rowMap['payment_method_id'].toString();
+      final paymentMethodIdValue = rowMap['payment_method_id'];
+      final paymentMethodId = paymentMethodIdValue?.toString();
       final amount = (rowMap['amount'] as num?)?.toInt() ?? 0;
       final paymentMethod = rowMap['payment_methods'] as Map<String, dynamic>?;
 
       totalAmount += amount;
 
-      // null인 경우 특수 키 사용
-      final groupKey = paymentMethodId ?? '_no_payment_method_';
-
       // 결제수단 정보 추출
+      final String groupKey;
       String pmName = '미지정';
       String pmIcon = '';
       String pmColor = '#9E9E9E';
       bool canAutoSave = false;
+
+      if (paymentMethodId == null) {
+        groupKey = '_no_payment_method_';
+      } else {
+        groupKey = paymentMethodId;
+      }
 
       if (paymentMethod != null) {
         pmName = paymentMethod['name']?.toString() ?? '미지정';

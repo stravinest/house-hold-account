@@ -42,11 +42,11 @@ class AssetGoalCardSimple extends ConsumerWidget {
           data: (currentAmount) =>
               _buildGoalCard(context, ref, l10n, goal, currentAmount, progress),
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (e, stack) => const SizedBox.shrink(),
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (e, stack) => const SizedBox.shrink(),
     );
   }
 

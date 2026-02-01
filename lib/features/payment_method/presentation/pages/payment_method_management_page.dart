@@ -312,13 +312,6 @@ class _PaymentMethodManagementPageState
       ],
     );
   }
-
-  void _showAddDialog(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const PaymentMethodWizardPage()),
-    );
-  }
 }
 
 /// Payment method list (shared + auto-collect integrated view, Design D)

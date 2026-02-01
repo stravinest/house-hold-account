@@ -95,7 +95,7 @@ class SharedUserFilter extends ConsumerWidget {
         height: 36,
         child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
       ),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (e, stack) => const SizedBox.shrink(),
     );
   }
 

@@ -341,7 +341,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
       loading: () {
         // 로딩 중 - 아무것도 안함 (UI만 표시)
       },
-      error: (_, __) {
+      error: (e, stack) {
         // 에러 시 로그인 페이지로
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;

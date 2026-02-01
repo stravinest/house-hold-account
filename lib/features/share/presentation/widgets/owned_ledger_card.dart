@@ -35,8 +35,6 @@ class OwnedLedgerCard extends ConsumerWidget {
 
     // 다크모드 대응: colorScheme 기반 색상
     final activeBorderColor = colorScheme.primary;
-    // 배경색을 더 연하게 (primary의 8% 투명도)
-    final activeBackgroundColor = colorScheme.primary.withValues(alpha: 0.08);
     final inactiveBorderColor = colorScheme.outlineVariant;
 
     return Card(

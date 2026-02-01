@@ -37,9 +37,6 @@ mixin _PermissionResumeHandler<T extends StatefulWidget> on State<T> {
 
 /// 투명도 상수
 class _OpacityConstants {
-  static const double successBannerBackground = 0.1;
-  static const double permissionItemGrantedBackground = 0.5;
-  static const double permissionItemDeniedBackground = 0.3;
   static const double errorButtonBackground = 0.1;
 }
 

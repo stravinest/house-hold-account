@@ -1,0 +1,748 @@
+[
+  {
+    "type": "frame",
+    "id": "webStatistics",
+    "name": "Web Statistics",
+    "context": "웹 통계 페이지 - 상세 차트 및 필터",
+    "width": 1440,
+    "height": 1200,
+    "fill": "$--surface",
+    "layout": "none",
+    "children": [
+      {
+        "type": "frame",
+        "id": "webStatsHeader",
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 72,
+        "fill": "$--surface",
+        "layout": "horizontal",
+        "padding": [16, 24],
+        "alignItems": "center",
+        "gap": 16,
+        "stroke": {
+          "color": "$--outline-variant",
+          "width": 1,
+          "position": "inside"
+        },
+        "children": [
+          {
+            "type": "text",
+            "fill": "$--on-surface",
+            "content": "통계",
+            "fontFamily": "$--font-primary",
+            "fontSize": 20,
+            "fontWeight": "600"
+          }
+        ]
+      },
+      {
+        "type": "frame",
+        "id": "webStatsFilters",
+        "x": 0,
+        "y": 72,
+        "width": 1440,
+        "height": 80,
+        "fill": "$--surface",
+        "padding": [16, 24],
+        "layout": "horizontal",
+        "gap": 16,
+        "alignItems": "center",
+        "stroke": {
+          "color": "$--outline-variant",
+          "width": 1,
+          "position": "inside"
+        },
+        "children": [
+          {
+            "type": "frame",
+            "width": 200,
+            "height": 48,
+            "fill": "$--surface-container-highest",
+            "cornerRadius": 12,
+            "padding": 16,
+            "layout": "horizontal",
+            "gap": 12,
+            "alignItems": "center",
+            "children": [
+              {
+                "type": "icon_font",
+                "width": 20,
+                "height": 20,
+                "iconFontName": "calendar",
+                "iconFontFamily": "lucide",
+                "fill": "$--on-surface-variant"
+              },
+              {
+                "type": "text",
+                "fill": "$--on-surface",
+                "content": "2026년 2월",
+                "fontFamily": "$--font-primary",
+                "fontSize": 14,
+                "fontWeight": "400"
+              }
+            ]
+          },
+          {
+            "type": "frame",
+            "width": 180,
+            "height": 48,
+            "fill": "$--surface-container-highest",
+            "cornerRadius": 12,
+            "padding": 16,
+            "layout": "horizontal",
+            "gap": 12,
+            "alignItems": "center",
+            "children": [
+              {
+                "type": "icon_font",
+                "width": 20,
+                "height": 20,
+                "iconFontName": "filter",
+                "iconFontFamily": "lucide",
+                "fill": "$--on-surface-variant"
+              },
+              {
+                "type": "text",
+                "fill": "$--on-surface",
+                "content": "전체",
+                "fontFamily": "$--font-primary",
+                "fontSize": 14,
+                "fontWeight": "400"
+              }
+            ]
+          },
+          {
+            "type": "frame",
+            "width": 180,
+            "height": 48,
+            "fill": "$--surface-container-highest",
+            "cornerRadius": 12,
+            "padding": 16,
+            "layout": "horizontal",
+            "gap": 12,
+            "alignItems": "center",
+            "children": [
+              {
+                "type": "icon_font",
+                "width": 20,
+                "height": 20,
+                "iconFontName": "tag",
+                "iconFontFamily": "lucide",
+                "fill": "$--on-surface-variant"
+              },
+              {
+                "type": "text",
+                "fill": "$--on-surface",
+                "content": "카테고리",
+                "fontFamily": "$--font-primary",
+                "fontSize": 14,
+                "fontWeight": "400"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "frame",
+        "id": "webStatsContent",
+        "x": 0,
+        "y": 152,
+        "width": 1440,
+        "height": 1048,
+        "fill": "$--surface-container",
+        "padding": 24,
+        "layout": "vertical",
+        "gap": 24,
+        "children": [
+          {
+            "type": "frame",
+            "layout": "horizontal",
+            "gap": 16,
+            "width": "fill_container",
+            "height": 400,
+            "children": [
+              {
+                "type": "frame",
+                "width": "fill_container",
+                "height": "fill_container",
+                "fill": "$--surface",
+                "cornerRadius": 16,
+                "padding": 24,
+                "layout": "vertical",
+                "gap": 16,
+                "children": [
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface",
+                    "content": "결제수단별 분석",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 18,
+                    "fontWeight": "600"
+                  },
+                  {
+                    "type": "frame",
+                    "width": "fill_container",
+                    "height": "fill_container",
+                    "fill": "$--surface-container",
+                    "cornerRadius": 8,
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                    "children": [
+                      {
+                        "type": "text",
+                        "fill": "$--on-surface-variant",
+                        "content": "[Horizontal Bar Chart]",
+                        "fontFamily": "$--font-primary",
+                        "fontSize": 14,
+                        "fontWeight": "400"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "frame",
+                "width": 480,
+                "height": "fill_container",
+                "fill": "$--surface",
+                "cornerRadius": 16,
+                "padding": 24,
+                "layout": "vertical",
+                "gap": 16,
+                "children": [
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface",
+                    "content": "사용자별 비교",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 18,
+                    "fontWeight": "600"
+                  },
+                  {
+                    "type": "frame",
+                    "width": "fill_container",
+                    "height": "fill_container",
+                    "fill": "$--surface-container",
+                    "cornerRadius": 8,
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                    "children": [
+                      {
+                        "type": "text",
+                        "fill": "$--on-surface-variant",
+                        "content": "[Stacked Bar Chart]",
+                        "fontFamily": "$--font-primary",
+                        "fontSize": 14,
+                        "fontWeight": "400"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "frame",
+            "layout": "horizontal",
+            "gap": 16,
+            "width": "fill_container",
+            "height": 400,
+            "children": [
+              {
+                "type": "frame",
+                "width": "fill_container",
+                "height": "fill_container",
+                "fill": "$--surface",
+                "cornerRadius": 16,
+                "padding": 24,
+                "layout": "vertical",
+                "gap": 16,
+                "children": [
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface",
+                    "content": "연도별 추이",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 18,
+                    "fontWeight": "600"
+                  },
+                  {
+                    "type": "frame",
+                    "width": "fill_container",
+                    "height": "fill_container",
+                    "fill": "$--surface-container",
+                    "cornerRadius": 8,
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                    "children": [
+                      {
+                        "type": "text",
+                        "fill": "$--on-surface-variant",
+                        "content": "[Bar + Line Chart]",
+                        "fontFamily": "$--font-primary",
+                        "fontSize": 14,
+                        "fontWeight": "400"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "frame",
+                "width": 480,
+                "height": "fill_container",
+                "fill": "$--surface",
+                "cornerRadius": 16,
+                "padding": 24,
+                "layout": "vertical",
+                "gap": 16,
+                "children": [
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface",
+                    "content": "예산 진행률",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 18,
+                    "fontWeight": "600"
+                  },
+                  {
+                    "type": "frame",
+                    "width": "fill_container",
+                    "height": "fill_container",
+                    "fill": "$--surface-container",
+                    "cornerRadius": 8,
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                    "children": [
+                      {
+                        "type": "text",
+                        "fill": "$--on-surface-variant",
+                        "content": "[Progress Chart]",
+                        "fontFamily": "$--font-primary",
+                        "fontSize": 14,
+                        "fontWeight": "400"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "frame",
+    "id": "webImportExport",
+    "name": "Web Import/Export",
+    "context": "웹 파일 업로드/다운로드 페이지",
+    "width": 1440,
+    "height": 900,
+    "fill": "$--surface",
+    "layout": "none",
+    "children": [
+      {
+        "type": "frame",
+        "id": "webImportHeader",
+        "x": 0,
+        "y": 0,
+        "width": 1440,
+        "height": 72,
+        "fill": "$--surface",
+        "layout": "horizontal",
+        "padding": [16, 24],
+        "alignItems": "center",
+        "gap": 16,
+        "stroke": {
+          "color": "$--outline-variant",
+          "width": 1,
+          "position": "inside"
+        },
+        "children": [
+          {
+            "type": "text",
+            "fill": "$--on-surface",
+            "content": "파일 관리",
+            "fontFamily": "$--font-primary",
+            "fontSize": 20,
+            "fontWeight": "600"
+          }
+        ]
+      },
+      {
+        "type": "frame",
+        "id": "webImportContent",
+        "x": 0,
+        "y": 72,
+        "width": 1440,
+        "height": 828,
+        "fill": "$--surface-container",
+        "padding": 24,
+        "layout": "horizontal",
+        "gap": 24,
+        "children": [
+          {
+            "type": "frame",
+            "id": "webUploadSection",
+            "width": "fill_container",
+            "height": "fill_container",
+            "fill": "$--surface",
+            "cornerRadius": 16,
+            "padding": 24,
+            "layout": "vertical",
+            "gap": 24,
+            "children": [
+              {
+                "type": "text",
+                "fill": "$--on-surface",
+                "content": "파일 업로드",
+                "fontFamily": "$--font-primary",
+                "fontSize": 20,
+                "fontWeight": "600"
+              },
+              {
+                "type": "frame",
+                "width": "fill_container",
+                "height": 300,
+                "fill": "$--surface-container",
+                "cornerRadius": 12,
+                "stroke": {
+                  "color": "$--outline",
+                  "width": 2,
+                  "position": "inside",
+                  "style": "dashed"
+                },
+                "layout": "vertical",
+                "justifyContent": "center",
+                "alignItems": "center",
+                "gap": 16,
+                "children": [
+                  {
+                    "type": "icon_font",
+                    "width": 64,
+                    "height": 64,
+                    "iconFontName": "upload-cloud",
+                    "iconFontFamily": "lucide",
+                    "fill": "$--primary"
+                  },
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface",
+                    "content": "파일을 드래그하거나 클릭하여 업로드",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 16,
+                    "fontWeight": "500"
+                  },
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface-variant",
+                    "content": "Excel (.xlsx) 또는 CSV 파일 (최대 10MB)",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 14,
+                    "fontWeight": "400"
+                  },
+                  {
+                    "type": "frame",
+                    "width": 200,
+                    "height": 48,
+                    "fill": "$--primary",
+                    "cornerRadius": 12,
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                    "children": [
+                      {
+                        "type": "text",
+                        "fill": "$--on-primary",
+                        "content": "파일 선택",
+                        "fontFamily": "$--font-primary",
+                        "fontSize": 16,
+                        "fontWeight": "500"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "frame",
+                "width": "fill_container",
+                "height": "fill_container",
+                "fill": "$--surface-container",
+                "cornerRadius": 12,
+                "padding": 24,
+                "layout": "vertical",
+                "gap": 16,
+                "children": [
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface",
+                    "content": "미리보기",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 16,
+                    "fontWeight": "600"
+                  },
+                  {
+                    "type": "frame",
+                    "width": "fill_container",
+                    "height": "fill_container",
+                    "justifyContent": "center",
+                    "alignItems": "center",
+                    "children": [
+                      {
+                        "type": "text",
+                        "fill": "$--on-surface-variant",
+                        "content": "파일을 업로드하면 여기에 미리보기가 표시됩니다",
+                        "fontFamily": "$--font-primary",
+                        "fontSize": 14,
+                        "fontWeight": "400"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "frame",
+            "id": "webDownloadSection",
+            "width": "fill_container",
+            "height": "fill_container",
+            "fill": "$--surface",
+            "cornerRadius": 16,
+            "padding": 24,
+            "layout": "vertical",
+            "gap": 24,
+            "children": [
+              {
+                "type": "text",
+                "fill": "$--on-surface",
+                "content": "파일 다운로드",
+                "fontFamily": "$--font-primary",
+                "fontSize": 20,
+                "fontWeight": "600"
+              },
+              {
+                "type": "frame",
+                "width": "fill_container",
+                "layout": "vertical",
+                "gap": 16,
+                "children": [
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface-variant",
+                    "content": "파일 형식",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 14,
+                    "fontWeight": "500"
+                  },
+                  {
+                    "type": "frame",
+                    "layout": "horizontal",
+                    "gap": 12,
+                    "children": [
+                      {
+                        "type": "frame",
+                        "width": 120,
+                        "height": 48,
+                        "fill": "$--primary",
+                        "cornerRadius": 12,
+                        "justifyContent": "center",
+                        "alignItems": "center",
+                        "children": [
+                          {
+                            "type": "text",
+                            "fill": "$--on-primary",
+                            "content": "Excel",
+                            "fontFamily": "$--font-primary",
+                            "fontSize": 14,
+                            "fontWeight": "500"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "frame",
+                        "width": 120,
+                        "height": 48,
+                        "fill": "$--surface-container",
+                        "cornerRadius": 12,
+                        "stroke": {
+                          "color": "$--outline",
+                          "width": 1,
+                          "position": "inside"
+                        },
+                        "justifyContent": "center",
+                        "alignItems": "center",
+                        "children": [
+                          {
+                            "type": "text",
+                            "fill": "$--on-surface",
+                            "content": "CSV",
+                            "fontFamily": "$--font-primary",
+                            "fontSize": 14,
+                            "fontWeight": "500"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "frame",
+                "width": "fill_container",
+                "layout": "vertical",
+                "gap": 16,
+                "children": [
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface-variant",
+                    "content": "기간 선택",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 14,
+                    "fontWeight": "500"
+                  },
+                  {
+                    "type": "frame",
+                    "layout": "horizontal",
+                    "gap": 12,
+                    "alignItems": "center",
+                    "children": [
+                      {
+                        "type": "frame",
+                        "width": 180,
+                        "height": 48,
+                        "fill": "$--surface-container-highest",
+                        "cornerRadius": 12,
+                        "padding": 16,
+                        "justifyContent": "center",
+                        "children": [
+                          {
+                            "type": "text",
+                            "fill": "$--on-surface",
+                            "content": "2026-01-01",
+                            "fontFamily": "$--font-primary",
+                            "fontSize": 14,
+                            "fontWeight": "400"
+                          }
+                        ]
+                      },
+                      {
+                        "type": "text",
+                        "fill": "$--on-surface-variant",
+                        "content": "~",
+                        "fontFamily": "$--font-primary",
+                        "fontSize": 16,
+                        "fontWeight": "400"
+                      },
+                      {
+                        "type": "frame",
+                        "width": 180,
+                        "height": 48,
+                        "fill": "$--surface-container-highest",
+                        "cornerRadius": 12,
+                        "padding": 16,
+                        "justifyContent": "center",
+                        "children": [
+                          {
+                            "type": "text",
+                            "fill": "$--on-surface",
+                            "content": "2026-02-01",
+                            "fontFamily": "$--font-primary",
+                            "fontSize": 14,
+                            "fontWeight": "400"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "frame",
+                "width": "fill_container",
+                "height": 52,
+                "fill": "$--primary",
+                "cornerRadius": 12,
+                "layout": "horizontal",
+                "gap": 12,
+                "justifyContent": "center",
+                "alignItems": "center",
+                "children": [
+                  {
+                    "type": "icon_font",
+                    "width": 20,
+                    "height": 20,
+                    "iconFontName": "download",
+                    "iconFontFamily": "lucide",
+                    "fill": "$--on-primary"
+                  },
+                  {
+                    "type": "text",
+                    "fill": "$--on-primary",
+                    "content": "다운로드",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 16,
+                    "fontWeight": "500"
+                  }
+                ]
+              },
+              {
+                "type": "frame",
+                "width": "fill_container",
+                "layout": "vertical",
+                "gap": 12,
+                "padding": [16, 0],
+                "children": [
+                  {
+                    "type": "text",
+                    "fill": "$--on-surface-variant",
+                    "content": "템플릿",
+                    "fontFamily": "$--font-primary",
+                    "fontSize": 14,
+                    "fontWeight": "500"
+                  },
+                  {
+                    "type": "frame",
+                    "width": "fill_container",
+                    "height": 48,
+                    "fill": "$--surface-container",
+                    "cornerRadius": 12,
+                    "stroke": {
+                      "color": "$--outline",
+                      "width": 1,
+                      "position": "inside"
+                    },
+                    "layout": "horizontal",
+                    "gap": 12,
+                    "padding": 16,
+                    "alignItems": "center",
+                    "children": [
+                      {
+                        "type": "icon_font",
+                        "width": 20,
+                        "height": 20,
+                        "iconFontName": "file-text",
+                        "iconFontFamily": "lucide",
+                        "fill": "$--on-surface-variant"
+                      },
+                      {
+                        "type": "text",
+                        "fill": "$--on-surface",
+                        "content": "빈 템플릿 다운로드",
+                        "fontFamily": "$--font-primary",
+                        "fontSize": 14,
+                        "fontWeight": "400"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

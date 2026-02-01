@@ -108,10 +108,6 @@ final selectedDateForCalendarProvider = Provider<DateTime>((ref) {
   DateTime date,
   WeekStartDay weekStartDay,
 ) {
-  final int targetWeekday = weekStartDay == WeekStartDay.sunday
-      ? DateTime.sunday
-      : DateTime.monday;
-
   // 현재 날짜의 요일
   int currentWeekday = date.weekday;
 

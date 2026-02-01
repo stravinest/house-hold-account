@@ -217,7 +217,7 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (_, __) => Text(l10n.transactionCategoryLoadError),
+                error: (e, stack) => Text(l10n.transactionCategoryLoadError),
               ),
               const SizedBox(height: Spacing.lg),
 

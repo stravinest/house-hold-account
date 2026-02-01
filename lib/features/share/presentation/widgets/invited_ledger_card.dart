@@ -27,13 +27,10 @@ class InvitedLedgerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isAccepted = invite.isAccepted;
     final colorScheme = Theme.of(context).colorScheme;
 
     // 다크모드 대응: colorScheme 기반 색상
     final activeBorderColor = colorScheme.primary;
-    // 배경색을 더 연하게 (primary의 8% 투명도)
-    final activeBackgroundColor = colorScheme.primary.withValues(alpha: 0.08);
     final inactiveBorderColor = colorScheme.outlineVariant;
 
     return Card(

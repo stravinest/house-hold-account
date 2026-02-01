@@ -300,7 +300,7 @@ class PendingTransactionRepository {
             value: ledgerId,
           ),
           callback: (payload) {
-            final recordData = payload.newRecord ?? payload.oldRecord;
+            final recordData = payload.newRecord;
             if (recordData['user_id'] != userId) {
               return;
             }
