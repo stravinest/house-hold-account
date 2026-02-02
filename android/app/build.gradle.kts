@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.household.shared.shared_household_account"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36  // Required by androidx.activity:activity:1.11.0
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
