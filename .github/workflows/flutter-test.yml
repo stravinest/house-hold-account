@@ -30,6 +30,9 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
+      - name: Create dummy .env file
+        run: touch .env
+
       - name: Generate code (Riverpod)
         run: flutter pub run build_runner build --delete-conflicting-outputs
 
