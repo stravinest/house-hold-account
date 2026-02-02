@@ -50,7 +50,6 @@ class SideBySideDonutChart extends ConsumerWidget {
             return _buildSingleUserChart(context, l10n, selectedUser);
 
           case SharedStatisticsMode.overlay:
-          default:
             // 겹쳐서: 나란히 두 개 도넛 차트
             return _buildSideBySideCharts(context, l10n, users);
         }
