@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:notification_listener_service/notification_event.dart';
 import 'package:notification_listener_service/notification_listener_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -30,6 +31,28 @@ class NotificationListenerWrapper {
   static NotificationListenerWrapper get instance {
     _instance ??= NotificationListenerWrapper._();
     return _instance!;
+  }
+
+  // Kotlin MethodChannel for cache invalidation
+  static const _notificationSyncChannel = MethodChannel(
+    'com.household.shared/notification_sync',
+  );
+
+  /// Kotlin 서비스의 캐시를 무효화
+  /// 결제수단 설정 변경 후 호출해야 함
+  static Future<void> invalidateNativeCache() async {
+    if (!Platform.isAndroid) return;
+
+    try {
+      await _notificationSyncChannel.invokeMethod('invalidateNotificationCache');
+      if (kDebugMode) {
+        debugPrint('[NotificationWrapper] Native cache invalidated');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('[NotificationWrapper] Failed to invalidate native cache: $e');
+      }
+    }
   }
 
   bool _isInitialized = false;

@@ -13,6 +13,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -475,13 +476,13 @@ class SupabaseHelper private constructor(private val context: Context) {
         }
     }
 
-    suspend fun getLearnedPushFormats(ledgerId: String): List<LearnedPushFormat> = withContext(Dispatchers.IO) {
+    suspend fun getLearnedPushFormats(ledgerId: String, ownerUserId: String): List<LearnedPushFormat> = withContext(Dispatchers.IO) {
         try {
             val baseUrl = supabaseUrl ?: return@withContext emptyList()
             val apiKey = anonKey ?: return@withContext emptyList()
             val token = getValidToken() ?: return@withContext emptyList()
 
-            val url = "$baseUrl/rest/v1/learned_push_formats?select=*,payment_methods!inner(ledger_id)&payment_methods.ledger_id=eq.$ledgerId"
+            val url = "$baseUrl/rest/v1/learned_push_formats?select=*,payment_methods!inner(ledger_id,owner_user_id)&payment_methods.ledger_id=eq.$ledgerId&payment_methods.owner_user_id=eq.$ownerUserId"
 
             val request = Request.Builder()
                 .url(url)
@@ -514,7 +515,7 @@ class SupabaseHelper private constructor(private val context: Context) {
                     )
                 }
 
-                Log.d(TAG, "Loaded ${formats.size} push formats for ledger $ledgerId")
+                Log.d(TAG, "Loaded ${formats.size} push formats for ledger $ledgerId, user $ownerUserId")
                 formats
             } else {
                 Log.e(TAG, "Failed to load push formats: ${response.code}")
@@ -590,17 +591,18 @@ class SupabaseHelper private constructor(private val context: Context) {
         val id: String,
         val name: String,
         val autoSaveMode: String,
-        val autoCollectSource: String
+        val autoCollectSource: String,
+        val ownerUserId: String
     )
 
-    suspend fun getPaymentMethodsByLedger(ledgerId: String): List<PaymentMethodInfo> = withContext(Dispatchers.IO) {
+    suspend fun getPaymentMethodsByLedger(ledgerId: String, ownerUserId: String): List<PaymentMethodInfo> = withContext(Dispatchers.IO) {
         try {
             val baseUrl = supabaseUrl ?: return@withContext emptyList()
             val apiKey = anonKey ?: return@withContext emptyList()
             val token = getValidToken() ?: return@withContext emptyList()
 
             val request = Request.Builder()
-                .url("$baseUrl/rest/v1/payment_methods?ledger_id=eq.$ledgerId&select=id,name,auto_save_mode,auto_collect_source")
+                .url("$baseUrl/rest/v1/payment_methods?ledger_id=eq.$ledgerId&owner_user_id=eq.$ownerUserId&select=id,name,auto_save_mode,auto_collect_source,owner_user_id")
                 .get()
                 .addHeader("Authorization", "Bearer $token")
                 .addHeader("apikey", apiKey)
@@ -620,11 +622,12 @@ class SupabaseHelper private constructor(private val context: Context) {
                         id = item.getString("id"),
                         name = item.getString("name"),
                         autoSaveMode = item.optString("auto_save_mode", "suggest"),
-                        autoCollectSource = item.optString("auto_collect_source", "sms")
+                        autoCollectSource = item.optString("auto_collect_source", "sms"),
+                        ownerUserId = item.optString("owner_user_id", "")
                     ))
                 }
                 
-                Log.d(TAG, "Loaded ${methods.size} payment methods for ledger $ledgerId")
+                Log.d(TAG, "Loaded ${methods.size} payment methods for ledger $ledgerId, user $ownerUserId")
                 methods
             } else {
                 Log.e(TAG, "Failed to load payment methods: ${response.code}")
@@ -863,5 +866,128 @@ class SupabaseHelper private constructor(private val context: Context) {
             result[key] = parseStringArray(array)
         }
         return result
+    }
+
+    /**
+     * 사용자의 자동수집 알림 설정 조회
+     *
+     * @param userId 사용자 ID
+     * @param isAutoMode true: auto_collect_saved_enabled, false: auto_collect_suggested_enabled
+     * @return 알림 활성화 여부 (기본값: true - 설정이 없거나 에러 시 알림 표시)
+     */
+    suspend fun getAutoCollectNotificationSetting(
+        userId: String,
+        isAutoMode: Boolean
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val baseUrl = supabaseUrl ?: run {
+                Log.w(TAG, "Supabase URL not configured, using default notification setting: true")
+                return@withContext true
+            }
+            val apiKey = anonKey ?: run {
+                Log.w(TAG, "Supabase API key not configured, using default notification setting: true")
+                return@withContext true
+            }
+            val token = getValidToken() ?: run {
+                Log.w(TAG, "No valid token available, using default notification setting: true")
+                return@withContext true
+            }
+
+            val column = if (isAutoMode)
+                "auto_collect_saved_enabled"
+            else
+                "auto_collect_suggested_enabled"
+
+            // URL 파라미터 인코딩으로 인젝션 방지
+            val encodedUserId = URLEncoder.encode(userId, "UTF-8")
+            val url = "$baseUrl/rest/v1/notification_settings?select=$column&user_id=eq.$encodedUserId"
+
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("apikey", apiKey)
+                .addHeader("Accept-Profile", SCHEMA)
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string() ?: return@withContext true
+                val jsonArray = JSONArray(responseBody)
+                if (jsonArray.length() > 0) {
+                    val setting = jsonArray.getJSONObject(0)
+                    val enabled = setting.optBoolean(column, true)
+                    Log.d(TAG, "Notification setting for $column: $enabled (userId: $userId)")
+                    return@withContext enabled
+                }
+            }
+            // 사용자 설정 레코드가 없는 경우 - 기본값 true (알림 활성화)
+            // 이는 신규 사용자나 설정을 변경한 적 없는 사용자를 위한 것
+            Log.i(TAG, "No notification setting record found for user $userId, using default: true (notifications enabled)")
+            true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting notification setting for user $userId", e)
+            true
+        }
+    }
+
+    /**
+     * 알림 히스토리 저장 (push_notifications 테이블)
+     *
+     * @param userId 사용자 ID
+     * @param type 알림 타입 ("auto_collect_suggested" or "auto_collect_saved")
+     * @param title 알림 제목
+     * @param body 알림 본문
+     * @param data 추가 데이터
+     * @return 저장 성공 여부
+     */
+    suspend fun savePushNotificationHistory(
+        userId: String,
+        type: String,
+        title: String,
+        body: String,
+        data: Map<String, Any?>
+    ): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val baseUrl = supabaseUrl ?: return@withContext false
+            val apiKey = anonKey ?: return@withContext false
+            val token = getValidToken() ?: return@withContext false
+
+            val json = JSONObject().apply {
+                put("user_id", userId)
+                put("type", type)
+                put("title", title)
+                put("body", body)
+                put("data", JSONObject(data))
+                put("is_read", false)
+            }
+
+            val requestBody = json.toString().toRequestBody("application/json".toMediaType())
+
+            val request = Request.Builder()
+                .url("$baseUrl/rest/v1/push_notifications")
+                .post(requestBody)
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("apikey", apiKey)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Content-Profile", SCHEMA)
+                .addHeader("Prefer", "return=minimal")
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                Log.d(TAG, "Push notification history saved: $type")
+                true
+            } else {
+                val errorBody = response.body?.string() ?: "No error body"
+                Log.e(TAG, "Failed to save push notification history: ${response.code}\n$errorBody")
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception while saving push notification history", e)
+            false
+        }
     }
 }

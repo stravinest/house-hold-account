@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/supabase_error_handler.dart';
 import '../models/payment_method_model.dart';
+import '../services/notification_listener_wrapper.dart';
 
 class PaymentMethodRepository {
   final _client = SupabaseConfig.client;
@@ -245,6 +246,9 @@ class PaymentMethodRepository {
         .eq('id', id)
         .select()
         .single();
+
+    // 설정 변경 후 Kotlin 캐시 무효화 (다음 알림 시 새 설정 반영)
+    await NotificationListenerWrapper.invalidateNativeCache();
 
     return PaymentMethodModel.fromJson(response);
   }

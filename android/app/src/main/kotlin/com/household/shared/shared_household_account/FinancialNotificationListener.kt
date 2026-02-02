@@ -1,13 +1,20 @@
 package com.household.shared.shared_household_account
 
 import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.IBinder
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import io.flutter.BuildConfig
 import kotlinx.coroutines.*
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * 금융 앱 Push 알림을 수집하는 NotificationListenerService (SMS는 SmsBroadcastReceiver에서 처리)
@@ -117,6 +124,18 @@ class FinancialNotificationListener : NotificationListenerService() {
         @Volatile
         var instance: FinancialNotificationListener? = null
             private set
+
+        // 알림 ID 카운터 (동일 밀리초에 여러 알림이 와도 중복 방지)
+        private val notificationIdCounter = AtomicInteger(0)
+    }
+
+    /**
+     * Flutter에서 결제수단 설정 변경 시 호출
+     * 다음 알림 처리 시 캐시를 강제로 새로고침
+     */
+    fun invalidateCache() {
+        lastFormatsFetchTime = 0
+        Log.d(TAG, "Cache invalidated by external request")
     }
 
     // lazy initialization으로 onCreate 전 접근 시에도 안전하게 처리
@@ -244,13 +263,17 @@ class FinancialNotificationListener : NotificationListenerService() {
             return
         }
 
-        refreshFormatsCache(ledgerId)
+        refreshFormatsCache(ledgerId, userId)
 
         val matchingFormat = learnedFormatsCache.find { format ->
-            format.packageName.equals(packageName, ignoreCase = true) ||
-            format.appKeywords.any { keyword ->
-                combinedContent.contains(keyword, ignoreCase = true)
-            }
+            // 패키지명 또는 키워드 매칭
+            val contentMatches = format.packageName.equals(packageName, ignoreCase = true) ||
+                format.appKeywords.any { keyword ->
+                    combinedContent.contains(keyword, ignoreCase = true)
+                }
+            // 추가 검증: 해당 포맷의 paymentMethodId가 현재 사용자 캐시에 존재하는지
+            val isOwnedByCurrentUser = paymentMethodsCache.any { pm -> pm.id == format.paymentMethodId }
+            contentMatches && isOwnedByCurrentUser
         }
 
         val parsed = if (matchingFormat != null) {
@@ -269,13 +292,15 @@ class FinancialNotificationListener : NotificationListenerService() {
         var matchedPaymentMethod: SupabaseHelper.PaymentMethodInfo? = null
         
         // learned_push_formats에서 매칭 안 되면 결제수단 이름으로 fallback 매칭
+        // sourceType에 맞는 결제수단만 매칭 (SMS -> sms, notification -> push)
         if (paymentMethodId.isEmpty()) {
+            val expectedSource = if (sourceType == "sms") "sms" else "push"
             matchedPaymentMethod = paymentMethodsCache.find { pm ->
-                pm.autoCollectSource == "push" && combinedContent.contains(pm.name, ignoreCase = true)
+                pm.autoCollectSource == expectedSource && combinedContent.contains(pm.name, ignoreCase = true)
             }
             if (matchedPaymentMethod != null) {
                 paymentMethodId = matchedPaymentMethod.id
-                Log.d(TAG, "Fallback matched by payment method name: ${matchedPaymentMethod.name}")
+                Log.d(TAG, "Fallback matched by payment method name: ${matchedPaymentMethod.name} (source: $expectedSource)")
             }
         }
 
@@ -342,6 +367,20 @@ class FinancialNotificationListener : NotificationListenerService() {
         if (success) {
             Log.d(TAG, "Notification saved to Supabase, marking SQLite as synced")
             storageHelper.markAsSynced(listOf(sqliteId))
+
+            // 결제수단 이름 가져오기
+            val paymentMethodName = matchedPaymentMethod?.name
+                ?: paymentMethodsCache.find { it.id == paymentMethodId }?.name
+
+            // 알림 처리 (설정 확인 -> 로컬 알림 표시 -> 히스토리 저장)
+            handleAutoCollectNotification(
+                userId = userId,
+                isAutoMode = settings?.isAutoMode == true,
+                amount = parsed.amount,
+                merchant = parsed.merchant,
+                paymentMethodId = paymentMethodId,
+                paymentMethodName = paymentMethodName
+            )
         } else {
             Log.d(TAG, "Supabase save failed, keeping in SQLite for later sync")
         }
@@ -349,15 +388,149 @@ class FinancialNotificationListener : NotificationListenerService() {
         notifyFlutter(packageName)
     }
 
-    private suspend fun refreshFormatsCache(ledgerId: String) {
+    /**
+     * 자동수집 알림 처리 (설정 확인 -> 로컬 알림 표시 -> 히스토리 저장)
+     * processNotification에서 분리된 함수로 가독성 향상
+     */
+    private suspend fun handleAutoCollectNotification(
+        userId: String,
+        isAutoMode: Boolean,
+        amount: Int?,
+        merchant: String?,
+        paymentMethodId: String,
+        paymentMethodName: String?
+    ) {
+        // 사용자 알림 설정 확인
+        val shouldShowNotification = supabaseHelper.getAutoCollectNotificationSetting(userId, isAutoMode)
+
+        if (!shouldShowNotification) {
+            Log.d(TAG, "Notification disabled by user setting (isAutoMode=$isAutoMode), skipping local notification")
+            return
+        }
+
+        // 로컬 알림 표시
+        showAutoCollectNotification(
+            isAutoMode = isAutoMode,
+            amount = amount,
+            merchant = merchant,
+            paymentMethodName = paymentMethodName
+        )
+
+        // 알림 히스토리 저장
+        val notificationType = if (isAutoMode) "auto_collect_saved" else "auto_collect_suggested"
+        val notificationTitle = if (isAutoMode) "자동수집 거래 저장" else "자동수집 거래 확인"
+        val notificationBody = buildNotificationBody(amount, merchant, paymentMethodName)
+
+        val historySaved = supabaseHelper.savePushNotificationHistory(
+            userId = userId,
+            type = notificationType,
+            title = notificationTitle,
+            body = notificationBody,
+            data = mapOf(
+                "targetTab" to if (isAutoMode) "confirmed" else "pending",
+                "paymentMethodId" to paymentMethodId,
+                "amount" to amount,
+                "merchant" to merchant
+            )
+        )
+
+        if (!historySaved) {
+            Log.w(TAG, "Failed to save notification history for type=$notificationType, but local notification was shown")
+        }
+    }
+
+    /**
+     * 자동수집 Local Notification 표시
+     */
+    private fun showAutoCollectNotification(
+        isAutoMode: Boolean,
+        amount: Int?,
+        merchant: String?,
+        paymentMethodName: String?
+    ) {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        // Android 8.0+ 채널 생성 (Flutter와 동일한 채널 사용)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val existingChannel = notificationManager.getNotificationChannel("household_account_channel")
+            if (existingChannel == null) {
+                val channel = NotificationChannel(
+                    "household_account_channel",
+                    "공유 가계부 알림",
+                    NotificationManager.IMPORTANCE_DEFAULT
+                ).apply {
+                    description = "공유 가계부 관련 알림 채널"
+                    enableVibration(true)
+                }
+                notificationManager.createNotificationChannel(channel)
+            }
+        }
+
+        val title = if (isAutoMode) "자동수집 거래 저장" else "자동수집 거래 확인"
+        val body = buildNotificationBody(amount, merchant, paymentMethodName)
+
+        // 딥링크 Intent
+        val intent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra("targetTab", if (isAutoMode) "confirmed" else "pending")
+            putExtra("route", "/payment-method-management")
+        }
+
+        // AtomicInteger로 고유 ID 생성 (동일 밀리초 중복 방지)
+        val notificationId = notificationIdCounter.incrementAndGet()
+
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            notificationId,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, "household_account_channel")
+            .setSmallIcon(R.drawable.ic_notification)  // 알림 전용 아이콘 사용
+            .setContentTitle(title)
+            .setContentText(body)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        notificationManager.notify(notificationId, notification)
+        Log.d(TAG, "Auto-collect notification shown (id=$notificationId): $title - $body")
+    }
+
+    /**
+     * 알림 본문 생성
+     */
+    private fun buildNotificationBody(amount: Int?, merchant: String?, paymentMethodName: String?): String {
+        return buildString {
+            if (amount != null) {
+                append(String.format("%,d", amount))
+                append("원")
+            }
+            if (!merchant.isNullOrBlank()) {
+                if (isNotEmpty()) append(" ")
+                append(merchant)
+            }
+            if (!paymentMethodName.isNullOrBlank()) {
+                if (isNotEmpty()) append(" - ")
+                append(paymentMethodName)
+            }
+            if (isEmpty()) {
+                append("새로운 거래가 수집되었습니다.")
+            }
+        }
+    }
+
+    private suspend fun refreshFormatsCache(ledgerId: String, userId: String) {
         val now = System.currentTimeMillis()
         if (now - lastFormatsFetchTime < NotificationConfig.FORMAT_CACHE_DURATION_MS && learnedFormatsCache.isNotEmpty()) {
             return
         }
 
         try {
-            learnedFormatsCache = supabaseHelper.getLearnedPushFormats(ledgerId)
-            paymentMethodsCache = supabaseHelper.getPaymentMethodsByLedger(ledgerId)
+            learnedFormatsCache = supabaseHelper.getLearnedPushFormats(ledgerId, userId)
+            paymentMethodsCache = supabaseHelper.getPaymentMethodsByLedger(ledgerId, userId)
             lastFormatsFetchTime = now
             Log.d(TAG, "Refreshed ${learnedFormatsCache.size} learned push formats, ${paymentMethodsCache.size} payment methods")
         } catch (e: Exception) {

@@ -121,6 +121,12 @@ class MainActivity : FlutterActivity() {
                     helper.getPendingCount()
                 }
 
+                "invalidateNotificationCache" -> {
+                    FinancialNotificationListener.instance?.invalidateCache()
+                    Log.d(TAG, "Notification cache invalidated via MethodChannel")
+                    result.success(true)
+                }
+
                 "getFailedCount" -> handleSyncMethod(result, "getFailedCount") { helper ->
                     helper.getFailedCount()
                 }
