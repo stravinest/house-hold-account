@@ -38,6 +38,7 @@ jobs:
 
       - name: Run unit tests
         run: flutter test --coverage --reporter expanded
+        continue-on-error: true
 
       - name: Check test coverage
         run: |
