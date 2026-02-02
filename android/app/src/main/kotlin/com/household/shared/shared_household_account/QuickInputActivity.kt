@@ -4,9 +4,11 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.os.Bundle
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.Toast
 import es.antonborri.home_widget.HomeWidgetPlugin
 import kotlinx.coroutines.CoroutineScope
@@ -16,12 +18,14 @@ import kotlinx.coroutines.launch
 
 class QuickInputActivity : Activity() {
     private lateinit var supabaseHelper: SupabaseHelper
-    
+
     private lateinit var amountInput: EditText
     private lateinit var titleInput: EditText
     private lateinit var saveButton: Button
     private lateinit var cancelButton: Button
-    
+    private lateinit var progressBar: ProgressBar
+
+    private var isSaving = false
     private val activityScope = CoroutineScope(Dispatchers.Main + Job())
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,11 +50,14 @@ class QuickInputActivity : Activity() {
         titleInput = findViewById(R.id.titleInput)
         saveButton = findViewById(R.id.saveButton)
         cancelButton = findViewById(R.id.cancelButton)
-        
+        progressBar = findViewById(R.id.progressBar)
+
         saveButton.setOnClickListener {
-            saveExpense()
+            if (!isSaving) {
+                saveExpense()
+            }
         }
-        
+
         cancelButton.setOnClickListener {
             finish()
         }
@@ -58,23 +65,29 @@ class QuickInputActivity : Activity() {
     
     private fun saveExpense() {
         val amountText = amountInput.text?.toString()
-        
+
         if (amountText.isNullOrBlank()) {
             Toast.makeText(this, "금액을 입력하세요", Toast.LENGTH_SHORT).show()
             return
         }
-        
+
         val amount = amountText.toIntOrNull()
         if (amount == null || amount <= 0) {
             Toast.makeText(this, "유효한 금액을 입력하세요", Toast.LENGTH_SHORT).show()
             return
         }
-        
+
+        // 저장 시작: 버튼 비활성화 및 ProgressBar 표시
+        isSaving = true
+        saveButton.isEnabled = false
+        progressBar.visibility = View.VISIBLE
+
         activityScope.launch {
             try {
                 val ledgerId = supabaseHelper.getCurrentLedgerId()
                 if (ledgerId.isNullOrBlank()) {
                     Toast.makeText(this@QuickInputActivity, "가계부를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
+                    resetSaveButton()
                     return@launch
                 }
 
@@ -88,6 +101,7 @@ class QuickInputActivity : Activity() {
                 val userId = supabaseHelper.getUserIdFromToken(token)
                 if (userId.isNullOrBlank()) {
                     Toast.makeText(this@QuickInputActivity, "사용자 정보를 찾을 수 없습니다", Toast.LENGTH_SHORT).show()
+                    resetSaveButton()
                     return@launch
                 }
 
@@ -109,9 +123,11 @@ class QuickInputActivity : Activity() {
                     finish()
                 } else {
                     Toast.makeText(this@QuickInputActivity, "저장 실패. 네트워크를 확인해주세요", Toast.LENGTH_SHORT).show()
+                    resetSaveButton()
                 }
             } catch (e: Exception) {
                 Toast.makeText(this@QuickInputActivity, "오류: ${e.message}", Toast.LENGTH_SHORT).show()
+                resetSaveButton()
             }
         }
     }
@@ -143,5 +159,11 @@ class QuickInputActivity : Activity() {
                 android.util.Log.e("QuickInputActivity", "Failed to update widget", e)
             }
         }
+    }
+
+    private fun resetSaveButton() {
+        isSaving = false
+        saveButton.isEnabled = true
+        progressBar.visibility = View.GONE
     }
 }
