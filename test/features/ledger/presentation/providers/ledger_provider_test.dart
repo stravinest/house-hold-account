@@ -122,9 +122,7 @@ void main() {
       ];
 
       // When: 내 가계부 찾기
-      final myLedger = ledgers.firstWhere(
-        (ledger) => ledger.ownerId == userId,
-      );
+      final myLedger = ledgers.firstWhere((ledger) => ledger.ownerId == userId);
 
       // Then: 내 가계부가 선택됨
       expect(myLedger.id, equals('my-ledger'));

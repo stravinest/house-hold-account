@@ -58,7 +58,9 @@ void main() {
         expect(snackBar.backgroundColor, equals(Colors.green[700]));
       });
 
-      testWidgets('기본 지속 시간은 SnackBarDuration.short를 사용한다', (WidgetTester tester) async {
+      testWidgets('기본 지속 시간은 SnackBarDuration.short를 사용한다', (
+        WidgetTester tester,
+      ) async {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
@@ -166,7 +168,9 @@ void main() {
         expect(snackBar.backgroundColor, equals(Colors.red[700]));
       });
 
-      testWidgets('기본 지속 시간은 SnackBarDuration.short를 사용한다', (WidgetTester tester) async {
+      testWidgets('기본 지속 시간은 SnackBarDuration.short를 사용한다', (
+        WidgetTester tester,
+      ) async {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
@@ -275,7 +279,9 @@ void main() {
         expect(snackBar.backgroundColor, isNull);
       });
 
-      testWidgets('기본 지속 시간은 SnackBarDuration.short를 사용한다', (WidgetTester tester) async {
+      testWidgets('기본 지속 시간은 SnackBarDuration.short를 사용한다', (
+        WidgetTester tester,
+      ) async {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
@@ -333,7 +339,9 @@ void main() {
     });
 
     group('context.mounted 체크', () {
-      testWidgets('unmounted context에서는 SnackBar를 표시하지 않는다', (WidgetTester tester) async {
+      testWidgets('unmounted context에서는 SnackBar를 표시하지 않는다', (
+        WidgetTester tester,
+      ) async {
         // 이 테스트는 context.mounted가 false일 때 에러가 발생하지 않음을 확인
         BuildContext? savedContext;
 
@@ -387,7 +395,8 @@ void main() {
       });
 
       testWidgets('긴 메시지를 올바르게 표시한다', (WidgetTester tester) async {
-        const longMessage = '이것은 매우 긴 메시지입니다. 사용자에게 자세한 정보를 제공하기 위해 여러 문장으로 구성될 수 있습니다.';
+        const longMessage =
+            '이것은 매우 긴 메시지입니다. 사용자에게 자세한 정보를 제공하기 위해 여러 문장으로 구성될 수 있습니다.';
 
         await tester.pumpWidget(
           MaterialApp(

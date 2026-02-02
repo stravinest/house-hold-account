@@ -46,28 +46,31 @@ void main() {
             : '#A8D8EA';
 
         // 날짜별 데이터 초기화
-        dailyTotals.putIfAbsent(dateKey, () => {
-          'users': <String, Map<String, dynamic>>{},
-          'totalIncome': 0,
-          'totalExpense': 0,
-        });
+        dailyTotals.putIfAbsent(
+          dateKey,
+          () => {
+            'users': <String, Map<String, dynamic>>{},
+            'totalIncome': 0,
+            'totalExpense': 0,
+          },
+        );
 
         final dayData = dailyTotals[dateKey]!;
         final users = dayData['users'] as Map<String, Map<String, dynamic>>;
 
         // 사용자별 데이터 초기화
-        users.putIfAbsent(userId, () => {
-          'income': 0,
-          'expense': 0,
-          'color': userColor,
-        });
+        users.putIfAbsent(
+          userId,
+          () => {'income': 0, 'expense': 0, 'color': userColor},
+        );
 
         // 금액 누적
         if (type == 'income') {
           users[userId]!['income'] = (users[userId]!['income'] as int) + amount;
           dayData['totalIncome'] = (dayData['totalIncome'] as int) + amount;
         } else {
-          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          users[userId]!['expense'] =
+              (users[userId]!['expense'] as int) + amount;
           dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
         }
       }
@@ -130,26 +133,29 @@ void main() {
             ? profileData['color'] as String
             : '#A8D8EA';
 
-        dailyTotals.putIfAbsent(dateKey, () => {
-          'users': <String, Map<String, dynamic>>{},
-          'totalIncome': 0,
-          'totalExpense': 0,
-        });
+        dailyTotals.putIfAbsent(
+          dateKey,
+          () => {
+            'users': <String, Map<String, dynamic>>{},
+            'totalIncome': 0,
+            'totalExpense': 0,
+          },
+        );
 
         final dayData = dailyTotals[dateKey]!;
         final users = dayData['users'] as Map<String, Map<String, dynamic>>;
 
-        users.putIfAbsent(userId, () => {
-          'income': 0,
-          'expense': 0,
-          'color': userColor,
-        });
+        users.putIfAbsent(
+          userId,
+          () => {'income': 0, 'expense': 0, 'color': userColor},
+        );
 
         if (type == 'income') {
           users[userId]!['income'] = (users[userId]!['income'] as int) + amount;
           dayData['totalIncome'] = (dayData['totalIncome'] as int) + amount;
         } else {
-          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          users[userId]!['expense'] =
+              (users[userId]!['expense'] as int) + amount;
           dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
         }
       }
@@ -206,26 +212,29 @@ void main() {
             ? profileData['color'] as String
             : '#A8D8EA';
 
-        dailyTotals.putIfAbsent(dateKey, () => {
-          'users': <String, Map<String, dynamic>>{},
-          'totalIncome': 0,
-          'totalExpense': 0,
-        });
+        dailyTotals.putIfAbsent(
+          dateKey,
+          () => {
+            'users': <String, Map<String, dynamic>>{},
+            'totalIncome': 0,
+            'totalExpense': 0,
+          },
+        );
 
         final dayData = dailyTotals[dateKey]!;
         final users = dayData['users'] as Map<String, Map<String, dynamic>>;
 
-        users.putIfAbsent(userId, () => {
-          'income': 0,
-          'expense': 0,
-          'color': userColor,
-        });
+        users.putIfAbsent(
+          userId,
+          () => {'income': 0, 'expense': 0, 'color': userColor},
+        );
 
         if (type == 'income') {
           users[userId]!['income'] = (users[userId]!['income'] as int) + amount;
           dayData['totalIncome'] = (dayData['totalIncome'] as int) + amount;
         } else {
-          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          users[userId]!['expense'] =
+              (users[userId]!['expense'] as int) + amount;
           dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
         }
       }
@@ -293,26 +302,29 @@ void main() {
             ? profileData['color'] as String
             : '#A8D8EA';
 
-        dailyTotals.putIfAbsent(dateKey, () => {
-          'users': <String, Map<String, dynamic>>{},
-          'totalIncome': 0,
-          'totalExpense': 0,
-        });
+        dailyTotals.putIfAbsent(
+          dateKey,
+          () => {
+            'users': <String, Map<String, dynamic>>{},
+            'totalIncome': 0,
+            'totalExpense': 0,
+          },
+        );
 
         final dayData = dailyTotals[dateKey]!;
         final users = dayData['users'] as Map<String, Map<String, dynamic>>;
 
-        users.putIfAbsent(userId, () => {
-          'income': 0,
-          'expense': 0,
-          'color': userColor,
-        });
+        users.putIfAbsent(
+          userId,
+          () => {'income': 0, 'expense': 0, 'color': userColor},
+        );
 
         if (type == 'income') {
           users[userId]!['income'] = (users[userId]!['income'] as int) + amount;
           dayData['totalIncome'] = (dayData['totalIncome'] as int) + amount;
         } else {
-          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          users[userId]!['expense'] =
+              (users[userId]!['expense'] as int) + amount;
           dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
         }
       }

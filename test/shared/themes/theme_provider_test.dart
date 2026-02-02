@@ -14,9 +14,7 @@ void main() {
     test('저장된 값이 없을 때 ThemeMode.system을 기본값으로 반환한다', () async {
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 
@@ -28,9 +26,7 @@ void main() {
     test('light 테마로 변경하고 SharedPreferences에 저장한다', () async {
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 
@@ -46,9 +42,7 @@ void main() {
     test('dark 테마로 변경하고 SharedPreferences에 저장한다', () async {
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 
@@ -64,9 +58,7 @@ void main() {
     test('system 테마로 변경하고 SharedPreferences에 저장한다', () async {
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 
@@ -85,9 +77,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'theme_mode': 'light'});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 
@@ -100,9 +90,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'theme_mode': 'dark'});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 
@@ -115,9 +103,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'theme_mode': 'system'});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 
@@ -132,9 +118,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'theme_mode': 'invalid_value'});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 
@@ -147,9 +131,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'theme_mode': ''});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 
@@ -163,9 +145,7 @@ void main() {
     test('여러 번 테마를 변경해도 올바르게 동작한다', () async {
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
-        overrides: [
-          sharedPreferencesProvider.overrideWithValue(prefs),
-        ],
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
       );
       addTearDown(container.dispose);
 

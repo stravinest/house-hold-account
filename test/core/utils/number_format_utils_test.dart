@@ -24,8 +24,11 @@ void main() {
 
         testCases.forEach((number, expectedFormat) {
           final formatted = NumberFormatUtils.currency.format(number);
-          expect(formatted, equals(expectedFormat),
-              reason: '숫자 $number가 $expectedFormat로 포맷되어야 함');
+          expect(
+            formatted,
+            equals(expectedFormat),
+            reason: '숫자 $number가 $expectedFormat로 포맷되어야 함',
+          );
         });
       });
 
@@ -39,8 +42,11 @@ void main() {
 
         testCases.forEach((number, expectedFormat) {
           final formatted = NumberFormatUtils.currency.format(number);
-          expect(formatted, equals(expectedFormat),
-              reason: '음수 $number가 $expectedFormat로 포맷되어야 함');
+          expect(
+            formatted,
+            equals(expectedFormat),
+            reason: '음수 $number가 $expectedFormat로 포맷되어야 함',
+          );
         });
       });
 
@@ -55,8 +61,11 @@ void main() {
 
         testCases.forEach((number, expectedFormat) {
           final formatted = NumberFormatUtils.currency.format(number);
-          expect(formatted, equals(expectedFormat),
-              reason: '소수 $number가 $expectedFormat로 포맷되어야 함');
+          expect(
+            formatted,
+            equals(expectedFormat),
+            reason: '소수 $number가 $expectedFormat로 포맷되어야 함',
+          );
         });
       });
 
@@ -73,16 +82,22 @@ void main() {
 
         testCases.forEach((number, expectedFormat) {
           final formatted = NumberFormatUtils.currency.format(number);
-          expect(formatted, equals(expectedFormat),
-              reason: '큰 숫자 $number가 $expectedFormat로 포맷되어야 함');
+          expect(
+            formatted,
+            equals(expectedFormat),
+            reason: '큰 숫자 $number가 $expectedFormat로 포맷되어야 함',
+          );
         });
       });
 
       test('동일한 인스턴스를 재사용한다', () {
         final instance1 = NumberFormatUtils.currency;
         final instance2 = NumberFormatUtils.currency;
-        expect(identical(instance1, instance2), isTrue,
-            reason: '동일한 NumberFormat 인스턴스를 재사용해야 함');
+        expect(
+          identical(instance1, instance2),
+          isTrue,
+          reason: '동일한 NumberFormat 인스턴스를 재사용해야 함',
+        );
       });
 
       test('캐시된 인스턴스로 여러 번 포맷해도 올바르게 동작한다', () {

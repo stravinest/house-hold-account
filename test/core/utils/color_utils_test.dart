@@ -21,7 +21,11 @@ void main() {
 
         testCases.forEach((hex, expectedColor) {
           final color = ColorUtils.parseHexColor(hex);
-          expect(color, equals(expectedColor), reason: 'HEX $hex가 올바르게 파싱되어야 함');
+          expect(
+            color,
+            equals(expectedColor),
+            reason: 'HEX $hex가 올바르게 파싱되어야 함',
+          );
         });
       });
 
@@ -43,8 +47,11 @@ void main() {
 
         for (final invalidHex in invalidCases) {
           final color = ColorUtils.parseHexColor(invalidHex);
-          expect(color, equals(ColorUtils.defaultColor),
-            reason: '잘못된 HEX 코드 "$invalidHex"는 기본 색상을 반환해야 함');
+          expect(
+            color,
+            equals(ColorUtils.defaultColor),
+            reason: '잘못된 HEX 코드 "$invalidHex"는 기본 색상을 반환해야 함',
+          );
         }
       });
 
@@ -82,7 +89,11 @@ void main() {
 
         testCases.forEach((color, expectedHex) {
           final hex = ColorUtils.colorToHex(color);
-          expect(hex, equals(expectedHex), reason: 'Color $color가 올바르게 변환되어야 함');
+          expect(
+            hex,
+            equals(expectedHex),
+            reason: 'Color $color가 올바르게 변환되어야 함',
+          );
         });
       });
 

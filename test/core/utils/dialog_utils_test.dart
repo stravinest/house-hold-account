@@ -415,7 +415,8 @@ void main() {
       });
 
       testWidgets('긴 메시지를 올바르게 표시한다', (WidgetTester tester) async {
-        const longMessage = '이 카테고리를 삭제하면 관련된 모든 거래 내역의 카테고리 정보가 사라집니다. '
+        const longMessage =
+            '이 카테고리를 삭제하면 관련된 모든 거래 내역의 카테고리 정보가 사라집니다. '
             '이 작업은 되돌릴 수 없습니다. 정말로 삭제하시겠습니까?';
 
         await tester.pumpWidget(
@@ -453,7 +454,8 @@ void main() {
       });
 
       testWidgets('여러 줄 메시지를 올바르게 표시한다', (WidgetTester tester) async {
-        const multilineMessage = '다음 항목들이 삭제됩니다:\n'
+        const multilineMessage =
+            '다음 항목들이 삭제됩니다:\n'
             '- 카테고리 정보\n'
             '- 관련 거래 내역\n'
             '- 통계 데이터';

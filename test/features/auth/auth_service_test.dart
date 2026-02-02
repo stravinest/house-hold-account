@@ -5,7 +5,9 @@ void main() {
     // HEX 색상 코드 검증 함수 (AuthService.updateProfile에서 사용될 로직)
     void validateHexColor(String color) {
       if (!RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(color)) {
-        throw ArgumentError('Invalid color format. Must be HEX code (e.g., #A8D8EA)');
+        throw ArgumentError(
+          'Invalid color format. Must be HEX code (e.g., #A8D8EA)',
+        );
       }
     }
 
@@ -42,11 +44,13 @@ void main() {
         // When & Then: ArgumentError 발생 예상
         expect(
           () => validateHexColor(invalidColor),
-          throwsA(isA<ArgumentError>().having(
-            (e) => e.message,
-            'message',
-            contains('Invalid color format'),
-          )),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('Invalid color format'),
+            ),
+          ),
           reason: '# 기호가 없으면 ArgumentError가 발생해야 합니다',
         );
       });
@@ -58,11 +62,13 @@ void main() {
         // When & Then: ArgumentError 발생 예상
         expect(
           () => validateHexColor(invalidColor),
-          throwsA(isA<ArgumentError>().having(
-            (e) => e.message,
-            'message',
-            contains('Invalid color format'),
-          )),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('Invalid color format'),
+            ),
+          ),
           reason: 'HEX 코드는 정확히 6자리여야 합니다',
         );
       });
@@ -74,11 +80,13 @@ void main() {
         // When & Then: ArgumentError 발생 예상
         expect(
           () => validateHexColor(invalidColor),
-          throwsA(isA<ArgumentError>().having(
-            (e) => e.message,
-            'message',
-            contains('Invalid color format'),
-          )),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('Invalid color format'),
+            ),
+          ),
           reason: 'HEX 코드는 정확히 6자리여야 합니다',
         );
       });
@@ -90,11 +98,13 @@ void main() {
         // When & Then: ArgumentError 발생 예상
         expect(
           () => validateHexColor(invalidColor),
-          throwsA(isA<ArgumentError>().having(
-            (e) => e.message,
-            'message',
-            contains('Invalid color format'),
-          )),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('Invalid color format'),
+            ),
+          ),
           reason: 'HEX 코드는 0-9, A-F 문자만 사용할 수 있습니다',
         );
       });
@@ -106,11 +116,13 @@ void main() {
         // When & Then: 에러 메시지에 예시 포함
         expect(
           () => validateHexColor(invalidColor),
-          throwsA(isA<ArgumentError>().having(
-            (e) => e.message,
-            'message',
-            contains('#A8D8EA'),
-          )),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('#A8D8EA'),
+            ),
+          ),
           reason: '에러 메시지에 올바른 형식의 예시가 포함되어야 합니다',
         );
       });
