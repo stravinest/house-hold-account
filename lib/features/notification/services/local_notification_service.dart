@@ -33,7 +33,7 @@ class LocalNotificationService {
 
     try {
       const initializationSettingsAndroid = AndroidInitializationSettings(
-        '@mipmap/ic_launcher',
+        '@drawable/ic_notification',
       );
       const initializationSettingsIOS = DarwinInitializationSettings(
         requestAlertPermission: true,
@@ -181,6 +181,7 @@ class LocalNotificationService {
         channelDescription: '공유 가계부 관련 알림 채널',
         importance: Importance.max,
         priority: Priority.max,
+        icon: '@drawable/ic_notification',
         playSound: true,
         enableVibration: true,
         showWhen: true,

@@ -34,7 +34,8 @@ data class LearnedPushFormat(
     val amountRegex: String,
     val typeKeywords: Map<String, List<String>>,
     val merchantRegex: String?,
-    val dateRegex: String?
+    val dateRegex: String?,
+    val confidence: Double? = 0.8
 )
 
 data class LearnedSmsFormat(
@@ -510,7 +511,8 @@ class SupabaseHelper private constructor(private val context: Context) {
                             amountRegex = item.optString("amount_regex", "([0-9,]+)\\s*원"),
                             typeKeywords = parseTypeKeywords(item.optJSONObject("type_keywords")),
                             merchantRegex = item.optString("merchant_regex", null),
-                            dateRegex = item.optString("date_regex", null)
+                            dateRegex = item.optString("date_regex", null),
+                            confidence = item.optDouble("confidence", 0.8)
                         )
                     )
                 }
@@ -664,7 +666,7 @@ class SupabaseHelper private constructor(private val context: Context) {
                     val jsonObject = jsonArray.getJSONObject(0)
                     return@withContext PaymentMethodAutoSettings(
                         autoSaveMode = jsonObject.optString("auto_save_mode", "suggest"),
-                        autoCollectSource = jsonObject.optString("auto_collect_source", "sms")
+                        autoCollectSource = jsonObject.optString("auto_collect_source", null)
                     )
                 }
             }

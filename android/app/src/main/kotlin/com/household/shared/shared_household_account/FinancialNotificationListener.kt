@@ -190,7 +190,12 @@ class FinancialNotificationListener : NotificationListenerService() {
 
         if (!isFinancialApp(packageName) && !isFromMessageApp) return
 
-        Log.d(TAG, "Financial notification received from: $packageName (messageApp=$isFromMessageApp)")
+        val timestamp = System.currentTimeMillis()
+        Log.d(TAG, "==================================================")
+        Log.d(TAG, "NOTIFICATION RECEIVED: $packageName")
+        Log.d(TAG, "Is from message app: $isFromMessageApp")
+        Log.d(TAG, "Timestamp: $timestamp")
+        Log.d(TAG, "==================================================")
 
         val notification = sbn.notification ?: return
         val extras = notification.extras ?: return
@@ -212,10 +217,10 @@ class FinancialNotificationListener : NotificationListenerService() {
 
         val normalizedContent = normalizeContent(content)
         val combinedContent = if (title != null) "$title $normalizedContent" else normalizedContent
-        val timestamp = sbn.postTime
         val sourceType = if (isFromMessageApp) "sms" else "notification"
-
+        
         serviceScope.launch {
+            Log.d(TAG, "[DEBUG] Starting processNotification for $packageName")
             processNotification(packageName, combinedContent, timestamp, title, normalizedContent, sourceType)
         }
     }
@@ -232,6 +237,12 @@ class FinancialNotificationListener : NotificationListenerService() {
         originalContent: String,
         sourceType: String
     ) {
+         Log.d(TAG, "[DEBUG] processNotification START")
+         Log.d(TAG, "[DEBUG]   - Package: $packageName")
+         Log.d(TAG, "[DEBUG]   - Source Type: $sourceType")
+         Log.d(TAG, "[DEBUG]   - Content length: ${originalContent.length}")
+        
+         //sql lite에 알림 저장
          val sqliteId = storageHelper.insertNotification(
              packageName = packageName,
              title = title,
@@ -241,46 +252,110 @@ class FinancialNotificationListener : NotificationListenerService() {
          )
          
          if (sqliteId == -1L) {
-             Log.d(TAG, "Duplicate notification, skipping")
-             return
+            Log.d(TAG, "Duplicate notification, skipping")
+            return
          }
          
          Log.d(TAG, "Notification saved to SQLite with id: $sqliteId (sourceType=$sourceType)")
 
-        if (!supabaseHelper.isInitialized) {
+         if (!supabaseHelper.isInitialized) {
             Log.d(TAG, "Supabase not initialized, using SQLite only")
             notifyFlutter(packageName)
             return
-        }
+         }
 
-        val ledgerId = supabaseHelper.getCurrentLedgerId()
-        val token = supabaseHelper.getValidToken()
-        val userId = token?.let { supabaseHelper.getUserIdFromToken(it) }
-
-        if (ledgerId == null || userId == null) {
+         val ledgerId = supabaseHelper.getCurrentLedgerId()
+         val token = supabaseHelper.getValidToken()
+         val userId = token?.let { supabaseHelper.getUserIdFromToken(it) }
+         
+         Log.d(TAG, "[DEBUG] Ledger ID: $ledgerId")
+         Log.d(TAG, "[DEBUG] User ID: $userId")
+         
+         if (ledgerId == null || userId == null) {
             Log.d(TAG, "No ledger or user, using SQLite only")
             notifyFlutter(packageName)
             return
-        }
+         }
 
-        refreshFormatsCache(ledgerId, userId)
+         Log.d(TAG, "[DEBUG] Refreshing formats cache...")
+         refreshFormatsCache(ledgerId, userId)
 
+        // ============================================================
+        // 1단계: 학습된 포맷으로 매칭 시도
+        // ============================================================
+        // 목적: 사용자가 이전에 수집한 Push의 패턴을 사용하여 정확하게 파싱
+        // 매칭 조건: (패키지명 or 키워드) AND (사용자 소유) AND (sourceType 일치)
+        //
+        // 중요: learnedFormatsCache는 learned_push_formats 테이블에서만 로드됨
+        //       → 결제수단의 autoCollectSource가 Push여야 매칭됨
         val matchingFormat = learnedFormatsCache.find { format ->
-            // 패키지명 또는 키워드 매칭
+            // ─── 조건 1: 패키지명 또는 키워드 매칭
             val contentMatches = format.packageName.equals(packageName, ignoreCase = true) ||
                 format.appKeywords.any { keyword ->
                     combinedContent.contains(keyword, ignoreCase = true)
                 }
-            // 추가 검증: 해당 포맷의 paymentMethodId가 현재 사용자 캐시에 존재하는지
+
+            if (contentMatches) {
+                Log.d(TAG, "[DEBUG] Content matched for format: ${format.id}")
+                Log.d(TAG, "[DEBUG]   - Package: ${format.packageName} (input: $packageName)")
+                Log.d(TAG, "[DEBUG]   - Keywords: ${format.appKeywords}")
+            }
+
+            // ─── 조건 2: 권한 검증 (현재 사용자 소유 결제수단인지 확인)
             val isOwnedByCurrentUser = paymentMethodsCache.any { pm -> pm.id == format.paymentMethodId }
-            contentMatches && isOwnedByCurrentUser
+
+            if (!isOwnedByCurrentUser && contentMatches) {
+                Log.d(TAG, "[DEBUG] Format matched but NOT owned by current user (paymentMethodId: ${format.paymentMethodId})")
+            }
+
+            // ─── 조건 3: sourceType 일치 확인 ⭐ 핵심!
+            // learned_push_formats는 Push 포맷이므로, 결제수단도 Push 모드여야 함
+            val paymentMethod = paymentMethodsCache.find { it.id == format.paymentMethodId }
+            val expectedSource = if (sourceType == "sms") "sms" else "push"
+            val sourceMatches = paymentMethod?.autoCollectSource == expectedSource
+
+            if (!sourceMatches && contentMatches && isOwnedByCurrentUser) {
+                Log.d(TAG, "[DEBUG] ⚠️ Format matched but SOURCE TYPE mismatch:")
+                Log.d(TAG, "[DEBUG]   - Payment method autoCollectSource: ${paymentMethod?.autoCollectSource}")
+                Log.d(TAG, "[DEBUG]   - Incoming sourceType: $sourceType (expected: $expectedSource)")
+                Log.d(TAG, "[DEBUG]   - Skipping this format, will try fallback matching")
+            }
+
+            contentMatches && isOwnedByCurrentUser && sourceMatches
         }
 
+        if (matchingFormat != null) {
+            Log.d(TAG, "[DEBUG] ✓ Found matching learned format:")
+            Log.d(TAG, "[DEBUG]   - Format ID: ${matchingFormat.id}")
+            Log.d(TAG, "[DEBUG]   - Payment Method ID: ${matchingFormat.paymentMethodId}")
+            Log.d(TAG, "[DEBUG]   - Source: Push (learned_push_formats)")
+            Log.d(TAG, "[DEBUG]   - Confidence: ${matchingFormat.confidence}")
+        } else {
+            Log.d(TAG, "[DEBUG] ✗ No matching learned format found")
+            if (sourceType != "sms" && learnedFormatsCache.isNotEmpty()) {
+                Log.d(TAG, "[DEBUG]   Available push formats (${learnedFormatsCache.size}):")
+                learnedFormatsCache.forEach { format ->
+                    Log.d(TAG, "[DEBUG]     - ${format.id}: ${format.packageName}")
+                    Log.d(TAG, "[DEBUG]       • paymentMethodId: ${format.paymentMethodId}")
+                    Log.d(TAG, "[DEBUG]       • confidence: ${format.confidence}")
+                }
+            }
+        }
+
+        // ============================================================
+        // 2단계: 학습된 포맷으로 파싱 vs 일반 파싱
+        // ============================================================
+        // 학습된 포맷이 있으면: 사용자가 학습한 정규식으로 금액/상호/날짜 추출 (높은 정확도)
+        // 학습된 포맷이 없으면: 패키지명 기반 기본 파싱 규칙 적용 (낮은 정확도)
         val parsed = if (matchingFormat != null) {
+            Log.d(TAG, "[DEBUG] Parsing with learned format...")
             FinancialMessageParser.parseWithFormat(combinedContent, matchingFormat)
         } else {
+            Log.d(TAG, "[DEBUG] Parsing with generic format (package: $packageName)...")
             FinancialMessageParser.parse(packageName, combinedContent)
         }
+
+        Log.d(TAG, "[DEBUG] Parse result: isParsed=${parsed.isParsed}, amount=${parsed.amount}, merchant=${parsed.merchant}, type=${parsed.transactionType}")
 
         if (!parsed.isParsed) {
             Log.d(TAG, "Failed to parse notification, keeping in SQLite for Flutter sync")
@@ -322,9 +397,12 @@ class FinancialNotificationListener : NotificationListenerService() {
             SupabaseHelper.PaymentMethodAutoSettings(it.autoSaveMode, it.autoCollectSource)
         } ?: supabaseHelper.getPaymentMethodAutoSettings(paymentMethodId)
 
-        // SMS 모드로 설정된 결제수단이면 Push 스킵 (SQLite는 synced 처리)
-        if (settings != null && !settings.isPushSource) {
-            Log.d(TAG, "Payment method is set to SMS mode, skipping push notification collection")
+        // sourceType과 autoCollectSource 불일치 시 스킵
+        // - SMS가 왔는데 결제수단이 Push 모드 → 스킵
+        // - Push가 왔는데 결제수단이 SMS 모드 → 스킵
+        val expectedSource = if (sourceType == "sms") "sms" else "push"
+        if (settings != null && settings.autoCollectSource != expectedSource) {
+            Log.d(TAG, "Source type mismatch: sourceType=$sourceType, expected=$expectedSource, actual=${settings.autoCollectSource}")
             storageHelper.markAsSynced(listOf(sqliteId))
             notifyFlutter(packageName)
             return
@@ -522,18 +600,68 @@ class FinancialNotificationListener : NotificationListenerService() {
         }
     }
 
+    /**
+     * SMS/Push 알림 파싱에 필요한 데이터를 Supabase에서 메모리로 로드하는 함수
+     *
+     * 역할:
+     * 1. 학습된 SMS 포맷(learnedFormatsCache) 로드
+     *    - 사용자가 이전에 수집한 SMS의 패턴을 학습한 데이터
+     *    - 패키지명, 금액/상호/날짜 정규식 등이 포함
+     * 2. 결제수단 정보(paymentMethodsCache) 로드
+     *    - 현재 사용자가 소유한 결제수단 목록
+     *    - 자동수집 모드(자동/제안/수동), 소스타입(SMS/Push) 등이 포함
+     * 3. 캐시 유효성 관리
+     *    - 캐시 만료 시간(FORMAT_CACHE_DURATION_MS)이 지나면 자동 새로고침
+     *    - 불필요한 네트워크 요청 방지 (성능 최적화)
+     *
+     * 사용 시점:
+     * - processNotification에서 새 알림 수신 시 매 번 호출
+     * - 캐시가 유효하면 Supabase 요청 스킵 (빠른 응답)
+     * - 캐시가 만료되면 최신 데이터로 갱신
+     *
+     * 부수 효과:
+     * - 알림 매칭 성능 향상 (Supabase 쿼리 불필요)
+     * - 사용자가 UI에서 결제수단 추가/수정 시 invalidateCache() 호출로 강제 새로고침
+     *
+     * @param ledgerId 가계부 ID (Supabase 데이터 필터링용)
+     * @param userId 사용자 ID (소유 결제수단, 권한 검증용)
+     */
     private suspend fun refreshFormatsCache(ledgerId: String, userId: String) {
         val now = System.currentTimeMillis()
+
+        // 캐시 유효성 검사: 마지막 업데이트로부터 경과 시간이 설정값보다 적고, 캐시가 비어있지 않으면 스킵
         if (now - lastFormatsFetchTime < NotificationConfig.FORMAT_CACHE_DURATION_MS && learnedFormatsCache.isNotEmpty()) {
+            Log.d(TAG, "[DEBUG] Cache fresh, skipping refresh (age: ${now - lastFormatsFetchTime}ms)")
             return
         }
 
+        Log.d(TAG, "[DEBUG] Cache expired or empty, refreshing...")
+
         try {
+            // Supabase에서 해당 가계부에 대한 학습된 SMS 포맷 로드
+            // 반환값: List<LearnedPushFormat> - 사용자가 이전에 수집한 SMS의 패턴들
             learnedFormatsCache = supabaseHelper.getLearnedPushFormats(ledgerId, userId)
+
+            // Supabase에서 현재 사용자가 소유한 결제수단 정보 로드
+            // 반환값: List<PaymentMethodInfo> - 현금, 카드, 체크카드 등 결제수단 정보
             paymentMethodsCache = supabaseHelper.getPaymentMethodsByLedger(ledgerId, userId)
+
+            // 캐시 갱신 시각 저장 (다음 갱신 필요 시점 판단용)
             lastFormatsFetchTime = now
+
             Log.d(TAG, "Refreshed ${learnedFormatsCache.size} learned push formats, ${paymentMethodsCache.size} payment methods")
+
+            // 결제수단 정보 상세 로깅 (디버그용)
+            paymentMethodsCache.forEach { pm ->
+                Log.d(TAG, "[DEBUG]   Payment Method: ${pm.name}")
+                Log.d(TAG, "[DEBUG]     - ID: ${pm.id}")
+                Log.d(TAG, "[DEBUG]     - autoSaveMode: ${pm.autoSaveMode}")
+                Log.d(TAG, "[DEBUG]     - autoCollectSource: ${pm.autoCollectSource}")
+                Log.d(TAG, "[DEBUG]     - ownerUserId: ${pm.ownerUserId}")
+            }
         } catch (e: Exception) {
+            // 캐시 갱신 실패해도 기존 캐시 사용 (우아한 저하)
+            // Supabase 장애 시에도 앱이 계속 동작할 수 있도록 함
             Log.e(TAG, "Failed to refresh formats cache", e)
         }
     }

@@ -77,10 +77,16 @@ class QuickInputActivity : Activity() {
             return
         }
 
-        // 저장 시작: 버튼 비활성화 및 ProgressBar 표시
+        // 저장 시작: UI 비활성화 및 로딩 상태 표시
         isSaving = true
         saveButton.isEnabled = false
+        saveButton.text = ""
+        saveButton.alpha = 0.7f
         progressBar.visibility = View.VISIBLE
+        cancelButton.isEnabled = false
+        cancelButton.alpha = 0.5f
+        amountInput.isEnabled = false
+        titleInput.isEnabled = false
 
         activityScope.launch {
             try {
@@ -164,6 +170,12 @@ class QuickInputActivity : Activity() {
     private fun resetSaveButton() {
         isSaving = false
         saveButton.isEnabled = true
+        saveButton.text = "저장"
+        saveButton.alpha = 1.0f
         progressBar.visibility = View.GONE
+        cancelButton.isEnabled = true
+        cancelButton.alpha = 1.0f
+        amountInput.isEnabled = true
+        titleInput.isEnabled = true
     }
 }

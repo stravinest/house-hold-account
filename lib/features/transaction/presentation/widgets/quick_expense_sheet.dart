@@ -224,25 +224,36 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  TextButton(
-                    onPressed: _isLoading ? null : () => Navigator.pop(context),
-                    child: Text(l10n.commonCancel),
+                  SizedBox(
+                    width: 80,
+                    height: 40,
+                    child: TextButton(
+                      onPressed: _isLoading
+                          ? null
+                          : () => Navigator.pop(context),
+                      child: Text(l10n.commonCancel),
+                    ),
                   ),
                   const SizedBox(width: Spacing.sm),
-                  ElevatedButton(
-                    onPressed: _isLoading ? null : _submit,
-                    child: _isLoading
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                colorScheme.onPrimary,
+                  SizedBox(
+                    width: 80,
+                    height: 40,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _submit,
+                      style: ElevatedButton.styleFrom(padding: EdgeInsets.zero),
+                      child: _isLoading
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  colorScheme.onPrimary,
+                                ),
                               ),
-                            ),
-                          )
-                        : Text(l10n.commonSave),
+                            )
+                          : Text(l10n.commonSave),
+                    ),
                   ),
                 ],
               ),

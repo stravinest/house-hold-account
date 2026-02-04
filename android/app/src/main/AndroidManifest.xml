@@ -98,6 +98,10 @@
          <meta-data
              android:name="com.google.firebase.messaging.default_notification_channel_id"
              android:value="household_account_channel" />
+         <!-- FCM Default Notification Icon (White Silhouette) -->
+         <meta-data
+             android:name="com.google.firebase.messaging.default_notification_icon"
+             android:resource="@drawable/ic_notification" />
          
 
         
