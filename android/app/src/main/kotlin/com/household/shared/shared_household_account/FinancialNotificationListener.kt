@@ -321,7 +321,18 @@ class FinancialNotificationListener : NotificationListenerService() {
                 Log.d(TAG, "[DEBUG]   - Skipping this format, will try fallback matching")
             }
 
-            contentMatches && isOwnedByCurrentUser && sourceMatches
+            // ─── 조건 4: autoSaveMode 확인 ⭐ 추가됨!
+            // manual 모드인 결제수단은 자동수집에서 제외
+            val isAutoSaveEnabled = paymentMethod?.autoSaveMode != "manual"
+
+            if (!isAutoSaveEnabled && contentMatches && isOwnedByCurrentUser && sourceMatches) {
+                Log.d(TAG, "[DEBUG] ⚠️ Format matched but autoSaveMode is manual:")
+                Log.d(TAG, "[DEBUG]   - Payment method: ${paymentMethod?.name}")
+                Log.d(TAG, "[DEBUG]   - autoSaveMode: ${paymentMethod?.autoSaveMode}")
+                Log.d(TAG, "[DEBUG]   - Skipping this format")
+            }
+
+            contentMatches && isOwnedByCurrentUser && sourceMatches && isAutoSaveEnabled
         }
 
         if (matchingFormat != null) {
@@ -368,14 +379,19 @@ class FinancialNotificationListener : NotificationListenerService() {
         
         // learned_push_formats에서 매칭 안 되면 결제수단 이름으로 fallback 매칭
         // sourceType에 맞는 결제수단만 매칭 (SMS -> sms, notification -> push)
+        // ⭐ autoSaveMode가 manual인 결제수단은 자동수집에서 제외
         if (paymentMethodId.isEmpty()) {
             val expectedSource = if (sourceType == "sms") "sms" else "push"
             matchedPaymentMethod = paymentMethodsCache.find { pm ->
-                pm.autoCollectSource == expectedSource && combinedContent.contains(pm.name, ignoreCase = true)
+                pm.autoCollectSource == expectedSource &&
+                pm.autoSaveMode != "manual" &&
+                combinedContent.contains(pm.name, ignoreCase = true)
             }
             if (matchedPaymentMethod != null) {
                 paymentMethodId = matchedPaymentMethod.id
-                Log.d(TAG, "Fallback matched by payment method name: ${matchedPaymentMethod.name} (source: $expectedSource)")
+                Log.d(TAG, "Fallback matched by payment method name: ${matchedPaymentMethod.name} (source: $expectedSource, mode: ${matchedPaymentMethod.autoSaveMode})")
+            } else {
+                Log.d(TAG, "Fallback matching failed: no eligible payment methods found (excluded manual mode)")
             }
         }
 
