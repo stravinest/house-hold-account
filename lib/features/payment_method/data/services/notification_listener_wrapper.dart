@@ -25,7 +25,33 @@ import 'native_notification_sync_service.dart';
 import 'sms_parsing_service.dart';
 
 class NotificationListenerWrapper {
-  NotificationListenerWrapper._();
+  NotificationListenerWrapper._()
+      : _paymentMethodRepository = PaymentMethodRepository(),
+        _pendingTransactionRepository = PendingTransactionRepository(),
+        _transactionRepository = TransactionRepository(),
+        _learnedPushFormatRepository = LearnedPushFormatRepository(),
+        _categoryMappingService = CategoryMappingService(),
+        _duplicateCheckService = DuplicateCheckService(),
+        _notificationService = NotificationService();
+
+  /// 테스트용 팩토리 생성자
+  /// 의존성 주입을 통해 mock 객체를 사용할 수 있도록 지원
+  @visibleForTesting
+  NotificationListenerWrapper.forTesting({
+    required PaymentMethodRepository paymentMethodRepository,
+    required PendingTransactionRepository pendingTransactionRepository,
+    required TransactionRepository transactionRepository,
+    required LearnedPushFormatRepository learnedPushFormatRepository,
+    required CategoryMappingService categoryMappingService,
+    required DuplicateCheckService duplicateCheckService,
+    required NotificationService notificationService,
+  })  : _paymentMethodRepository = paymentMethodRepository,
+        _pendingTransactionRepository = pendingTransactionRepository,
+        _transactionRepository = transactionRepository,
+        _learnedPushFormatRepository = learnedPushFormatRepository,
+        _categoryMappingService = categoryMappingService,
+        _duplicateCheckService = duplicateCheckService,
+        _notificationService = notificationService;
 
   static NotificationListenerWrapper? _instance;
   static NotificationListenerWrapper get instance {
@@ -62,17 +88,13 @@ class NotificationListenerWrapper {
   StreamSubscription<ServiceNotificationEvent>? _subscription;
   RealtimeChannel? _paymentMethodsSubscription;
 
-  final PaymentMethodRepository _paymentMethodRepository =
-      PaymentMethodRepository();
-  final PendingTransactionRepository _pendingTransactionRepository =
-      PendingTransactionRepository();
-  final TransactionRepository _transactionRepository = TransactionRepository();
-  final LearnedPushFormatRepository _learnedPushFormatRepository =
-      LearnedPushFormatRepository();
-  final CategoryMappingService _categoryMappingService =
-      CategoryMappingService();
-  final DuplicateCheckService _duplicateCheckService = DuplicateCheckService();
-  final NotificationService _notificationService = NotificationService();
+  late final PaymentMethodRepository _paymentMethodRepository;
+  late final PendingTransactionRepository _pendingTransactionRepository;
+  late final TransactionRepository _transactionRepository;
+  late final LearnedPushFormatRepository _learnedPushFormatRepository;
+  late final CategoryMappingService _categoryMappingService;
+  late final DuplicateCheckService _duplicateCheckService;
+  late final NotificationService _notificationService;
 
   List<PaymentMethodModel> _autoSavePaymentMethods = [];
   final Map<String, List<LearnedPushFormatModel>> _learnedFormatsCache = {};
@@ -614,7 +636,12 @@ class NotificationListenerWrapper {
     );
   }
 
-  bool _isFinancialApp(String packageName) {
+  @visibleForTesting
+  static bool isFinancialAppForTesting(String packageName) {
+    return _isFinancialAppStatic(packageName);
+  }
+
+  static bool _isFinancialAppStatic(String packageName) {
     final packageLower = packageName.toLowerCase();
 
     // 디버그 모드에서만 테스트 패키지(com.android.shell) 허용
@@ -624,6 +651,22 @@ class NotificationListenerWrapper {
 
     return _financialAppPackagesLower.any((pkg) => packageLower.contains(pkg));
   }
+
+  bool _isFinancialApp(String packageName) {
+    return _isFinancialAppStatic(packageName);
+  }
+
+  /// 테스트에서 키워드 동기화 검증을 위한 접근자
+  @visibleForTesting
+  static List<String> get financialChannelKeywordsForTesting =>
+      _financialChannelKeywords;
+
+  @visibleForTesting
+  static List<String> get alimtalkTransactionKeywordsForTesting =>
+      _alimtalkTransactionKeywords;
+
+  @visibleForTesting
+  static RegExp get amountPatternForTesting => _amountPattern;
 
   // 카카오톡 알림톡 금융 채널 키워드 (title에서 확인)
   // FinancialNotificationListener.kt의 FINANCIAL_CHANNEL_KEYWORDS와 동기화 필요
@@ -638,6 +681,8 @@ class NotificationListenerWrapper {
     '카카오뱅크', '토스뱅크', '케이뱅크',
     // 간편결제
     '카카오페이', '네이버페이',
+    // 카카오톡 알림톡 채널명 (실제 알림에서 title로 사용됨)
+    '카드영수증',
   ];
 
   // 카카오톡 알림톡 본문 거래 키워드
@@ -651,11 +696,16 @@ class NotificationListenerWrapper {
   // 금액 패턴 정규식
   static final _amountPattern = RegExp(r'[0-9,]+원|\d{1,3}(,\d{3})+');
 
-  /// 카카오톡 알림톡 금융 알림 3중 검증
+  /// 카카오톡 알림톡 금융 알림 3중 검증 (테스트용 public static 메서드)
   /// 1) title이 금융 채널 키워드 포함
   /// 2) content에 거래 키워드 포함
   /// 3) content에 금액 패턴 포함
-  bool _isFinancialAlimtalk(String title, String content) {
+  @visibleForTesting
+  static bool isFinancialAlimtalkForTesting(String title, String content) {
+    return _isFinancialAlimtalkStatic(title, content);
+  }
+
+  static bool _isFinancialAlimtalkStatic(String title, String content) {
     if (title.isEmpty || content.isEmpty) return false;
 
     // 1) 금융 채널 title 확인
@@ -676,6 +726,10 @@ class NotificationListenerWrapper {
     if (!hasAmountPattern) return false;
 
     return true;
+  }
+
+  bool _isFinancialAlimtalk(String title, String content) {
+    return _isFinancialAlimtalkStatic(title, content);
   }
 
   _PaymentMethodMatchResult? _findMatchingPaymentMethod(

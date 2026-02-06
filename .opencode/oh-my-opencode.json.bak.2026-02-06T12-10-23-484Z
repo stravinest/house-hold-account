@@ -12,20 +12,20 @@
       "model": "anthropic/claude-sonnet-4-5"
     },
     "oracle": {
-      "model": "anthropic/claude-opus-4-6",
+      "model": "anthropic/claude-opus-4-5",
       "variant": "max"
     },
     "frontend-ui-ux-engineer": {
-      "model": "anthropic/claude-opus-4-6"
+      "model": "anthropic/claude-opus-4-5"
     },
     "document-writer": {
-      "model": "anthropic/claude-opus-4-6"
+      "model": "anthropic/claude-opus-4-5"
     },
     "multimodal-looker": {
       "model": "anthropic/claude-sonnet-4-5"
     },
     "momus": {
-      "model": "anthropic/claude-opus-4-6"
+      "model": "anthropic/claude-opus-4-5"
     },
     "atlas": {
       "model": "anthropic/claude-sonnet-4-5"
@@ -36,7 +36,7 @@
       "model": "google/gemini-3-pro"
     },
     "ultrabrain": {
-      "model": "anthropic/claude-opus-4-6",
+      "model": "anthropic/claude-opus-4-5",
       "variant": "max"
     },
     "artistry": {
@@ -50,7 +50,7 @@
       "model": "anthropic/claude-sonnet-4-5"
     },
     "unspecified-high": {
-      "model": "anthropic/claude-opus-4-6",
+      "model": "anthropic/claude-opus-4-5",
       "variant": "max"
     },
     "writing": {
