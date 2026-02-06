@@ -2269,7 +2269,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get autoSaveSettingsSourcePushDesc =>
-      '카드사 앱의 푸시 알림을 감지합니다. KB국민, 신한, 삼성카드 등이 지원됩니다.';
+      '카드사 앱 또는 카카오톡 알림톡의 푸시 알림을 감지합니다. KB국민, 신한, 삼성카드 등이 지원됩니다.';
 
   @override
   String get paymentMethodPermissionWarningTitle => '공유 전환 확인';

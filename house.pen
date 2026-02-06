@@ -1,5 +1,5 @@
 {
-  "version": "2.6",
+  "version": "2.7",
   "children": [
     {
       "type": "frame",
@@ -19,7 +19,7 @@
       "x": -2294.577046548957,
       "y": -419,
       "name": "Improved Design",
-      "width": 6895,
+      "width": 8143,
       "height": 1575,
       "fill": "#F5F5F5",
       "gap": 48,
@@ -6400,7 +6400,7 @@
                               "y": 0,
                               "name": "foodSegment",
                               "innerRadius": 0.6,
-                              "sweepAngle": 131,
+                              "sweepAngle": -131,
                               "fill": "#BA1A1A",
                               "width": 200,
                               "height": 200
@@ -6413,7 +6413,7 @@
                               "name": "transportSegment",
                               "innerRadius": 0.6,
                               "startAngle": 131,
-                              "sweepAngle": 114,
+                              "sweepAngle": -114,
                               "fill": "#FF9800",
                               "width": 200,
                               "height": 200
@@ -6426,7 +6426,7 @@
                               "name": "shoppingSegment",
                               "innerRadius": 0.6,
                               "startAngle": 245,
-                              "sweepAngle": 115,
+                              "sweepAngle": -115,
                               "fill": "#2E7D32",
                               "width": 200,
                               "height": 200
@@ -10831,6 +10831,325 @@
                           "cornerRadius": 4
                         }
                       ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ToS01",
+          "name": "TermsOfService",
+          "context": "이용약관 페이지",
+          "width": 375,
+          "height": 812,
+          "fill": "$--surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "ToS02",
+              "name": "headerSection",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                24,
+                24,
+                16,
+                24
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ToS03",
+                  "name": "pageTitle",
+                  "fill": "$--on-surface",
+                  "content": "이용약관",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ToS04",
+                  "name": "effectiveDate",
+                  "fill": "$--on-surface-variant",
+                  "content": "시행일자: 2026년 2월 6일",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ToS05",
+              "name": "contentSection",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "padding": [
+                0,
+                24,
+                24,
+                24
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ToS06",
+                  "name": "article1Title",
+                  "fill": "$--on-surface",
+                  "content": "제1조 (목적)",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ToS07",
+                  "name": "article1Content",
+                  "fill": "$--on-surface-variant",
+                  "content": "본 약관은 공유 가계부(이하 '서비스')를 이용함에 있어 회사와 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "ToS08",
+                  "name": "article2Title",
+                  "fill": "$--on-surface",
+                  "content": "제2조 (정의)",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "ToS09",
+                  "name": "article2Content",
+                  "fill": "$--on-surface-variant",
+                  "content": "1. '서비스'란 회사가 제공하는 가계부 관리 및 공유 애플리케이션을 의미합니다.\n2. '이용자'란 본 약관에 따라 회사가 제공하는 서비스를 이용하는 자를 의미합니다.\n3. '가계부'란 이용자가 생성한 수입, 지출, 자산 관리 데이터를 의미합니다.\n4. '공유 가계부'란 여러 이용자가 함께 사용하는 가계부를 의미합니다.\n5. '회원'이란 회사와 서비스 이용계약을 체결하고 회원 아이디를 부여받은 자를 의미합니다.",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "ToS10",
+                  "name": "moreArticles",
+                  "fill": "$--on-surface-variant",
+                  "content": "※ 전체 약관은 docs/terms_of_service.md 파일을 참조하세요.",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "ToS11",
+              "name": "bottomButtons",
+              "width": "fill_container",
+              "gap": 12,
+              "padding": [
+                0,
+                24,
+                24,
+                24
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ToS12",
+                  "name": "closeButton",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "$--primary",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ToS13",
+                      "fill": "$--on-primary",
+                      "content": "확인",
+                      "fontFamily": "$--font-primary",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "PP01",
+          "name": "PrivacyPolicy",
+          "context": "개인정보처리방침 페이지",
+          "width": 375,
+          "height": 812,
+          "fill": "$--surface",
+          "layout": "vertical",
+          "children": [
+            {
+              "type": "frame",
+              "id": "PP02",
+              "name": "headerSection",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                24,
+                24,
+                16,
+                24
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PP03",
+                  "name": "pageTitle",
+                  "fill": "$--on-surface",
+                  "content": "개인정보처리방침",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 24,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PP04",
+                  "name": "effectiveDate",
+                  "fill": "$--on-surface-variant",
+                  "content": "시행일자: 2026년 2월 6일",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PP05",
+              "name": "contentSection",
+              "width": "fill_container",
+              "height": "fill_container",
+              "layout": "vertical",
+              "gap": 20,
+              "padding": [
+                0,
+                24,
+                24,
+                24
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "PP06",
+                  "name": "introText",
+                  "fill": "$--on-surface-variant",
+                  "content": "공유 가계부는 개인정보 보호법, 정보통신망 이용촉진 및 정보보호 등에 관한 법률 등 관련 법령에 따라 이용자의 개인정보를 보호하고 있습니다.",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "PP07",
+                  "name": "article1Title",
+                  "fill": "$--on-surface",
+                  "content": "제1조 (개인정보의 수집 및 이용 목적)",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PP08",
+                  "name": "article1Content",
+                  "fill": "$--on-surface-variant",
+                  "content": "회사는 다음의 목적을 위하여 개인정보를 처리합니다:\n\n1. 회원가입 및 관리\n- 회원 가입의사 확인, 본인 식별·인증\n- 회원자격 유지·관리, 서비스 부정이용 방지\n\n2. 서비스 제공\n- 가계부 데이터 저장 및 관리\n- 공유 가계부 멤버 관리\n- SMS 자동수집 기능 제공 (안드로이드만 해당)\n- 푸시 알림 발송\n\n3. 서비스 개선\n- 통계 분석 및 신규 서비스 개발",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "PP09",
+                  "name": "article2Title",
+                  "fill": "$--on-surface",
+                  "content": "제2조 (수집하는 개인정보의 항목)",
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 18,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "PP10",
+                  "name": "article2Content",
+                  "fill": "$--on-surface-variant",
+                  "content": "【필수 수집 항목】\n- 이메일 주소, 비밀번호\n- 프로필 정보 (닉네임, 사용자 색상)\n- 거래 데이터 (금액, 날짜, 카테고리)\n- 푸시 알림 토큰\n\n【선택 수집 항목】\n- SMS 수신 내용 (자동수집 기능 사용 시)\n- 영수증 이미지",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "PP11",
+                  "name": "moreArticles",
+                  "fill": "$--on-surface-variant",
+                  "content": "※ 전체 개인정보처리방침은 docs/privacy_policy.md 파일을 참조하세요.",
+                  "lineHeight": 1.6,
+                  "fontFamily": "$--font-primary",
+                  "fontSize": 12,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "PP12",
+              "name": "bottomButtons",
+              "width": "fill_container",
+              "gap": 12,
+              "padding": [
+                0,
+                24,
+                24,
+                24
+              ],
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "PP13",
+                  "name": "closeButton",
+                  "width": "fill_container",
+                  "height": 48,
+                  "fill": "$--primary",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "PP14",
+                      "fill": "$--on-primary",
+                      "content": "확인",
+                      "fontFamily": "$--font-primary",
+                      "fontSize": 16,
+                      "fontWeight": "600"
                     }
                   ]
                 }

@@ -121,6 +121,8 @@ class NotificationListenerWrapper {
     'com.naverfin.payapp', // 네이버페이 (대체)
     'com.kakaopay.app', // 카카오페이
     'com.komsco.kpay', // K-Pay
+    // 카카오톡 (알림톡 금융 알림 수집)
+    'com.kakao.talk', // 카카오톡 알림톡
     // 경기지역화폐 (실제 확인된 패키지명)
     'gov.gyeonggi.ggcard', // 경기지역화폐 공식 앱 (확인됨!)
     'kr.or.ggc', // 경기지역화폐 공통
@@ -501,6 +503,25 @@ class NotificationListenerWrapper {
 
     final combinedContent = '$title $content';
 
+    // 카카오톡 알림톡: 금융 채널 title + 거래 키워드 + 금액 패턴 3중 검증
+    // 개인 채팅/일반 채널 알림을 확실히 차단
+    final isKakaoPackage = packageLower.contains('com.kakao.talk');
+    if (isKakaoPackage) {
+      if (!_isFinancialAlimtalk(title, content)) {
+        if (kDebugMode) {
+          debugPrint(
+            '[NotificationListener] Skipping non-financial kakao notification (title: $title)',
+          );
+        }
+        return;
+      }
+      if (kDebugMode) {
+        debugPrint(
+          '[NotificationListener] Kakao alimtalk financial notification: $title',
+        );
+      }
+    }
+
     // 패키지명 또는 내용에서 금융 관련 여부 확인
     final isFinancial = _isFinancialApp(packageName);
     final isFinancialSender = FinancialSmsSenders.isFinancialSender(
@@ -550,12 +571,16 @@ class NotificationListenerWrapper {
       '[NotificationListener] Found match: ${matchResult.paymentMethod.name}',
     );
 
+    // 카카오톡 알림톡도 Push 알림이므로 sourceType은 'notification'
+    const sourceType = 'notification';
+
     await _processNotification(
       packageName: packageName,
       content: combinedContent,
       timestamp: timestamp,
       paymentMethod: matchResult.paymentMethod,
       learnedFormat: matchResult.learnedFormat,
+      sourceType: sourceType,
     );
   }
 
@@ -600,6 +625,59 @@ class NotificationListenerWrapper {
     return _financialAppPackagesLower.any((pkg) => packageLower.contains(pkg));
   }
 
+  // 카카오톡 알림톡 금융 채널 키워드 (title에서 확인)
+  // FinancialNotificationListener.kt의 FINANCIAL_CHANNEL_KEYWORDS와 동기화 필요
+  static const _financialChannelKeywords = [
+    // 카드사
+    'KB국민카드', '국민카드', '신한카드', '삼성카드', '현대카드',
+    '롯데카드', '우리카드', '하나카드', 'BC카드', 'NH카드',
+    '비씨카드',
+    // 은행
+    'KB국민은행', '국민은행', '신한은행', '우리은행', '하나은행',
+    'NH농협', '농협은행', 'IBK기업은행', '기업은행',
+    '카카오뱅크', '토스뱅크', '케이뱅크',
+    // 간편결제
+    '카카오페이', '네이버페이',
+  ];
+
+  // 카카오톡 알림톡 본문 거래 키워드
+  // FinancialNotificationListener.kt의 ALIMTALK_TRANSACTION_KEYWORDS와 동기화 필요
+  static const _alimtalkTransactionKeywords = [
+    '승인', '결제', '출금', '입금', '이체', '충전',
+    '취소', '환불', '일시불', '할부', '사용금액',
+    '잔액', '체크카드', '신용카드',
+  ];
+
+  // 금액 패턴 정규식
+  static final _amountPattern = RegExp(r'[0-9,]+원|\d{1,3}(,\d{3})+');
+
+  /// 카카오톡 알림톡 금융 알림 3중 검증
+  /// 1) title이 금융 채널 키워드 포함
+  /// 2) content에 거래 키워드 포함
+  /// 3) content에 금액 패턴 포함
+  bool _isFinancialAlimtalk(String title, String content) {
+    if (title.isEmpty || content.isEmpty) return false;
+
+    // 1) 금융 채널 title 확인
+    final titleLower = title.toLowerCase();
+    final isFinancialChannel = _financialChannelKeywords.any(
+      (keyword) => titleLower.contains(keyword.toLowerCase()),
+    );
+    if (!isFinancialChannel) return false;
+
+    // 2) 거래 키워드 확인
+    final hasTransactionKeyword = _alimtalkTransactionKeywords.any(
+      (keyword) => content.contains(keyword),
+    );
+    if (!hasTransactionKeyword) return false;
+
+    // 3) 금액 패턴 확인
+    final hasAmountPattern = _amountPattern.hasMatch(content);
+    if (!hasAmountPattern) return false;
+
+    return true;
+  }
+
   _PaymentMethodMatchResult? _findMatchingPaymentMethod(
     String packageName,
     String content,
@@ -615,9 +693,8 @@ class NotificationListenerWrapper {
 
     for (final pm in _autoSavePaymentMethods) {
       // Push 소스로 설정된 결제수단만 매칭 (SMS로 설정된 결제수단은 무시)
-      if (pm.autoCollectSource != AutoCollectSource.push) {
-        continue;
-      }
+      // 카카오톡 알림톡도 Push 알림이므로 push 소스 결제수단과 매칭됨
+      if (pm.autoCollectSource != AutoCollectSource.push) continue;
 
       final formats = _learnedFormatsCache[pm.id];
       if (kDebugMode) {

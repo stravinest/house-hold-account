@@ -1024,14 +1024,12 @@ class _AutoCollectPaymentMethodCard extends StatelessWidget {
   ) {
     return switch (paymentMethod.autoSaveMode) {
       AutoSaveMode.manual => l10n.autoSaveModeOff,
-      AutoSaveMode.suggest =>
-        paymentMethod.autoCollectSource == AutoCollectSource.sms
-            ? l10n.autoSaveModeSuggestSms
-            : l10n.autoSaveModeSuggestPush,
-      AutoSaveMode.auto =>
-        paymentMethod.autoCollectSource == AutoCollectSource.sms
-            ? l10n.autoSaveModeAutoSms
-            : l10n.autoSaveModeAutoPush,
+      AutoSaveMode.suggest => paymentMethod.autoCollectSource == AutoCollectSource.sms
+          ? l10n.autoSaveModeSuggestSms
+          : l10n.autoSaveModeSuggestPush,
+      AutoSaveMode.auto => paymentMethod.autoCollectSource == AutoCollectSource.sms
+          ? l10n.autoSaveModeAutoSms
+          : l10n.autoSaveModeAutoPush,
     };
   }
 }

@@ -750,7 +750,7 @@
   "autoSaveSettingsSourceSms": "SMS",
   "autoSaveSettingsSourcePush": "Push",
   "autoSaveSettingsSourceSmsDesc": "Detects payment text messages. Supported by most card companies.",
-  "autoSaveSettingsSourcePushDesc": "Detects push notifications from card apps. Supports KB, Shinhan, Samsung Card, etc.",
+  "autoSaveSettingsSourcePushDesc": "Detects push notifications from card apps or KakaoTalk alerts. Supports KB, Shinhan, Samsung Card, etc.",
   "paymentMethodPermissionWarningTitle": "Confirm Sharing",
   "paymentMethodPermissionWarningMessage": "Changing from personal to shared payment method will allow other members to modify it. Continue?",
   "errorOccurred": "An error occurred",

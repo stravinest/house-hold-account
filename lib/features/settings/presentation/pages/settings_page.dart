@@ -211,17 +211,13 @@ class SettingsPage extends ConsumerWidget {
               leading: const Icon(Icons.description_outlined),
               title: Text(l10n.settingsTerms),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                // TODO: 이용약관 페이지로 이동
-              },
+              onTap: () => context.push(Routes.termsOfService),
             ),
             ListTile(
               leading: const Icon(Icons.privacy_tip_outlined),
               title: Text(l10n.settingsPrivacy),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                // TODO: 개인정보처리방침 페이지로 이동
-              },
+              onTap: () => context.push(Routes.privacyPolicy),
             ),
 
             const Divider(),

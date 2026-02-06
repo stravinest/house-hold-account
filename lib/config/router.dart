@@ -17,7 +17,9 @@ import '../features/payment_method/presentation/pages/debug_test_page.dart';
 import '../features/payment_method/presentation/pages/payment_method_management_page.dart';
 import '../features/payment_method/presentation/pages/pending_transactions_page.dart';
 import '../features/search/presentation/pages/search_page.dart';
+import '../features/settings/presentation/pages/privacy_policy_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
+import '../features/settings/presentation/pages/terms_of_service_page.dart';
 import '../features/share/presentation/pages/share_management_page.dart';
 import 'page_transitions.dart';
 
@@ -51,6 +53,8 @@ class Routes {
   static const String autoSaveSettings =
       '/settings/payment-methods/:id/auto-save';
   static const String pendingTransactions = '/settings/pending-transactions';
+  static const String termsOfService = '/terms-of-service';
+  static const String privacyPolicy = '/privacy-policy';
   static const String debugTest = '/debug-test';
 }
 
@@ -267,6 +271,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => slideTransition(
           key: state.pageKey,
           child: const PendingTransactionsPage(),
+        ),
+      ),
+
+      // 이용약관 - 슬라이드 전환
+      GoRoute(
+        path: Routes.termsOfService,
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const TermsOfServicePage(),
+        ),
+      ),
+
+      // 개인정보처리방침 - 슬라이드 전환
+      GoRoute(
+        path: Routes.privacyPolicy,
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const PrivacyPolicyPage(),
         ),
       ),
 

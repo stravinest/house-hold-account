@@ -76,11 +76,13 @@ check_emulator() {
 }
 
 # SMS 전송 함수
+# 여러 줄 SMS는 adb emu sms send가 개행을 지원하지 않으므로
+# cmd notification post (bigtext)로 알림을 직접 전송하여 NotificationListener가 수집하도록 함
 send_sms() {
     local sender="$1"
     local content="$2"
     local template_name="$3"
-    
+
     echo -e "${BLUE}------------------------------------------------------------${NC}"
     echo -e "${YELLOW}[$template_name] SMS 전송 중...${NC}"
     echo -e "  발신자: ${CYAN}$sender${NC}"
@@ -89,13 +91,24 @@ send_sms() {
         echo -e "    ${line}"
     done
     echo -e "${BLUE}------------------------------------------------------------${NC}"
-    
-    adb emu sms send "$sender" "$content" > /dev/null 2>&1
-    
+
+    if [[ "$content" == *$'\n'* ]]; then
+        # 여러 줄 SMS: cmd notification post -S bigtext 사용
+        # adb emu sms send는 첫 줄만 전송되는 제한이 있음
+        # bigtext 스타일로 전체 내용이 EXTRA_BIG_TEXT에 저장됨
+        local flat_content
+        flat_content=$(printf '%s' "$content" | tr '\n' ' ' | tr -s ' ')
+        local tag="sms_test_${RANDOM}"
+        adb shell "cmd notification post -S bigtext -t '${sender}' '${tag}' '${flat_content}'" > /dev/null 2>&1
+    else
+        # 한 줄 SMS: 기존 adb emu sms send 사용
+        adb emu sms send "$sender" "$content" > /dev/null 2>&1
+    fi
+
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}전송 완료!${NC}"
     else
-        echo -e "${RED}전송 실패: adb emu sms send 명령 오류${NC}"
+        echo -e "${RED}전송 실패${NC}"
         exit 1
     fi
     echo ""
@@ -131,9 +144,14 @@ send_kb() {
     local formatted=$(format_amount "$amount")
     local datetime=$(get_datetime)
     local card_last4=$((1000 + RANDOM % 9000))
-    
-    local content="[KB국민카드] ${card_last4} ${formatted}원 승인 홍*동 ${datetime} ${merchant}"
-    
+
+    local content="[Web발신]
+KB국민카드(${card_last4})
+${formatted}원 승인
+${datetime}
+${merchant}
+홍*동님"
+
     send_sms "15881688" "$content" "KB국민카드"
 }
 

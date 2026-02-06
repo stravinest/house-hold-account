@@ -2326,7 +2326,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoSaveSettingsSourcePushDesc =>
-      'Detects push notifications from card apps. Supports KB, Shinhan, Samsung Card, etc.';
+      'Detects push notifications from card apps or KakaoTalk alerts. Supports KB, Shinhan, Samsung Card, etc.';
 
   @override
   String get paymentMethodPermissionWarningTitle => 'Confirm Sharing';

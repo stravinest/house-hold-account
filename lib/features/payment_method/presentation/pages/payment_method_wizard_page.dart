@@ -376,7 +376,7 @@ class _PaymentMethodWizardPageState
     // Cannot proceed if template selected in auto-collect mode but no format
     if (_selectedMode == PaymentMethodAddMode.autoCollect &&
         _selectedTemplate != null) {
-      // SMS/Push 모드에 따라 적절한 포맷 존재 여부 확인
+      // SMS/Push/Kakao 모드에 따라 적절한 포맷 존재 여부 확인
       final hasNoFormat = _notificationType == AutoCollectSource.push.name
           ? _generatedPushFormat == null
           : _generatedFormat == null;
@@ -1494,7 +1494,7 @@ class _PaymentMethodWizardPageState
   }
 
   Future<void> _showEditKeywordsDialog() async {
-    // Push 모드인 경우 Push 포맷의 appKeywords 사용
+    // Push/Kakao 모드인 경우 Push 포맷의 appKeywords 사용
     final isPushMode = _notificationType == AutoCollectSource.push.name;
 
     // 현재 키워드 가져오기 (SMS 또는 Push)

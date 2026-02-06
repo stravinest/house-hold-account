@@ -20,6 +20,7 @@ enum AutoSaveMode {
 }
 
 /// 자동 수집 소스 타입 (SMS 또는 Push 알림 중 하나만 선택)
+/// 카카오톡 알림톡은 Push 알림의 일종으로, Push 소스에 포함됨
 enum AutoCollectSource {
   sms,
   push;
