@@ -1,34 +1,29 @@
 {
-  "sessionCount": 38,
+  "sessionCount": 42,
   "lastSession": {
-    "startedAt": "2026-02-05T05:52:09.524Z",
+    "startedAt": "2026-02-06T00:25:09.637Z",
     "platform": "claude",
     "level": "Starter"
   },
   "pdca": {
-    "currentFeature": "auto-collect-notification-fix",
-    "phase": "check",
-    "startedAt": "2026-02-02T20:30:00.000Z",
-    "designedAt": "2026-02-02T20:35:00.000Z",
-    "implementedAt": "2026-02-02T20:45:00.000Z",
-    "analyzedAt": "2026-02-02T20:55:00.000Z",
-    "iteration": 0,
-    "matchRate": 100,
+    "currentFeature": "statistics-payment-method-merge",
+    "phase": "do",
+    "startedAt": "2026-02-05T09:00:00.000Z",
+    "designedAt": "2026-02-05T09:15:00.000Z",
+    "implementedAt": "2026-02-05T09:25:00.000Z",
     "documents": {
-      "plan": "docs/01-plan/features/auto-collect-notification-fix.plan.md",
-      "design": "docs/02-design/features/auto-collect-notification-fix.design.md",
-      "analysis": "docs/03-analysis/auto-collect-notification-fix.analysis.md"
+      "plan": "docs/01-plan/features/statistics-payment-method-merge.plan.md",
+      "design": "docs/02-design/features/statistics-payment-method-merge.design.md"
     },
     "implementation": {
       "files": [
-        "android/app/src/main/kotlin/com/household/shared/shared_household_account/SupabaseHelper.kt",
-        "android/app/src/main/kotlin/com/household/shared/shared_household_account/FinancialNotificationListener.kt"
+        "lib/features/statistics/data/repositories/statistics_repository.dart"
       ]
     },
     "previousFeature": {
-      "name": "auto-collect-user-isolation-fix",
+      "name": "auto-collect-notification-fix",
       "phase": "check",
-      "completedAt": "2026-02-02T15:50:00.000Z",
+      "completedAt": "2026-02-02T20:55:00.000Z",
       "matchRate": 100
     }
   }

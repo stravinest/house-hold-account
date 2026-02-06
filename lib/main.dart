@@ -206,6 +206,20 @@ class _SharedHouseholdAccountAppState
         // 공유 가계부 변경 알림 -> 홈 화면으로 이동
         router.go(Routes.home);
         break;
+      case 'auto_collect_suggested':
+        // 자동수집 제안 알림 -> 결제수단 관리 > 수집내역 > 대기중 탭
+        router.go(Routes.home);
+        Future.microtask(
+          () => router.push('${Routes.paymentMethod}?tab=pending'),
+        );
+        break;
+      case 'auto_collect_saved':
+        // 자동수집 저장 알림 -> 결제수단 관리 > 수집내역 > 확인됨 탭
+        router.go(Routes.home);
+        Future.microtask(
+          () => router.push('${Routes.paymentMethod}?tab=confirmed'),
+        );
+        break;
       default:
         // 기타 알림 -> 홈 화면으로 이동
         router.go(Routes.home);
@@ -250,6 +264,7 @@ class _SharedHouseholdAccountAppState
     'add-expense', // 지출 추가
     'add-income', // 수입 추가
     'quick-expense', // 빠른 지출 추가
+    'payment-method', // 자동수집 알림 딥링크
   };
 
   void _handleDeepLink(Uri uri) {
@@ -280,15 +295,18 @@ class _SharedHouseholdAccountAppState
 
     // URI의 host가 라우트 경로가 됨
     // 예: sharedhousehold://add-expense -> /add-expense
+    // 예: sharedhousehold://payment-method?tab=pending -> /payment-method?tab=pending
     final path = uri.host.isEmpty ? '/' : '/${uri.host}';
+    final queryString = uri.query.isNotEmpty ? '?${uri.query}' : '';
+    final fullPath = '$path$queryString';
 
     // 라우터로 이동
     final router = ref.read(routerProvider);
 
     // 딥링크 처리를 약간 지연시켜 앱이 완전히 초기화되도록 함
     Future.delayed(const Duration(milliseconds: 500), () {
-      router.go(path);
-      debugPrint('딥링크 라우팅: $path');
+      router.go(fullPath);
+      debugPrint('딥링크 라우팅: $fullPath');
     });
   }
 

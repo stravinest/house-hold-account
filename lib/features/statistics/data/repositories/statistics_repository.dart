@@ -409,6 +409,28 @@ class StatisticsRepository {
     );
   }
 
+  // 결제수단 그룹 키 생성
+  // - 자동수집 결제수단 (can_auto_save=true): 이름 기준 그룹화 (합산)
+  // - 공유 결제수단 (can_auto_save=false): UUID 기준 그룹화
+  // - 결제수단 없음: '_no_payment_method_'
+  String _getPaymentMethodGroupKey({
+    required String? paymentMethodId,
+    required String? name,
+    required bool canAutoSave,
+  }) {
+    if (paymentMethodId == null) {
+      return '_no_payment_method_';
+    }
+
+    // 자동수집 결제수단: 이름 기준 그룹화 (공유 가계부에서 동일 이름 합산)
+    if (canAutoSave && name != null && name.isNotEmpty) {
+      return 'auto_$name';
+    }
+
+    // 공유 결제수단: UUID 기준 그룹화 (기존 동작)
+    return paymentMethodId;
+  }
+
   // 결제수단별 통계
   Future<List<PaymentMethodStatistics>> getPaymentMethodStatistics({
     required String ledgerId,
@@ -442,18 +464,11 @@ class StatisticsRepository {
 
       totalAmount += amount;
 
-      // 결제수단 정보 추출
-      final String groupKey;
+      // 결제수단 정보 추출 (그룹 키 생성 전에 먼저 추출)
       String pmName = '미지정';
       String pmIcon = '';
       String pmColor = '#9E9E9E';
       bool canAutoSave = false;
-
-      if (paymentMethodId == null) {
-        groupKey = '_no_payment_method_';
-      } else {
-        groupKey = paymentMethodId;
-      }
 
       if (paymentMethod != null) {
         pmName = paymentMethod['name']?.toString() ?? '미지정';
@@ -461,6 +476,13 @@ class StatisticsRepository {
         pmColor = paymentMethod['color']?.toString() ?? '#9E9E9E';
         canAutoSave = paymentMethod['can_auto_save'] == true;
       }
+
+      // 그룹 키 생성 (자동수집은 이름 기준, 공유는 UUID 기준)
+      final groupKey = _getPaymentMethodGroupKey(
+        paymentMethodId: paymentMethodId,
+        name: pmName,
+        canAutoSave: canAutoSave,
+      );
 
       if (grouped.containsKey(groupKey)) {
         grouped[groupKey] = grouped[groupKey]!.copyWith(

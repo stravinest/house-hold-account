@@ -716,6 +716,7 @@ class SmsListenerService {
         title: title,
         body: body,
         data: {
+          'type': notificationType.value,
           'pendingId': pendingTx.id,
           'targetTab': targetTab,
           'paymentMethodName': paymentMethod.name,

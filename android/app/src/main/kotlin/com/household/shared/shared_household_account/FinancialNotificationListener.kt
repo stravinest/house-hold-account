@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.service.notification.NotificationListenerService
@@ -563,11 +564,11 @@ class FinancialNotificationListener : NotificationListenerService() {
         val title = if (isAutoMode) "자동수집 거래 저장" else "자동수집 거래 확인"
         val body = buildNotificationBody(amount, merchant, paymentMethodName)
 
-        // 딥링크 Intent
+        // 딥링크 Intent (app_links 플러그인이 cold start/warm start 모두 처리)
+        val tab = if (isAutoMode) "confirmed" else "pending"
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            putExtra("targetTab", if (isAutoMode) "confirmed" else "pending")
-            putExtra("route", "/payment-method-management")
+            data = Uri.parse("sharedhousehold://payment-method?tab=$tab")
         }
 
         // AtomicInteger로 고유 ID 생성 (동일 밀리초 중복 방지)

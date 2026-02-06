@@ -93,7 +93,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isDeepLinkRoute =
           state.matchedLocation == Routes.addExpense ||
           state.matchedLocation == Routes.addIncome ||
-          state.matchedLocation == Routes.quickExpense;
+          state.matchedLocation == Routes.quickExpense ||
+          state.matchedLocation == Routes.paymentMethod;
 
       // 스플래시 화면에서는 리다이렉트하지 않음
       if (isSplash) return null;
@@ -211,13 +212,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // 결제수단 관리 - 슬라이드 전환
+      // 결제수단 관리 - 슬라이드 전환 (딥링크 쿼리 파라미터 지원)
       GoRoute(
         path: Routes.paymentMethod,
-        pageBuilder: (context, state) => slideTransition(
-          key: state.pageKey,
-          child: const PaymentMethodManagementPage(),
-        ),
+        pageBuilder: (context, state) {
+          final tab = state.uri.queryParameters['tab'];
+          // tab 파라미터가 있으면 수집내역 탭(index 1)으로 이동
+          final initialTabIndex = tab != null ? 1 : 0;
+          // 수집내역 내부 탭: pending=0, confirmed=1
+          final initialAutoCollectTabIndex = tab == 'confirmed' ? 1 : 0;
+          return slideTransition(
+            key: state.pageKey,
+            child: PaymentMethodManagementPage(
+              initialTabIndex: initialTabIndex,
+              initialAutoCollectTabIndex: initialAutoCollectTabIndex,
+            ),
+          );
+        },
       ),
 
       // 가계부 관리 - 슬라이드 전환

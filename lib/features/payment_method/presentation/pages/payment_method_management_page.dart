@@ -91,7 +91,17 @@ Map<_DateGroup, List<PendingTransactionModel>> _groupTransactionsByDate(
 
 /// Payment method management page (payment method tab + auto-collect history tab)
 class PaymentMethodManagementPage extends ConsumerStatefulWidget {
-  const PaymentMethodManagementPage({super.key});
+  const PaymentMethodManagementPage({
+    super.key,
+    this.initialTabIndex = 0,
+    this.initialAutoCollectTabIndex = 0,
+  });
+
+  /// 메인 탭 초기 인덱스 (0: 결제수단, 1: 수집내역)
+  final int initialTabIndex;
+
+  /// 수집내역 내부 탭 초기 인덱스 (0: 대기중, 1: 확인됨, 2: 거부됨)
+  final int initialAutoCollectTabIndex;
 
   @override
   ConsumerState<PaymentMethodManagementPage> createState() =>
@@ -111,8 +121,13 @@ class _PaymentMethodManagementPageState
     _mainTabController = TabController(
       length: _isAndroidPlatform ? 2 : 1,
       vsync: this,
+      initialIndex: _isAndroidPlatform ? widget.initialTabIndex : 0,
     );
-    _autoCollectTabController = TabController(length: 3, vsync: this);
+    _autoCollectTabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialAutoCollectTabIndex,
+    );
 
     // Listener for FAB state update
     _mainTabController.addListener(_onMainTabChanged);
