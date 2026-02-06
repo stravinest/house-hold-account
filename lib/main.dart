@@ -305,8 +305,19 @@ class _SharedHouseholdAccountAppState
 
     // 딥링크 처리를 약간 지연시켜 앱이 완전히 초기화되도록 함
     Future.delayed(const Duration(milliseconds: 500), () {
-      router.go(fullPath);
-      debugPrint('딥링크 라우팅: $fullPath');
+      // payment-method는 별도 페이지이므로 홈 위에 스택으로 추가
+      // 알림 탭(_handleNotificationTap)과 동일한 패턴 사용
+      if (uri.host == 'payment-method') {
+        router.go(Routes.home);
+        Future.microtask(() {
+          router.push(fullPath);
+          debugPrint('딥링크 라우팅 (push): $fullPath');
+        });
+      } else {
+        // add-expense, add-income, quick-expense는 HomePage 자체를 렌더링하므로 go() 유지
+        router.go(fullPath);
+        debugPrint('딥링크 라우팅 (go): $fullPath');
+      }
     });
   }
 
