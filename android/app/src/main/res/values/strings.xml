@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">공유 가계부</string>
+    <string name="app_name">우생가계부</string>
 
     <!-- Widget Names -->
     <string name="widget_quick_add_name">빠른 추가</string>

@@ -16,20 +16,19 @@
 
         <!-- 앱 아이콘 -->
         <ImageView
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginBottom="2dp"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_marginBottom="4dp"
             android:src="@drawable/widget_icon"
             android:scaleType="fitCenter"
-            android:contentDescription="가계부 아이콘" />
+            android:contentDescription="우생가계부 아이콘" />
 
         <!-- 추가 버튼 -->
         <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_marginBottom="2dp"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
             android:background="@drawable/button_primary_background"
-            android:padding="5dp"
+            android:padding="6dp"
             android:src="@drawable/ic_add_circle"
             android:scaleType="fitCenter"
             android:tint="@android:color/white"

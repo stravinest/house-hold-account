@@ -5,7 +5,7 @@ flutter_launcher_icons:
   min_sdk_android: 21
   remove_alpha_ios: true
   adaptive_icon_foreground: 'app.icon.foreground.png'
-  adaptive_icon_background: '#FFFFFF'
+  adaptive_icon_background: '#8DB580'
   web:
     generate: false
   windows:

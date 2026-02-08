@@ -1,12 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 알림용 아이콘 - 단색 실루엣 (Android 가이드라인 준수) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
     android:viewportWidth="24"
     android:viewportHeight="24">
-    <!-- 지갑/가계부 아이콘 -->
+
+    <!-- House roof + walls outline -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M21,18v1c0,1.1 -0.9,2 -2,2L5,21c-1.11,0 -2,-0.9 -2,-2L3,5c0,-1.1 0.89,-2 2,-2h14c1.1,0 2,0.9 2,2v1h-9c-1.11,0 -2,0.9 -2,2v8c0,1.1 0.89,2 2,2h9zM12,16h10L22,8L12,8v8zM16,13.5c-0.83,0 -1.5,-0.67 -1.5,-1.5s0.67,-1.5 1.5,-1.5 1.5,0.67 1.5,1.5 -0.67,1.5 -1.5,1.5z"/>
+        android:pathData="M13,4 L21,10 L19,10 L19,17 L7,17 L7,10 L5,10 Z"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent" />
+
+    <!-- Character: circle (left) -->
+    <path
+        android:pathData="M10.5,13.2 m-1.5,0 a1.5,1.5 0,1,0 3,0 a1.5,1.5 0,1,0 -3,0"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.0"
+        android:fillColor="@android:color/transparent" />
+
+    <!-- Character: V shape (right) -->
+    <path
+        android:pathData="M13.8,14.8 L15.3,12.2 L16.8,14.8"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.0"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="@android:color/transparent" />
 </vector>

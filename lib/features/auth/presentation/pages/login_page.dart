@@ -154,7 +154,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
     final inputDecoration = InputDecoration(
       filled: true,
-      fillColor: colorScheme.surfaceContainerHighest,
+      fillColor: const Color(0xFFE3E3DB),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(inputBorderRadius),
         borderSide: BorderSide.none,
@@ -179,7 +179,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: const Color(0xFFFDFDF5),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Form(
@@ -405,13 +405,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           onPressed: _isLoading ? null : _handleGoogleLogin,
                           style: OutlinedButton.styleFrom(
                             foregroundColor: colorScheme.onSurface,
-                            side: BorderSide(color: colorScheme.outline),
+                            side: const BorderSide(color: Color(0xFF74796D)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(
                                 inputBorderRadius,
                               ),
                             ),
-                            backgroundColor: colorScheme.surface,
+                            backgroundColor: const Color(0xFFFDFDF5),
                           ),
                           icon: CachedNetworkImage(
                             imageUrl: 'https://www.google.com/favicon.ico',
