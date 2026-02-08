@@ -548,4 +548,204 @@ class NotificationFilterHelperTest {
             NotificationFilterHelper.PAYMENT_KEYWORDS.isNotEmpty()
         )
     }
+
+    // =====================================================
+    // extractLatestSmsFromContent - 누적 SMS content 추출
+    // =====================================================
+
+    @Test
+    fun `extractLatestSmsFromContent - 단일 SMS content는 그대로 반환한다`() {
+        val content =
+            "[Web발신] KB국민카드0038승인 제*현님 12,900원 일시불 02/08 12:27 갤러리아광교점( 누적1,348,277원"
+        assertEquals(
+            content,
+            NotificationFilterHelper.extractLatestSmsFromContent(content)
+        )
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - Web발신 구분자가 없는 content는 그대로 반환한다`() {
+        val content = "KB국민카드 승인 12,900원 일시불"
+        assertEquals(
+            content,
+            NotificationFilterHelper.extractLatestSmsFromContent(content)
+        )
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 2개 SMS가 누적된 경우 마지막 SMS만 추출한다`() {
+        val content =
+            "[Web발신] KB국민카드0038승인 제*현님 12,900원 일시불 02/08 12:27 갤러리아광교점( 누적1,348,277원 " +
+            "[Web발신] KB국민카드0038승인 제*현님 11,000원 일시불 02/08 12:30 갤러리아광교점( 누적1,359,277원"
+        val result = NotificationFilterHelper.extractLatestSmsFromContent(content)
+        assertTrue("마지막 SMS 금액 11,000원이 포함되어야 한다", result.contains("11,000원"))
+        assertFalse("이전 SMS 금액 12,900원은 포함되지 않아야 한다", result.contains("12,900원"))
+        assertTrue("[Web발신] 접두사가 유지되어야 한다", result.startsWith("[Web발신]"))
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 3개 SMS가 누적된 경우 마지막 SMS만 추출한다`() {
+        val content =
+            "[Web발신] KB국민카드0038승인 제*현님 12,900원 일시불 02/08 12:27 갤러리아광교점( 누적1,348,277원 " +
+            "[Web발신] KB국민카드0038승인 제*현님 11,000원 일시불 02/08 12:30 갤러리아광교점( 누적1,359,277원 " +
+            "[Web발신] KB국민카드0038승인 제*현님 5,310원 일시불 02/08 13:07 갤러리아광교점( 누적1,364,587원"
+        val result = NotificationFilterHelper.extractLatestSmsFromContent(content)
+        assertTrue("마지막 SMS 금액 5,310원이 포함되어야 한다", result.contains("5,310원"))
+        assertFalse("첫 번째 SMS 금액 12,900원은 포함되지 않아야 한다", result.contains("12,900원"))
+        assertFalse("두 번째 SMS 금액 11,000원은 포함되지 않아야 한다", result.contains("11,000원"))
+        assertTrue("[Web발신] 접두사가 유지되어야 한다", result.startsWith("[Web발신]"))
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 4개 SMS 누적 실제 버그 시나리오를 처리한다`() {
+        // 실제 DB에서 발견된 버그 데이터 재현
+        val content =
+            "\u2068\u20681588-1688\u2069 [Web발신] KB국민카드0038승인 제*현님 12,900원 일시불 02/08 12:27 갤러리아광교점( 누적1,348,277원 " +
+            "[Web발신] KB국민카드0038승인 제*현님 11,000원 일시불 02/08 12:30 갤러리아광교점( 누적1,359,277원 " +
+            "[Web발신] KB국민카드0038승인 제*현님 5,310원 일시불 02/08 13:07 갤러리아광교점( 누적1,364,587원 " +
+            "[Web발신] KB국민카드0038승인 제*현님 21,500원 일시불 02/08 13:53 돌핀웨일 광교점 누적1,386,087원"
+        val result = NotificationFilterHelper.extractLatestSmsFromContent(content)
+        assertTrue("마지막 SMS인 21,500원이 추출되어야 한다", result.contains("21,500원"))
+        assertTrue("마지막 SMS의 가맹점명이 포함되어야 한다", result.contains("돌핀웨일 광교점"))
+        assertFalse("첫 번째 SMS인 12,900원은 포함되지 않아야 한다", result.contains("12,900원"))
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 현대카드 등 다른 카드사의 누적 SMS도 처리한다`() {
+        val content =
+            "[Web발신] 네이버 현대카드 승인 제*현 2,000원 일시불 02/08 12:02 아쿠아플라넷주식 누적437,437원 " +
+            "[Web발신] 네이버 현대카드 승인 제*현 5,000원 일시불 02/08 13:00 스타벅스 누적442,437원"
+        val result = NotificationFilterHelper.extractLatestSmsFromContent(content)
+        assertTrue("마지막 SMS 금액 5,000원이 포함되어야 한다", result.contains("5,000원"))
+        assertTrue("마지막 SMS의 가맹점명이 포함되어야 한다", result.contains("스타벅스"))
+        assertFalse("이전 SMS 금액 2,000원은 포함되지 않아야 한다", result.contains("2,000원"))
+        assertFalse("이전 SMS의 가맹점명은 포함되지 않아야 한다", result.contains("아쿠아플라넷"))
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 웹발신 구분자도 처리한다`() {
+        val content =
+            "[웹발신] KB국민카드 승인 12,900원 " +
+            "[웹발신] KB국민카드 승인 5,000원"
+        val result = NotificationFilterHelper.extractLatestSmsFromContent(content)
+        assertTrue("마지막 SMS 금액 5,000원이 포함되어야 한다", result.contains("5,000원"))
+        assertFalse("이전 SMS 금액 12,900원은 포함되지 않아야 한다", result.contains("12,900원"))
+        assertTrue("[웹발신] 접두사가 유지되어야 한다", result.startsWith("[웹발신]"))
+    }
+
+    // =====================================================
+    // extractLatestSmsFromContent - 엣지 케이스
+    // =====================================================
+
+    @Test
+    fun `extractLatestSmsFromContent - 빈 문자열은 그대로 반환한다`() {
+        assertEquals(
+            "",
+            NotificationFilterHelper.extractLatestSmsFromContent("")
+        )
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 구분자만 있는 경우 원본을 그대로 반환한다`() {
+        // split("[Web발신]") -> ["", ""], lastPart = "" -> isBlank -> continue
+        val content = "[Web발신]"
+        assertEquals(
+            "구분자만 있고 내용이 없으면 원본을 그대로 반환해야 한다",
+            content,
+            NotificationFilterHelper.extractLatestSmsFromContent(content)
+        )
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 구분자 뒤에 공백만 있는 경우 원본을 그대로 반환한다`() {
+        // split("[Web발신]") -> ["", "   "], lastPart = "   " -> trim -> "" -> isBlank -> continue
+        val content = "[Web발신]   "
+        assertEquals(
+            "구분자 뒤 공백만 있으면 원본을 그대로 반환해야 한다",
+            content,
+            NotificationFilterHelper.extractLatestSmsFromContent(content)
+        )
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 구분자가 content 끝에 있는 경우 원본을 그대로 반환한다`() {
+        // split("[Web발신]") -> ["내용 ", ""], lastPart = "" -> isBlank -> continue
+        val content = "KB국민카드 승인 12,900원 [Web발신]"
+        assertEquals(
+            "구분자가 끝에 있고 뒤에 내용이 없으면 원본을 그대로 반환해야 한다",
+            content,
+            NotificationFilterHelper.extractLatestSmsFromContent(content)
+        )
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 구분자 부분 매칭은 무시한다`() {
+        // "[Web발신" 은 "[Web발신]"와 contains 매칭 안됨
+        val content = "[Web발신 KB국민카드 승인 12,900원"
+        assertEquals(
+            "닫는 괄호가 없는 불완전한 구분자는 무시하고 원본을 반환해야 한다",
+            content,
+            NotificationFilterHelper.extractLatestSmsFromContent(content)
+        )
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 구분자 앞에 접두사 텍스트가 있는 비표준 포맷도 처리한다`() {
+        // Samsung Messages가 전화번호를 구분자 앞에 붙이는 경우
+        // split("[Web발신]") -> ["1588-1688 ", " KB국민카드 승인 12,900원"]
+        val content = "1588-1688 [Web발신] KB국민카드 승인 12,900원"
+        val result = NotificationFilterHelper.extractLatestSmsFromContent(content)
+        assertTrue("구분자 뒤의 실제 SMS 내용이 포함되어야 한다", result.contains("12,900원"))
+        assertTrue("[Web발신] 접두사가 유지되어야 한다", result.startsWith("[Web발신]"))
+        assertFalse("구분자 앞의 전화번호는 제거되어야 한다", result.contains("1588-1688"))
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - Web발신과 웹발신이 혼합된 경우 첫 번째 매칭 구분자 기준으로 처리한다`() {
+        // [Web발신]이 SMS_CONTENT_DELIMITERS에서 먼저 매칭됨
+        // 실제로는 통신사가 동일 구분자를 사용하므로 이 시나리오는 극히 드묾
+        val content =
+            "[웹발신] 첫번째 SMS 12,900원 " +
+            "[Web발신] 두번째 SMS 5,000원"
+        val result = NotificationFilterHelper.extractLatestSmsFromContent(content)
+        // [Web발신]이 먼저 매칭되어 split -> ["[웹발신] 첫번째 SMS 12,900원 ", " 두번째 SMS 5,000원"]
+        assertTrue("두번째 SMS 금액이 포함되어야 한다", result.contains("5,000원"))
+        assertTrue("[Web발신] 접두사로 시작해야 한다", result.startsWith("[Web발신]"))
+    }
+
+    @Test
+    fun `extractLatestSmsFromContent - 줄바꿈이 포함된 누적 SMS도 처리한다`() {
+        val content =
+            "[Web발신]\nKB국민카드 승인 12,900원\n갤러리아광교점 " +
+            "[Web발신]\nKB국민카드 승인 5,000원\n스타벅스"
+        val result = NotificationFilterHelper.extractLatestSmsFromContent(content)
+        assertTrue("마지막 SMS 금액이 포함되어야 한다", result.contains("5,000원"))
+        assertTrue("마지막 SMS 가맹점이 포함되어야 한다", result.contains("스타벅스"))
+        assertFalse("이전 SMS 금액은 포함되지 않아야 한다", result.contains("12,900원"))
+    }
+
+    // =====================================================
+    // SMS_CONTENT_DELIMITERS 상수 검증
+    // =====================================================
+
+    @Test
+    fun `SMS_CONTENT_DELIMITERS - 비어있지 않다`() {
+        assertTrue(
+            NotificationConfig.SMS_CONTENT_DELIMITERS.isNotEmpty()
+        )
+    }
+
+    @Test
+    fun `SMS_CONTENT_DELIMITERS - Web발신 구분자가 포함되어 있다`() {
+        assertTrue(
+            NotificationConfig.SMS_CONTENT_DELIMITERS.contains("[Web발신]")
+        )
+    }
+
+    @Test
+    fun `SMS_CONTENT_DELIMITERS - 웹발신 구분자가 포함되어 있다`() {
+        assertTrue(
+            NotificationConfig.SMS_CONTENT_DELIMITERS.contains("[웹발신]")
+        )
+    }
 }

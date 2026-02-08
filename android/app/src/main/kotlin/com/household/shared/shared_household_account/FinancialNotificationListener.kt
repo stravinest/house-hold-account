@@ -13,6 +13,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import io.flutter.BuildConfig
 import kotlinx.coroutines.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -132,12 +133,27 @@ class FinancialNotificationListener : NotificationListenerService() {
         // EXTRA_MESSAGES에서 전체 본문을 추출해야 함
         val messagingText = extractMessagingText(extras)
 
-        val content = bigText ?: messagingText ?: text
-        Log.d(TAG, "Content source: bigText=${bigText != null}, messagingText=${messagingText != null}, text=${text != null}")
-        Log.d(TAG, "Content preview: ${content?.take(100)}")
-        if (content.isNullOrBlank()) {
+        val rawContent = bigText ?: messagingText ?: text
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "Content source: bigText=${bigText != null}, messagingText=${messagingText != null}, text=${text != null}")
+            Log.d(TAG, "Raw content preview: ${rawContent?.take(100)}")
+        }
+        if (rawContent.isNullOrBlank()) {
             Log.d(TAG, "Notification has no text content, skipping")
             return
+        }
+
+        // SMS 앱 알림일 때만 누적 SMS 추출 적용
+        // Push 알림에는 [Web발신] 구분자가 없으므로 불필요
+        val content = if (isFromMessageApp) {
+            NotificationFilterHelper.extractLatestSmsFromContent(rawContent)
+        } else {
+            rawContent
+        }
+        if (BuildConfig.DEBUG && content != rawContent) {
+            Log.d(TAG, "Extracted latest SMS from accumulated content")
+            Log.d(TAG, "  Original length: ${rawContent.length}, Extracted length: ${content.length}")
+            Log.d(TAG, "  Extracted preview: ${content.take(100)}")
         }
 
         if (!NotificationFilterHelper.containsPaymentKeyword(content)) {
@@ -623,17 +639,17 @@ class FinancialNotificationListener : NotificationListenerService() {
     }
 
     /**
-     * MessagingStyle 알림에서 메시지 텍스트를 추출하는 함수
-     * Google Messages 등이 여러 줄 SMS를 MessagingStyle 알림으로 생성할 때,
-     * EXTRA_TEXT에는 첫 줄/요약만 포함되고, 전체 본문은 EXTRA_MESSAGES에 저장됨
+     * MessagingStyle 알림에서 가장 최근 메시지 텍스트만 추출하는 함수
+     * Google Messages, Samsung Messages 등이 SMS를 MessagingStyle 알림으로 생성할 때,
+     * EXTRA_MESSAGES에 이전 메시지가 누적되어 저장됨
+     * 마지막(최신) 메시지만 추출하여 이전 메시지 중복 파싱 방지
      */
     @Suppress("DEPRECATION")
     private fun extractMessagingText(extras: android.os.Bundle): String? {
         val messages = extras.getParcelableArray(Notification.EXTRA_MESSAGES) ?: return null
-        val textParts = messages.mapNotNull { msg ->
-            (msg as? android.os.Bundle)?.getCharSequence("text")?.toString()
-        }
-        return if (textParts.isNotEmpty()) textParts.joinToString(" ") else null
+        // 마지막 메시지만 추출 (최신 SMS)
+        val lastMessage = messages.lastOrNull() as? android.os.Bundle ?: return null
+        return lastMessage.getCharSequence("text")?.toString()
     }
 
     // 아래 메서드들은 현재 MainActivity에서 NotificationStorageHelper를 직접 사용하므로

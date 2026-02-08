@@ -192,4 +192,23 @@ object NotificationFilterHelper {
     fun getExpectedSource(sourceType: String): String {
         return if (sourceType == "sms") "sms" else "push"
     }
+
+    /**
+     * 누적된 SMS content에서 가장 최근(마지막) SMS 메시지만 추출
+     * Samsung Messages 등은 알림 업데이트 시 이전 SMS를 content에 누적함
+     * 예: "12,900원... [Web발신] 11,000원... [Web발신] 5,310원..."
+     * 이 경우 마지막 구분자 이후의 텍스트만 반환
+     */
+    fun extractLatestSmsFromContent(content: String): String {
+        for (delimiter in NotificationConfig.SMS_CONTENT_DELIMITERS) {
+            if (!content.contains(delimiter)) continue
+
+            val parts = content.split(delimiter)
+            val lastPart = parts.lastOrNull()?.trim()
+            if (lastPart.isNullOrBlank()) continue
+
+            return "$delimiter $lastPart"
+        }
+        return content
+    }
 }
