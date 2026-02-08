@@ -409,7 +409,7 @@
   },
   "recurringDailyAutoCreate": "계속 반복 (매일 자동 생성)",
   "fixedExpenseRegister": "고정비로 등록",
-  "fixedExpenseDescription": "월세, 보험료 등 정기적으로 지출되는 금액",
+  "fixedExpenseDescription": "월세, 보험료 등 정기적으로 지출되는 금액 (반복주기 필수)",
   "yearLabel": "년도",
   "monthLabel": "월",
   "yearFormat": "{year}년",
@@ -1312,5 +1312,14 @@
         "type": "String"
       }
     }
-  }
+  },
+  "filterAll": "전체",
+  "filterRecurring": "고정비",
+  "filterIncome": "수입",
+  "filterExpense": "지출",
+  "filterAsset": "자산",
+  "tooltipListView": "리스트 보기",
+  "tooltipCalendarView": "캘린더 보기",
+  "segmentList": "리스트",
+  "segmentCalendar": "캘린더"
 }

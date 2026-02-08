@@ -260,7 +260,7 @@
   "recurringTransactionCount": "{count} transactions will be created",
   "recurringDailyAutoCreate": "Continue repeating (auto-create daily)",
   "fixedExpenseRegister": "Register as Fixed Expense",
-  "fixedExpenseDescription": "Regular expenses like rent, insurance, etc.",
+  "fixedExpenseDescription": "Regular expenses like rent, insurance, etc. (recurring period required)",
   "yearLabel": "Year",
   "monthLabel": "Month",
   "yearFormat": "{year}",
@@ -828,5 +828,14 @@
         "type": "String"
       }
     }
-  }
+  },
+  "filterAll": "All",
+  "filterRecurring": "Recurring",
+  "filterIncome": "Income",
+  "filterExpense": "Expense",
+  "filterAsset": "Asset",
+  "tooltipListView": "List View",
+  "tooltipCalendarView": "Calendar View",
+  "segmentList": "List",
+  "segmentCalendar": "Calendar"
 }

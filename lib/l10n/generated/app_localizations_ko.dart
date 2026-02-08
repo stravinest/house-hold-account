@@ -836,7 +836,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get fixedExpenseRegister => '고정비로 등록';
 
   @override
-  String get fixedExpenseDescription => '월세, 보험료 등 정기적으로 지출되는 금액';
+  String get fixedExpenseDescription => '월세, 보험료 등 정기적으로 지출되는 금액 (반복주기 필수)';
 
   @override
   String get yearLabel => '년도';
@@ -2439,4 +2439,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String exportDateRange(String start, String end) {
     return '$start ~ $end';
   }
+
+  @override
+  String get filterAll => '전체';
+
+  @override
+  String get filterRecurring => '고정비';
+
+  @override
+  String get filterIncome => '수입';
+
+  @override
+  String get filterExpense => '지출';
+
+  @override
+  String get filterAsset => '자산';
+
+  @override
+  String get tooltipListView => '리스트 보기';
+
+  @override
+  String get tooltipCalendarView => '캘린더 보기';
+
+  @override
+  String get segmentList => '리스트';
+
+  @override
+  String get segmentCalendar => '캘린더';
 }

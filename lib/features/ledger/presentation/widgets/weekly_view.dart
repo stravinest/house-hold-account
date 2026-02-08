@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -5,7 +8,6 @@ import 'package:intl/intl.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
-import '../../../../shared/widgets/spinning_refresh_button.dart';
 import '../../../share/presentation/providers/share_provider.dart';
 import '../../../transaction/domain/entities/transaction.dart';
 import '../../../transaction/presentation/providers/transaction_provider.dart';
@@ -175,7 +177,7 @@ class _WeeklySummaryHeader extends ConsumerWidget {
 }
 
 /// 주별 네비게이션 헤더
-class _WeeklyNavigationHeader extends StatelessWidget {
+class _WeeklyNavigationHeader extends StatefulWidget {
   final DateTime weekStart;
   final DateTime weekEnd;
   final ValueChanged<DateTime> onWeekChanged;
@@ -193,14 +195,101 @@ class _WeeklyNavigationHeader extends StatelessWidget {
   });
 
   @override
+  State<_WeeklyNavigationHeader> createState() =>
+      _WeeklyNavigationHeaderState();
+}
+
+class _WeeklyNavigationHeaderState extends State<_WeeklyNavigationHeader>
+    with SingleTickerProviderStateMixin {
+  static const double _kSegmentWidth = 56;
+  late final AnimationController _refreshController;
+  bool _isRefreshing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleRefresh() async {
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    unawaited(_refreshController.repeat());
+    try {
+      await widget.onRefresh();
+    } finally {
+      _refreshController.stop();
+      _refreshController.reset();
+      if (mounted) setState(() => _isRefreshing = false);
+    }
+  }
+
+  Widget _buildSegment({
+    required IconData icon,
+    required String label,
+    required bool isActive,
+    required VoidCallback onTap,
+    required ColorScheme colorScheme,
+    Widget? iconWidget,
+  }) {
+    final color =
+        isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: _kSegmentWidth,
+        padding: const EdgeInsets.only(top: 6, bottom: 4),
+        decoration: BoxDecoration(
+          color: isActive ? colorScheme.surface : Colors.transparent,
+          borderRadius: BorderRadius.circular(6),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: colorScheme.shadow.withValues(alpha: 0.1),
+                    blurRadius: 2,
+                    offset: const Offset(0, 1),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            iconWidget ?? Icon(icon, size: IconSize.xs, color: color),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                color: color,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
     final now = DateTime.now();
-    final currentWeekRange = getWeekRangeFor(now, weekStartDay);
+    final currentWeekRange = getWeekRangeFor(now, widget.weekStartDay);
     final isCurrentWeek =
-        weekStart.year == currentWeekRange.start.year &&
-        weekStart.month == currentWeekRange.start.month &&
-        weekStart.day == currentWeekRange.start.day;
+        widget.weekStart.year == currentWeekRange.start.year &&
+        widget.weekStart.month == currentWeekRange.start.month &&
+        widget.weekStart.day == currentWeekRange.start.day;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -209,49 +298,74 @@ class _WeeklyNavigationHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // 오늘 버튼
-          TextButton.icon(
-            onPressed: isCurrentWeek ? null : onTodayPressed,
-            icon: const Icon(Icons.today, size: IconSize.sm),
-            label: Text(l10n.calendarToday),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.only(
-                left: Spacing.sm,
-                top: Spacing.xs,
-                bottom: Spacing.xs,
-                right: 0,
-              ),
+          // 세그먼트 탭 바 (오늘 + 새로고침)
+          Container(
+            padding: const EdgeInsets.all(Spacing.xs),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
             ),
-          ),
-          // 새로고침 버튼 (스피닝 효과)
-          SpinningRefreshButton(
-            onRefresh: onRefresh,
-            tooltip: l10n.tooltipRefresh,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildSegment(
+                  icon: Icons.today,
+                  label: l10n.calendarToday,
+                  isActive: !isCurrentWeek,
+                  onTap: isCurrentWeek ? () {} : widget.onTodayPressed,
+                  colorScheme: colorScheme,
+                ),
+                const SizedBox(width: Spacing.xs),
+                _buildSegment(
+                  icon: Icons.refresh,
+                  label: l10n.tooltipRefresh,
+                  isActive: _isRefreshing,
+                  onTap: _handleRefresh,
+                  colorScheme: colorScheme,
+                  iconWidget: AnimatedBuilder(
+                    animation: _refreshController,
+                    builder: (context, child) {
+                      return Transform.rotate(
+                        angle: _refreshController.value * 2 * math.pi,
+                        child: child,
+                      );
+                    },
+                    child: Icon(
+                      Icons.refresh,
+                      size: IconSize.xs,
+                      color: _isRefreshing
+                          ? colorScheme.primary
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           const Spacer(),
           // 이전 주 버튼
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            onPressed: () =>
-                onWeekChanged(weekStart.subtract(const Duration(days: 7))),
+            onPressed: () => widget.onWeekChanged(
+                widget.weekStart.subtract(const Duration(days: 7))),
           ),
           // 주 범위 표시
           Text(
             l10n.calendarWeeklyRange(
-              weekStart.month,
-              weekStart.day,
-              weekEnd.month,
-              weekEnd.day,
+              widget.weekStart.month,
+              widget.weekStart.day,
+              widget.weekEnd.month,
+              widget.weekEnd.day,
             ),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.bold),
           ),
           // 다음 주 버튼
           IconButton(
             icon: const Icon(Icons.chevron_right),
-            onPressed: () =>
-                onWeekChanged(weekStart.add(const Duration(days: 7))),
+            onPressed: () => widget.onWeekChanged(
+                widget.weekStart.add(const Duration(days: 7))),
           ),
         ],
       ),

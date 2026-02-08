@@ -851,7 +851,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fixedExpenseDescription =>
-      'Regular expenses like rent, insurance, etc.';
+      'Regular expenses like rent, insurance, etc. (recurring period required)';
 
   @override
   String get yearLabel => 'Year';
@@ -2497,4 +2497,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String exportDateRange(String start, String end) {
     return '$start ~ $end';
   }
+
+  @override
+  String get filterAll => 'All';
+
+  @override
+  String get filterRecurring => 'Recurring';
+
+  @override
+  String get filterIncome => 'Income';
+
+  @override
+  String get filterExpense => 'Expense';
+
+  @override
+  String get filterAsset => 'Asset';
+
+  @override
+  String get tooltipListView => 'List View';
+
+  @override
+  String get tooltipCalendarView => 'Calendar View';
+
+  @override
+  String get segmentList => 'List';
+
+  @override
+  String get segmentCalendar => 'Calendar';
 }

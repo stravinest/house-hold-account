@@ -1661,7 +1661,7 @@ abstract class AppLocalizations {
   /// No description provided for @fixedExpenseDescription.
   ///
   /// In ko, this message translates to:
-  /// **'월세, 보험료 등 정기적으로 지출되는 금액'**
+  /// **'월세, 보험료 등 정기적으로 지출되는 금액 (반복주기 필수)'**
   String get fixedExpenseDescription;
 
   /// No description provided for @yearLabel.
@@ -4632,6 +4632,60 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{start} ~ {end}'**
   String exportDateRange(String start, String end);
+
+  /// No description provided for @filterAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체'**
+  String get filterAll;
+
+  /// No description provided for @filterRecurring.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정비'**
+  String get filterRecurring;
+
+  /// No description provided for @filterIncome.
+  ///
+  /// In ko, this message translates to:
+  /// **'수입'**
+  String get filterIncome;
+
+  /// No description provided for @filterExpense.
+  ///
+  /// In ko, this message translates to:
+  /// **'지출'**
+  String get filterExpense;
+
+  /// No description provided for @filterAsset.
+  ///
+  /// In ko, this message translates to:
+  /// **'자산'**
+  String get filterAsset;
+
+  /// No description provided for @tooltipListView.
+  ///
+  /// In ko, this message translates to:
+  /// **'리스트 보기'**
+  String get tooltipListView;
+
+  /// No description provided for @tooltipCalendarView.
+  ///
+  /// In ko, this message translates to:
+  /// **'캘린더 보기'**
+  String get tooltipCalendarView;
+
+  /// No description provided for @segmentList.
+  ///
+  /// In ko, this message translates to:
+  /// **'리스트'**
+  String get segmentList;
+
+  /// No description provided for @segmentCalendar.
+  ///
+  /// In ko, this message translates to:
+  /// **'캘린더'**
+  String get segmentCalendar;
 }
 
 class _AppLocalizationsDelegate
