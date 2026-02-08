@@ -74,6 +74,7 @@ class _CategorySelectorWidgetState
   void _showAddCategoryDialog() {
     final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
+    var isLoading = false;
 
     String typeLabel;
     switch (widget.transactionType) {
@@ -89,28 +90,52 @@ class _CategorySelectorWidgetState
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.categoryAddType(typeLabel)),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.categoryName,
-            hintText: l10n.categoryNameHintExample,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) => _submitCategory(dialogContext, nameController),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => _submitCategory(dialogContext, nameController),
-            child: Text(l10n.commonAdd),
-          ),
-        ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (_, setDialogState) {
+          Future<void> submit() async {
+            if (isLoading) return;
+            setDialogState(() => isLoading = true);
+            try {
+              await _submitCategory(dialogContext, nameController);
+            } finally {
+              if (dialogContext.mounted) {
+                setDialogState(() => isLoading = false);
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: Text(l10n.categoryAddType(typeLabel)),
+            content: TextField(
+              controller: nameController,
+              autofocus: true,
+              enabled: !isLoading,
+              decoration: InputDecoration(
+                labelText: l10n.categoryName,
+                hintText: l10n.categoryNameHintExample,
+                border: const OutlineInputBorder(),
+              ),
+              onSubmitted: isLoading ? null : (_) => submit(),
+            ),
+            actions: [
+              TextButton(
+                onPressed:
+                    isLoading ? null : () => Navigator.pop(dialogContext),
+                child: Text(l10n.commonCancel),
+              ),
+              FilledButton(
+                onPressed: isLoading ? null : () => submit(),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.commonAdd),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -157,32 +182,56 @@ class _CategorySelectorWidgetState
   void _showEditCategoryDialog(Category category) {
     final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: category.name);
+    var isLoading = false;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.categoryEdit),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.categoryName,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) =>
-              _submitEditCategory(dialogContext, category, nameController),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                _submitEditCategory(dialogContext, category, nameController),
-            child: Text(l10n.commonSave),
-          ),
-        ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (_, setDialogState) {
+          Future<void> submit() async {
+            if (isLoading) return;
+            setDialogState(() => isLoading = true);
+            try {
+              await _submitEditCategory(
+                  dialogContext, category, nameController);
+            } finally {
+              if (dialogContext.mounted) {
+                setDialogState(() => isLoading = false);
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: Text(l10n.categoryEdit),
+            content: TextField(
+              controller: nameController,
+              autofocus: true,
+              enabled: !isLoading,
+              decoration: InputDecoration(
+                labelText: l10n.categoryName,
+                border: const OutlineInputBorder(),
+              ),
+              onSubmitted: isLoading ? null : (_) => submit(),
+            ),
+            actions: [
+              TextButton(
+                onPressed:
+                    isLoading ? null : () => Navigator.pop(dialogContext),
+                child: Text(l10n.commonCancel),
+              ),
+              FilledButton(
+                onPressed: isLoading ? null : () => submit(),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.commonSave),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

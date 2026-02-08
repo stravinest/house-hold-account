@@ -5,6 +5,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../fixed_expense/domain/entities/fixed_expense_category.dart';
 import '../../../fixed_expense/presentation/providers/fixed_expense_category_provider.dart';
+import '../../../ledger/presentation/providers/ledger_provider.dart';
 
 /// 고정비 카테고리 선택 위젯
 ///
@@ -58,38 +59,65 @@ class _FixedExpenseCategorySelectorWidgetState
   void _showAddFixedExpenseCategoryDialog() {
     final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
+    var isLoading = false;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.fixedExpenseCategoryAdd),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.fixedExpenseCategoryName,
-            hintText: l10n.fixedExpenseCategoryNameHint,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) =>
-              _submitFixedExpenseCategory(dialogContext, nameController),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                _submitFixedExpenseCategory(dialogContext, nameController),
-            child: Text(l10n.commonAdd),
-          ),
-        ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (_, setDialogState) {
+          Future<void> submit() async {
+            if (isLoading) return;
+            setDialogState(() => isLoading = true);
+            try {
+              await _submitFixedExpenseCategory(
+                  dialogContext, nameController);
+            } finally {
+              if (dialogContext.mounted) {
+                setDialogState(() => isLoading = false);
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: Text(l10n.fixedExpenseCategoryAdd),
+            content: TextField(
+              controller: nameController,
+              autofocus: true,
+              enabled: !isLoading,
+              decoration: InputDecoration(
+                labelText: l10n.fixedExpenseCategoryName,
+                hintText: l10n.fixedExpenseCategoryNameHint,
+                border: const OutlineInputBorder(),
+              ),
+              onSubmitted: isLoading ? null : (_) => submit(),
+            ),
+            actions: [
+              TextButton(
+                onPressed:
+                    isLoading ? null : () => Navigator.pop(dialogContext),
+                child: Text(l10n.commonCancel),
+              ),
+              FilledButton(
+                onPressed: isLoading ? null : () => submit(),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.commonAdd),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   /// 고정비 카테고리 생성 제출
+  ///
+  /// autoDispose notifier를 거치지 않고 repository를 직접 사용하여
+  /// 비동기 작업 중 provider dispose 문제를 방지합니다.
   Future<void> _submitFixedExpenseCategory(
     BuildContext dialogContext,
     TextEditingController nameController,
@@ -101,14 +129,17 @@ class _FixedExpenseCategorySelectorWidgetState
       return;
     }
 
+    final ledgerId = ref.read(selectedLedgerIdProvider);
+    if (ledgerId == null) return;
+
     try {
-      final newCategory = await ref
-          .read(fixedExpenseCategoryNotifierProvider.notifier)
-          .createCategory(
-            name: nameController.text.trim(),
-            icon: '',
-            color: _generateRandomColor(),
-          );
+      final repository = ref.read(fixedExpenseCategoryRepositoryProvider);
+      final newCategory = await repository.createCategory(
+        ledgerId: ledgerId,
+        name: nameController.text.trim(),
+        icon: '',
+        color: _generateRandomColor(),
+      );
 
       widget.onCategorySelected(newCategory);
 
@@ -116,11 +147,15 @@ class _FixedExpenseCategorySelectorWidgetState
         Navigator.pop(dialogContext);
       }
 
-      SnackBarUtils.showSuccess(context, l10n.fixedExpenseCategoryAdded);
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(context, l10n.fixedExpenseCategoryAdded);
+      }
 
       ref.invalidate(fixedExpenseCategoriesProvider);
     } catch (e) {
-      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      if (context.mounted) {
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
     }
   }
 
@@ -128,38 +163,56 @@ class _FixedExpenseCategorySelectorWidgetState
   void _showEditFixedExpenseCategoryDialog(FixedExpenseCategory category) {
     final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: category.name);
+    var isLoading = false;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.fixedExpenseCategoryEdit),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.fixedExpenseCategoryName,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) => _submitEditFixedExpenseCategory(
-            dialogContext,
-            category,
-            nameController,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () => _submitEditFixedExpenseCategory(
-              dialogContext,
-              category,
-              nameController,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (_, setDialogState) {
+          Future<void> submit() async {
+            if (isLoading) return;
+            setDialogState(() => isLoading = true);
+            try {
+              await _submitEditFixedExpenseCategory(
+                  dialogContext, category, nameController);
+            } finally {
+              if (dialogContext.mounted) {
+                setDialogState(() => isLoading = false);
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: Text(l10n.fixedExpenseCategoryEdit),
+            content: TextField(
+              controller: nameController,
+              autofocus: true,
+              enabled: !isLoading,
+              decoration: InputDecoration(
+                labelText: l10n.fixedExpenseCategoryName,
+                border: const OutlineInputBorder(),
+              ),
+              onSubmitted: isLoading ? null : (_) => submit(),
             ),
-            child: Text(l10n.commonSave),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed:
+                    isLoading ? null : () => Navigator.pop(dialogContext),
+                child: Text(l10n.commonCancel),
+              ),
+              FilledButton(
+                onPressed: isLoading ? null : () => submit(),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.commonSave),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -184,19 +237,22 @@ class _FixedExpenseCategorySelectorWidgetState
     }
 
     try {
-      await ref
-          .read(fixedExpenseCategoryNotifierProvider.notifier)
-          .updateCategory(id: category.id, name: newName);
+      final repository = ref.read(fixedExpenseCategoryRepositoryProvider);
+      await repository.updateCategory(id: category.id, name: newName);
 
       if (dialogContext.mounted) {
         Navigator.pop(dialogContext);
       }
 
-      SnackBarUtils.showSuccess(context, l10n.commonSuccess);
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(context, l10n.commonSuccess);
+      }
 
       ref.invalidate(fixedExpenseCategoriesProvider);
     } catch (e) {
-      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      if (context.mounted) {
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
     }
   }
 
@@ -230,20 +286,23 @@ class _FixedExpenseCategorySelectorWidgetState
     if (confirmed != true) return;
 
     try {
-      await ref
-          .read(fixedExpenseCategoryNotifierProvider.notifier)
-          .deleteCategory(category.id);
+      final repository = ref.read(fixedExpenseCategoryRepositoryProvider);
+      await repository.deleteCategory(category.id);
 
       // 삭제된 카테고리가 선택되어 있었으면 선택 해제
       if (widget.selectedCategory?.id == category.id) {
         widget.onCategorySelected(null);
       }
 
-      SnackBarUtils.showSuccess(context, l10n.fixedExpenseCategoryDeleted);
+      if (context.mounted) {
+        SnackBarUtils.showSuccess(context, l10n.fixedExpenseCategoryDeleted);
+      }
 
       ref.invalidate(fixedExpenseCategoriesProvider);
     } catch (e) {
-      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      if (context.mounted) {
+        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
     }
   }
 

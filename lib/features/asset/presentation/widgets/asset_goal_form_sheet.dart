@@ -22,6 +22,7 @@ class AssetGoalFormSheet extends ConsumerStatefulWidget {
 class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
   late TextEditingController _amountController;
   DateTime? _targetDate;
+  bool _isLoading = false;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -131,8 +132,14 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           TextButton(
-            onPressed: () => _submit(context, isEditing),
-            child: Text(l10n.commonSave),
+            onPressed: _isLoading ? null : () => _submit(context, isEditing),
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(l10n.commonSave),
           ),
         ],
       ),
@@ -272,17 +279,27 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return FilledButton(
-      onPressed: () => _submit(context, isEditing),
+      onPressed: _isLoading ? null : () => _submit(context, isEditing),
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(56),
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      child: Text(
-        isEditing ? l10n.assetGoalEdit : l10n.assetGoalCreate,
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      ),
+      child: _isLoading
+          ? SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: colorScheme.onPrimary,
+              ),
+            )
+          : Text(
+              isEditing ? l10n.assetGoalEdit : l10n.assetGoalCreate,
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
     );
   }
 
@@ -314,6 +331,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
       return;
     }
 
+    setState(() => _isLoading = true);
     final notifier = ref.read(assetGoalNotifierProvider(ledgerId).notifier);
 
     try {
@@ -352,6 +370,8 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
       if (context.mounted) {
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 }

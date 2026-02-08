@@ -51,33 +51,56 @@ class _PaymentMethodSelectorWidgetState
   void _showAddPaymentMethodDialog() {
     final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController();
+    var isLoading = false;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.paymentMethodAdd),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.paymentMethodName,
-            hintText: l10n.paymentMethodNameHintExample,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) =>
-              _submitPaymentMethod(dialogContext, nameController),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                _submitPaymentMethod(dialogContext, nameController),
-            child: Text(l10n.commonAdd),
-          ),
-        ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (_, setDialogState) {
+          Future<void> submit() async {
+            if (isLoading) return;
+            setDialogState(() => isLoading = true);
+            try {
+              await _submitPaymentMethod(dialogContext, nameController);
+            } finally {
+              if (dialogContext.mounted) {
+                setDialogState(() => isLoading = false);
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: Text(l10n.paymentMethodAdd),
+            content: TextField(
+              controller: nameController,
+              autofocus: true,
+              enabled: !isLoading,
+              decoration: InputDecoration(
+                labelText: l10n.paymentMethodName,
+                hintText: l10n.paymentMethodNameHintExample,
+                border: const OutlineInputBorder(),
+              ),
+              onSubmitted: isLoading ? null : (_) => submit(),
+            ),
+            actions: [
+              TextButton(
+                onPressed:
+                    isLoading ? null : () => Navigator.pop(dialogContext),
+                child: Text(l10n.commonCancel),
+              ),
+              FilledButton(
+                onPressed: isLoading ? null : () => submit(),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.commonAdd),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -122,32 +145,56 @@ class _PaymentMethodSelectorWidgetState
   void _showEditPaymentMethodDialog(PaymentMethod method) {
     final l10n = AppLocalizations.of(context);
     final nameController = TextEditingController(text: method.name);
+    var isLoading = false;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.paymentMethodEdit),
-        content: TextField(
-          controller: nameController,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: l10n.paymentMethodName,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) =>
-              _submitEditPaymentMethod(dialogContext, method, nameController),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(l10n.commonCancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                _submitEditPaymentMethod(dialogContext, method, nameController),
-            child: Text(l10n.commonSave),
-          ),
-        ],
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (_, setDialogState) {
+          Future<void> submit() async {
+            if (isLoading) return;
+            setDialogState(() => isLoading = true);
+            try {
+              await _submitEditPaymentMethod(
+                  dialogContext, method, nameController);
+            } finally {
+              if (dialogContext.mounted) {
+                setDialogState(() => isLoading = false);
+              }
+            }
+          }
+
+          return AlertDialog(
+            title: Text(l10n.paymentMethodEdit),
+            content: TextField(
+              controller: nameController,
+              autofocus: true,
+              enabled: !isLoading,
+              decoration: InputDecoration(
+                labelText: l10n.paymentMethodName,
+                border: const OutlineInputBorder(),
+              ),
+              onSubmitted: isLoading ? null : (_) => submit(),
+            ),
+            actions: [
+              TextButton(
+                onPressed:
+                    isLoading ? null : () => Navigator.pop(dialogContext),
+                child: Text(l10n.commonCancel),
+              ),
+              FilledButton(
+                onPressed: isLoading ? null : () => submit(),
+                child: isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(l10n.commonSave),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
