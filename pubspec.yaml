@@ -68,6 +68,12 @@ dependencies:
   # 마크다운 렌더링
   flutter_markdown: ^0.7.4+1
 
+  # 데이터 내보내기
+  excel: ^4.0.6
+  csv: ^6.0.0
+  path_provider: ^2.1.5
+  share_plus: ^10.1.4
+
   # SMS/알림 자동저장 (Android only)
   another_telephony: ^0.4.1
   notification_listener_service: ^0.3.5

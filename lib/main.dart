@@ -332,8 +332,16 @@ class _SharedHouseholdAccountAppState
       final user = response.session.user;
       final router = ref.read(routerProvider);
 
-      // 이메일 인증 완료 여부 확인
-      if (user.emailConfirmedAt != null) {
+      // 비밀번호 재설정 감지 (URL fragment에 type=recovery 포함)
+      final isPasswordRecovery = uri.fragment.contains('type=recovery') ||
+          uri.queryParameters['type'] == 'recovery';
+
+      if (isPasswordRecovery) {
+        debugPrint('비밀번호 재설정 - 새 비밀번호 입력 페이지로 이동');
+        Future.delayed(const Duration(milliseconds: 500), () {
+          router.go(Routes.resetPassword);
+        });
+      } else if (user.emailConfirmedAt != null) {
         // 이메일 인증 완료 - 홈으로 이동
         Future.delayed(const Duration(milliseconds: 500), () {
           router.go(Routes.home);

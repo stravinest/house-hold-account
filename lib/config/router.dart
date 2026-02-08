@@ -6,6 +6,7 @@ import '../l10n/generated/app_localizations.dart';
 import '../features/auth/presentation/pages/email_verification_page.dart';
 import '../features/auth/presentation/pages/forgot_password_page.dart';
 import '../features/auth/presentation/pages/login_page.dart';
+import '../features/auth/presentation/pages/reset_password_page.dart';
 import '../features/auth/presentation/pages/signup_page.dart';
 import '../features/auth/presentation/providers/auth_provider.dart';
 import '../features/category/presentation/pages/category_management_page.dart';
@@ -55,6 +56,7 @@ class Routes {
   static const String pendingTransactions = '/settings/pending-transactions';
   static const String termsOfService = '/terms-of-service';
   static const String privacyPolicy = '/privacy-policy';
+  static const String resetPassword = '/reset-password';
   static const String debugTest = '/debug-test';
 }
 
@@ -93,6 +95,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == Routes.signup ||
           state.matchedLocation == Routes.forgotPassword ||
           state.matchedLocation == Routes.emailVerification;
+      final isResetPassword =
+          state.matchedLocation == Routes.resetPassword;
       final isSplash = state.matchedLocation == Routes.splash;
       final isDeepLinkRoute =
           state.matchedLocation == Routes.addExpense ||
@@ -105,6 +109,12 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // 딥링크 라우트는 리다이렉트하지 않음 (이미 로그인된 상태에서만 접근 가능)
       if (isDeepLinkRoute && isLoggedIn) {
+        return null;
+      }
+
+      // 비밀번호 재설정 페이지는 항상 접근 가능
+      // (recovery 콜백에서 세션 복구 타이밍에 따라 isLoggedIn이 false일 수 있음)
+      if (isResetPassword) {
         return null;
       }
 
@@ -155,6 +165,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             child: EmailVerificationPage(email: email),
           );
         },
+      ),
+
+      // 비밀번호 재설정 - 페이드 전환
+      GoRoute(
+        path: Routes.resetPassword,
+        pageBuilder: (context, state) => fadeTransition(
+          key: state.pageKey,
+          child: const ResetPasswordPage(),
+        ),
       ),
 
       // 메인 - 페이드 전환
@@ -345,7 +364,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// 스플래시 페이지 (임시)
+// 스플래시 페이지 (1v48l 디자인)
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
 
@@ -353,38 +372,152 @@ class SplashPage extends ConsumerStatefulWidget {
   ConsumerState<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends ConsumerState<SplashPage> {
+class _SplashPageState extends ConsumerState<SplashPage>
+    with TickerProviderStateMixin {
+  late final AnimationController _dotController;
+  bool _minTimeElapsed = false;
+  bool _hasNavigated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _dotController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat();
+
+    // 최소 2초 동안 스플래시 디자인 표시
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (!mounted) return;
+      _minTimeElapsed = true;
+      _tryNavigate(ref.read(authStateProvider));
+    });
+  }
+
+  void _tryNavigate(AsyncValue<dynamic> authState) {
+    if (!_minTimeElapsed || _hasNavigated || !mounted) return;
+
+    authState.when(
+      data: (user) {
+        _hasNavigated = true;
+        if (user != null) {
+          context.go(Routes.home);
+        } else {
+          context.go(Routes.login);
+        }
+      },
+      loading: () {},
+      error: (e, stack) {
+        _hasNavigated = true;
+        context.go(Routes.login);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _dotController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final l10n = AppLocalizations.of(context);
 
-    // 인증 상태 로딩이 완료되면 즉시 리다이렉트
-    authState.when(
-      data: (user) {
-        // build 중에 navigation을 직접 호출하면 안되므로 다음 프레임에 실행
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          if (user != null) {
-            context.go(Routes.home);
-          } else {
-            context.go(Routes.login);
-          }
-        });
-      },
-      loading: () {
-        // 로딩 중 - 아무것도 안함 (UI만 표시)
-      },
-      error: (e, stack) {
-        // 에러 시 로그인 페이지로
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          context.go(Routes.login);
-        });
-      },
+    // 인증 상태 변경 시 최소 시간 경과 후 리다이렉트
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _tryNavigate(authState);
+    });
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFFDFDF5),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 앱 아이콘
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x15000000),
+                    blurRadius: 16,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(28),
+                child: Image.asset(
+                  'assets/images/app_icon.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // 타이틀
+            Text(
+              l10n.appTitle,
+              style: const TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF1A1C19),
+              ),
+            ),
+            const SizedBox(height: 8),
+            // 서브타이틀
+            Text(
+              l10n.appSubtitle,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF44483E),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            // 로딩 인디케이터 (3개 점)
+            AnimatedBuilder(
+              animation: _dotController,
+              builder: (context, child) {
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(3, (index) {
+                    const colors = [
+                      Color(0xFF2E7D32),
+                      Color(0xFFA8DAB5),
+                      Color(0xFFC4C8BB),
+                    ];
+                    final delay = index * 0.3;
+                    final value = _dotController.value;
+                    final opacity =
+                        ((value - delay) % 1.0 < 0.5) ? 1.0 : 0.4;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Opacity(
+                        opacity: opacity,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: colors[index],
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
-
-    // 네이티브 스플래시가 이미 표시되므로 최소한의 UI만 표시
-    // (빈 화면 방지용 - 실제로는 거의 보이지 않음)
-    return const Scaffold(body: SizedBox.shrink());
   }
 }

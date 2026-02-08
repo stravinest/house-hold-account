@@ -101,13 +101,13 @@ abstract class AppLocalizations {
   /// 앱 제목
   ///
   /// In ko, this message translates to:
-  /// **'공유 가계부'**
+  /// **'우생가계부'**
   String get appTitle;
 
   /// 앱 부제목
   ///
   /// In ko, this message translates to:
-  /// **'가족, 커플, 룸메이트와 함께\n가계부를 관리하세요'**
+  /// **'우리집 생활 공유가계부'**
   String get appSubtitle;
 
   /// No description provided for @commonCancel.
@@ -467,7 +467,7 @@ abstract class AppLocalizations {
   /// No description provided for @authSignupSubtitle.
   ///
   /// In ko, this message translates to:
-  /// **'공유 가계부를 시작하려면\n계정을 만들어주세요'**
+  /// **'우생가계부를 시작하려면\n계정을 만들어주세요'**
   String get authSignupSubtitle;
 
   /// No description provided for @authTermsAgreement.
@@ -743,7 +743,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsDataExportDescription.
   ///
   /// In ko, this message translates to:
-  /// **'거래 내역을 CSV로 내보내기'**
+  /// **'거래 내역을 엑셀/CSV로 내보내기'**
   String get settingsDataExportDescription;
 
   /// No description provided for @settingsInfo.
@@ -923,13 +923,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAboutAppName.
   ///
   /// In ko, this message translates to:
-  /// **'공유 가계부'**
+  /// **'우생가계부'**
   String get settingsAboutAppName;
 
   /// No description provided for @settingsAboutAppDescription.
   ///
   /// In ko, this message translates to:
-  /// **'Flutter + Supabase로 만든 공유 가계부 앱입니다.'**
+  /// **'Flutter + Supabase로 만든 우생가계부 앱입니다.'**
   String get settingsAboutAppDescription;
 
   /// No description provided for @settingsAboutAppSubDescription.
@@ -4386,6 +4386,252 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'동일한 SMS/알림이 2번 수신되었을 수 있습니다.'**
   String get duplicateMessageReceivedTwice;
+
+  /// No description provided for @authResetPasswordTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 비밀번호 설정'**
+  String get authResetPasswordTitle;
+
+  /// No description provided for @authResetPasswordSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새로운 비밀번호를 입력해주세요'**
+  String get authResetPasswordSubtitle;
+
+  /// No description provided for @authResetPasswordButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 변경'**
+  String get authResetPasswordButton;
+
+  /// No description provided for @authResetPasswordSuccess.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호가 변경되었습니다'**
+  String get authResetPasswordSuccess;
+
+  /// No description provided for @authResetPasswordFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 변경 실패: {error}'**
+  String authResetPasswordFailed(String error);
+
+  /// No description provided for @authResetPasswordConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 확인'**
+  String get authResetPasswordConfirm;
+
+  /// No description provided for @exportTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'엑셀 내보내기'**
+  String get exportTitle;
+
+  /// No description provided for @exportPeriod.
+  ///
+  /// In ko, this message translates to:
+  /// **'내보내기 기간'**
+  String get exportPeriod;
+
+  /// No description provided for @exportThisMonth.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 달'**
+  String get exportThisMonth;
+
+  /// No description provided for @exportLastMonth.
+  ///
+  /// In ko, this message translates to:
+  /// **'지난 달'**
+  String get exportLastMonth;
+
+  /// No description provided for @exportRecent3Months.
+  ///
+  /// In ko, this message translates to:
+  /// **'최근 3개월'**
+  String get exportRecent3Months;
+
+  /// No description provided for @exportThisYear.
+  ///
+  /// In ko, this message translates to:
+  /// **'올해 전체'**
+  String get exportThisYear;
+
+  /// No description provided for @exportTransactionType.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 유형'**
+  String get exportTransactionType;
+
+  /// No description provided for @exportTypeAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체'**
+  String get exportTypeAll;
+
+  /// No description provided for @exportTypeExpense.
+  ///
+  /// In ko, this message translates to:
+  /// **'지출만'**
+  String get exportTypeExpense;
+
+  /// No description provided for @exportTypeIncome.
+  ///
+  /// In ko, this message translates to:
+  /// **'수입만'**
+  String get exportTypeIncome;
+
+  /// No description provided for @exportTypeAsset.
+  ///
+  /// In ko, this message translates to:
+  /// **'자산만'**
+  String get exportTypeAsset;
+
+  /// No description provided for @exportIncludeItems.
+  ///
+  /// In ko, this message translates to:
+  /// **'포함 항목'**
+  String get exportIncludeItems;
+
+  /// No description provided for @exportIncludeCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리'**
+  String get exportIncludeCategory;
+
+  /// No description provided for @exportIncludePaymentMethod.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단'**
+  String get exportIncludePaymentMethod;
+
+  /// No description provided for @exportIncludeMemo.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모'**
+  String get exportIncludeMemo;
+
+  /// No description provided for @exportIncludeAuthor.
+  ///
+  /// In ko, this message translates to:
+  /// **'작성자'**
+  String get exportIncludeAuthor;
+
+  /// No description provided for @exportIncludeFixedExpense.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정비'**
+  String get exportIncludeFixedExpense;
+
+  /// No description provided for @exportFileFormat.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일 형식'**
+  String get exportFileFormat;
+
+  /// No description provided for @exportButton.
+  ///
+  /// In ko, this message translates to:
+  /// **'내보내기'**
+  String get exportButton;
+
+  /// No description provided for @exportExporting.
+  ///
+  /// In ko, this message translates to:
+  /// **'내보내는 중...'**
+  String get exportExporting;
+
+  /// No description provided for @exportSuccess.
+  ///
+  /// In ko, this message translates to:
+  /// **'파일이 생성되었습니다'**
+  String get exportSuccess;
+
+  /// No description provided for @exportFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'내보내기 실패: {error}'**
+  String exportFailed(String error);
+
+  /// No description provided for @exportNoData.
+  ///
+  /// In ko, this message translates to:
+  /// **'내보낼 거래 내역이 없습니다'**
+  String get exportNoData;
+
+  /// No description provided for @exportColumnDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'날짜'**
+  String get exportColumnDate;
+
+  /// No description provided for @exportColumnType.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래유형'**
+  String get exportColumnType;
+
+  /// No description provided for @exportColumnAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액'**
+  String get exportColumnAmount;
+
+  /// No description provided for @exportColumnTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목'**
+  String get exportColumnTitle;
+
+  /// No description provided for @exportColumnCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리'**
+  String get exportColumnCategory;
+
+  /// No description provided for @exportColumnPaymentMethod.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단'**
+  String get exportColumnPaymentMethod;
+
+  /// No description provided for @exportColumnMemo.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모'**
+  String get exportColumnMemo;
+
+  /// No description provided for @exportColumnAuthor.
+  ///
+  /// In ko, this message translates to:
+  /// **'작성자'**
+  String get exportColumnAuthor;
+
+  /// No description provided for @exportColumnFixedExpense.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정비'**
+  String get exportColumnFixedExpense;
+
+  /// No description provided for @exportFrom.
+  ///
+  /// In ko, this message translates to:
+  /// **'시작일'**
+  String get exportFrom;
+
+  /// No description provided for @exportTo.
+  ///
+  /// In ko, this message translates to:
+  /// **'종료일'**
+  String get exportTo;
+
+  /// No description provided for @exportDateRange.
+  ///
+  /// In ko, this message translates to:
+  /// **'{start} ~ {end}'**
+  String exportDateRange(String start, String end);
 }
 
 class _AppLocalizationsDelegate

@@ -9,10 +9,10 @@ class AppLocalizationsKo extends AppLocalizations {
   AppLocalizationsKo([String locale = 'ko']) : super(locale);
 
   @override
-  String get appTitle => '공유 가계부';
+  String get appTitle => '우생가계부';
 
   @override
-  String get appSubtitle => '가족, 커플, 룸메이트와 함께\n가계부를 관리하세요';
+  String get appSubtitle => '우리집 생활 공유가계부';
 
   @override
   String get commonCancel => '취소';
@@ -192,7 +192,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authSignupTitle => '새 계정 만들기';
 
   @override
-  String get authSignupSubtitle => '공유 가계부를 시작하려면\n계정을 만들어주세요';
+  String get authSignupSubtitle => '우생가계부를 시작하려면\n계정을 만들어주세요';
 
   @override
   String get authTermsAgreement => '회원가입 시 이용약관 및 개인정보처리방침에\n동의하는 것으로 간주됩니다.';
@@ -341,7 +341,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsDataExport => '데이터 내보내기';
 
   @override
-  String get settingsDataExportDescription => '거래 내역을 CSV로 내보내기';
+  String get settingsDataExportDescription => '거래 내역을 엑셀/CSV로 내보내기';
 
   @override
   String get settingsInfo => '정보';
@@ -440,11 +440,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get settingsFeaturePreparing => '준비 중인 기능입니다';
 
   @override
-  String get settingsAboutAppName => '공유 가계부';
+  String get settingsAboutAppName => '우생가계부';
 
   @override
   String get settingsAboutAppDescription =>
-      'Flutter + Supabase로 만든 공유 가계부 앱입니다.';
+      'Flutter + Supabase로 만든 우생가계부 앱입니다.';
 
   @override
   String get settingsAboutAppSubDescription => '가족, 연인, 룸메이트와 함께 지출을 관리하세요.';
@@ -2310,4 +2310,133 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get duplicateMessageReceivedTwice => '동일한 SMS/알림이 2번 수신되었을 수 있습니다.';
+
+  @override
+  String get authResetPasswordTitle => '새 비밀번호 설정';
+
+  @override
+  String get authResetPasswordSubtitle => '새로운 비밀번호를 입력해주세요';
+
+  @override
+  String get authResetPasswordButton => '비밀번호 변경';
+
+  @override
+  String get authResetPasswordSuccess => '비밀번호가 변경되었습니다';
+
+  @override
+  String authResetPasswordFailed(String error) {
+    return '비밀번호 변경 실패: $error';
+  }
+
+  @override
+  String get authResetPasswordConfirm => '비밀번호 확인';
+
+  @override
+  String get exportTitle => '엑셀 내보내기';
+
+  @override
+  String get exportPeriod => '내보내기 기간';
+
+  @override
+  String get exportThisMonth => '이번 달';
+
+  @override
+  String get exportLastMonth => '지난 달';
+
+  @override
+  String get exportRecent3Months => '최근 3개월';
+
+  @override
+  String get exportThisYear => '올해 전체';
+
+  @override
+  String get exportTransactionType => '거래 유형';
+
+  @override
+  String get exportTypeAll => '전체';
+
+  @override
+  String get exportTypeExpense => '지출만';
+
+  @override
+  String get exportTypeIncome => '수입만';
+
+  @override
+  String get exportTypeAsset => '자산만';
+
+  @override
+  String get exportIncludeItems => '포함 항목';
+
+  @override
+  String get exportIncludeCategory => '카테고리';
+
+  @override
+  String get exportIncludePaymentMethod => '결제수단';
+
+  @override
+  String get exportIncludeMemo => '메모';
+
+  @override
+  String get exportIncludeAuthor => '작성자';
+
+  @override
+  String get exportIncludeFixedExpense => '고정비';
+
+  @override
+  String get exportFileFormat => '파일 형식';
+
+  @override
+  String get exportButton => '내보내기';
+
+  @override
+  String get exportExporting => '내보내는 중...';
+
+  @override
+  String get exportSuccess => '파일이 생성되었습니다';
+
+  @override
+  String exportFailed(String error) {
+    return '내보내기 실패: $error';
+  }
+
+  @override
+  String get exportNoData => '내보낼 거래 내역이 없습니다';
+
+  @override
+  String get exportColumnDate => '날짜';
+
+  @override
+  String get exportColumnType => '거래유형';
+
+  @override
+  String get exportColumnAmount => '금액';
+
+  @override
+  String get exportColumnTitle => '제목';
+
+  @override
+  String get exportColumnCategory => '카테고리';
+
+  @override
+  String get exportColumnPaymentMethod => '결제수단';
+
+  @override
+  String get exportColumnMemo => '메모';
+
+  @override
+  String get exportColumnAuthor => '작성자';
+
+  @override
+  String get exportColumnFixedExpense => '고정비';
+
+  @override
+  String get exportFrom => '시작일';
+
+  @override
+  String get exportTo => '종료일';
+
+  @override
+  String exportDateRange(String start, String end) {
+    return '$start ~ $end';
+  }
 }

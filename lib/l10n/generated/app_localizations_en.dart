@@ -9,11 +9,10 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Shared Household';
+  String get appTitle => 'WooSaeng';
 
   @override
-  String get appSubtitle =>
-      'Manage your household finances\nwith family, couple, or roommates';
+  String get appSubtitle => 'Shared Household Account Book';
 
   @override
   String get commonCancel => 'Cancel';
@@ -195,8 +194,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authSignupTitle => 'Create Account';
 
   @override
-  String get authSignupSubtitle =>
-      'Create an account to start\nusing Shared Household';
+  String get authSignupSubtitle => 'Create an account to start\nusing WooSaeng';
 
   @override
   String get authTermsAgreement =>
@@ -352,7 +350,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDataExport => 'Export Data';
 
   @override
-  String get settingsDataExportDescription => 'Export transactions as CSV';
+  String get settingsDataExportDescription =>
+      'Export transactions as Excel/CSV';
 
   @override
   String get settingsInfo => 'Information';
@@ -451,11 +450,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsFeaturePreparing => 'This feature is coming soon';
 
   @override
-  String get settingsAboutAppName => 'Shared Household Account';
+  String get settingsAboutAppName => 'WooSaeng';
 
   @override
   String get settingsAboutAppDescription =>
-      'A shared household account app built with Flutter + Supabase.';
+      'A WooSaeng household account app built with Flutter + Supabase.';
 
   @override
   String get settingsAboutAppSubDescription =>
@@ -2369,4 +2368,133 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get duplicateMessageReceivedTwice =>
       'The same SMS/notification may have been received twice.';
+
+  @override
+  String get authResetPasswordTitle => 'Set New Password';
+
+  @override
+  String get authResetPasswordSubtitle => 'Please enter your new password';
+
+  @override
+  String get authResetPasswordButton => 'Change Password';
+
+  @override
+  String get authResetPasswordSuccess => 'Password has been changed';
+
+  @override
+  String authResetPasswordFailed(String error) {
+    return 'Failed to change password: $error';
+  }
+
+  @override
+  String get authResetPasswordConfirm => 'Confirm Password';
+
+  @override
+  String get exportTitle => 'Export to Excel';
+
+  @override
+  String get exportPeriod => 'Export Period';
+
+  @override
+  String get exportThisMonth => 'This Month';
+
+  @override
+  String get exportLastMonth => 'Last Month';
+
+  @override
+  String get exportRecent3Months => 'Last 3 Months';
+
+  @override
+  String get exportThisYear => 'This Year';
+
+  @override
+  String get exportTransactionType => 'Transaction Type';
+
+  @override
+  String get exportTypeAll => 'All';
+
+  @override
+  String get exportTypeExpense => 'Expense Only';
+
+  @override
+  String get exportTypeIncome => 'Income Only';
+
+  @override
+  String get exportTypeAsset => 'Asset Only';
+
+  @override
+  String get exportIncludeItems => 'Include Items';
+
+  @override
+  String get exportIncludeCategory => 'Category';
+
+  @override
+  String get exportIncludePaymentMethod => 'Payment Method';
+
+  @override
+  String get exportIncludeMemo => 'Memo';
+
+  @override
+  String get exportIncludeAuthor => 'Author';
+
+  @override
+  String get exportIncludeFixedExpense => 'Fixed Expense';
+
+  @override
+  String get exportFileFormat => 'File Format';
+
+  @override
+  String get exportButton => 'Export';
+
+  @override
+  String get exportExporting => 'Exporting...';
+
+  @override
+  String get exportSuccess => 'File has been created';
+
+  @override
+  String exportFailed(String error) {
+    return 'Export failed: $error';
+  }
+
+  @override
+  String get exportNoData => 'No transactions to export';
+
+  @override
+  String get exportColumnDate => 'Date';
+
+  @override
+  String get exportColumnType => 'Type';
+
+  @override
+  String get exportColumnAmount => 'Amount';
+
+  @override
+  String get exportColumnTitle => 'Title';
+
+  @override
+  String get exportColumnCategory => 'Category';
+
+  @override
+  String get exportColumnPaymentMethod => 'Payment Method';
+
+  @override
+  String get exportColumnMemo => 'Memo';
+
+  @override
+  String get exportColumnAuthor => 'Author';
+
+  @override
+  String get exportColumnFixedExpense => 'Fixed Expense';
+
+  @override
+  String get exportFrom => 'From';
+
+  @override
+  String get exportTo => 'To';
+
+  @override
+  String exportDateRange(String start, String end) {
+    return '$start ~ $end';
+  }
 }

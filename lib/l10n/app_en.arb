@@ -1,7 +1,7 @@
 {
   "@@locale": "en",
-  "appTitle": "Shared Household",
-  "appSubtitle": "Manage your household finances\nwith family, couple, or roommates",
+  "appTitle": "WooSaeng",
+  "appSubtitle": "Shared Household Account Book",
   "commonCancel": "Cancel",
   "commonSave": "Save",
   "commonDelete": "Delete",
@@ -61,7 +61,7 @@
   "authEmailNotVerified": "Email not verified. Please check your inbox.",
   "authEmailAlreadyRegistered": "This email is already registered.",
   "authSignupTitle": "Create Account",
-  "authSignupSubtitle": "Create an account to start\nusing Shared Household",
+  "authSignupSubtitle": "Create an account to start\nusing WooSaeng",
   "authTermsAgreement": "By signing up, you agree to our\nTerms of Service and Privacy Policy.",
   "authForgotPasswordTitle": "Reset Password",
   "authForgotPasswordSubtitle": "Enter your email address and we'll send you\na link to reset your password.",
@@ -107,7 +107,7 @@
   "settingsPasswordChange": "Change Password",
   "settingsData": "Data",
   "settingsDataExport": "Export Data",
-  "settingsDataExportDescription": "Export transactions as CSV",
+  "settingsDataExportDescription": "Export transactions as Excel/CSV",
   "settingsInfo": "Information",
   "settingsAppInfo": "App Info",
   "settingsVersion": "Version {version}",
@@ -137,8 +137,8 @@
   "settingsLanguageEnglish": "English",
   "settingsLanguageChanged": "Language has been changed",
   "settingsFeaturePreparing": "This feature is coming soon",
-  "settingsAboutAppName": "Shared Household Account",
-  "settingsAboutAppDescription": "A shared household account app built with Flutter + Supabase.",
+  "settingsAboutAppName": "WooSaeng",
+  "settingsAboutAppDescription": "A WooSaeng household account app built with Flutter + Supabase.",
   "settingsAboutAppSubDescription": "Manage expenses together with family, couple, or roommates.",
   "ledgerTitle": "Ledger",
   "ledgerManagement": "Ledger Management",
@@ -763,5 +763,70 @@
   "ignoreDuplicate": "Save",
   "duplicateInfo": "Duplicate Info",
   "originalTransactionNotFound": "Original transaction not found.",
-  "duplicateMessageReceivedTwice": "The same SMS/notification may have been received twice."
+  "duplicateMessageReceivedTwice": "The same SMS/notification may have been received twice.",
+  "authResetPasswordTitle": "Set New Password",
+  "authResetPasswordSubtitle": "Please enter your new password",
+  "authResetPasswordButton": "Change Password",
+  "authResetPasswordSuccess": "Password has been changed",
+  "authResetPasswordFailed": "Failed to change password: {error}",
+  "@authResetPasswordFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "authResetPasswordConfirm": "Confirm Password",
+  "exportTitle": "Export to Excel",
+  "exportPeriod": "Export Period",
+  "exportThisMonth": "This Month",
+  "exportLastMonth": "Last Month",
+  "exportRecent3Months": "Last 3 Months",
+  "exportThisYear": "This Year",
+  "exportTransactionType": "Transaction Type",
+  "exportTypeAll": "All",
+  "exportTypeExpense": "Expense Only",
+  "exportTypeIncome": "Income Only",
+  "exportTypeAsset": "Asset Only",
+  "exportIncludeItems": "Include Items",
+  "exportIncludeCategory": "Category",
+  "exportIncludePaymentMethod": "Payment Method",
+  "exportIncludeMemo": "Memo",
+  "exportIncludeAuthor": "Author",
+  "exportIncludeFixedExpense": "Fixed Expense",
+  "exportFileFormat": "File Format",
+  "exportButton": "Export",
+  "exportExporting": "Exporting...",
+  "exportSuccess": "File has been created",
+  "exportFailed": "Export failed: {error}",
+  "@exportFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "exportNoData": "No transactions to export",
+  "exportColumnDate": "Date",
+  "exportColumnType": "Type",
+  "exportColumnAmount": "Amount",
+  "exportColumnTitle": "Title",
+  "exportColumnCategory": "Category",
+  "exportColumnPaymentMethod": "Payment Method",
+  "exportColumnMemo": "Memo",
+  "exportColumnAuthor": "Author",
+  "exportColumnFixedExpense": "Fixed Expense",
+  "exportFrom": "From",
+  "exportTo": "To",
+  "exportDateRange": "{start} ~ {end}",
+  "@exportDateRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  }
 }

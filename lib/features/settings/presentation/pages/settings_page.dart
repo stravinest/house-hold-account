@@ -15,6 +15,7 @@ import '../../../../shared/widgets/section_header.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ledger/presentation/providers/calendar_view_provider.dart';
 import '../../../notification/presentation/pages/notification_settings_page.dart';
+import '../widgets/data_export_bottom_sheet.dart';
 
 // 알림 설정 프로바이더
 final notificationEnabledProvider = StateProvider<bool>((ref) => true);
@@ -506,8 +507,12 @@ class SettingsPage extends ConsumerWidget {
   }
 
   void _exportData(BuildContext context, AppLocalizations l10n) {
-    // TODO: 데이터 내보내기 구현
-    SnackBarUtils.showInfo(context, l10n.settingsFeaturePreparing);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (context) => const DataExportBottomSheet(),
+    );
   }
 
   void _showAboutDialog(BuildContext context, AppLocalizations l10n) {

@@ -267,7 +267,10 @@ class AuthService {
 
   // 비밀번호 재설정 이메일 전송
   Future<void> resetPassword(String email) async {
-    await _auth.resetPasswordForEmail(email);
+    await _auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'sharedhousehold://auth-callback/',
+    );
   }
 
   // 비밀번호 변경
