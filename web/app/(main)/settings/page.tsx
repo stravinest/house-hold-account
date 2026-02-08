@@ -24,8 +24,8 @@ const managementItems = [
 ];
 
 const infoItems = [
-  { label: '이용약관', href: '/settings/terms', icon: FileText },
-  { label: '개인정보처리방침', href: '/settings/privacy', icon: Shield },
+  { label: '이용약관', href: '/terms', icon: FileText },
+  { label: '개인정보처리방침', href: '/privacy', icon: Shield },
   { label: '앱 버전', href: '#', icon: Info, extra: 'v1.0.0' },
 ];
 

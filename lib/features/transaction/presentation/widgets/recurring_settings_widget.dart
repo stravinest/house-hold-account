@@ -77,14 +77,12 @@ class _RecurringSettingsWidgetState
     extends ConsumerState<RecurringSettingsWidget> {
   late RecurringType _selectedType;
   DateTime? _endDate;
-  bool _isFixedExpense = false;
 
   @override
   void initState() {
     super.initState();
-    _selectedType = widget.initialSettings?.type ?? RecurringType.none;
+    _selectedType = widget.initialSettings?.type ?? RecurringType.monthly;
     _endDate = widget.initialSettings?.endDate;
-    _isFixedExpense = widget.initialSettings?.isFixedExpense ?? false;
   }
 
   @override
@@ -102,7 +100,7 @@ class _RecurringSettingsWidgetState
   }
 
   int _calculateTransactionCount() {
-    if (_selectedType == RecurringType.none || _endDate == null) {
+    if (_endDate == null) {
       return 1;
     }
 
@@ -160,7 +158,7 @@ class _RecurringSettingsWidgetState
         type: _selectedType,
         endDate: _endDate,
         transactionCount: count,
-        isFixedExpense: _isFixedExpense,
+        isFixedExpense: widget.initialSettings?.isFixedExpense ?? false,
       ),
     );
   }
@@ -299,10 +297,6 @@ class _RecurringSettingsWidgetState
         SegmentedButton<RecurringType>(
           segments: [
             ButtonSegment(
-              value: RecurringType.none,
-              label: Text(l10n.recurringNone),
-            ),
-            ButtonSegment(
               value: RecurringType.daily,
               label: Text(l10n.recurringDaily),
             ),
@@ -386,42 +380,11 @@ class _RecurringSettingsWidgetState
               ],
             ),
           ),
-
-          // 고정비 설정 (지출 타입이고 반복이 설정된 경우에만)
-          if (widget.transactionType == 'expense') ...[
-            const SizedBox(height: 16),
-            _buildFixedExpenseSection(colorScheme, l10n),
-          ],
         ],
       ],
     );
   }
 
-  /// 고정비 설정 섹션 빌드 (체크박스만)
-  Widget _buildFixedExpenseSection(
-    ColorScheme colorScheme,
-    AppLocalizations l10n,
-  ) {
-    return CheckboxListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(l10n.fixedExpenseRegister),
-      subtitle: Text(
-        l10n.fixedExpenseDescription,
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-      ),
-      value: _isFixedExpense,
-      onChanged: widget.enabled
-          ? (value) {
-              setState(() {
-                _isFixedExpense = value ?? false;
-              });
-              _notifyChange();
-            }
-          : null,
-    );
-  }
 }
 
 /// 월/년도 선택 다이얼로그

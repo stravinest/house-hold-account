@@ -29,9 +29,13 @@ import '../providers/ledger_provider.dart';
 import '../providers/calendar_view_provider.dart';
 import '../widgets/calendar_view.dart';
 import '../widgets/calendar_month_summary.dart';
+import '../widgets/calendar_header.dart';
 import '../widgets/calendar_view_mode_selector.dart';
 import '../widgets/daily_view.dart';
 import '../widgets/weekly_view.dart';
+import '../widgets/monthly_list_view.dart';
+import '../widgets/transaction_filter_chips.dart';
+import '../providers/monthly_list_view_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   final String? initialTransactionType;
@@ -763,7 +767,7 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
 }
 
 // 월별 뷰 콘텐츠 (기존 CalendarTabView의 내용)
-class _MonthlyViewContent extends StatelessWidget {
+class _MonthlyViewContent extends ConsumerWidget {
   final DateTime selectedDate;
   final DateTime focusedDate;
   final bool showUserSummary;
@@ -787,10 +791,12 @@ class _MonthlyViewContent extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewType = ref.watch(monthlyViewTypeProvider);
+
     return Column(
       children: [
-        // 고정 헤더: 수입 | 지출 | 합계
+        // 1. 고정 헤더: 수입 | 지출 | 합계
         Consumer(
           builder: (context, ref, child) {
             // 실제 멤버 수 사용 (실시간 반영을 위해 isShared 대신 직접 조회)
@@ -804,42 +810,73 @@ class _MonthlyViewContent extends StatelessWidget {
             );
           },
         ),
-        // 스크롤 가능한 영역
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final scrollAreaHeight = constraints.maxHeight;
 
-              return RefreshIndicator(
-                onRefresh: onRefresh,
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  child: Column(
-                    children: [
-                      CalendarView(
-                        key: calendarKey,
-                        selectedDate: selectedDate,
-                        focusedDate: focusedDate,
-                        onDateSelected: onDateSelected,
-                        onPageChanged: onPageChanged,
-                        onRefresh: onRefresh,
-                        showSummary: false,
+        // 2. 캘린더 헤더: 오늘, 리스트 토글, 새로고침, 월 네비게이션 (항상 표시)
+        CalendarHeader(
+          focusedDate: focusedDate,
+          selectedDate: selectedDate,
+          onTodayPressed: () {
+            final today = DateTime.now();
+            onDateSelected(today);
+            onPageChanged(today);
+          },
+          onPreviousMonth: () {
+            final previousMonth = DateTime(focusedDate.year, focusedDate.month - 1);
+            onPageChanged(previousMonth);
+          },
+          onNextMonth: () {
+            final nextMonth = DateTime(focusedDate.year, focusedDate.month + 1);
+            onPageChanged(nextMonth);
+          },
+          onRefresh: onRefresh,
+          showListView: viewType == MonthlyViewType.list,
+          onListViewToggle: () {
+            ref.read(monthlyViewTypeProvider.notifier).toggle();
+          },
+        ),
+
+        // 3. 필터 칩 (리스트 뷰일 때만)
+        if (viewType == MonthlyViewType.list) const TransactionFilterChips(),
+
+        // 4. 메인 콘텐츠 영역
+        Expanded(
+          child: viewType == MonthlyViewType.list
+              ? const MonthlyListView()
+              : LayoutBuilder(
+                  builder: (context, constraints) {
+                    final scrollAreaHeight = constraints.maxHeight;
+
+                    return RefreshIndicator(
+                      onRefresh: onRefresh,
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          children: [
+                            CalendarView(
+                              key: calendarKey,
+                              selectedDate: selectedDate,
+                              focusedDate: focusedDate,
+                              onDateSelected: onDateSelected,
+                              onPageChanged: onPageChanged,
+                              onRefresh: onRefresh,
+                              showSummary: false,
+                              showHeader: false,
+                            ),
+                            // 일일 요약
+                            if (showUserSummary) ...[
+                              const Divider(height: 1),
+                              _DailyDateHeader(date: selectedDate),
+                              _DailyUserSummary(date: selectedDate),
+                            ],
+                            // 스크롤 가능하도록 최소 높이 보장
+                            SizedBox(height: scrollAreaHeight - 80),
+                          ],
+                        ),
                       ),
-                      // 일일 요약
-                      if (showUserSummary) ...[
-                        const Divider(height: 1),
-                        _DailyDateHeader(date: selectedDate),
-                        _DailyUserSummary(date: selectedDate),
-                      ],
-                      // 스크롤 가능하도록 최소 높이 보장
-                      SizedBox(height: scrollAreaHeight - 80),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              );
-            },
-          ),
         ),
       ],
     );

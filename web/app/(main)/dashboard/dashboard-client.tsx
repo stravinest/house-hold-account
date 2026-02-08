@@ -4,12 +4,12 @@ import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { formatAmount, formatDate } from '@/lib/utils';
+import { formatAmount, formatDate, generateChartData } from '@/lib/utils';
 import { SummaryCard } from '@/components/shared/SummaryCard';
 import { PeriodTabs, type PeriodType } from '@/components/shared/PeriodTabs';
 import { DateNavigation } from '@/components/shared/DateNavigation';
 import { SpendingBarChart } from '@/components/charts/SpendingBarChart';
-import { CategoryBreakdownList } from '@/components/charts/CategoryBreakdownList';
+import { TopSpendingSection } from '@/components/charts/TopSpendingSection';
 import { TransactionDetailModal } from '@/components/shared/TransactionDetailModal';
 import { useTransactionDetail } from '@/lib/hooks/useTransactionDetail';
 
@@ -21,6 +21,10 @@ type Transaction = {
   date: string;
   categoryName: string;
   categoryIcon: string;
+  categoryColor?: string;
+  authorName?: string;
+  authorColor?: string;
+  isFixedExpense?: boolean;
 };
 
 type TransactionQueryRow = {
@@ -30,7 +34,15 @@ type TransactionQueryRow = {
   type: string;
   date: string;
   created_at?: string;
+  is_fixed_expense?: boolean;
   categories: { name: string; icon: string | null; color: string | null } | null;
+  profiles: { display_name: string | null; color: string | null } | null;
+};
+
+type CategoryDataItem = {
+  name: string;
+  value: number;
+  color: string;
 };
 
 type DashboardData = {
@@ -38,7 +50,8 @@ type DashboardData = {
   expense: number;
   balance: number;
   transactions: Transaction[];
-  categoryData: { name: string; value: number }[];
+  topExpenses: Transaction[];
+  categoryData: CategoryDataItem[];
   chartData: { label: string; income: number; expense: number }[];
 };
 
@@ -96,71 +109,6 @@ function getChartTitle(period: PeriodType): string {
     case 'week': return '요일별 수입/지출';
     case 'month': return '주별 수입/지출';
     case 'year': return '월별 수입/지출';
-  }
-}
-
-function generateChartData(
-  transactions: { type: string; amount: number; date: string }[],
-  period: PeriodType,
-  baseDate: Date,
-): { label: string; income: number; expense: number }[] {
-  switch (period) {
-    case 'day': {
-      const slots = ['오전', '점심', '오후', '저녁', '야간'];
-      const map: Record<string, { income: number; expense: number }> = {};
-      for (const s of slots) map[s] = { income: 0, expense: 0 };
-      for (const tx of transactions) {
-        const hour = new Date(tx.date + 'T12:00:00').getHours();
-        const slot = hour < 6 ? '야간' : hour < 11 ? '오전' : hour < 14 ? '점심' : hour < 18 ? '오후' : '저녁';
-        if (tx.type === 'income') map[slot].income += tx.amount;
-        else if (tx.type === 'expense') map[slot].expense += tx.amount;
-      }
-      return slots.map((s) => ({ label: s, ...map[s] }));
-    }
-    case 'week': {
-      const dayLabels = ['월', '화', '수', '목', '금', '토', '일'];
-      const dayNamesJs = ['일', '월', '화', '수', '목', '금', '토'];
-      const map: Record<string, { income: number; expense: number }> = {};
-      for (const d of dayLabels) map[d] = { income: 0, expense: 0 };
-      for (const tx of transactions) {
-        const dayName = dayNamesJs[new Date(tx.date + 'T12:00:00').getDay()];
-        if (tx.type === 'income') map[dayName].income += tx.amount;
-        else if (tx.type === 'expense') map[dayName].expense += tx.amount;
-      }
-      return dayLabels.map((d) => ({ label: d, ...map[d] }));
-    }
-    case 'month': {
-      const lastDay = new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 0).getDate();
-      const weekCount = Math.ceil(lastDay / 7);
-      const result: { label: string; income: number; expense: number }[] = [];
-      for (let w = 1; w <= weekCount; w++) {
-        const dayStart = (w - 1) * 7 + 1;
-        const dayEnd = Math.min(w * 7, lastDay);
-        let income = 0, expense = 0;
-        for (const tx of transactions) {
-          const txDay = new Date(tx.date + 'T12:00:00').getDate();
-          if (txDay >= dayStart && txDay <= dayEnd) {
-            if (tx.type === 'income') income += tx.amount;
-            else if (tx.type === 'expense') expense += tx.amount;
-          }
-        }
-        result.push({ label: `${w}주`, income, expense });
-      }
-      return result;
-    }
-    case 'year': {
-      return Array.from({ length: 12 }, (_, i) => {
-        const mo = i + 1;
-        let income = 0, expense = 0;
-        for (const tx of transactions) {
-          if (new Date(tx.date + 'T12:00:00').getMonth() + 1 === mo) {
-            if (tx.type === 'income') income += tx.amount;
-            else if (tx.type === 'expense') expense += tx.amount;
-          }
-        }
-        return { label: `${mo}월`, income, expense };
-      });
-    }
   }
 }
 
@@ -226,13 +174,15 @@ export function DashboardClient({
             break;
         }
 
-        const { data: txData } = await supabase
+        const { data: txData, error: txError } = await supabase
           .from('transactions')
-          .select('*, categories(name, icon, color)')
+          .select('*, categories(name, icon, color), profiles(display_name, color)')
           .eq('ledger_id', ledgerId)
           .gte('date', startDate)
           .lt('date', endDate)
           .order('date', { ascending: false });
+
+        if (txError) throw txError;
 
         const transactions = txData || [];
 
@@ -243,30 +193,43 @@ export function DashboardClient({
           .filter((t) => t.type === 'expense')
           .reduce((s, t) => s + t.amount, 0);
 
-        const categoryMap: Record<string, number> = {};
+        const categoryMap: Record<string, { value: number; color: string }> = {};
         for (const tx of transactions) {
           if (tx.type === 'expense') {
             const row = tx as unknown as TransactionQueryRow;
             const name = row.categories?.name || '기타';
-            categoryMap[name] = (categoryMap[name] || 0) + tx.amount;
+            const color = row.categories?.color || '#78909C';
+            if (!categoryMap[name]) categoryMap[name] = { value: 0, color };
+            categoryMap[name].value += tx.amount;
           }
         }
-        const categoryData = Object.entries(categoryMap)
-          .map(([name, value]) => ({ name, value }))
+        const categoryData: CategoryDataItem[] = Object.entries(categoryMap)
+          .map(([name, { value, color }]) => ({ name, value, color }))
           .sort((a, b) => b.value - a.value);
 
-        const serialized = transactions.slice(0, 10).map((tx) => {
-          const row = tx as unknown as TransactionQueryRow;
-          return {
-            id: row.id,
-            description: row.title,
-            amount: row.amount,
-            type: row.type,
-            date: row.date,
-            categoryName: row.categories?.name || '',
-            categoryIcon: row.categories?.icon || '',
-          };
+        const serializeTx = (row: TransactionQueryRow): Transaction => ({
+          id: row.id,
+          description: row.title,
+          amount: row.amount,
+          type: row.type,
+          date: row.date,
+          categoryName: row.categories?.name || '',
+          categoryIcon: row.categories?.icon || '',
+          categoryColor: row.categories?.color || undefined,
+          authorName: row.profiles?.display_name || undefined,
+          authorColor: row.profiles?.color || undefined,
+          isFixedExpense: row.is_fixed_expense || false,
         });
+
+        const serialized = transactions.slice(0, 10).map((tx) =>
+          serializeTx(tx as unknown as TransactionQueryRow)
+        );
+
+        const topExpenses = transactions
+          .filter((t) => t.type === 'expense')
+          .sort((a, b) => b.amount - a.amount)
+          .slice(0, 5)
+          .map((tx) => serializeTx(tx as unknown as TransactionQueryRow));
 
         const chartData = generateChartData(
           transactions.map((tx) => ({ type: tx.type, amount: tx.amount, date: tx.date })),
@@ -279,12 +242,12 @@ export function DashboardClient({
           expense,
           balance: income - expense,
           transactions: serialized,
+          topExpenses,
           categoryData,
           chartData,
         });
       } catch (err) {
         setFetchError('데이터를 불러오는 중 오류가 발생했습니다.');
-        console.error('Failed to fetch dashboard data:', err);
       } finally {
         setLoading(false);
       }
@@ -348,18 +311,18 @@ export function DashboardClient({
         />
       </div>
 
-      {/* Charts Row */}
-      <div className='flex flex-col gap-4 md:flex-row md:items-stretch'>
-        <SpendingBarChart
-          title={getChartTitle(period)}
-          data={data.chartData}
-          mode='dual'
-        />
-        <CategoryBreakdownList
-          title='카테고리별 지출'
-          data={data.categoryData}
-        />
-      </div>
+      {/* Chart */}
+      <SpendingBarChart
+        title={getChartTitle(period)}
+        data={data.chartData}
+        mode='dual'
+      />
+
+      {/* Top Spending */}
+      <TopSpendingSection
+        topExpenses={data.topExpenses}
+        categoryData={data.categoryData}
+      />
 
       {/* Recent Transactions */}
       <div className='rounded-[16px] border border-card-border bg-white p-6'>
@@ -399,13 +362,26 @@ export function DashboardClient({
                     </p>
                   </div>
                 </div>
-                <p
-                  className={`text-sm font-semibold ${
-                    tx.type === 'income' ? 'text-income' : 'text-expense'
-                  }`}
-                >
-                  {formatAmount(tx.type === 'expense' ? -tx.amount : tx.amount, true)}
-                </p>
+                <div className='flex items-center gap-3'>
+                  {tx.authorName && (
+                    <span className='flex shrink-0 items-center gap-1.5'>
+                      <span
+                        className='flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white'
+                        style={{ backgroundColor: tx.authorColor || '#9E9E9E' }}
+                      >
+                        {tx.authorName.charAt(0)}
+                      </span>
+                      <span className='max-w-[60px] truncate text-xs text-on-surface-variant'>{tx.authorName}</span>
+                    </span>
+                  )}
+                  <p
+                    className={`text-sm font-semibold ${
+                      tx.type === 'income' ? 'text-income' : 'text-expense'
+                    }`}
+                  >
+                    {formatAmount(tx.type === 'expense' ? -tx.amount : tx.amount, true)}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

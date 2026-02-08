@@ -273,6 +273,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             const SizedBox(height: Spacing.md),
             _buildInstallment(),
             const Divider(),
+            const SizedBox(height: Spacing.md),
+            _buildFixedExpenseToggle(),
+            const Divider(),
           ],
           const SizedBox(height: Spacing.md),
           DateSelectorTile(selectedDate: _selectedDate, onTap: _selectDate),
@@ -285,7 +288,10 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             ),
             const Divider(),
           ],
-          if (!_isInstallmentMode) ...[_buildRecurring(), const Divider()],
+          if (!_isInstallmentMode && _recurringSettings.isFixedExpense) ...[
+            _buildRecurring(),
+            const Divider(),
+          ],
           CategorySectionWidget(
             isFixedExpense: _recurringSettings.isFixedExpense,
             selectedCategory: _selectedCategory,
@@ -326,6 +332,53 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       _recurringSettings = const RecurringSettings(type: RecurringType.none);
     }),
   );
+
+  Widget _buildFixedExpenseToggle() {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        l10n.fixedExpenseRegister,
+        style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+      ),
+      subtitle: Text(
+        l10n.fixedExpenseDescription,
+        style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+      ),
+      value: _recurringSettings.isFixedExpense,
+      onChanged: !_isLoading && !_isInstallmentMode
+          ? (value) {
+              setState(() {
+                // 고정비 선택 시 반복주기 자동 설정, 해제 시 명시적 초기화
+                final newType = value
+                    ? (_recurringSettings.type == RecurringType.none
+                        ? RecurringType.monthly
+                        : _recurringSettings.type)
+                    : RecurringType.none;
+
+                final newSettings = _recurringSettings.copyWith(
+                  isFixedExpense: value,
+                  type: newType,
+                  endDate: value ? _recurringSettings.endDate : null,
+                );
+
+                if (value != _recurringSettings.isFixedExpense) {
+                  value ? _selectedCategory = null : _selectedFixedExpenseCategory = null;
+                }
+
+                _recurringSettings = newSettings;
+              });
+            }
+          : null,
+    );
+  }
 
   Widget _buildRecurring() => RecurringSettingsWidget(
     startDate: _selectedDate,

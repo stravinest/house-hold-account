@@ -17,6 +17,9 @@ import 'calendar_day_cell.dart';
 ///
 /// [showSummary]가 false이면 CalendarMonthSummary를 표시하지 않습니다.
 /// 이 경우 부모 위젯에서 CalendarMonthSummary를 별도로 고정 헤더로 표시할 수 있습니다.
+/// [showHeader]가 false이면 CalendarHeader를 표시하지 않습니다.
+/// 이 경우 부모 위젯에서 CalendarHeader를 별도로 관리할 수 있습니다.
+/// [showListView]와 [onListViewToggle]은 월별 뷰에서만 사용되며, 선택적입니다.
 class CalendarView extends ConsumerWidget {
   final DateTime selectedDate;
   final DateTime focusedDate;
@@ -27,6 +30,15 @@ class CalendarView extends ConsumerWidget {
   /// true이면 CalendarMonthSummary를 내부에 표시, false이면 외부에서 별도 관리
   final bool showSummary;
 
+  /// true이면 CalendarHeader를 내부에 표시, false이면 외부에서 별도 관리
+  final bool showHeader;
+
+  /// 리스트 뷰 모드 여부 (월별 뷰에서만 사용)
+  final bool? showListView;
+
+  /// 리스트 뷰 토글 콜백 (월별 뷰에서만 사용)
+  final VoidCallback? onListViewToggle;
+
   const CalendarView({
     super.key,
     required this.selectedDate,
@@ -35,6 +47,9 @@ class CalendarView extends ConsumerWidget {
     required this.onPageChanged,
     required this.onRefresh,
     this.showSummary = true,
+    this.showHeader = true,
+    this.showListView,
+    this.onListViewToggle,
   });
 
   @override
@@ -67,28 +82,31 @@ class CalendarView extends ConsumerWidget {
             ),
           ),
 
-        // 커스텀 헤더
-        CalendarHeader(
-          focusedDate: focusedDate,
-          selectedDate: selectedDate,
-          onTodayPressed: () {
-            final today = DateTime.now();
-            onDateSelected(today);
-            onPageChanged(today);
-          },
-          onPreviousMonth: () {
-            final previousMonth = DateTime(
-              focusedDate.year,
-              focusedDate.month - 1,
-            );
-            onPageChanged(previousMonth);
-          },
-          onNextMonth: () {
-            final nextMonth = DateTime(focusedDate.year, focusedDate.month + 1);
-            onPageChanged(nextMonth);
-          },
-          onRefresh: onRefresh,
-        ),
+        // 커스텀 헤더 (showHeader가 true일 때만 표시)
+        if (showHeader)
+          CalendarHeader(
+            focusedDate: focusedDate,
+            selectedDate: selectedDate,
+            onTodayPressed: () {
+              final today = DateTime.now();
+              onDateSelected(today);
+              onPageChanged(today);
+            },
+            onPreviousMonth: () {
+              final previousMonth = DateTime(
+                focusedDate.year,
+                focusedDate.month - 1,
+              );
+              onPageChanged(previousMonth);
+            },
+            onNextMonth: () {
+              final nextMonth = DateTime(focusedDate.year, focusedDate.month + 1);
+              onPageChanged(nextMonth);
+            },
+            onRefresh: onRefresh,
+            showListView: showListView ?? false,
+            onListViewToggle: onListViewToggle ?? () {},
+          ),
 
         // 커스텀 요일 헤더
         CalendarDaysOfWeekHeader(colorScheme: colorScheme),

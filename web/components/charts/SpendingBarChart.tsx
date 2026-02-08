@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   BarChart,
   Bar,
@@ -7,7 +8,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
 } from 'recharts';
 import { formatAmountShort } from '@/lib/utils';
 
@@ -31,17 +31,36 @@ export function SpendingBarChart({
   data,
   mode = 'single',
 }: SpendingBarChartProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [chartWidth, setChartWidth] = useState(0);
+
+  const measure = useCallback(() => {
+    if (containerRef.current) {
+      setChartWidth(containerRef.current.clientWidth);
+    }
+  }, []);
+
+  useEffect(() => {
+    measure();
+    const el = containerRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(() => measure());
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [measure]);
+
   return (
-    <div className='flex flex-1 flex-col rounded-[16px] border border-card-border bg-white p-6'>
+    <div className='flex flex-col rounded-[16px] border border-card-border bg-white p-6'>
       <div className='mb-4 flex items-center justify-between'>
         <h3 className='text-[15px] font-semibold text-on-surface'>{title}</h3>
         {subText ? (
           <span className='text-xs text-on-surface-variant'>{subText}</span>
         ) : null}
       </div>
-      <div className='flex-1'>
-        <ResponsiveContainer width='100%' height={200}>
-          <BarChart data={data} barGap={2}>
+      <div ref={containerRef} style={{ minHeight: 200 }}>
+        {chartWidth > 0 ? (
+          <BarChart width={chartWidth} height={200} data={data} barGap={2}>
             <CartesianGrid strokeDasharray='3 3' stroke='#F0F0EC' vertical={false} />
             <XAxis
               dataKey='label'
@@ -75,12 +94,14 @@ export function SpendingBarChart({
                   fill='#2E7D32'
                   radius={[6, 6, 0, 0]}
                   maxBarSize={24}
+                  isAnimationActive={false}
                 />
                 <Bar
                   dataKey='expense'
                   fill='#BA1A1A'
                   radius={[6, 6, 0, 0]}
                   maxBarSize={24}
+                  isAnimationActive={false}
                 />
               </>
             ) : (
@@ -89,10 +110,13 @@ export function SpendingBarChart({
                 fill='#A8DAB5'
                 radius={[6, 6, 0, 0]}
                 maxBarSize={32}
+                isAnimationActive={false}
               />
             )}
           </BarChart>
-        </ResponsiveContainer>
+        ) : (
+          <div style={{ height: 200 }} />
+        )}
       </div>
     </div>
   );
