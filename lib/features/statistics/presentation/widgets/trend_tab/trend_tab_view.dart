@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../providers/statistics_provider.dart';
-import '../common/period_filter.dart';
-import '../common/statistics_type_filter.dart';
 import 'trend_bar_chart.dart';
+import 'trend_filter_section.dart';
 import 'trend_detail_list.dart';
 
 class TrendTabView extends ConsumerWidget {
@@ -33,12 +32,8 @@ class TrendTabView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 기간 필터 (월별/연별)
-            const Center(child: PeriodFilter()),
-            const SizedBox(height: 12),
-
-            // 타입 필터 (수입/지출/자산)
-            const Center(child: StatisticsTypeFilter()),
+            // 필터 (기간 드롭다운 + 타입 토글)
+            const TrendFilterSection(),
             const SizedBox(height: 16),
 
             // 막대 그래프

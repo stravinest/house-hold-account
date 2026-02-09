@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/utils/color_utils.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/entities/statistics_entities.dart';
@@ -9,15 +10,6 @@ import '../../providers/statistics_provider.dart';
 
 class PaymentMethodDonutChart extends ConsumerWidget {
   const PaymentMethodDonutChart({super.key});
-
-  Color _parseColor(String colorString) {
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF9E9E9E);
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -89,7 +81,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
   ) {
     return data.map((item) {
       final percentage = item.percentage;
-      final color = _parseColor(item.paymentMethodColor);
+      final color = ColorUtils.parseHexColor(item.paymentMethodColor, fallback: const Color(0xFF9E9E9E));
 
       return PieChartSectionData(
         color: color,

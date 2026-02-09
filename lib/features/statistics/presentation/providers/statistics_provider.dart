@@ -5,7 +5,6 @@ import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../share/presentation/providers/share_provider.dart';
 import '../../data/repositories/statistics_repository.dart';
 import '../../domain/entities/statistics_entities.dart';
-import '../widgets/common/expense_type_filter.dart';
 
 // 공유 통계 필터 모드
 enum SharedStatisticsMode {
@@ -205,7 +204,7 @@ final paymentMethodStatisticsProvider =
       );
     });
 
-// 월별 추이 (평균값 포함)
+// 월별 추이 (평균값 포함, 지출 시 고정비/변동비 필터 적용)
 final monthlyTrendWithAverageProvider = FutureProvider<TrendStatisticsData>((
   ref,
 ) async {
@@ -221,15 +220,23 @@ final monthlyTrendWithAverageProvider = FutureProvider<TrendStatisticsData>((
 
   final date = ref.watch(statisticsSelectedDateProvider);
   final repository = ref.watch(statisticsRepositoryProvider);
+  final type = ref.watch(selectedStatisticsTypeProvider);
+
+  // 지출일 경우에만 고정비/변동비 필터 적용
+  ExpenseTypeFilter? expenseTypeFilter;
+  if (type == 'expense') {
+    expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
+  }
 
   return repository.getMonthlyTrendWithAverage(
     ledgerId: ledgerId,
     baseDate: date,
     months: 6,
+    expenseTypeFilter: expenseTypeFilter,
   );
 });
 
-// 연별 추이 (평균값 포함, 선택된 날짜 기준)
+// 연별 추이 (평균값 포함, 지출 시 고정비/변동비 필터 적용)
 final yearlyTrendWithAverageProvider = FutureProvider<TrendStatisticsData>((
   ref,
 ) async {
@@ -245,11 +252,19 @@ final yearlyTrendWithAverageProvider = FutureProvider<TrendStatisticsData>((
 
   final date = ref.watch(statisticsSelectedDateProvider);
   final repository = ref.watch(statisticsRepositoryProvider);
+  final type = ref.watch(selectedStatisticsTypeProvider);
+
+  // 지출일 경우에만 고정비/변동비 필터 적용
+  ExpenseTypeFilter? expenseTypeFilter;
+  if (type == 'expense') {
+    expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
+  }
 
   return repository.getYearlyTrendWithAverage(
     ledgerId: ledgerId,
     baseDate: date,
     years: 6,
+    expenseTypeFilter: expenseTypeFilter,
   );
 });
 
@@ -278,6 +293,7 @@ final monthlyTrendProvider = FutureProvider<List<MonthlyStatistics>>((
 // ========== 공유 가계부용 Provider ==========
 
 // 사용자별 카테고리 통계 (공유 가계부용)
+// 거래가 없는 멤버도 0원으로 포함
 final categoryStatisticsByUserProvider =
     FutureProvider<Map<String, UserCategoryStatistics>>((ref) async {
       final ledgerId = ref.watch(selectedLedgerIdProvider);
@@ -293,13 +309,37 @@ final categoryStatisticsByUserProvider =
         expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
       }
 
-      return repository.getCategoryStatisticsByUser(
+      final userStats = await repository.getCategoryStatisticsByUser(
         ledgerId: ledgerId,
         year: date.year,
         month: date.month,
         type: type,
         expenseTypeFilter: expenseTypeFilter,
       );
+
+      // 모든 가계부 멤버를 포함 (거래가 없는 멤버도 0원으로 추가)
+      // 멤버 목록 순서대로 정렬하여 일관된 순서 보장
+      final members = await ref.watch(currentLedgerMembersProvider.future);
+      final orderedStats = <String, UserCategoryStatistics>{};
+
+      for (final member in members) {
+        if (userStats.containsKey(member.userId)) {
+          orderedStats[member.userId] = userStats[member.userId]!;
+        } else {
+          final displayName = member.displayName ??
+              member.email?.split('@').first ??
+              'Unknown';
+          orderedStats[member.userId] = UserCategoryStatistics(
+            userId: member.userId,
+            userName: displayName,
+            userColor: member.color ?? '#4CAF50',
+            totalAmount: 0,
+            categories: {},
+          );
+        }
+      }
+
+      return orderedStats;
     });
 
 // 공유 가계부 여부 확인

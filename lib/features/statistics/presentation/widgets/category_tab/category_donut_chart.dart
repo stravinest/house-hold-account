@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../../core/utils/color_utils.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
@@ -10,15 +11,6 @@ import '../../providers/statistics_provider.dart';
 
 class CategoryDonutChart extends ConsumerWidget {
   const CategoryDonutChart({super.key});
-
-  Color _parseColor(String colorString) {
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF9E9E9E);
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -136,7 +128,7 @@ class CategoryDonutChart extends ConsumerWidget {
       final percentage = totalAmount > 0
           ? (item.amount / totalAmount) * 100
           : 0.0;
-      final color = _parseColor(item.categoryColor);
+      final color = ColorUtils.parseHexColor(item.categoryColor, fallback: const Color(0xFF9E9E9E));
 
       return PieChartSectionData(
         color: color,

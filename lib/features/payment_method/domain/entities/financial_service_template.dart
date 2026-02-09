@@ -102,7 +102,7 @@ class FinancialServiceTemplate extends Equatable {
       id: 'woori_card',
       name: '우리카드',
       logoIcon: 'assets/logos/woori_card.png',
-      color: '#0066B3',
+      color: '#0056A4',
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[우리카드] 홍길동님\n15,000원 승인\n우리(1*2*)\n01/21 13:30 일시불\n스타벅스',
@@ -113,7 +113,7 @@ class FinancialServiceTemplate extends Equatable {
       id: 'hana_card',
       name: '하나카드',
       logoIcon: 'assets/logos/hana_card.png',
-      color: '#009490',
+      color: '#009775',
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[하나카드] 홍길동님\n15,000원 승인\n하나(1*2*)\n01/21 13:30 일시불\n스타벅스',
@@ -124,7 +124,7 @@ class FinancialServiceTemplate extends Equatable {
       id: 'bc_card',
       name: 'BC카드',
       logoIcon: 'assets/logos/bc_card.png',
-      color: '#F05A28',
+      color: '#F37321',
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[BC카드] 홍길동님\n15,000원 승인\nBC(1*2*)\n01/21 13:30 일시불\n스타벅스',
@@ -135,7 +135,7 @@ class FinancialServiceTemplate extends Equatable {
       id: 'nh_card',
       name: 'NH농협카드',
       logoIcon: 'assets/logos/nh_card.png',
-      color: '#00A852',
+      color: '#009A3E',
       category: FinancialServiceCategory.card,
       defaultSampleSms:
           '[NH농협카드] 홍길동님 15,000원 승인\n농협BC(1*2*)\n01/21 13:30 일시불\n스타벅스',
@@ -160,7 +160,7 @@ class FinancialServiceTemplate extends Equatable {
       id: 'yongin_pay',
       name: '용인와이페이',
       logoIcon: 'assets/logos/yongin_pay.png',
-      color: '#2E7D32',
+      color: '#4CAF50',
       category: FinancialServiceCategory.localCurrency,
       defaultSampleSms: '[경기지역화폐] 15,000원 결제\n(스타벅스 용인점)\n잔액: 35,000원',
       defaultSamplePush:
@@ -182,7 +182,7 @@ class FinancialServiceTemplate extends Equatable {
       id: 'goyang_pay',
       name: '고양페이',
       logoIcon: 'assets/logos/goyang_pay.png',
-      color: '#43A047',
+      color: '#2E7D32',
       category: FinancialServiceCategory.localCurrency,
       defaultSampleSms: '[경기지역화폐] 15,000원 결제\n(스타벅스 고양점)\n잔액: 35,000원',
       defaultSamplePush:
@@ -193,7 +193,7 @@ class FinancialServiceTemplate extends Equatable {
       id: 'bucheon_pay',
       name: '부천페이',
       logoIcon: 'assets/logos/bucheon_pay.png',
-      color: '#4CAF50',
+      color: '#43A047',
       category: FinancialServiceCategory.localCurrency,
       defaultSampleSms: '[경기지역화폐] 15,000원 결제\n(스타벅스 부천점)\n잔액: 35,000원',
       defaultSamplePush:
@@ -204,7 +204,7 @@ class FinancialServiceTemplate extends Equatable {
       id: 'seoul_love',
       name: '서울사랑상품권',
       logoIcon: 'assets/logos/seoul_love.png',
-      color: '#E60012',
+      color: '#7B1FA2',
       category: FinancialServiceCategory.localCurrency,
       defaultSampleSms: '[서울사랑상품권] 15,000원 결제\n스타벅스 서울점\n잔액: 35,000원',
       defaultSamplePush: '서울사랑상품권 결제\n15,000원 결제 완료\n가맹점: 스타벅스\n잔액: 35,000원',
@@ -214,7 +214,7 @@ class FinancialServiceTemplate extends Equatable {
       id: 'incheon_eum',
       name: '인천이음페이',
       logoIcon: 'assets/logos/incheon_eum.png',
-      color: '#005BAC',
+      color: '#00838F',
       category: FinancialServiceCategory.localCurrency,
       defaultSampleSms: '[인천이음] 15,000원 결제\n스타벅스 인천점\n잔액: 35,000원',
       defaultSamplePush: '인천이음페이 결제\n15,000원 결제 완료\n가맹점: 스타벅스\n잔액: 35,000원',

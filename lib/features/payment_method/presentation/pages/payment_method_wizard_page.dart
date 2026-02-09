@@ -6,6 +6,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/utils/supabase_error_handler.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
+import '../../../../shared/widgets/category_icon.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/learned_sms_format.dart';
@@ -959,16 +960,21 @@ class _PaymentMethodWizardPageState
     );
   }
 
-  /// Template chip widget - improved touch target size
+  /// Template chip widget - improved touch target size with brand icon
   Widget _buildTemplateChip(FinancialServiceTemplate template) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return ActionChip(
+      avatar: CategoryIcon(
+        icon: '',
+        name: template.name,
+        color: template.color,
+        size: CategoryIconSize.small,
+      ),
       label: Text(template.name),
       onPressed: () => _selectTemplate(template),
       backgroundColor: colorScheme.surfaceContainerHighest,
       side: BorderSide.none,
-      // Increased padding for better touch target (min 48dp)
       padding: const EdgeInsets.symmetric(
         horizontal: Spacing.sm + Spacing.xs,
         vertical: Spacing.sm,

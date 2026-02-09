@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/utils/category_l10n_helper.dart';
+import '../../../../../core/utils/color_utils.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../../../shared/widgets/category_icon.dart';
 import '../../../../ledger/domain/entities/ledger.dart';
 import '../../../../share/presentation/providers/share_provider.dart';
 import '../../../data/repositories/statistics_repository.dart';
@@ -133,16 +135,6 @@ class _MemberTabs extends StatelessWidget {
     required this.onStateChanged,
   });
 
-  Color _parseColor(String? colorString) {
-    if (colorString == null) return const Color(0xFF9E9E9E);
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF9E9E9E);
-    }
-  }
-
   String _getDisplayName(LedgerMember member) {
     if (member.displayName != null && member.displayName!.isNotEmpty) {
       return member.displayName!;
@@ -220,7 +212,7 @@ class _MemberTabs extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final parsedUserColor = _parseColor(userColor);
+    final parsedUserColor = ColorUtils.parseHexColor(userColor, fallback: const Color(0xFF9E9E9E));
 
     return GestureDetector(
       onTap: onTap,
@@ -278,15 +270,6 @@ class _SharedDonutChart extends StatelessWidget {
 
   const _SharedDonutChart({required this.users, required this.sharedState});
 
-  Color _parseColor(String colorString) {
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF9E9E9E);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -327,12 +310,49 @@ class _SharedDonutChart extends StatelessWidget {
     }
 
     if (totalAmount == 0 || categories.isEmpty) {
-      return SizedBox(
-        height: 220,
-        child: Center(
-          child: Text(
-            l10n.statisticsNoData,
-            style: TextStyle(fontSize: 14, color: colorScheme.onSurfaceVariant),
+      return Semantics(
+        label: l10n.statisticsNoData,
+        child: SizedBox(
+          height: 220,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              PieChart(
+                PieChartData(
+                  sectionsSpace: 0,
+                  centerSpaceRadius: 60,
+                  sections: [
+                    PieChartSectionData(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                      value: 1,
+                      title: '',
+                      radius: 50,
+                    ),
+                  ],
+                  pieTouchData: PieTouchData(enabled: false),
+                ),
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    centerLabel,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '0${l10n.transactionAmountUnit}',
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       );
@@ -441,7 +461,7 @@ class _SharedDonutChart extends StatelessWidget {
       final percentage = totalAmount > 0
           ? (category.amount / totalAmount) * 100
           : 0.0;
-      final color = _parseColor(category.categoryColor);
+      final color = ColorUtils.parseHexColor(category.categoryColor, fallback: const Color(0xFF9E9E9E));
 
       return PieChartSectionData(
         color: color,
@@ -464,15 +484,6 @@ class _SharedLegendList extends StatelessWidget {
   final SharedStatisticsState sharedState;
 
   const _SharedLegendList({required this.users, required this.sharedState});
-
-  Color _parseColor(String colorString) {
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF9E9E9E);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -516,19 +527,19 @@ class _SharedLegendList extends StatelessWidget {
         final percentage = totalAmount > 0
             ? (item.amount / totalAmount) * 100
             : 0.0;
-        final color = _parseColor(item.categoryColor);
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(
             children: [
-              // 색상 원
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              // 카테고리 아이콘
+              CategoryIcon(
+                icon: item.categoryIcon,
+                name: item.categoryName,
+                color: item.categoryColor,
+                size: CategoryIconSize.small,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               // 카테고리명
               Text(
                 CategoryL10nHelper.translate(item.categoryName, l10n),

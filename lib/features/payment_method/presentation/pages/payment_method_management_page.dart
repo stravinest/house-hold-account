@@ -13,6 +13,7 @@ import '../../data/services/native_notification_sync_service.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../shared/widgets/category_icon.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../category/domain/entities/category.dart';
@@ -875,6 +876,13 @@ class _SharedPaymentMethodChip extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    CategoryIcon(
+                      icon: paymentMethod.icon,
+                      name: paymentMethod.name,
+                      color: paymentMethod.color,
+                      size: CategoryIconSize.small,
+                    ),
+                    const SizedBox(width: Spacing.xs),
                     Text(
                       paymentMethod.name,
                       style: TextStyle(
@@ -968,6 +976,12 @@ class _AutoCollectPaymentMethodCard extends StatelessWidget {
       child: Column(
         children: [
           ListTile(
+            leading: CategoryIcon(
+              icon: paymentMethod.icon,
+              name: paymentMethod.name,
+              color: paymentMethod.color,
+              size: CategoryIconSize.medium,
+            ),
             title: Text(paymentMethod.name),
             subtitle: Row(
               children: [
@@ -1863,7 +1877,12 @@ class _PendingTransactionEditSheetState
         return FilterChip(
           selected: isSelected,
           label: Text(category.name),
-          avatar: Text(category.icon),
+          avatar: CategoryIcon(
+            icon: category.icon,
+            name: category.name,
+            color: category.color,
+            size: CategoryIconSize.small,
+          ),
           onSelected: (selected) {
             setState(() {
               _selectedCategoryId = selected ? category.id : null;

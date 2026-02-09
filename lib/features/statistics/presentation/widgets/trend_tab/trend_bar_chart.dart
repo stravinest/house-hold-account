@@ -18,14 +18,14 @@ class TrendBarChart extends ConsumerWidget {
     final selectedDate = ref.watch(statisticsSelectedDateProvider);
 
     if (period == TrendPeriod.monthly) {
-      // 날짜가 변경될 때 widget을 재생성하여 데이터와 스크롤 갱신
+      // 날짜 또는 타입 변경 시 widget을 재생성하여 데이터와 스크롤 갱신
       return _MonthlyTrendChart(
-        key: ValueKey('monthly_${selectedDate.year}_${selectedDate.month}'),
+        key: ValueKey('monthly_${selectedDate.year}_${selectedDate.month}_$selectedType'),
         selectedType: selectedType,
       );
     } else {
       return _YearlyTrendChart(
-        key: ValueKey('yearly_${selectedDate.year}'),
+        key: ValueKey('yearly_${selectedDate.year}_$selectedType'),
         selectedType: selectedType,
       );
     }

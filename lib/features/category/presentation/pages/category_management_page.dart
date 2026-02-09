@@ -8,6 +8,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../shared/widgets/category_icon.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../domain/entities/category.dart';
@@ -165,6 +166,12 @@ class _CategoryTile extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
+        leading: CategoryIcon(
+          icon: category.icon,
+          name: category.name,
+          color: category.color,
+          size: CategoryIconSize.medium,
+        ),
         title: Text(
           category.name,
           maxLines: 1,

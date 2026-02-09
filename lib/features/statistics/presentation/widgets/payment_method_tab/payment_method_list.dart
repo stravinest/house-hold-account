@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/utils/color_utils.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../../../shared/widgets/category_icon.dart';
 import '../../../../../shared/widgets/skeleton_loading.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
@@ -50,19 +52,10 @@ class _PaymentMethodItem extends StatelessWidget {
     required this.l10n,
   });
 
-  Color _parseColor(String colorString) {
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF9E9E9E);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = _parseColor(item.paymentMethodColor);
+    final color = ColorUtils.parseHexColor(item.paymentMethodColor, fallback: const Color(0xFF9E9E9E));
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
@@ -70,18 +63,12 @@ class _PaymentMethodItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              // 순위
-              SizedBox(
-                width: 24,
-                child: Text(
-                  '$rank',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: rank <= 3
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
+              // 결제수단 아이콘
+              CategoryIcon(
+                icon: item.paymentMethodIcon,
+                name: item.paymentMethodName,
+                color: item.paymentMethodColor,
+                size: CategoryIconSize.small,
               ),
               const SizedBox(width: 12),
               // 결제수단명 + 뱃지
@@ -97,11 +84,12 @@ class _PaymentMethodItem extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    // 뱃지
-                    _PaymentMethodBadge(
-                      canAutoSave: item.canAutoSave,
-                      l10n: l10n,
-                    ),
+                    // 뱃지 (미지정 결제수단은 뱃지 표시 안 함)
+                    if (item.paymentMethodId != '_no_payment_method_')
+                      _PaymentMethodBadge(
+                        canAutoSave: item.canAutoSave,
+                        l10n: l10n,
+                      ),
                   ],
                 ),
               ),

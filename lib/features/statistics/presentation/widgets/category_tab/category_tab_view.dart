@@ -8,8 +8,7 @@ import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../auth/presentation/providers/auth_provider.dart';
 import '../../providers/statistics_provider.dart';
-import '../common/expense_type_filter.dart';
-import '../common/statistics_type_filter.dart';
+import '../common/statistics_filter_section.dart';
 import 'category_distribution_card.dart';
 import 'category_summary_card.dart';
 import 'shared_category_tab_view.dart';
@@ -95,9 +94,6 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedType = ref.watch(selectedStatisticsTypeProvider);
-    final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
-
     // 공유 가계부인 경우 SharedCategoryTabView 표시
     final isSharedLedger = ref.watch(isSharedLedgerProvider);
     if (isSharedLedger) {
@@ -111,22 +107,8 @@ class _CategoryTabViewState extends ConsumerState<CategoryTabView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 타입 필터 (수입/지출/자산)
-            const Center(child: StatisticsTypeFilter()),
-
-            // 고정비/변동비 필터 (지출 선택 시에만 표시)
-            if (selectedType == 'expense') ...[
-              const SizedBox(height: 12),
-              Center(
-                child: ExpenseTypeFilterWidget(
-                  selectedFilter: expenseTypeFilter,
-                  onChanged: (filter) {
-                    ref.read(selectedExpenseTypeFilterProvider.notifier).state =
-                        filter;
-                  },
-                ),
-              ),
-            ],
+            // 타입 필터 (드롭다운 + 서브필터)
+            const StatisticsFilterSection(),
             const SizedBox(height: 16),
 
             // 요약 카드 (전월 대비 포함)

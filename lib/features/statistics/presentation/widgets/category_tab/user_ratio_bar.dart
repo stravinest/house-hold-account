@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/utils/color_utils.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
@@ -10,16 +11,6 @@ import '../../providers/statistics_provider.dart';
 /// 총 지출과 함께 각 사용자의 비중을 시각화
 class UserRatioBar extends ConsumerWidget {
   const UserRatioBar({super.key});
-
-  Color _parseColor(String? colorString) {
-    if (colorString == null) return const Color(0xFF4CAF50);
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF4CAF50);
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -133,7 +124,7 @@ class UserRatioBar extends ConsumerWidget {
             final ratio = totalAmount > 0
                 ? user.totalAmount / totalAmount
                 : 0.0;
-            final color = _parseColor(user.userColor);
+            final color = ColorUtils.parseHexColor(user.userColor, fallback: const Color(0xFF9E9E9E));
 
             return Expanded(
               flex: (ratio * 1000).round().clamp(1, 1000),
@@ -165,7 +156,7 @@ class UserRatioBar extends ConsumerWidget {
     int totalAmount,
   ) {
     final theme = Theme.of(context);
-    final color = _parseColor(user.userColor);
+    final color = ColorUtils.parseHexColor(user.userColor, fallback: const Color(0xFF9E9E9E));
     final ratio = totalAmount > 0
         ? (user.totalAmount / totalAmount * 100)
         : 0.0;

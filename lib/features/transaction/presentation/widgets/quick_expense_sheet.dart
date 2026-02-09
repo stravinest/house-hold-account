@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
+import '../../../../shared/widgets/category_icon.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
 import '../../../payment_method/presentation/providers/payment_method_provider.dart';
@@ -200,9 +201,11 @@ class _QuickExpenseSheetState extends ConsumerState<QuickExpenseSheet> {
                             value: category,
                             child: Row(
                               children: [
-                                Text(
-                                  category.icon,
-                                  style: const TextStyle(fontSize: IconSize.sm),
+                                CategoryIcon(
+                                  icon: category.icon,
+                                  name: category.name,
+                                  color: category.color,
+                                  size: CategoryIconSize.small,
                                 ),
                                 const SizedBox(width: Spacing.sm),
                                 Text(category.name),

@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/utils/color_utils.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
@@ -10,15 +11,6 @@ import '../../providers/statistics_provider.dart';
 /// 두 사용자의 도넛 차트를 나란히 표시하는 위젯
 class SideBySideDonutChart extends ConsumerWidget {
   const SideBySideDonutChart({super.key});
-
-  Color _parseColor(String colorString) {
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF9E9E9E);
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -135,7 +127,7 @@ class SideBySideDonutChart extends ConsumerWidget {
     double size = 140,
   }) {
     final theme = Theme.of(context);
-    final userColor = _parseColor(user.userColor);
+    final userColor = ColorUtils.parseHexColor(user.userColor, fallback: const Color(0xFF9E9E9E));
     final categories = user.categoryList;
 
     if (user.totalAmount == 0 || categories.isEmpty) {
@@ -386,7 +378,7 @@ class SideBySideDonutChart extends ConsumerWidget {
       final percentage = totalAmount > 0
           ? (category.amount / totalAmount) * 100
           : 0.0;
-      final color = _parseColor(category.categoryColor);
+      final color = ColorUtils.parseHexColor(category.categoryColor, fallback: const Color(0xFF9E9E9E));
 
       return PieChartSectionData(
         color: color,

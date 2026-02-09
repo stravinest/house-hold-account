@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/category_l10n_helper.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../../../shared/widgets/category_icon.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../providers/statistics_provider.dart';
 import 'category_donut_chart.dart';
@@ -68,15 +69,6 @@ class _CategoryLegendList extends StatelessWidget {
 
   const _CategoryLegendList({required this.statistics});
 
-  Color _parseColor(String colorString) {
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF9E9E9E);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -93,19 +85,19 @@ class _CategoryLegendList extends StatelessWidget {
         final percentage = totalAmount > 0
             ? (item.amount / totalAmount) * 100
             : 0.0;
-        final color = _parseColor(item.categoryColor);
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(
             children: [
-              // 색상 원
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              // 카테고리 아이콘
+              CategoryIcon(
+                icon: item.categoryIcon,
+                name: item.categoryName,
+                color: item.categoryColor,
+                size: CategoryIconSize.small,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               // 카테고리명
               Text(
                 CategoryL10nHelper.translate(item.categoryName, l10n),

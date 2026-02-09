@@ -1,27 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/utils/color_utils.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
-import '../common/expense_type_filter.dart';
 
 /// 공유 가계부용 카테고리 요약 카드 - Pencil Oleyd 디자인 적용
 /// 총 금액 + 진행 바 + 사용자별 내역 (색상 동그라미 포함)
 class SharedCategorySummaryCard extends ConsumerWidget {
   const SharedCategorySummaryCard({super.key});
-
-  Color _parseColor(String? colorString) {
-    if (colorString == null) return const Color(0xFF9E9E9E);
-    try {
-      final colorValue = int.parse(colorString.replaceFirst('#', '0xFF'));
-      return Color(colorValue);
-    } catch (e) {
-      return const Color(0xFF9E9E9E);
-    }
-  }
 
   String _getTypeLabel(
     AppLocalizations l10n,
@@ -208,7 +198,7 @@ class SharedCategorySummaryCard extends ConsumerWidget {
 
         // 사용자별 내역
         ...users.map((user) {
-          final userColor = _parseColor(user.userColor);
+          final userColor = ColorUtils.parseHexColor(user.userColor, fallback: const Color(0xFF9E9E9E));
           final percentage = totalAmount > 0
               ? (user.totalAmount / totalAmount * 100)
               : 0.0;

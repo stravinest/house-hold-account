@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../../shared/widgets/category_icon.dart';
 import '../../../fixed_expense/domain/entities/fixed_expense_category.dart';
 import '../../../fixed_expense/presentation/providers/fixed_expense_category_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
@@ -366,6 +367,12 @@ class _FixedExpenseCategorySelectorWidgetState
           return FilterChip(
             selected: isSelected,
             showCheckmark: false,
+            avatar: CategoryIcon(
+              icon: category.icon,
+              name: category.name,
+              color: category.color,
+              size: CategoryIconSize.small,
+            ),
             label: Text(category.name),
             onSelected: widget.enabled
                 ? (_) => widget.onCategorySelected(category)
@@ -402,12 +409,24 @@ class _FixedExpenseCategorySelectorWidgetState
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 카테고리 이름
+          // 카테고리 아이콘 + 이름
           Padding(
-            padding: const EdgeInsets.only(left: 12),
-            child: Text(
-              category.name,
-              style: TextStyle(color: colorScheme.onSurface),
+            padding: const EdgeInsets.only(left: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CategoryIcon(
+                  icon: category.icon,
+                  name: category.name,
+                  color: category.color,
+                  size: CategoryIconSize.small,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  category.name,
+                  style: TextStyle(color: colorScheme.onSurface),
+                ),
+              ],
             ),
           ),
           // 수정 버튼

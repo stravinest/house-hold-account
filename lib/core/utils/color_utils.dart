@@ -7,17 +7,26 @@ class ColorUtils {
 
   /// HEX 색상 코드를 Color 객체로 변환
   ///
-  /// [hexColor] 형식: #RRGGBB (예: #A8D8EA)
-  /// 파싱 실패 시 기본 색상 반환
-  static Color parseHexColor(String hexColor) {
+  /// 지원 형식: #RRGGBB, #RRGGBBAA, RRGGBB
+  /// 파싱 실패 시 [fallback] 또는 기본 색상 반환
+  static Color parseHexColor(String? hexColor, {Color? fallback}) {
+    if (hexColor == null || hexColor.isEmpty) {
+      return fallback ?? defaultColor;
+    }
     try {
-      // HEX 코드 유효성 검사: #으로 시작하고 정확히 7자리여야 함
-      if (!hexColor.startsWith('#') || hexColor.length != 7) {
-        return defaultColor;
+      final cleaned = hexColor.replaceFirst('#', '');
+      if (cleaned.length == 6) {
+        return Color(int.parse('FF$cleaned', radix: 16));
       }
-      return Color(int.parse(hexColor.replaceFirst('#', '0xFF')));
+      if (cleaned.length == 8) {
+        // RRGGBBAA -> AARRGGBB
+        final alpha = cleaned.substring(6, 8);
+        final rgb = cleaned.substring(0, 6);
+        return Color(int.parse('$alpha$rgb', radix: 16));
+      }
+      return fallback ?? defaultColor;
     } catch (e) {
-      return defaultColor;
+      return fallback ?? defaultColor;
     }
   }
 

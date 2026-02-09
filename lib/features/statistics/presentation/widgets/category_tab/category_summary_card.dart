@@ -6,7 +6,6 @@ import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
-import '../common/expense_type_filter.dart';
 
 class CategorySummaryCard extends ConsumerWidget {
   const CategorySummaryCard({super.key});

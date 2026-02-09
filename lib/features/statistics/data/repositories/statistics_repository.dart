@@ -1,8 +1,15 @@
 import '../../../../config/supabase_config.dart';
 import '../../domain/entities/statistics_entities.dart';
-import '../../presentation/widgets/common/expense_type_filter.dart';
 
 class StatisticsRepository {
+  // 하드코딩 문자열 상수 - UI에서 CategoryL10nHelper로 번역됨
+  static const _fixedExpenseName = '고정비';
+  static const _fixedExpenseIcon = 'push_pin';
+  static const _fixedExpenseColor = '#FF9800';
+  static const _uncategorizedName = '미지정';
+  static const _uncategorizedIcon = '';
+  static const _uncategorizedColor = '#9E9E9E';
+
   final _client = SupabaseConfig.client;
 
   // 카테고리별 지출/수입 합계
@@ -84,16 +91,16 @@ class StatisticsRepository {
               expenseTypeFilter == ExpenseTypeFilter.all)) {
         // 고정비를 별도 카테고리로 그룹화
         groupKey = '_fixed_expense_';
-        categoryName = '고정비';
-        categoryIcon = '📌';
-        categoryColor = '#FF9800'; // 오렌지색
+        categoryName = _fixedExpenseName;
+        categoryIcon = _fixedExpenseIcon;
+        categoryColor = _fixedExpenseColor;
       } else {
         // 기존 로직: 원래 카테고리대로 그룹화
         if (categoryId == null) {
           groupKey = '_uncategorized_';
-          categoryName = '미지정';
-          categoryIcon = '';
-          categoryColor = '#9E9E9E';
+          categoryName = _uncategorizedName;
+          categoryIcon = _uncategorizedIcon;
+          categoryColor = _uncategorizedColor;
         } else {
           groupKey = categoryId;
           if (category != null) {
@@ -101,9 +108,9 @@ class StatisticsRepository {
             categoryIcon = category['icon'].toString();
             categoryColor = category['color'].toString();
           } else {
-            categoryName = '미지정';
-            categoryIcon = '';
-            categoryColor = '#9E9E9E';
+            categoryName = _uncategorizedName;
+            categoryIcon = _uncategorizedIcon;
+            categoryColor = _uncategorizedColor;
           }
         }
       }
@@ -188,9 +195,9 @@ class StatisticsRepository {
       final userName = displayName ?? email?.split('@').first ?? 'Unknown';
 
       // 카테고리 정보 추출
-      final categoryName = category?['name']?.toString() ?? '미지정';
-      final categoryIcon = category?['icon']?.toString() ?? '';
-      final categoryColor = category?['color']?.toString() ?? '#9E9E9E';
+      final categoryName = category?['name']?.toString() ?? _uncategorizedName;
+      final categoryIcon = category?['icon']?.toString() ?? _uncategorizedIcon;
+      final categoryColor = category?['color']?.toString() ?? _uncategorizedColor;
 
       // 사용자 통계 초기화
       if (!userStats.containsKey(userId)) {
@@ -465,13 +472,13 @@ class StatisticsRepository {
       totalAmount += amount;
 
       // 결제수단 정보 추출 (그룹 키 생성 전에 먼저 추출)
-      String pmName = '미지정';
-      String pmIcon = '';
-      String pmColor = '#9E9E9E';
+      String pmName = _uncategorizedName;
+      String pmIcon = _uncategorizedIcon;
+      String pmColor = _uncategorizedColor;
       bool canAutoSave = false;
 
       if (paymentMethod != null) {
-        pmName = paymentMethod['name']?.toString() ?? '미지정';
+        pmName = paymentMethod['name']?.toString() ?? _uncategorizedName;
         pmIcon = paymentMethod['icon']?.toString() ?? '';
         pmColor = paymentMethod['color']?.toString() ?? '#9E9E9E';
         canAutoSave = paymentMethod['can_auto_save'] == true;
@@ -574,15 +581,16 @@ class StatisticsRepository {
     required String ledgerId,
     required DateTime baseDate,
     int months = 6,
+    ExpenseTypeFilter? expenseTypeFilter,
   }) async {
     // 시작/종료 날짜 계산
     final startDate = DateTime(baseDate.year, baseDate.month - months + 1, 1);
     final endDate = DateTime(baseDate.year, baseDate.month + 1, 0);
 
-    // 단일 쿼리로 전체 기간 데이터 조회
+    // 단일 쿼리로 전체 기간 데이터 조회 (고정비 필터용 is_fixed_expense 포함)
     final response = await _client
         .from('transactions')
-        .select('amount, type, date')
+        .select('amount, type, date, is_fixed_expense')
         .eq('ledger_id', ledgerId)
         .gte('date', startDate.toIso8601String().split('T').first)
         .lte('date', endDate.toIso8601String().split('T').first);
@@ -614,6 +622,17 @@ class StatisticsRepository {
       final type = row['type'] as String;
 
       if (!monthlyData.containsKey(key)) continue;
+
+      // 지출 타입일 때 고정비/변동비 필터 적용
+      if (type == 'expense' && expenseTypeFilter != null) {
+        final isFixedExpense = row['is_fixed_expense'] == true;
+        if (expenseTypeFilter == ExpenseTypeFilter.fixed && !isFixedExpense) {
+          continue;
+        }
+        if (expenseTypeFilter == ExpenseTypeFilter.variable && isFixedExpense) {
+          continue;
+        }
+      }
 
       if (type == 'income') {
         monthlyData[key]!['income'] = monthlyData[key]!['income']! + amount;
@@ -684,15 +703,16 @@ class StatisticsRepository {
     required String ledgerId,
     required DateTime baseDate,
     int years = 6,
+    ExpenseTypeFilter? expenseTypeFilter,
   }) async {
     final startYear = baseDate.year - years + 1;
     final startDate = DateTime(startYear, 1, 1);
     final endDate = DateTime(baseDate.year, 12, 31);
 
-    // 단일 쿼리로 전체 기간 데이터 조회
+    // 단일 쿼리로 전체 기간 데이터 조회 (고정비 필터용 is_fixed_expense 포함)
     final response = await _client
         .from('transactions')
-        .select('amount, type, date')
+        .select('amount, type, date, is_fixed_expense')
         .eq('ledger_id', ledgerId)
         .gte('date', startDate.toIso8601String().split('T').first)
         .lte('date', endDate.toIso8601String().split('T').first);
@@ -712,6 +732,17 @@ class StatisticsRepository {
       final type = row['type'] as String;
 
       if (!yearlyData.containsKey(year)) continue;
+
+      // 지출 타입일 때 고정비/변동비 필터 적용
+      if (type == 'expense' && expenseTypeFilter != null) {
+        final isFixedExpense = row['is_fixed_expense'] == true;
+        if (expenseTypeFilter == ExpenseTypeFilter.fixed && !isFixedExpense) {
+          continue;
+        }
+        if (expenseTypeFilter == ExpenseTypeFilter.variable && isFixedExpense) {
+          continue;
+        }
+      }
 
       if (type == 'income') {
         yearlyData[year]!['income'] = yearlyData[year]!['income']! + amount;

@@ -1,3 +1,6 @@
+// 지출 유형 필터 (전체/고정비/변동비)
+enum ExpenseTypeFilter { all, fixed, variable }
+
 // 추이 기간 타입
 enum TrendPeriod { monthly, yearly }
 
