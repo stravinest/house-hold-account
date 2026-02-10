@@ -2536,4 +2536,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get iconNone => 'None';
+
+  @override
+  String get paymentMethodAutoCollectEditNotice =>
+      'Auto-collect payment methods can be edited in Payment Method Management';
+
+  @override
+  String get paymentMethodAutoCollectDeleteNotice =>
+      'Auto-collect payment methods can be deleted in Payment Method Management';
 }

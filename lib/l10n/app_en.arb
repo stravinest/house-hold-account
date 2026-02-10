@@ -841,5 +841,7 @@
   "categoryIcon": "Icon",
   "categoryColor": "Color",
   "categoryPreview": "Preview",
-  "iconNone": "None"
+  "iconNone": "None",
+  "paymentMethodAutoCollectEditNotice": "Auto-collect payment methods can be edited in Payment Method Management",
+  "paymentMethodAutoCollectDeleteNotice": "Auto-collect payment methods can be deleted in Payment Method Management"
 }

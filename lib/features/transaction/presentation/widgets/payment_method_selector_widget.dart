@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
+import '../../../../shared/widgets/category_icon.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../payment_method/domain/entities/payment_method.dart';
 import '../../../payment_method/presentation/providers/payment_method_provider.dart';
@@ -134,6 +135,7 @@ class _PaymentMethodSelectorWidgetState
       }
 
       ref.invalidate(sharedPaymentMethodsProvider);
+      ref.invalidate(selectablePaymentMethodsProvider);
     } catch (e) {
       if (context.mounted) {
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
@@ -230,6 +232,7 @@ class _PaymentMethodSelectorWidgetState
       SnackBarUtils.showSuccess(context, l10n.commonSuccess);
 
       ref.invalidate(sharedPaymentMethodsProvider);
+      ref.invalidate(selectablePaymentMethodsProvider);
     } catch (e) {
       SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     }
@@ -276,6 +279,7 @@ class _PaymentMethodSelectorWidgetState
       }
 
       ref.invalidate(sharedPaymentMethodsProvider);
+      ref.invalidate(selectablePaymentMethodsProvider);
     } catch (e) {
       if (mounted) {
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
@@ -285,8 +289,8 @@ class _PaymentMethodSelectorWidgetState
 
   @override
   Widget build(BuildContext context) {
-    // 공유 결제수단만 사용 (자동수집 결제수단 제외)
-    final paymentMethodsAsync = ref.watch(sharedPaymentMethodsProvider);
+    // 공유 결제수단 + 현재 사용자의 자동수집 결제수단
+    final paymentMethodsAsync = ref.watch(selectablePaymentMethodsProvider);
 
     return paymentMethodsAsync.when(
       data: (paymentMethods) =>
@@ -326,7 +330,9 @@ class _PaymentMethodSelectorWidgetState
             spacing: 8,
             runSpacing: 8,
             children: paymentMethods
-                .map((method) => _buildEditModeChip(method, colorScheme))
+                .map((method) => method.canAutoSave
+                    ? _buildAutoCollectEditModeChip(method, colorScheme)
+                    : _buildEditModeChip(method, colorScheme))
                 .toList(),
           ),
           const SizedBox(height: 8),
@@ -359,6 +365,14 @@ class _PaymentMethodSelectorWidgetState
           return FilterChip(
             selected: isSelected,
             showCheckmark: false,
+            avatar: method.canAutoSave
+                ? CategoryIcon(
+                    icon: method.icon,
+                    name: method.name,
+                    color: method.color,
+                    size: CategoryIconSize.small,
+                  )
+                : null,
             label: Text(method.name),
             onSelected: widget.enabled
                 ? (_) => widget.onPaymentMethodSelected(method)
@@ -378,6 +392,74 @@ class _PaymentMethodSelectorWidgetState
               : null,
         ),
       ],
+    );
+  }
+
+  /// 편집 모드용 자동수집 결제수단 칩 (수정/삭제 비활성화)
+  Widget _buildAutoCollectEditModeChip(
+    PaymentMethod method,
+    ColorScheme colorScheme,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    final disabledColor = colorScheme.onSurface.withValues(alpha: 0.38);
+
+    return Container(
+      height: 38,
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 6),
+            child: CategoryIcon(
+              icon: method.icon,
+              name: method.name,
+              color: method.color,
+              size: CategoryIconSize.small,
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              method.name,
+              style: TextStyle(color: colorScheme.onSurface),
+            ),
+          ),
+          InkWell(
+            onTap: () => SnackBarUtils.showInfo(
+              context,
+              l10n.paymentMethodAutoCollectEditNotice,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 32,
+              height: 38,
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.edit_outlined,
+                size: 16,
+                color: disabledColor,
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: () => SnackBarUtils.showInfo(
+              context,
+              l10n.paymentMethodAutoCollectDeleteNotice,
+            ),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              width: 32,
+              height: 38,
+              alignment: Alignment.center,
+              child: Icon(Icons.close, size: 16, color: disabledColor),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

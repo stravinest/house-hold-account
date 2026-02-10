@@ -4710,6 +4710,18 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'없음'**
   String get iconNone;
+
+  /// No description provided for @paymentMethodAutoCollectEditNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집 결제수단은 결제수단 관리에서 수정할 수 있습니다'**
+  String get paymentMethodAutoCollectEditNotice;
+
+  /// No description provided for @paymentMethodAutoCollectDeleteNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집 결제수단은 결제수단 관리에서 삭제할 수 있습니다'**
+  String get paymentMethodAutoCollectDeleteNotice;
 }
 
 class _AppLocalizationsDelegate

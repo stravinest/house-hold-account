@@ -2478,4 +2478,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get iconNone => '없음';
+
+  @override
+  String get paymentMethodAutoCollectEditNotice =>
+      '자동수집 결제수단은 결제수단 관리에서 수정할 수 있습니다';
+
+  @override
+  String get paymentMethodAutoCollectDeleteNotice =>
+      '자동수집 결제수단은 결제수단 관리에서 삭제할 수 있습니다';
 }

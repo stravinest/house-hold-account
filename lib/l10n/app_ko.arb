@@ -1325,5 +1325,7 @@
   "categoryIcon": "아이콘",
   "categoryColor": "색상",
   "categoryPreview": "미리보기",
-  "iconNone": "없음"
+  "iconNone": "없음",
+  "paymentMethodAutoCollectEditNotice": "자동수집 결제수단은 결제수단 관리에서 수정할 수 있습니다",
+  "paymentMethodAutoCollectDeleteNotice": "자동수집 결제수단은 결제수단 관리에서 삭제할 수 있습니다"
 }

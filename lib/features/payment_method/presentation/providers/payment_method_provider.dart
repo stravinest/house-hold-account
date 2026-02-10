@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/providers/safe_notifier.dart';
 
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/payment_method_repository.dart';
 import '../../data/repositories/learned_sms_format_repository.dart';
@@ -85,6 +86,29 @@ final autoCollectPaymentMethodsByOwnerProvider =
       );
     });
 
+// 거래 추가/수정 화면에서 선택 가능한 결제수단 목록
+// (공유 결제수단 + 현재 사용자의 자동수집 결제수단)
+final selectablePaymentMethodsProvider = FutureProvider<List<PaymentMethod>>((
+  ref,
+) async {
+  final ledgerId = ref.watch(selectedLedgerIdProvider);
+  if (ledgerId == null) return [];
+
+  final currentUser = ref.watch(currentUserProvider);
+  if (currentUser == null) return [];
+
+  final repository = ref.watch(paymentMethodRepositoryProvider);
+  final results = await Future.wait([
+    repository.getSharedPaymentMethods(ledgerId),
+    repository.getAutoCollectPaymentMethodsByOwner(
+      ledgerId: ledgerId,
+      ownerUserId: currentUser.id,
+    ),
+  ]);
+
+  return [...results[0], ...results[1]];
+});
+
 // 결제수단 관리 노티파이어
 class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
   final PaymentMethodRepository _repository;
@@ -132,6 +156,7 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
       safeInvalidate(paymentMethodsProvider);
       // 공유/자동수집 provider도 함께 갱신
       safeInvalidate(sharedPaymentMethodsProvider);
+      safeInvalidate(selectablePaymentMethodsProvider);
       // 자동수집 결제수단 provider는 family이므로 전체 목록 재갱신을 위해
       // UI에서 현재 userId로 다시 watch하도록 함
       // (family provider는 특정 args로만 invalidate 가능하므로 UI에서 처리)
