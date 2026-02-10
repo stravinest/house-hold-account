@@ -10,6 +10,7 @@ import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/category_icon.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/icon_picker.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../domain/entities/category.dart';
 import '../providers/category_provider.dart';
@@ -109,7 +110,7 @@ class _CategoryListView extends ConsumerWidget {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(Spacing.md),
+          padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, 80),
           cacheExtent: 500, // 성능 최적화: 스크롤 시 미리 렌더링
           itemCount: filtered.length,
           itemBuilder: (context, index) {
@@ -122,7 +123,7 @@ class _CategoryListView extends ConsumerWidget {
         );
       },
       loading: () => ListView.builder(
-        padding: const EdgeInsets.all(Spacing.md),
+        padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, 80),
         itemCount: 5,
         itemBuilder: (context, index) {
           return const Card(
@@ -248,34 +249,35 @@ class _CategoryDialog extends ConsumerStatefulWidget {
 class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-
-  static const List<String> _colorPalette = [
-    '#FF6B6B',
-    '#4ECDC4',
-    '#FFE66D',
-    '#95E1D3',
-    '#A8DADC',
-    '#F4A261',
-    '#E76F51',
-    '#2A9D8F',
-    '#4CAF50',
-    '#2196F3',
-    '#9C27B0',
-    '#00BCD4',
-    '#E91E63',
-    '#795548',
-    '#607D8B',
-    '#8BC34A',
-  ];
+  late String _selectedColor;
+  late String _selectedIcon;
+  bool _isSubmitting = false;
 
   String _generateRandomColor() {
-    return _colorPalette[Random().nextInt(_colorPalette.length)];
+    return CategoryColorPalette.palette[
+        Random().nextInt(CategoryColorPalette.palette.length)];
+  }
+
+  /// 카테고리 타입에 대응하는 iconGroups 키
+  String get _iconGroupKey {
+    switch (widget.type) {
+      case 'expense':
+        return 'expense';
+      case 'income':
+        return 'income';
+      case 'asset':
+        return 'asset';
+      default:
+        return 'expense';
+    }
   }
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
+    _selectedColor = widget.category?.color ?? _generateRandomColor();
+    _selectedIcon = widget.category?.icon ?? '';
   }
 
   @override
@@ -289,43 +291,156 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
     final l10n = AppLocalizations.of(context);
     final isEdit = widget.category != null;
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return AlertDialog(
-      title: Text(isEdit ? l10n.categoryEdit : l10n.categoryAdd),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _nameController,
-          autofocus: true,
-          maxLength: 20,
-          decoration: InputDecoration(
-            labelText: l10n.categoryName,
-            hintText: l10n.categoryNameHint,
-            border: const OutlineInputBorder(),
-            counterText: '',
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(BorderRadiusToken.xl),
+      ),
+      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      title: Column(
+        children: [
+          Text(
+            isEdit ? l10n.categoryEdit : l10n.categoryAdd,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return l10n.categoryNameRequired;
-            }
-            return null;
-          },
+          const SizedBox(height: Spacing.md),
+          CategoryIcon(
+            icon: _selectedIcon,
+            name: _nameController.text.isNotEmpty
+                ? _nameController.text
+                : '?',
+            color: _selectedColor,
+            size: CategoryIconSize.large,
+          ),
+        ],
+      ),
+      contentPadding: EdgeInsets.zero,
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 이름 입력
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.categoryName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      TextFormField(
+                        controller: _nameController,
+                        autofocus: true,
+                        maxLength: 20,
+                        decoration: InputDecoration(
+                          hintText: l10n.categoryNameHint,
+                          filled: true,
+                          fillColor: colorScheme.surfaceContainerLowest,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
+                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
+                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
+                            borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          counterText: '',
+                        ),
+                        onChanged: (_) => setState(() {}),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return l10n.categoryNameRequired;
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                // 색상 선택
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ColorPicker(
+                    palette: CategoryColorPalette.palette,
+                    selectedColor: _selectedColor,
+                    onColorSelected: (color) {
+                      setState(() => _selectedColor = color);
+                    },
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                // 아이콘 선택
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: IconPicker(
+                    selectedIcon: _selectedIcon,
+                    selectedColor: _selectedColor,
+                    filterGroup: _iconGroupKey,
+                    onIconSelected: (icon) {
+                      setState(() => _selectedIcon = icon);
+                    },
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                Divider(height: 1, color: colorScheme.outlineVariant),
+              ],
+            ),
+          ),
         ),
       ),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSubmitting ? null : () => Navigator.pop(context),
           child: Text(l10n.commonCancel),
         ),
-        TextButton(
-          onPressed: _submit,
-          child: Text(isEdit ? l10n.commonEdit : l10n.commonAdd),
+        FilledButton(
+          onPressed: _isSubmitting ? null : _submit,
+          style: FilledButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          ),
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  isEdit ? l10n.commonEdit : l10n.commonAdd,
+                  style: const TextStyle(fontSize: 14),
+                ),
         ),
       ],
     );
   }
 
   Future<void> _submit() async {
+    if (_isSubmitting) return;
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSubmitting = true);
 
     final l10n = AppLocalizations.of(context);
 
@@ -335,15 +450,17 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
             .read(categoryNotifierProvider.notifier)
             .updateCategory(
               id: widget.category!.id,
-              name: _nameController.text,
+              name: _nameController.text.trim(),
+              icon: _selectedIcon,
+              color: _selectedColor,
             );
       } else {
         await ref
             .read(categoryNotifierProvider.notifier)
             .createCategory(
-              name: _nameController.text,
-              icon: '',
-              color: _generateRandomColor(),
+              name: _nameController.text.trim(),
+              icon: _selectedIcon,
+              color: _selectedColor,
               type: widget.type,
             );
       }
@@ -358,6 +475,10 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
     } catch (e) {
       if (mounted) {
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
       }
     }
   }

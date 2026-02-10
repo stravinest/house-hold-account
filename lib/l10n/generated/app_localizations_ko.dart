@@ -2466,4 +2466,16 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get segmentCalendar => '캘린더';
+
+  @override
+  String get categoryIcon => '아이콘';
+
+  @override
+  String get categoryColor => '색상';
+
+  @override
+  String get categoryPreview => '미리보기';
+
+  @override
+  String get iconNone => '없음';
 }

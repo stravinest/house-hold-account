@@ -15,6 +15,7 @@ import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/category_icon.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/icon_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../category/domain/entities/category.dart';
 import '../../../category/presentation/providers/category_provider.dart';
@@ -404,7 +405,7 @@ class _PaymentMethodListView extends ConsumerWidget {
       onRefresh: () => _refreshPaymentMethods(ref, userId),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(Spacing.md),
+        padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, 80),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -641,7 +642,7 @@ class _PaymentMethodListView extends ConsumerWidget {
   void _showAddSharedDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => const _AddSharedPaymentMethodDialog(),
+      builder: (context) => const _SharedPaymentMethodDialog(),
     );
   }
 
@@ -657,13 +658,23 @@ class _PaymentMethodListView extends ConsumerWidget {
   }
 
   void _showEditDialog(BuildContext context, PaymentMethod paymentMethod) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
+    // 공유 결제수단: 카테고리와 동일한 다이얼로그 스타일
+    // 자동수집 결제수단: wizard 페이지
+    if (!paymentMethod.canAutoSave) {
+      showDialog(
+        context: context,
         builder: (context) =>
-            PaymentMethodWizardPage(paymentMethod: paymentMethod),
-      ),
-    );
+            _SharedPaymentMethodDialog(paymentMethod: paymentMethod),
+      );
+    } else {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              PaymentMethodWizardPage(paymentMethod: paymentMethod),
+        ),
+      );
+    }
   }
 
   void _showDeleteConfirm(
@@ -2045,24 +2056,37 @@ class _PendingTransactionEditSheetState
   }
 }
 
-/// 공유 결제수단 추가 다이얼로그 (카테고리 추가 스타일)
-class _AddSharedPaymentMethodDialog extends ConsumerStatefulWidget {
-  const _AddSharedPaymentMethodDialog();
+/// 공유 결제수단 추가/수정 다이얼로그 (카테고리 다이얼로그와 동일한 디자인)
+class _SharedPaymentMethodDialog extends ConsumerStatefulWidget {
+  final PaymentMethod? paymentMethod;
+
+  const _SharedPaymentMethodDialog({this.paymentMethod});
 
   @override
-  ConsumerState<_AddSharedPaymentMethodDialog> createState() =>
-      _AddSharedPaymentMethodDialogState();
+  ConsumerState<_SharedPaymentMethodDialog> createState() =>
+      _SharedPaymentMethodDialogState();
 }
 
-class _AddSharedPaymentMethodDialogState
-    extends ConsumerState<_AddSharedPaymentMethodDialog> {
+class _SharedPaymentMethodDialogState
+    extends ConsumerState<_SharedPaymentMethodDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
+  late String _selectedColor;
+  late String _selectedIcon;
+  bool _isSubmitting = false;
+
+  bool get isEdit => widget.paymentMethod != null;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
+    _nameController = TextEditingController(
+      text: widget.paymentMethod?.name ?? '',
+    );
+    _selectedColor = widget.paymentMethod?.color.isNotEmpty == true
+        ? widget.paymentMethod!.color
+        : PaymentMethodColors.palette[0];
+    _selectedIcon = widget.paymentMethod?.icon ?? '';
   }
 
   @override
@@ -2075,59 +2099,196 @@ class _AddSharedPaymentMethodDialogState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
+    final colorScheme = Theme.of(context).colorScheme;
+
     return AlertDialog(
-      title: Text(l10n.sharedPaymentMethodAdd),
-      content: Form(
-        key: _formKey,
-        child: TextFormField(
-          controller: _nameController,
-          autofocus: true,
-          maxLength: 20,
-          decoration: InputDecoration(
-            labelText: l10n.paymentMethodName,
-            hintText: l10n.paymentMethodNameHint,
-            border: const OutlineInputBorder(),
-            counterText: '',
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(BorderRadiusToken.xl),
+      ),
+      titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+      title: Column(
+        children: [
+          Text(
+            isEdit ? l10n.paymentMethodWizardEditTitle : l10n.sharedPaymentMethodAdd,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return l10n.paymentMethodNameRequired;
-            }
-            return null;
-          },
+          const SizedBox(height: Spacing.md),
+          CategoryIcon(
+            icon: _selectedIcon,
+            name: _nameController.text.isNotEmpty
+                ? _nameController.text
+                : '?',
+            color: _selectedColor,
+            size: CategoryIconSize.large,
+          ),
+        ],
+      ),
+      contentPadding: EdgeInsets.zero,
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 이름 입력
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.paymentMethodName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: Spacing.sm),
+                      TextFormField(
+                        controller: _nameController,
+                        autofocus: !isEdit,
+                        maxLength: 20,
+                        decoration: InputDecoration(
+                          hintText: l10n.paymentMethodNameHint,
+                          filled: true,
+                          fillColor: colorScheme.surfaceContainerLowest,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
+                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
+                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
+                            borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          counterText: '',
+                        ),
+                        onChanged: (_) => setState(() {}),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return l10n.paymentMethodNameRequired;
+                          }
+                          return null;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                // 색상 선택
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ColorPicker(
+                    palette: PaymentMethodColors.palette,
+                    selectedColor: _selectedColor,
+                    onColorSelected: (color) {
+                      setState(() => _selectedColor = color);
+                    },
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                // 아이콘 선택
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: IconPicker(
+                    selectedIcon: _selectedIcon,
+                    selectedColor: _selectedColor,
+                    filterGroup: 'payment',
+                    onIconSelected: (icon) {
+                      setState(() => _selectedIcon = icon);
+                    },
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                Divider(height: 1, color: colorScheme.outlineVariant),
+              ],
+            ),
+          ),
         ),
       ),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: _isSubmitting ? null : () => Navigator.pop(context),
           child: Text(l10n.commonCancel),
         ),
-        TextButton(onPressed: _submit, child: Text(l10n.commonAdd)),
+        FilledButton(
+          onPressed: _isSubmitting ? null : _submit,
+          style: FilledButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          ),
+          child: _isSubmitting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Text(
+                  isEdit ? l10n.commonEdit : l10n.commonAdd,
+                  style: const TextStyle(fontSize: 14),
+                ),
+        ),
       ],
     );
   }
 
   Future<void> _submit() async {
+    if (_isSubmitting) return;
     if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isSubmitting = true);
 
     final l10n = AppLocalizations.of(context);
 
     try {
-      // 공유 결제수단 생성 (canAutoSave = false)
-      await ref
-          .read(paymentMethodNotifierProvider.notifier)
-          .createPaymentMethod(
-            name: _nameController.text.trim(),
-            canAutoSave: false,
-          );
+      if (isEdit) {
+        await ref
+            .read(paymentMethodNotifierProvider.notifier)
+            .updatePaymentMethod(
+              id: widget.paymentMethod!.id,
+              name: _nameController.text.trim(),
+              icon: _selectedIcon,
+              color: _selectedColor,
+            );
 
-      if (mounted) {
-        Navigator.pop(context);
-        SnackBarUtils.showSuccess(context, l10n.paymentMethodAdded);
+        if (mounted) {
+          Navigator.pop(context);
+          SnackBarUtils.showSuccess(context, l10n.paymentMethodUpdated);
+        }
+      } else {
+        await ref
+            .read(paymentMethodNotifierProvider.notifier)
+            .createPaymentMethod(
+              name: _nameController.text.trim(),
+              icon: _selectedIcon,
+              color: _selectedColor,
+              canAutoSave: false,
+            );
+
+        if (mounted) {
+          Navigator.pop(context);
+          SnackBarUtils.showSuccess(context, l10n.paymentMethodAdded);
+        }
       }
     } catch (e) {
       if (mounted) {
         SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
       }
     }
   }

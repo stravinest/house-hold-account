@@ -7,6 +7,7 @@ import '../../../../core/utils/supabase_error_handler.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/category_icon.dart';
+import '../../../../shared/widgets/icon_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../domain/entities/learned_sms_format.dart';
@@ -75,6 +76,10 @@ class _PaymentMethodWizardPageState
   // Submission loading state
   bool _isSubmitting = false;
 
+  // 색상/아이콘 (manual 모드 전용)
+  String _manualColor = PaymentMethodColors.palette[0];
+  String _manualIcon = '';
+
   @override
   void initState() {
     super.initState();
@@ -90,6 +95,12 @@ class _PaymentMethodWizardPageState
       _selectedMode = widget.paymentMethod!.canAutoSave
           ? PaymentMethodAddMode.autoCollect
           : PaymentMethodAddMode.manual;
+
+      // 기존 색상/아이콘 로드 (manual 모드)
+      _manualColor = widget.paymentMethod!.color.isNotEmpty
+          ? widget.paymentMethod!.color
+          : PaymentMethodColors.palette[0];
+      _manualIcon = widget.paymentMethod!.icon;
 
       // Initialize autoSaveMode from existing payment method
       _autoSaveMode = widget.paymentMethod!.autoSaveMode;
@@ -415,6 +426,8 @@ class _PaymentMethodWizardPageState
         await notifier.updatePaymentMethod(
           id: widget.paymentMethod!.id,
           name: trimmedName,
+          icon: canAutoSave ? null : _manualIcon,
+          color: canAutoSave ? null : _manualColor,
           canAutoSave: canAutoSave,
         );
 
@@ -441,8 +454,10 @@ class _PaymentMethodWizardPageState
         // 1. Create payment method
         final paymentMethod = await notifier.createPaymentMethod(
           name: trimmedName,
-          icon: '',
-          color: _selectedTemplate?.color ?? '#9E9E9E',
+          icon: canAutoSave ? '' : _manualIcon,
+          color: canAutoSave
+              ? (_selectedTemplate?.color ?? '#9E9E9E')
+              : _manualColor,
           canAutoSave: canAutoSave,
         );
 
@@ -998,7 +1013,7 @@ class _PaymentMethodWizardPageState
   /// Manual entry configuration screen (name only)
   Widget _buildManualConfiguration() {
     final l10n = AppLocalizations.of(context);
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(Spacing.md),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1045,7 +1060,42 @@ class _PaymentMethodWizardPageState
               hintText: l10n.paymentMethodWizardNameHint,
               counterText: '',
             ),
+            onChanged: (_) => setState(() {}),
           ),
+          // 색상/아이콘 선택 (manual 모드에서만 표시)
+          if (_selectedMode == PaymentMethodAddMode.manual) ...[
+            const SizedBox(height: Spacing.lg),
+            // 미리보기
+            Center(
+              child: CategoryIcon(
+                icon: _manualIcon,
+                name: _nameController.text.isNotEmpty
+                    ? _nameController.text
+                    : '?',
+                color: _manualColor,
+                size: CategoryIconSize.large,
+              ),
+            ),
+            const SizedBox(height: Spacing.md),
+            // 색상 선택
+            ColorPicker(
+              palette: PaymentMethodColors.palette,
+              selectedColor: _manualColor,
+              onColorSelected: (color) {
+                setState(() => _manualColor = color);
+              },
+            ),
+            const SizedBox(height: Spacing.md),
+            // 아이콘 선택
+            IconPicker(
+              selectedIcon: _manualIcon,
+              selectedColor: _manualColor,
+              filterGroup: 'payment',
+              onIconSelected: (icon) {
+                setState(() => _manualIcon = icon);
+              },
+            ),
+          ],
         ],
       ),
     );

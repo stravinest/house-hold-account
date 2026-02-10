@@ -4686,6 +4686,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'캘린더'**
   String get segmentCalendar;
+
+  /// No description provided for @categoryIcon.
+  ///
+  /// In ko, this message translates to:
+  /// **'아이콘'**
+  String get categoryIcon;
+
+  /// No description provided for @categoryColor.
+  ///
+  /// In ko, this message translates to:
+  /// **'색상'**
+  String get categoryColor;
+
+  /// No description provided for @categoryPreview.
+  ///
+  /// In ko, this message translates to:
+  /// **'미리보기'**
+  String get categoryPreview;
+
+  /// No description provided for @iconNone.
+  ///
+  /// In ko, this message translates to:
+  /// **'없음'**
+  String get iconNone;
 }
 
 class _AppLocalizationsDelegate

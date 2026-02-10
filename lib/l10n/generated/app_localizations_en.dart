@@ -2524,4 +2524,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get segmentCalendar => 'Calendar';
+
+  @override
+  String get categoryIcon => 'Icon';
+
+  @override
+  String get categoryColor => 'Color';
+
+  @override
+  String get categoryPreview => 'Preview';
+
+  @override
+  String get iconNone => 'None';
 }

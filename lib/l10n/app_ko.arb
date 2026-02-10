@@ -1321,5 +1321,9 @@
   "tooltipListView": "리스트 보기",
   "tooltipCalendarView": "캘린더 보기",
   "segmentList": "리스트",
-  "segmentCalendar": "캘린더"
+  "segmentCalendar": "캘린더",
+  "categoryIcon": "아이콘",
+  "categoryColor": "색상",
+  "categoryPreview": "미리보기",
+  "iconNone": "없음"
 }

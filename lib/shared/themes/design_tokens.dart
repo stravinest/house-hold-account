@@ -179,6 +179,20 @@ class PaymentMethodColors {
   ];
 }
 
+/// 카테고리 색상 팔레트
+///
+/// 카테고리 생성/수정 시 사용할 수 있는 색상 목록입니다.
+/// Material 400 계열 14색 기반
+class CategoryColorPalette {
+  CategoryColorPalette._();
+
+  static const List<String> palette = [
+    '#EF5350', '#FF7043', '#FFA726', '#FFCA28',
+    '#66BB6A', '#26A69A', '#42A5F5', '#5C6BC0',
+    '#AB47BC', '#7B1FA2', '#EC407A', '#78909C',
+  ];
+}
+
 /// 사용 예시:
 ///
 /// ```dart

@@ -12,8 +12,8 @@ enum CategoryIconSize {
   /// 36x36 - 카테고리 관리 페이지
   medium(36, 18, BorderRadiusToken.sm),
 
-  /// 48x48 - 상세 화면
-  large(48, 22, BorderRadiusToken.md);
+  /// 64x64 - 다이얼로그 미리보기
+  large(64, 32, BorderRadiusToken.lg);
 
   final double dimension;
   final double fontSize;
@@ -49,8 +49,8 @@ class CategoryIcon extends StatelessWidget {
     this.size = CategoryIconSize.small,
   });
 
-  /// Material icon 이름 -> IconData 매핑
-  static const Map<String, IconData> _iconMap = {
+  /// Material icon 이름 -> IconData 매핑 (public)
+  static const Map<String, IconData> iconMap = {
     // 지출 카테고리
     'restaurant': Icons.restaurant,
     'directions_bus': Icons.directions_bus,
@@ -89,16 +89,73 @@ class CategoryIcon extends StatelessWidget {
     'push_pin': Icons.push_pin,
     // 하위 호환 (이전 icon name)
     'smartphone': Icons.smartphone,
+    // 추가 아이콘 (사용자 선택용)
+    'local_cafe': Icons.local_cafe,
+    'fitness_center': Icons.fitness_center,
+    'pets': Icons.pets,
+    'child_care': Icons.child_care,
+    'card_giftcard': Icons.card_giftcard,
+    'flight': Icons.flight,
+    'local_gas_station': Icons.local_gas_station,
+    'local_parking': Icons.local_parking,
+    'school': Icons.school,
+    'sports_esports': Icons.sports_esports,
+    'wifi': Icons.wifi,
+    'local_laundry_service': Icons.local_laundry_service,
+    'checkroom': Icons.checkroom,
+    'self_improvement': Icons.self_improvement,
+    'volunteer_activism': Icons.volunteer_activism,
+    'storefront': Icons.storefront,
+    'local_atm': Icons.local_atm,
+    'money': Icons.money,
+    'currency_exchange': Icons.currency_exchange,
+    'music_note': Icons.music_note,
+    'palette': Icons.palette,
+    'cleaning_services': Icons.cleaning_services,
+    'celebration': Icons.celebration,
+    'wallet': Icons.wallet,
+    'more_horiz': Icons.more_horiz,
+    'stethoscope': Icons.medical_services,
+  };
+
+  /// 아이콘 그룹 (IconPicker UI에서 그룹별 표시용)
+  static const Map<String, List<String>> iconGroups = {
+    'expense': [
+      'restaurant', 'local_cafe', 'directions_bus', 'shopping_cart',
+      'home', 'call', 'local_hospital', 'movie', 'menu_book',
+      'receipt_long', 'fitness_center', 'pets', 'child_care',
+      'flight', 'local_gas_station', 'local_parking',
+      'checkroom', 'sports_esports', 'local_laundry_service',
+    ],
+    'income': [
+      'account_balance_wallet', 'work', 'redeem',
+      'account_balance', 'attach_money', 'storefront',
+      'card_giftcard', 'local_atm', 'money',
+    ],
+    'asset': [
+      'lock', 'savings', 'trending_up', 'pie_chart',
+      'apartment', 'currency_bitcoin', 'diamond',
+      'currency_exchange',
+    ],
+    'fixed': [
+      'house', 'domain', 'shield', 'request_quote',
+      'cell_tower', 'subscriptions', 'wifi', 'school',
+      'self_improvement', 'volunteer_activism',
+    ],
+    'payment': [
+      'payments', 'credit_card', 'account_balance_wallet',
+      'local_atm', 'smartphone', 'storefront', 'money',
+    ],
   };
 
   @override
   Widget build(BuildContext context) {
     final bgColor = ColorUtils.parseHexColor(color, fallback: const Color(0xFF6750A4));
     final trimmedIcon = icon.trim();
-    final iconData = _iconMap[trimmedIcon];
+    final iconData = iconMap[trimmedIcon];
 
     if (kDebugMode && trimmedIcon.isNotEmpty && iconData == null) {
-      debugPrint('CategoryIcon: _iconMap에 없는 아이콘 "$trimmedIcon" (name: $name)');
+      debugPrint('CategoryIcon: iconMap에 없는 아이콘 "$trimmedIcon" (name: $name)');
     }
 
     return Container(

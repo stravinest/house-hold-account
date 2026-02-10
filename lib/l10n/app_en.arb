@@ -837,5 +837,9 @@
   "tooltipListView": "List View",
   "tooltipCalendarView": "Calendar View",
   "segmentList": "List",
-  "segmentCalendar": "Calendar"
+  "segmentCalendar": "Calendar",
+  "categoryIcon": "Icon",
+  "categoryColor": "Color",
+  "categoryPreview": "Preview",
+  "iconNone": "None"
 }
