@@ -49,9 +49,7 @@ class ExpenseTypeFilterWidget extends StatelessWidget {
             child: Ink(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? colorScheme.surface
-                    : Colors.transparent,
+                color: isSelected ? colorScheme.surface : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 boxShadow: isSelected
                     ? const [
@@ -71,8 +69,8 @@ class ExpenseTypeFilterWidget extends StatelessWidget {
                   color: !enabled
                       ? colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
                       : isSelected
-                          ? colorScheme.primary
-                          : colorScheme.onSurfaceVariant,
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
                 ),
               ),
             ),

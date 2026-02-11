@@ -405,7 +405,12 @@ class _PaymentMethodListView extends ConsumerWidget {
       onRefresh: () => _refreshPaymentMethods(ref, userId),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, 80),
+        padding: const EdgeInsets.fromLTRB(
+          Spacing.md,
+          Spacing.md,
+          Spacing.md,
+          80,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1051,12 +1056,14 @@ class _AutoCollectPaymentMethodCard extends StatelessWidget {
   ) {
     return switch (paymentMethod.autoSaveMode) {
       AutoSaveMode.manual => l10n.autoSaveModeOff,
-      AutoSaveMode.suggest => paymentMethod.autoCollectSource == AutoCollectSource.sms
-          ? l10n.autoSaveModeSuggestSms
-          : l10n.autoSaveModeSuggestPush,
-      AutoSaveMode.auto => paymentMethod.autoCollectSource == AutoCollectSource.sms
-          ? l10n.autoSaveModeAutoSms
-          : l10n.autoSaveModeAutoPush,
+      AutoSaveMode.suggest =>
+        paymentMethod.autoCollectSource == AutoCollectSource.sms
+            ? l10n.autoSaveModeSuggestSms
+            : l10n.autoSaveModeSuggestPush,
+      AutoSaveMode.auto =>
+        paymentMethod.autoCollectSource == AutoCollectSource.sms
+            ? l10n.autoSaveModeAutoSms
+            : l10n.autoSaveModeAutoPush,
     };
   }
 }
@@ -2111,15 +2118,15 @@ class _SharedPaymentMethodDialogState
       title: Column(
         children: [
           Text(
-            isEdit ? l10n.paymentMethodWizardEditTitle : l10n.sharedPaymentMethodAdd,
+            isEdit
+                ? l10n.paymentMethodWizardEditTitle
+                : l10n.sharedPaymentMethodAdd,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: Spacing.md),
           CategoryIcon(
             icon: _selectedIcon,
-            name: _nameController.text.isNotEmpty
-                ? _nameController.text
-                : '?',
+            name: _nameController.text.isNotEmpty ? _nameController.text : '?',
             color: _selectedColor,
             size: CategoryIconSize.large,
           ),
@@ -2159,18 +2166,34 @@ class _SharedPaymentMethodDialogState
                           filled: true,
                           fillColor: colorScheme.surfaceContainerLowest,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.md,
+                            ),
+                            borderSide: BorderSide(
+                              color: colorScheme.outlineVariant,
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.md,
+                            ),
+                            borderSide: BorderSide(
+                              color: colorScheme.outlineVariant,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-                            borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.md,
+                            ),
+                            borderSide: BorderSide(
+                              color: colorScheme.primary,
+                              width: 2,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           counterText: '',
                         ),
                         onChanged: (_) => setState(() {}),

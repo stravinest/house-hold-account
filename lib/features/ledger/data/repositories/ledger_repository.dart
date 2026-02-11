@@ -80,9 +80,7 @@ class LedgerRepository {
     String? currency,
     bool? isShared,
   }) async {
-    final updates = <String, dynamic>{
-      'updated_at': DateTimeUtils.nowUtcIso(),
-    };
+    final updates = <String, dynamic>{'updated_at': DateTimeUtils.nowUtcIso()};
     if (name != null) updates['name'] = name;
     if (description != null) updates['description'] = description;
     if (currency != null) updates['currency'] = currency;

@@ -127,7 +127,10 @@ class SideBySideDonutChart extends ConsumerWidget {
     double size = 140,
   }) {
     final theme = Theme.of(context);
-    final userColor = ColorUtils.parseHexColor(user.userColor, fallback: const Color(0xFF9E9E9E));
+    final userColor = ColorUtils.parseHexColor(
+      user.userColor,
+      fallback: const Color(0xFF9E9E9E),
+    );
     final categories = user.categoryList;
 
     if (user.totalAmount == 0 || categories.isEmpty) {
@@ -378,7 +381,10 @@ class SideBySideDonutChart extends ConsumerWidget {
       final percentage = totalAmount > 0
           ? (category.amount / totalAmount) * 100
           : 0.0;
-      final color = ColorUtils.parseHexColor(category.categoryColor, fallback: const Color(0xFF9E9E9E));
+      final color = ColorUtils.parseHexColor(
+        category.categoryColor,
+        fallback: const Color(0xFF9E9E9E),
+      );
 
       return PieChartSectionData(
         color: color,

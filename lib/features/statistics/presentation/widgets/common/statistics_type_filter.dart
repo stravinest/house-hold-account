@@ -21,13 +21,15 @@ class StatisticsTypeFilter extends ConsumerWidget {
         ref.read(selectedStatisticsTypeProvider.notifier).state = value;
       },
       offset: const Offset(0, 40),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainer,
       itemBuilder: (context) {
         final types = [
-          ('expense', l10n.statisticsTypeExpense, Icons.account_balance_wallet_outlined),
+          (
+            'expense',
+            l10n.statisticsTypeExpense,
+            Icons.account_balance_wallet_outlined,
+          ),
           ('income', l10n.statisticsTypeIncome, Icons.trending_up),
           ('asset', l10n.statisticsTypeAsset, Icons.account_balance_outlined),
         ];

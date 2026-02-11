@@ -55,7 +55,10 @@ class _PaymentMethodItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = ColorUtils.parseHexColor(item.paymentMethodColor, fallback: const Color(0xFF9E9E9E));
+    final color = ColorUtils.parseHexColor(
+      item.paymentMethodColor,
+      fallback: const Color(0xFF9E9E9E),
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),

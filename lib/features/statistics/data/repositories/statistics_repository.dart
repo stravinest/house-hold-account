@@ -197,7 +197,8 @@ class StatisticsRepository {
       // 카테고리 정보 추출
       final categoryName = category?['name']?.toString() ?? _uncategorizedName;
       final categoryIcon = category?['icon']?.toString() ?? _uncategorizedIcon;
-      final categoryColor = category?['color']?.toString() ?? _uncategorizedColor;
+      final categoryColor =
+          category?['color']?.toString() ?? _uncategorizedColor;
 
       // 사용자 통계 초기화
       if (!userStats.containsKey(userId)) {

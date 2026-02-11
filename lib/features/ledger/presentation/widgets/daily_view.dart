@@ -159,8 +159,7 @@ class _DailyNavigationHeader extends StatefulWidget {
   });
 
   @override
-  State<_DailyNavigationHeader> createState() =>
-      _DailyNavigationHeaderState();
+  State<_DailyNavigationHeader> createState() => _DailyNavigationHeaderState();
 }
 
 class _DailyNavigationHeaderState extends State<_DailyNavigationHeader>
@@ -205,8 +204,7 @@ class _DailyNavigationHeaderState extends State<_DailyNavigationHeader>
     required ColorScheme colorScheme,
     Widget? iconWidget,
   }) {
-    final color =
-        isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
+    final color = isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -249,7 +247,8 @@ class _DailyNavigationHeaderState extends State<_DailyNavigationHeader>
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final now = DateTime.now();
-    final isToday = widget.date.year == now.year &&
+    final isToday =
+        widget.date.year == now.year &&
         widget.date.month == now.month &&
         widget.date.day == now.day;
 
@@ -307,25 +306,26 @@ class _DailyNavigationHeaderState extends State<_DailyNavigationHeader>
           // 이전 날짜 버튼
           IconButton(
             icon: const Icon(Icons.chevron_left),
-            onPressed: () =>
-                widget.onDateChanged(
-                    widget.date.subtract(const Duration(days: 1))),
+            onPressed: () => widget.onDateChanged(
+              widget.date.subtract(const Duration(days: 1)),
+            ),
           ),
           // 날짜 표시
           Text(
             l10n.calendarDailyDate(
-                widget.date.year, widget.date.month, widget.date.day),
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+              widget.date.year,
+              widget.date.month,
+              widget.date.day,
+            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           // 다음 날짜 버튼
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: () =>
-                widget.onDateChanged(
-                    widget.date.add(const Duration(days: 1))),
+                widget.onDateChanged(widget.date.add(const Duration(days: 1))),
           ),
         ],
       ),

@@ -92,9 +92,7 @@ class LearnedPushFormatRepository {
     String? dateRegex,
     double? confidence,
   }) async {
-    final updates = <String, dynamic>{
-      'updated_at': DateTimeUtils.nowUtcIso(),
-    };
+    final updates = <String, dynamic>{'updated_at': DateTimeUtils.nowUtcIso()};
     if (packageName != null) updates['package_name'] = packageName;
     if (appKeywords != null) updates['app_keywords'] = appKeywords;
     if (amountRegex != null) updates['amount_regex'] = amountRegex;

@@ -150,7 +150,10 @@ class TransactionDetailSheet extends ConsumerWidget {
                     context,
                     icon: Icons.access_time,
                     label: l10n.labelRegisteredAt,
-                    value: DateTimeUtils.formatLocal(transaction.createdAt, dateTimeFormat),
+                    value: DateTimeUtils.formatLocal(
+                      transaction.createdAt,
+                      dateTimeFormat,
+                    ),
                   ),
 
                   // 카테고리

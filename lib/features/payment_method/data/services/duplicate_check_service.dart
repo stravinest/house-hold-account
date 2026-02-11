@@ -114,7 +114,8 @@ class DuplicateCheckService {
   /// - 이렇게 하면 SMS와 Push 알림이 동시에 수신되어도 서로를 중복으로 감지하지 않음
   Future<String?> _checkPendingDuplicate(String hash, String ledgerId) async {
     final fiveSecondsAgo = DateTimeUtils.toUtcIso(
-        DateTime.now().subtract(const Duration(seconds: 5)));
+      DateTime.now().subtract(const Duration(seconds: 5)),
+    );
 
     final response = await _client
         .from('pending_transactions')

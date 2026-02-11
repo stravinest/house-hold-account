@@ -52,10 +52,7 @@ class AutoCollectGuidePage extends StatelessWidget {
           const SizedBox(height: Spacing.lg),
 
           // Step 1
-          _StepHeader(
-            number: '1',
-            title: l10n.autoCollectGuideStep1Title,
-          ),
+          _StepHeader(number: '1', title: l10n.autoCollectGuideStep1Title),
           const SizedBox(height: Spacing.sm),
           _StepCard(
             child: Column(
@@ -113,10 +110,7 @@ class AutoCollectGuidePage extends StatelessWidget {
           const SizedBox(height: Spacing.lg),
 
           // Step 2
-          _StepHeader(
-            number: '2',
-            title: l10n.autoCollectGuideStep2Title,
-          ),
+          _StepHeader(number: '2', title: l10n.autoCollectGuideStep2Title),
           const SizedBox(height: Spacing.sm),
           _StepCard(
             child: Column(
@@ -206,10 +200,7 @@ class AutoCollectGuidePage extends StatelessWidget {
           const SizedBox(height: Spacing.lg),
 
           // Step 3
-          _StepHeader(
-            number: '3',
-            title: l10n.autoCollectGuideStep3Title,
-          ),
+          _StepHeader(number: '3', title: l10n.autoCollectGuideStep3Title),
           const SizedBox(height: Spacing.sm),
           _StepCard(
             child: Column(
@@ -233,10 +224,7 @@ class AutoCollectGuidePage extends StatelessWidget {
           const SizedBox(height: Spacing.lg),
 
           // Step 4
-          _StepHeader(
-            number: '4',
-            title: l10n.autoCollectGuideStep4Title,
-          ),
+          _StepHeader(number: '4', title: l10n.autoCollectGuideStep4Title),
           const SizedBox(height: Spacing.sm),
           _StepCard(
             child: Column(

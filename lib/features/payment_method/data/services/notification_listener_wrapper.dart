@@ -26,13 +26,13 @@ import 'sms_parsing_service.dart';
 
 class NotificationListenerWrapper {
   NotificationListenerWrapper._()
-      : _paymentMethodRepository = PaymentMethodRepository(),
-        _pendingTransactionRepository = PendingTransactionRepository(),
-        _transactionRepository = TransactionRepository(),
-        _learnedPushFormatRepository = LearnedPushFormatRepository(),
-        _categoryMappingService = CategoryMappingService(),
-        _duplicateCheckService = DuplicateCheckService(),
-        _notificationService = NotificationService();
+    : _paymentMethodRepository = PaymentMethodRepository(),
+      _pendingTransactionRepository = PendingTransactionRepository(),
+      _transactionRepository = TransactionRepository(),
+      _learnedPushFormatRepository = LearnedPushFormatRepository(),
+      _categoryMappingService = CategoryMappingService(),
+      _duplicateCheckService = DuplicateCheckService(),
+      _notificationService = NotificationService();
 
   /// 테스트용 팩토리 생성자
   /// 의존성 주입을 통해 mock 객체를 사용할 수 있도록 지원
@@ -45,13 +45,13 @@ class NotificationListenerWrapper {
     required CategoryMappingService categoryMappingService,
     required DuplicateCheckService duplicateCheckService,
     required NotificationService notificationService,
-  })  : _paymentMethodRepository = paymentMethodRepository,
-        _pendingTransactionRepository = pendingTransactionRepository,
-        _transactionRepository = transactionRepository,
-        _learnedPushFormatRepository = learnedPushFormatRepository,
-        _categoryMappingService = categoryMappingService,
-        _duplicateCheckService = duplicateCheckService,
-        _notificationService = notificationService;
+  }) : _paymentMethodRepository = paymentMethodRepository,
+       _pendingTransactionRepository = pendingTransactionRepository,
+       _transactionRepository = transactionRepository,
+       _learnedPushFormatRepository = learnedPushFormatRepository,
+       _categoryMappingService = categoryMappingService,
+       _duplicateCheckService = duplicateCheckService,
+       _notificationService = notificationService;
 
   static NotificationListenerWrapper? _instance;
   static NotificationListenerWrapper get instance {
@@ -70,13 +70,17 @@ class NotificationListenerWrapper {
     if (!Platform.isAndroid) return;
 
     try {
-      await _notificationSyncChannel.invokeMethod('invalidateNotificationCache');
+      await _notificationSyncChannel.invokeMethod(
+        'invalidateNotificationCache',
+      );
       if (kDebugMode) {
         debugPrint('[NotificationWrapper] Native cache invalidated');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('[NotificationWrapper] Failed to invalidate native cache: $e');
+        debugPrint(
+          '[NotificationWrapper] Failed to invalidate native cache: $e',
+        );
       }
     }
   }
@@ -688,9 +692,20 @@ class NotificationListenerWrapper {
   // 카카오톡 알림톡 본문 거래 키워드
   // FinancialNotificationListener.kt의 ALIMTALK_TRANSACTION_KEYWORDS와 동기화 필요
   static const _alimtalkTransactionKeywords = [
-    '승인', '결제', '출금', '입금', '이체', '충전',
-    '취소', '환불', '일시불', '할부', '사용금액',
-    '잔액', '체크카드', '신용카드',
+    '승인',
+    '결제',
+    '출금',
+    '입금',
+    '이체',
+    '충전',
+    '취소',
+    '환불',
+    '일시불',
+    '할부',
+    '사용금액',
+    '잔액',
+    '체크카드',
+    '신용카드',
   ];
 
   // 금액 패턴 정규식

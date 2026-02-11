@@ -100,7 +100,10 @@ class CalendarView extends ConsumerWidget {
               onPageChanged(previousMonth);
             },
             onNextMonth: () {
-              final nextMonth = DateTime(focusedDate.year, focusedDate.month + 1);
+              final nextMonth = DateTime(
+                focusedDate.year,
+                focusedDate.month + 1,
+              );
               onPageChanged(nextMonth);
             },
             onRefresh: onRefresh,

@@ -324,7 +324,8 @@ class _SharedHouseholdAccountAppState
       final router = ref.read(routerProvider);
 
       // 비밀번호 재설정 감지 (URL fragment에 type=recovery 포함)
-      final isPasswordRecovery = uri.fragment.contains('type=recovery') ||
+      final isPasswordRecovery =
+          uri.fragment.contains('type=recovery') ||
           uri.queryParameters['type'] == 'recovery';
 
       if (isPasswordRecovery) {

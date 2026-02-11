@@ -56,10 +56,7 @@ class GuideDialog extends StatelessWidget {
             // 서브타이틀
             const Text(
               '우리의 생활 공유 가계부',
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF44483E),
-              ),
+              style: TextStyle(fontSize: 14, color: Color(0xFF44483E)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -80,10 +77,7 @@ class GuideDialog extends StatelessWidget {
             // Tip 박스
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFA8DAB5),
                 borderRadius: BorderRadius.circular(12),
@@ -99,10 +93,7 @@ class GuideDialog extends StatelessWidget {
                   SizedBox(width: 8),
                   Text(
                     '설정 > 정보 > 가이드',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF2E7D32),
-                    ),
+                    style: TextStyle(fontSize: 13, color: Color(0xFF2E7D32)),
                   ),
                 ],
               ),
@@ -158,10 +149,7 @@ class GuideDialog extends StatelessWidget {
                 ),
                 child: const Text(
                   '확인',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
               ),
             ),

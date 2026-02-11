@@ -39,8 +39,9 @@ class MonthlyListView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final filteredTransactionsAsync =
-        ref.watch(filteredMonthlyTransactionsProvider);
+    final filteredTransactionsAsync = ref.watch(
+      filteredMonthlyTransactionsProvider,
+    );
 
     return filteredTransactionsAsync.when(
       data: (transactions) {
@@ -95,11 +96,7 @@ class MonthlyListView extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: colorScheme.error,
-              ),
+              Icon(Icons.error_outline, size: 48, color: colorScheme.error),
               const SizedBox(height: Spacing.md),
               Text(
                 l10n.errorWithMessage(error.toString()),
@@ -134,9 +131,7 @@ class MonthlyListView extends ConsumerWidget {
                 children: [
                   SkeletonCircle(size: 8),
                   SizedBox(width: 12),
-                  Expanded(
-                    child: SkeletonLine(height: 14),
-                  ),
+                  Expanded(child: SkeletonLine(height: 14)),
                 ],
               ),
             ],
@@ -238,10 +233,7 @@ class _TransactionItem extends StatelessWidget {
           );
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
               // 사용자 색상 점

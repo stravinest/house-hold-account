@@ -93,9 +93,7 @@ class LearnedSmsFormatRepository {
     String? dateRegex,
     double? confidence,
   }) async {
-    final updates = <String, dynamic>{
-      'updated_at': DateTimeUtils.nowUtcIso(),
-    };
+    final updates = <String, dynamic>{'updated_at': DateTimeUtils.nowUtcIso()};
     if (senderPattern != null) updates['sender_pattern'] = senderPattern;
     if (senderKeywords != null) updates['sender_keywords'] = senderKeywords;
     if (amountRegex != null) updates['amount_regex'] = amountRegex;

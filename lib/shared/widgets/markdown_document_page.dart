@@ -34,10 +34,7 @@ class _MarkdownDocumentPageState extends State<MarkdownDocumentPage> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        scrolledUnderElevation: 0,
-      ),
+      appBar: AppBar(title: Text(widget.title), scrolledUnderElevation: 0),
       body: CenteredContent(
         maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
         child: FutureBuilder<String>(
@@ -82,11 +79,7 @@ class _MarkdownDocumentPageState extends State<MarkdownDocumentPage> {
     ColorScheme colorScheme,
   ) {
     return MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-      p: TextStyle(
-        height: 1.6,
-        fontSize: 14,
-        color: colorScheme.onSurface,
-      ),
+      p: TextStyle(height: 1.6, fontSize: 14, color: colorScheme.onSurface),
       h1: TextStyle(
         fontSize: 24,
         fontWeight: FontWeight.bold,
@@ -102,30 +95,17 @@ class _MarkdownDocumentPageState extends State<MarkdownDocumentPage> {
         fontWeight: FontWeight.w600,
         color: colorScheme.onSurface,
       ),
-      listBullet: TextStyle(
-        fontSize: 14,
-        color: colorScheme.onSurface,
-      ),
+      listBullet: TextStyle(fontSize: 14, color: colorScheme.onSurface),
       tableHead: TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 14,
         color: colorScheme.onSurface,
       ),
-      tableBody: TextStyle(
-        fontSize: 14,
-        color: colorScheme.onSurface,
-      ),
-      tableBorder: TableBorder.all(
-        color: colorScheme.outlineVariant,
-      ),
-      tableCellsPadding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 6,
-      ),
+      tableBody: TextStyle(fontSize: 14, color: colorScheme.onSurface),
+      tableBorder: TableBorder.all(color: colorScheme.outlineVariant),
+      tableCellsPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       horizontalRuleDecoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: colorScheme.outlineVariant),
-        ),
+        border: Border(top: BorderSide(color: colorScheme.outlineVariant)),
       ),
     );
   }

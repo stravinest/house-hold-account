@@ -150,9 +150,7 @@ class PendingTransactionRepository {
     DateTime? parsedDate,
     String? paymentMethodId,
   }) async {
-    final updates = <String, dynamic>{
-      'updated_at': DateTimeUtils.nowUtcIso(),
-    };
+    final updates = <String, dynamic>{'updated_at': DateTimeUtils.nowUtcIso()};
     if (parsedAmount != null) updates['parsed_amount'] = parsedAmount;
     if (parsedType != null) updates['parsed_type'] = parsedType;
     if (parsedMerchant != null) updates['parsed_merchant'] = parsedMerchant;
@@ -275,10 +273,7 @@ class PendingTransactionRepository {
   Future<void> rejectAll(String ledgerId, String userId) async {
     await _client
         .from('pending_transactions')
-        .update({
-          'status': 'rejected',
-          'updated_at': DateTimeUtils.nowUtcIso(),
-        })
+        .update({'status': 'rejected', 'updated_at': DateTimeUtils.nowUtcIso()})
         .eq('ledger_id', ledgerId)
         .eq('user_id', userId)
         .eq('status', 'pending');
@@ -328,10 +323,7 @@ class PendingTransactionRepository {
   Future<void> markAllAsViewed(String ledgerId, String userId) async {
     await _client
         .from('pending_transactions')
-        .update({
-          'is_viewed': true,
-          'updated_at': DateTimeUtils.nowUtcIso(),
-        })
+        .update({'is_viewed': true, 'updated_at': DateTimeUtils.nowUtcIso()})
         .eq('ledger_id', ledgerId)
         .eq('user_id', userId)
         .eq('is_viewed', false);

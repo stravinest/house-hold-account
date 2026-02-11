@@ -241,8 +241,7 @@ class _WeeklyNavigationHeaderState extends State<_WeeklyNavigationHeader>
     required ColorScheme colorScheme,
     Widget? iconWidget,
   }) {
-    final color =
-        isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
+    final color = isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -346,7 +345,8 @@ class _WeeklyNavigationHeaderState extends State<_WeeklyNavigationHeader>
           IconButton(
             icon: const Icon(Icons.chevron_left),
             onPressed: () => widget.onWeekChanged(
-                widget.weekStart.subtract(const Duration(days: 7))),
+              widget.weekStart.subtract(const Duration(days: 7)),
+            ),
           ),
           // 주 범위 표시
           Text(
@@ -356,16 +356,16 @@ class _WeeklyNavigationHeaderState extends State<_WeeklyNavigationHeader>
               widget.weekEnd.month,
               widget.weekEnd.day,
             ),
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           // 다음 주 버튼
           IconButton(
             icon: const Icon(Icons.chevron_right),
             onPressed: () => widget.onWeekChanged(
-                widget.weekStart.add(const Duration(days: 7))),
+              widget.weekStart.add(const Duration(days: 7)),
+            ),
           ),
         ],
       ),

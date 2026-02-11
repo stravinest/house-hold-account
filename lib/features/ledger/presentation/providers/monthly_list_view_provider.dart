@@ -47,8 +47,8 @@ class MonthlyViewTypeNotifier extends StateNotifier<MonthlyViewType> {
 /// 월간 뷰 타입 Provider
 final monthlyViewTypeProvider =
     StateNotifierProvider<MonthlyViewTypeNotifier, MonthlyViewType>((ref) {
-  return MonthlyViewTypeNotifier();
-});
+      return MonthlyViewTypeNotifier();
+    });
 
 /// 선택된 필터 Set Provider (복수 선택 가능)
 final selectedFiltersProvider = StateProvider<Set<TransactionFilter>>((ref) {
@@ -58,44 +58,44 @@ final selectedFiltersProvider = StateProvider<Set<TransactionFilter>>((ref) {
 /// 필터링된 월간 거래 Provider
 final filteredMonthlyTransactionsProvider =
     Provider<AsyncValue<List<Transaction>>>((ref) {
-  final monthlyTransactionsAsync = ref.watch(monthlyTransactionsProvider);
-  final selectedFilters = ref.watch(selectedFiltersProvider);
+      final monthlyTransactionsAsync = ref.watch(monthlyTransactionsProvider);
+      final selectedFilters = ref.watch(selectedFiltersProvider);
 
-  return monthlyTransactionsAsync.when(
-    data: (transactions) {
-      // '전체' 필터가 선택되어 있으면 모든 거래 반환
-      if (selectedFilters.contains(TransactionFilter.all)) {
-        return AsyncValue.data(transactions);
-      }
+      return monthlyTransactionsAsync.when(
+        data: (transactions) {
+          // '전체' 필터가 선택되어 있으면 모든 거래 반환
+          if (selectedFilters.contains(TransactionFilter.all)) {
+            return AsyncValue.data(transactions);
+          }
 
-      // 선택된 필터에 따라 OR 조건으로 필터링
-      final filtered = transactions.where((tx) {
-        // 고정비 필터: isFixedExpense 속성 확인
-        if (selectedFilters.contains(TransactionFilter.recurring) &&
-            tx.isFixedExpense) {
-          return true;
-        }
-        // 수입 필터
-        if (selectedFilters.contains(TransactionFilter.income) &&
-            tx.type == 'income') {
-          return true;
-        }
-        // 지출 필터
-        if (selectedFilters.contains(TransactionFilter.expense) &&
-            tx.type == 'expense') {
-          return true;
-        }
-        // 자산 필터
-        if (selectedFilters.contains(TransactionFilter.asset) &&
-            tx.type == 'asset') {
-          return true;
-        }
-        return false;
-      }).toList();
+          // 선택된 필터에 따라 OR 조건으로 필터링
+          final filtered = transactions.where((tx) {
+            // 고정비 필터: isFixedExpense 속성 확인
+            if (selectedFilters.contains(TransactionFilter.recurring) &&
+                tx.isFixedExpense) {
+              return true;
+            }
+            // 수입 필터
+            if (selectedFilters.contains(TransactionFilter.income) &&
+                tx.type == 'income') {
+              return true;
+            }
+            // 지출 필터
+            if (selectedFilters.contains(TransactionFilter.expense) &&
+                tx.type == 'expense') {
+              return true;
+            }
+            // 자산 필터
+            if (selectedFilters.contains(TransactionFilter.asset) &&
+                tx.type == 'asset') {
+              return true;
+            }
+            return false;
+          }).toList();
 
-      return AsyncValue.data(filtered);
-    },
-    loading: () => const AsyncValue.loading(),
-    error: (e, st) => AsyncValue.error(e, st),
-  );
-});
+          return AsyncValue.data(filtered);
+        },
+        loading: () => const AsyncValue.loading(),
+        error: (e, st) => AsyncValue.error(e, st),
+      );
+    });

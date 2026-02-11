@@ -70,8 +70,7 @@ class _FixedExpenseCategorySelectorWidgetState
             if (isLoading) return;
             setDialogState(() => isLoading = true);
             try {
-              await _submitFixedExpenseCategory(
-                  dialogContext, nameController);
+              await _submitFixedExpenseCategory(dialogContext, nameController);
             } finally {
               if (dialogContext.mounted) {
                 setDialogState(() => isLoading = false);
@@ -94,8 +93,9 @@ class _FixedExpenseCategorySelectorWidgetState
             ),
             actions: [
               TextButton(
-                onPressed:
-                    isLoading ? null : () => Navigator.pop(dialogContext),
+                onPressed: isLoading
+                    ? null
+                    : () => Navigator.pop(dialogContext),
                 child: Text(l10n.commonCancel),
               ),
               FilledButton(
@@ -175,7 +175,10 @@ class _FixedExpenseCategorySelectorWidgetState
             setDialogState(() => isLoading = true);
             try {
               await _submitEditFixedExpenseCategory(
-                  dialogContext, category, nameController);
+                dialogContext,
+                category,
+                nameController,
+              );
             } finally {
               if (dialogContext.mounted) {
                 setDialogState(() => isLoading = false);
@@ -197,8 +200,9 @@ class _FixedExpenseCategorySelectorWidgetState
             ),
             actions: [
               TextButton(
-                onPressed:
-                    isLoading ? null : () => Navigator.pop(dialogContext),
+                onPressed: isLoading
+                    ? null
+                    : () => Navigator.pop(dialogContext),
                 child: Text(l10n.commonCancel),
               ),
               FilledButton(

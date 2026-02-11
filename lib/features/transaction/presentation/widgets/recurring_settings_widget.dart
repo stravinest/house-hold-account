@@ -384,7 +384,6 @@ class _RecurringSettingsWidgetState
       ],
     );
   }
-
 }
 
 /// 월/년도 선택 다이얼로그

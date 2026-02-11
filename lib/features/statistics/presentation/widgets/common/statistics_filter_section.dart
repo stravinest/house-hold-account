@@ -32,9 +32,8 @@ class StatisticsFilterSection extends ConsumerWidget {
             child: ExpenseTypeFilterWidget(
               selectedFilter: expenseTypeFilter,
               onChanged: (filter) {
-                ref
-                    .read(selectedExpenseTypeFilterProvider.notifier)
-                    .state = filter;
+                ref.read(selectedExpenseTypeFilterProvider.notifier).state =
+                    filter;
               },
             ),
           ),

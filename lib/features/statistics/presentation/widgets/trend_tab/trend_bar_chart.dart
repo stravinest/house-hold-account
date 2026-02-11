@@ -20,7 +20,9 @@ class TrendBarChart extends ConsumerWidget {
     if (period == TrendPeriod.monthly) {
       // 날짜 또는 타입 변경 시 widget을 재생성하여 데이터와 스크롤 갱신
       return _MonthlyTrendChart(
-        key: ValueKey('monthly_${selectedDate.year}_${selectedDate.month}_$selectedType'),
+        key: ValueKey(
+          'monthly_${selectedDate.year}_${selectedDate.month}_$selectedType',
+        ),
         selectedType: selectedType,
       );
     } else {

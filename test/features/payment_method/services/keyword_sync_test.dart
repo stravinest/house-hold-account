@@ -27,9 +27,20 @@ void main() {
 
   // Kotlin NotificationFilterHelper의 ALIMTALK_TRANSACTION_KEYWORDS와 동일해야 함
   const kotlinAlimtalkTransactionKeywords = [
-    '승인', '결제', '출금', '입금', '이체', '충전',
-    '취소', '환불', '일시불', '할부', '사용금액',
-    '잔액', '체크카드', '신용카드',
+    '승인',
+    '결제',
+    '출금',
+    '입금',
+    '이체',
+    '충전',
+    '취소',
+    '환불',
+    '일시불',
+    '할부',
+    '사용금액',
+    '잔액',
+    '체크카드',
+    '신용카드',
   ];
 
   group('Kotlin/Dart 금융 채널 키워드 동기화', () {
@@ -128,8 +139,7 @@ void main() {
     // 동일한 정규식이므로 동일한 결과를 반환해야 함
 
     test('단순 금액 패턴이 동일하게 매칭되어야 한다', () {
-      final dartPattern =
-          NotificationListenerWrapper.amountPatternForTesting;
+      final dartPattern = NotificationListenerWrapper.amountPatternForTesting;
 
       expect(dartPattern.hasMatch('50,000원'), isTrue);
       expect(dartPattern.hasMatch('1,200,000원'), isTrue);
@@ -138,8 +148,7 @@ void main() {
     });
 
     test('쉼표 형식 금액이 매칭되어야 한다', () {
-      final dartPattern =
-          NotificationListenerWrapper.amountPatternForTesting;
+      final dartPattern = NotificationListenerWrapper.amountPatternForTesting;
 
       expect(dartPattern.hasMatch('1,000'), isTrue);
       expect(dartPattern.hasMatch('50,000'), isTrue);
@@ -147,8 +156,7 @@ void main() {
     });
 
     test('금액이 아닌 텍스트는 매칭되지 않아야 한다', () {
-      final dartPattern =
-          NotificationListenerWrapper.amountPatternForTesting;
+      final dartPattern = NotificationListenerWrapper.amountPatternForTesting;
 
       expect(dartPattern.hasMatch('안녕하세요'), isFalse);
       expect(dartPattern.hasMatch('이벤트 당첨'), isFalse);

@@ -212,7 +212,10 @@ class _MemberTabs extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final parsedUserColor = ColorUtils.parseHexColor(userColor, fallback: const Color(0xFF9E9E9E));
+    final parsedUserColor = ColorUtils.parseHexColor(
+      userColor,
+      fallback: const Color(0xFF9E9E9E),
+    );
 
     return GestureDetector(
       onTap: onTap,
@@ -461,7 +464,10 @@ class _SharedDonutChart extends StatelessWidget {
       final percentage = totalAmount > 0
           ? (category.amount / totalAmount) * 100
           : 0.0;
-      final color = ColorUtils.parseHexColor(category.categoryColor, fallback: const Color(0xFF9E9E9E));
+      final color = ColorUtils.parseHexColor(
+        category.categoryColor,
+        fallback: const Color(0xFF9E9E9E),
+      );
 
       return PieChartSectionData(
         color: color,

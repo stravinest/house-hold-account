@@ -118,7 +118,8 @@ class ShareRepository {
 
     // 만료일: 7일 후
     final expiresAt = DateTimeUtils.toUtcIso(
-        DateTime.now().add(const Duration(days: 7)));
+      DateTime.now().add(const Duration(days: 7)),
+    );
 
     final response = await _client
         .from('ledger_invites')

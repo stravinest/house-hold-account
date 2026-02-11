@@ -222,19 +222,12 @@ class ColorPicker extends StatelessWidget {
                     color: color,
                     shape: BoxShape.circle,
                     border: isSelected
-                        ? Border.all(
-                            color: const Color(0xFF2E7D32),
-                            width: 2.5,
-                          )
+                        ? Border.all(color: const Color(0xFF2E7D32), width: 2.5)
                         : null,
                   ),
                   alignment: Alignment.center,
                   child: isSelected
-                      ? const Icon(
-                          Icons.check,
-                          size: 16,
-                          color: Colors.white,
-                        )
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
                       : null,
                 ),
               );

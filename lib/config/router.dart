@@ -99,8 +99,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           state.matchedLocation == Routes.signup ||
           state.matchedLocation == Routes.forgotPassword ||
           state.matchedLocation == Routes.emailVerification;
-      final isResetPassword =
-          state.matchedLocation == Routes.resetPassword;
+      final isResetPassword = state.matchedLocation == Routes.resetPassword;
       final isSplash = state.matchedLocation == Routes.splash;
       final isDeepLinkRoute =
           state.matchedLocation == Routes.addExpense ||
@@ -300,10 +299,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 사용 가이드 - 슬라이드 전환
       GoRoute(
         path: Routes.guide,
-        pageBuilder: (context, state) => slideTransition(
-          key: state.pageKey,
-          child: const GuidePage(),
-        ),
+        pageBuilder: (context, state) =>
+            slideTransition(key: state.pageKey, child: const GuidePage()),
       ),
 
       // 자동수집 가이드 - 슬라이드 전환
@@ -496,10 +493,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
             // 서브타이틀
             Text(
               l10n.appSubtitle,
-              style: const TextStyle(
-                fontSize: 14,
-                color: Color(0xFF44483E),
-              ),
+              style: const TextStyle(fontSize: 14, color: Color(0xFF44483E)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -517,8 +511,7 @@ class _SplashPageState extends ConsumerState<SplashPage>
                     ];
                     final delay = index * 0.3;
                     final value = _dotController.value;
-                    final opacity =
-                        ((value - delay) % 1.0 < 0.5) ? 1.0 : 0.4;
+                    final opacity = ((value - delay) % 1.0 < 0.5) ? 1.0 : 0.4;
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: Opacity(

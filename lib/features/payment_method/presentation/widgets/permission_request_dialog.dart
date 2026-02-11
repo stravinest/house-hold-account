@@ -538,9 +538,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                 onPressed: _isLoading ? null : onRequest,
                 style: OutlinedButton.styleFrom(
                   foregroundColor: _PermissionColors.buttonText,
-                  side: const BorderSide(
-                    color: _PermissionColors.buttonBorder,
-                  ),
+                  side: const BorderSide(color: _PermissionColors.buttonBorder),
                   padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

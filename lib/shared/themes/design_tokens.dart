@@ -187,9 +187,18 @@ class CategoryColorPalette {
   CategoryColorPalette._();
 
   static const List<String> palette = [
-    '#EF5350', '#FF7043', '#FFA726', '#FFCA28',
-    '#66BB6A', '#26A69A', '#42A5F5', '#5C6BC0',
-    '#AB47BC', '#7B1FA2', '#EC407A', '#78909C',
+    '#EF5350',
+    '#FF7043',
+    '#FFA726',
+    '#FFCA28',
+    '#66BB6A',
+    '#26A69A',
+    '#42A5F5',
+    '#5C6BC0',
+    '#AB47BC',
+    '#7B1FA2',
+    '#EC407A',
+    '#78909C',
   ];
 }
 

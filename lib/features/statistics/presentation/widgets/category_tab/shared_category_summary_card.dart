@@ -198,7 +198,10 @@ class SharedCategorySummaryCard extends ConsumerWidget {
 
         // 사용자별 내역
         ...users.map((user) {
-          final userColor = ColorUtils.parseHexColor(user.userColor, fallback: const Color(0xFF9E9E9E));
+          final userColor = ColorUtils.parseHexColor(
+            user.userColor,
+            fallback: const Color(0xFF9E9E9E),
+          );
           final percentage = totalAmount > 0
               ? (user.totalAmount / totalAmount * 100)
               : 0.0;

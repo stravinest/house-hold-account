@@ -97,11 +97,7 @@ class TransactionFilterChips extends ConsumerWidget {
               ),
               if (!isAll) ...[
                 const SizedBox(width: 4),
-                Icon(
-                  Icons.close,
-                  size: 10,
-                  color: colorScheme.onPrimary,
-                ),
+                Icon(Icons.close, size: 10, color: colorScheme.onPrimary),
               ],
             ],
           ),
@@ -122,9 +118,7 @@ class TransactionFilterChips extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  for (int i = 0;
-                      i < selectedFilters.length;
-                      i++) ...[
+                  for (int i = 0; i < selectedFilters.length; i++) ...[
                     if (i > 0) const SizedBox(width: Spacing.sm),
                     buildActiveBadge(selectedFilters.elementAt(i)),
                   ],

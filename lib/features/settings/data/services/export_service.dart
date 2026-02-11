@@ -51,8 +51,9 @@ class ExportService {
     }).toList();
 
     if (options.transactionType != null) {
-      filtered =
-          filtered.where((t) => t.type == options.transactionType).toList();
+      filtered = filtered
+          .where((t) => t.type == options.transactionType)
+          .toList();
     }
 
     filtered.sort((a, b) => a.date.compareTo(b.date));
@@ -128,9 +129,7 @@ class ExportService {
     }
     if (options.includeFixedExpense) {
       final isKo = l10n.localeName == 'ko';
-      row.add(
-        t.isFixedExpense ? (isKo ? 'O' : 'Yes') : '',
-      );
+      row.add(t.isFixedExpense ? (isKo ? 'O' : 'Yes') : '');
     }
 
     return row;
@@ -151,8 +150,7 @@ class ExportService {
     final headers = _buildHeaders(options, l10n);
 
     final excel = Excel.createExcel();
-    final sheetName =
-        l10n.localeName == 'ko' ? '거래내역' : 'Transactions';
+    final sheetName = l10n.localeName == 'ko' ? '거래내역' : 'Transactions';
     final sheet = excel[sheetName];
 
     // 기본 시트 삭제
@@ -164,7 +162,9 @@ class ExportService {
     for (var i = 0; i < headers.length; i++) {
       sheet
           .cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0))
-          .value = TextCellValue(headers[i]);
+          .value = TextCellValue(
+        headers[i],
+      );
     }
 
     // 데이터 작성
@@ -183,7 +183,9 @@ class ExportService {
                     rowIndex: rowIdx + 1,
                   ),
                 )
-                .value = IntCellValue(numValue);
+                .value = IntCellValue(
+              numValue,
+            );
             continue;
           }
         }
@@ -194,7 +196,9 @@ class ExportService {
                 rowIndex: rowIdx + 1,
               ),
             )
-            .value = TextCellValue(cellValue);
+            .value = TextCellValue(
+          cellValue,
+        );
       }
     }
 

@@ -106,10 +106,9 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                 // 타이틀
                 Text(
                   l10n.authResetPasswordTitle,
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: Spacing.sm),
@@ -118,8 +117,8 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
                 Text(
                   l10n.authResetPasswordSubtitle,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                   textAlign: TextAlign.center,
                 ),
 

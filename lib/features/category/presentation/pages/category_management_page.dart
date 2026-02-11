@@ -110,7 +110,12 @@ class _CategoryListView extends ConsumerWidget {
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, 80),
+          padding: const EdgeInsets.fromLTRB(
+            Spacing.md,
+            Spacing.md,
+            Spacing.md,
+            80,
+          ),
           cacheExtent: 500, // 성능 최적화: 스크롤 시 미리 렌더링
           itemCount: filtered.length,
           itemBuilder: (context, index) {
@@ -123,7 +128,12 @@ class _CategoryListView extends ConsumerWidget {
         );
       },
       loading: () => ListView.builder(
-        padding: const EdgeInsets.fromLTRB(Spacing.md, Spacing.md, Spacing.md, 80),
+        padding: const EdgeInsets.fromLTRB(
+          Spacing.md,
+          Spacing.md,
+          Spacing.md,
+          80,
+        ),
         itemCount: 5,
         itemBuilder: (context, index) {
           return const Card(
@@ -254,8 +264,9 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   bool _isSubmitting = false;
 
   String _generateRandomColor() {
-    return CategoryColorPalette.palette[
-        Random().nextInt(CategoryColorPalette.palette.length)];
+    return CategoryColorPalette.palette[Random().nextInt(
+      CategoryColorPalette.palette.length,
+    )];
   }
 
   /// 카테고리 타입에 대응하는 iconGroups 키
@@ -307,9 +318,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
           const SizedBox(height: Spacing.md),
           CategoryIcon(
             icon: _selectedIcon,
-            name: _nameController.text.isNotEmpty
-                ? _nameController.text
-                : '?',
+            name: _nameController.text.isNotEmpty ? _nameController.text : '?',
             color: _selectedColor,
             size: CategoryIconSize.large,
           ),
@@ -349,18 +358,34 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
                           filled: true,
                           fillColor: colorScheme.surfaceContainerLowest,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.md,
+                            ),
+                            borderSide: BorderSide(
+                              color: colorScheme.outlineVariant,
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.md,
+                            ),
+                            borderSide: BorderSide(
+                              color: colorScheme.outlineVariant,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-                            borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.md,
+                            ),
+                            borderSide: BorderSide(
+                              color: colorScheme.primary,
+                              width: 2,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           counterText: '',
                         ),
                         onChanged: (_) => setState(() {}),

@@ -107,9 +107,7 @@ void main() {
 
     test('카카오톡은 금융 앱 목록에 포함되어야 한다 (알림톡 수집)', () {
       expect(
-        NotificationListenerWrapper.isFinancialAppForTesting(
-          'com.kakao.talk',
-        ),
+        NotificationListenerWrapper.isFinancialAppForTesting('com.kakao.talk'),
         isTrue,
         reason: '카카오톡 알림톡의 금융 알림을 수집하기 위해 포함',
       );
@@ -125,10 +123,7 @@ void main() {
     });
 
     test('빈 패키지명은 차단해야 한다', () {
-      expect(
-        NotificationListenerWrapper.isFinancialAppForTesting(''),
-        isFalse,
-      );
+      expect(NotificationListenerWrapper.isFinancialAppForTesting(''), isFalse);
     });
 
     test('대소문자를 무시하고 매칭해야 한다', () {
@@ -195,10 +190,7 @@ void main() {
 
     test('빈 content는 false를 반환해야 한다', () {
       expect(
-        NotificationListenerWrapper.isFinancialAlimtalkForTesting(
-          'KB국민카드',
-          '',
-        ),
+        NotificationListenerWrapper.isFinancialAlimtalkForTesting('KB국민카드', ''),
         isFalse,
       );
     });
@@ -259,5 +251,4 @@ void main() {
       });
     }
   });
-
 }

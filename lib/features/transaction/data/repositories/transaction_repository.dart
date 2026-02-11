@@ -142,9 +142,7 @@ class TransactionRepository {
     bool? isFixedExpense,
     String? fixedExpenseCategoryId,
   }) async {
-    final updates = <String, dynamic>{
-      'updated_at': DateTimeUtils.nowUtcIso(),
-    };
+    final updates = <String, dynamic>{'updated_at': DateTimeUtils.nowUtcIso()};
     if (categoryId != null) updates['category_id'] = categoryId;
     if (paymentMethodId != null) updates['payment_method_id'] = paymentMethodId;
     if (amount != null) updates['amount'] = amount;
@@ -460,10 +458,7 @@ class TransactionRepository {
   Future<void> deleteRecurringTemplate(String templateId) async {
     await _client
         .from('recurring_templates')
-        .update({
-          'is_active': false,
-          'updated_at': DateTimeUtils.nowUtcIso(),
-        })
+        .update({'is_active': false, 'updated_at': DateTimeUtils.nowUtcIso()})
         .eq('id', templateId);
   }
 }

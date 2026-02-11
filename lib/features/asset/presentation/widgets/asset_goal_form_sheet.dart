@@ -297,8 +297,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
             )
           : Text(
               isEditing ? l10n.assetGoalEdit : l10n.assetGoalCreate,
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
     );
   }

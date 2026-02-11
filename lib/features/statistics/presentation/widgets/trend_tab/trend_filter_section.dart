@@ -51,13 +51,15 @@ class _PeriodDropdown extends ConsumerWidget {
         ref.read(trendPeriodProvider.notifier).state = value;
       },
       offset: const Offset(0, 40),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: colorScheme.surfaceContainer,
       itemBuilder: (context) {
         final periods = [
-          (TrendPeriod.monthly, l10n.statisticsPeriodMonthly, Icons.calendar_month),
+          (
+            TrendPeriod.monthly,
+            l10n.statisticsPeriodMonthly,
+            Icons.calendar_month,
+          ),
           (TrendPeriod.yearly, l10n.statisticsPeriodYearly, Icons.date_range),
         ];
 
@@ -69,9 +71,13 @@ class _PeriodDropdown extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(period.$3, size: 16, color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurface),
+                Icon(
+                  period.$3,
+                  size: 16,
+                  color: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.onSurface,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   period.$2,
@@ -161,9 +167,7 @@ class _TypeInlineToggle extends ConsumerWidget {
             child: Ink(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
               decoration: BoxDecoration(
-                color: isSelected
-                    ? colorScheme.surface
-                    : Colors.transparent,
+                color: isSelected ? colorScheme.surface : Colors.transparent,
                 borderRadius: BorderRadius.circular(6),
                 boxShadow: isSelected
                     ? const [

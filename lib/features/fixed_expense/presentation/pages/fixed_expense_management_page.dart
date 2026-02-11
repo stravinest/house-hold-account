@@ -278,8 +278,9 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
   bool _isSubmitting = false;
 
   String _generateRandomColor() {
-    return CategoryColorPalette.palette[
-        Random().nextInt(CategoryColorPalette.palette.length)];
+    return CategoryColorPalette.palette[Random().nextInt(
+      CategoryColorPalette.palette.length,
+    )];
   }
 
   @override
@@ -311,15 +312,15 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
       title: Column(
         children: [
           Text(
-            isEdit ? l10n.fixedExpenseCategoryEdit : l10n.fixedExpenseCategoryAdd,
+            isEdit
+                ? l10n.fixedExpenseCategoryEdit
+                : l10n.fixedExpenseCategoryAdd,
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: Spacing.md),
           CategoryIcon(
             icon: _selectedIcon,
-            name: _nameController.text.isNotEmpty
-                ? _nameController.text
-                : '?',
+            name: _nameController.text.isNotEmpty ? _nameController.text : '?',
             color: _selectedColor,
             size: CategoryIconSize.large,
           ),
@@ -359,18 +360,34 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
                           filled: true,
                           fillColor: colorScheme.surfaceContainerLowest,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.md,
+                            ),
+                            borderSide: BorderSide(
+                              color: colorScheme.outlineVariant,
+                            ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-                            borderSide: BorderSide(color: colorScheme.outlineVariant),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.md,
+                            ),
+                            borderSide: BorderSide(
+                              color: colorScheme.outlineVariant,
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-                            borderSide: BorderSide(color: colorScheme.primary, width: 2),
+                            borderRadius: BorderRadius.circular(
+                              BorderRadiusToken.md,
+                            ),
+                            borderSide: BorderSide(
+                              color: colorScheme.primary,
+                              width: 2,
+                            ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           counterText: '',
                         ),
                         onChanged: (_) => setState(() {}),

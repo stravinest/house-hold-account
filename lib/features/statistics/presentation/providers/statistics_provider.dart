@@ -326,9 +326,8 @@ final categoryStatisticsByUserProvider =
         if (userStats.containsKey(member.userId)) {
           orderedStats[member.userId] = userStats[member.userId]!;
         } else {
-          final displayName = member.displayName ??
-              member.email?.split('@').first ??
-              'Unknown';
+          final displayName =
+              member.displayName ?? member.email?.split('@').first ?? 'Unknown';
           orderedStats[member.userId] = UserCategoryStatistics(
             userId: member.userId,
             userName: displayName,

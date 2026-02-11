@@ -121,36 +121,76 @@ class CategoryIcon extends StatelessWidget {
   /// 아이콘 그룹 (IconPicker UI에서 그룹별 표시용)
   static const Map<String, List<String>> iconGroups = {
     'expense': [
-      'restaurant', 'local_cafe', 'directions_bus', 'shopping_cart',
-      'home', 'call', 'local_hospital', 'movie', 'menu_book',
-      'receipt_long', 'fitness_center', 'pets', 'child_care',
-      'flight', 'local_gas_station', 'local_parking',
-      'checkroom', 'sports_esports', 'local_laundry_service',
+      'restaurant',
+      'local_cafe',
+      'directions_bus',
+      'shopping_cart',
+      'home',
+      'call',
+      'local_hospital',
+      'movie',
+      'menu_book',
+      'receipt_long',
+      'fitness_center',
+      'pets',
+      'child_care',
+      'flight',
+      'local_gas_station',
+      'local_parking',
+      'checkroom',
+      'sports_esports',
+      'local_laundry_service',
     ],
     'income': [
-      'account_balance_wallet', 'work', 'redeem',
-      'account_balance', 'attach_money', 'storefront',
-      'card_giftcard', 'local_atm', 'money',
+      'account_balance_wallet',
+      'work',
+      'redeem',
+      'account_balance',
+      'attach_money',
+      'storefront',
+      'card_giftcard',
+      'local_atm',
+      'money',
     ],
     'asset': [
-      'lock', 'savings', 'trending_up', 'pie_chart',
-      'apartment', 'currency_bitcoin', 'diamond',
+      'lock',
+      'savings',
+      'trending_up',
+      'pie_chart',
+      'apartment',
+      'currency_bitcoin',
+      'diamond',
       'currency_exchange',
     ],
     'fixed': [
-      'house', 'domain', 'shield', 'request_quote',
-      'cell_tower', 'subscriptions', 'wifi', 'school',
-      'self_improvement', 'volunteer_activism',
+      'house',
+      'domain',
+      'shield',
+      'request_quote',
+      'cell_tower',
+      'subscriptions',
+      'wifi',
+      'school',
+      'self_improvement',
+      'volunteer_activism',
     ],
     'payment': [
-      'payments', 'credit_card', 'account_balance_wallet',
-      'local_atm', 'smartphone', 'storefront', 'money',
+      'payments',
+      'credit_card',
+      'account_balance_wallet',
+      'local_atm',
+      'smartphone',
+      'storefront',
+      'money',
     ],
   };
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = ColorUtils.parseHexColor(color, fallback: const Color(0xFF6750A4));
+    final bgColor = ColorUtils.parseHexColor(
+      color,
+      fallback: const Color(0xFF6750A4),
+    );
     final trimmedIcon = icon.trim();
     final iconData = iconMap[trimmedIcon];
 
@@ -167,26 +207,17 @@ class CategoryIcon extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: iconData != null
-          ? Icon(
-              iconData,
-              size: size.fontSize,
-              color: bgColor,
-            )
+          ? Icon(iconData, size: size.fontSize, color: bgColor)
           : trimmedIcon.isEmpty
-              ? Text(
-                  name.isNotEmpty ? name.characters.first : '?',
-                  style: TextStyle(
-                    fontSize: size.fontSize,
-                    fontWeight: FontWeight.bold,
-                    color: bgColor,
-                  ),
-                )
-              : Icon(
-                  Icons.category,
-                  size: size.fontSize,
-                  color: bgColor,
-                ),
+          ? Text(
+              name.isNotEmpty ? name.characters.first : '?',
+              style: TextStyle(
+                fontSize: size.fontSize,
+                fontWeight: FontWeight.bold,
+                color: bgColor,
+              ),
+            )
+          : Icon(Icons.category, size: size.fontSize, color: bgColor),
     );
   }
-
 }

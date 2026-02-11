@@ -88,8 +88,7 @@ class _CalendarHeaderState extends State<CalendarHeader>
     required ColorScheme colorScheme,
     Widget? iconWidget,
   }) {
-    final color =
-        isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
+    final color = isActive ? colorScheme.primary : colorScheme.onSurfaceVariant;
 
     return GestureDetector(
       onTap: onTap,
@@ -211,10 +210,9 @@ class _CalendarHeaderState extends State<CalendarHeader>
               widget.focusedDate.year,
               widget.focusedDate.month,
             ),
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium!
-                .copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
           ),
           // 다음 월 버튼
           IconButton(

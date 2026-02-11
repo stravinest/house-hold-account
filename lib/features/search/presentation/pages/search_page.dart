@@ -44,13 +44,17 @@ final searchResultsProvider = FutureProvider<List<Transaction>>((ref) async {
 
   final response = await client
       .from('transactions')
-      .select('*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name)')
+      .select(
+        '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name)',
+      )
       .eq('ledger_id', ledgerId)
       .or('title.ilike.%$escapedQuery%,memo.ilike.%$escapedQuery%')
       .order('date', ascending: false)
       .limit(50);
 
-  return (response as List).map((json) => TransactionModel.fromJson(json as Map<String, dynamic>)).toList();
+  return (response as List)
+      .map((json) => TransactionModel.fromJson(json as Map<String, dynamic>))
+      .toList();
 });
 
 class SearchPage extends ConsumerStatefulWidget {
@@ -154,10 +158,7 @@ class _SearchResultItem extends StatelessWidget {
   final Transaction transaction;
   final VoidCallback? onDetailClosed;
 
-  const _SearchResultItem({
-    required this.transaction,
-    this.onDetailClosed,
-  });
+  const _SearchResultItem({required this.transaction, this.onDetailClosed});
 
   @override
   Widget build(BuildContext context) {
@@ -216,5 +217,4 @@ class _SearchResultItem extends StatelessWidget {
       ),
     );
   }
-
 }

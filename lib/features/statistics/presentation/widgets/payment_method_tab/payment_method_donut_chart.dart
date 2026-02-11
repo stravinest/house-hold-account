@@ -81,7 +81,10 @@ class PaymentMethodDonutChart extends ConsumerWidget {
   ) {
     return data.map((item) {
       final percentage = item.percentage;
-      final color = ColorUtils.parseHexColor(item.paymentMethodColor, fallback: const Color(0xFF9E9E9E));
+      final color = ColorUtils.parseHexColor(
+        item.paymentMethodColor,
+        fallback: const Color(0xFF9E9E9E),
+      );
 
       return PieChartSectionData(
         color: color,

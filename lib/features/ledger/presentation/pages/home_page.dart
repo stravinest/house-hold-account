@@ -821,7 +821,10 @@ class _MonthlyViewContent extends ConsumerWidget {
             onPageChanged(today);
           },
           onPreviousMonth: () {
-            final previousMonth = DateTime(focusedDate.year, focusedDate.month - 1);
+            final previousMonth = DateTime(
+              focusedDate.year,
+              focusedDate.month - 1,
+            );
             onPageChanged(previousMonth);
           },
           onNextMonth: () {

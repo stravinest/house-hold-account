@@ -124,7 +124,10 @@ class UserRatioBar extends ConsumerWidget {
             final ratio = totalAmount > 0
                 ? user.totalAmount / totalAmount
                 : 0.0;
-            final color = ColorUtils.parseHexColor(user.userColor, fallback: const Color(0xFF9E9E9E));
+            final color = ColorUtils.parseHexColor(
+              user.userColor,
+              fallback: const Color(0xFF9E9E9E),
+            );
 
             return Expanded(
               flex: (ratio * 1000).round().clamp(1, 1000),
@@ -156,7 +159,10 @@ class UserRatioBar extends ConsumerWidget {
     int totalAmount,
   ) {
     final theme = Theme.of(context);
-    final color = ColorUtils.parseHexColor(user.userColor, fallback: const Color(0xFF9E9E9E));
+    final color = ColorUtils.parseHexColor(
+      user.userColor,
+      fallback: const Color(0xFF9E9E9E),
+    );
     final ratio = totalAmount > 0
         ? (user.totalAmount / totalAmount * 100)
         : 0.0;

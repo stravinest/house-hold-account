@@ -343,14 +343,14 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
       title: Text(
         l10n.fixedExpenseRegister,
         style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+          fontWeight: FontWeight.w600,
+        ),
       ),
       subtitle: Text(
         l10n.fixedExpenseDescription,
         style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+          color: colorScheme.onSurfaceVariant,
+        ),
       ),
       value: _recurringSettings.isFixedExpense,
       onChanged: !_isLoading && !_isInstallmentMode
@@ -359,8 +359,8 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 // 고정비 선택 시 반복주기 자동 설정, 해제 시 명시적 초기화
                 final newType = value
                     ? (_recurringSettings.type == RecurringType.none
-                        ? RecurringType.monthly
-                        : _recurringSettings.type)
+                          ? RecurringType.monthly
+                          : _recurringSettings.type)
                     : RecurringType.none;
 
                 final newSettings = _recurringSettings.copyWith(
@@ -370,7 +370,9 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 );
 
                 if (value != _recurringSettings.isFixedExpense) {
-                  value ? _selectedCategory = null : _selectedFixedExpenseCategory = null;
+                  value
+                      ? _selectedCategory = null
+                      : _selectedFixedExpenseCategory = null;
                 }
 
                 _recurringSettings = newSettings;

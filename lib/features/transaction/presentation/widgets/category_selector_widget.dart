@@ -120,8 +120,9 @@ class _CategorySelectorWidgetState
             ),
             actions: [
               TextButton(
-                onPressed:
-                    isLoading ? null : () => Navigator.pop(dialogContext),
+                onPressed: isLoading
+                    ? null
+                    : () => Navigator.pop(dialogContext),
                 child: Text(l10n.commonCancel),
               ),
               FilledButton(
@@ -194,7 +195,10 @@ class _CategorySelectorWidgetState
             setDialogState(() => isLoading = true);
             try {
               await _submitEditCategory(
-                  dialogContext, category, nameController);
+                dialogContext,
+                category,
+                nameController,
+              );
             } finally {
               if (dialogContext.mounted) {
                 setDialogState(() => isLoading = false);
@@ -216,8 +220,9 @@ class _CategorySelectorWidgetState
             ),
             actions: [
               TextButton(
-                onPressed:
-                    isLoading ? null : () => Navigator.pop(dialogContext),
+                onPressed: isLoading
+                    ? null
+                    : () => Navigator.pop(dialogContext),
                 child: Text(l10n.commonCancel),
               ),
               FilledButton(

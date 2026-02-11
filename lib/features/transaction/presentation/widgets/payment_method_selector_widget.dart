@@ -85,8 +85,9 @@ class _PaymentMethodSelectorWidgetState
             ),
             actions: [
               TextButton(
-                onPressed:
-                    isLoading ? null : () => Navigator.pop(dialogContext),
+                onPressed: isLoading
+                    ? null
+                    : () => Navigator.pop(dialogContext),
                 child: Text(l10n.commonCancel),
               ),
               FilledButton(
@@ -158,7 +159,10 @@ class _PaymentMethodSelectorWidgetState
             setDialogState(() => isLoading = true);
             try {
               await _submitEditPaymentMethod(
-                  dialogContext, method, nameController);
+                dialogContext,
+                method,
+                nameController,
+              );
             } finally {
               if (dialogContext.mounted) {
                 setDialogState(() => isLoading = false);
@@ -180,8 +184,9 @@ class _PaymentMethodSelectorWidgetState
             ),
             actions: [
               TextButton(
-                onPressed:
-                    isLoading ? null : () => Navigator.pop(dialogContext),
+                onPressed: isLoading
+                    ? null
+                    : () => Navigator.pop(dialogContext),
                 child: Text(l10n.commonCancel),
               ),
               FilledButton(
@@ -330,9 +335,11 @@ class _PaymentMethodSelectorWidgetState
             spacing: 8,
             runSpacing: 8,
             children: paymentMethods
-                .map((method) => method.canAutoSave
-                    ? _buildAutoCollectEditModeChip(method, colorScheme)
-                    : _buildEditModeChip(method, colorScheme))
+                .map(
+                  (method) => method.canAutoSave
+                      ? _buildAutoCollectEditModeChip(method, colorScheme)
+                      : _buildEditModeChip(method, colorScheme),
+                )
                 .toList(),
           ),
           const SizedBox(height: 8),
@@ -438,11 +445,7 @@ class _PaymentMethodSelectorWidgetState
               width: 32,
               height: 38,
               alignment: Alignment.center,
-              child: Icon(
-                Icons.edit_outlined,
-                size: 16,
-                color: disabledColor,
-              ),
+              child: Icon(Icons.edit_outlined, size: 16, color: disabledColor),
             ),
           ),
           InkWell(
