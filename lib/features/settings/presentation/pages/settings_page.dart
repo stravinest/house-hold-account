@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +17,7 @@ import '../../../../shared/widgets/section_header.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ledger/presentation/providers/calendar_view_provider.dart';
 import '../../../notification/presentation/pages/notification_settings_page.dart';
+import '../../../payment_method/presentation/widgets/permission_request_dialog.dart';
 import '../widgets/data_export_bottom_sheet.dart';
 
 // 알림 설정 프로바이더
@@ -100,6 +103,22 @@ class SettingsPage extends ConsumerWidget {
                 );
               },
             ),
+
+            // 앱 권한 설정 (Android 전용)
+            if (Platform.isAndroid)
+              ListTile(
+                leading: const Icon(Icons.security_outlined),
+                title: const Text('앱 권한 설정'),
+                subtitle: const Text('푸시 알림, SMS, 알림 접근 권한 관리'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  PermissionRequestDialog.show(
+                    context,
+                    permissionType: AutoSavePermissionType.all,
+                    isInitialSetup: true,
+                  );
+                },
+              ),
 
             const Divider(),
 
@@ -207,6 +226,12 @@ class SettingsPage extends ConsumerWidget {
               title: Text(l10n.settingsAppInfo),
               subtitle: Text(l10n.settingsVersion('1.0.0')),
               onTap: () => _showAboutDialog(context, l10n),
+            ),
+            ListTile(
+              leading: const Icon(Icons.menu_book_outlined),
+              title: Text(l10n.settingsGuide),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(Routes.guide),
             ),
             ListTile(
               leading: const Icon(Icons.description_outlined),
@@ -516,17 +541,36 @@ class SettingsPage extends ConsumerWidget {
   }
 
   void _showAboutDialog(BuildContext context, AppLocalizations l10n) {
-    showAboutDialog(
+    showDialog(
       context: context,
-      applicationName: l10n.settingsAboutAppName,
-      applicationVersion: '1.0.0',
-      applicationIcon: const Icon(Icons.account_balance_wallet, size: 48),
-      children: [
-        const SizedBox(height: 16),
-        Text(l10n.settingsAboutAppDescription),
-        const SizedBox(height: 8),
-        Text(l10n.settingsAboutAppSubDescription),
-      ],
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.account_balance_wallet, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              l10n.settingsAboutAppName,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.settingsVersion('1.0.0'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 16),
+            Text(l10n.settingsAboutAppDescription),
+            const SizedBox(height: 8),
+            Text(l10n.settingsAboutAppSubDescription),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.commonClose),
+          ),
+        ],
+      ),
     );
   }
 

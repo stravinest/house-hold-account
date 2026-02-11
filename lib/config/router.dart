@@ -18,6 +18,8 @@ import '../features/payment_method/presentation/pages/debug_test_page.dart';
 import '../features/payment_method/presentation/pages/payment_method_management_page.dart';
 import '../features/payment_method/presentation/pages/pending_transactions_page.dart';
 import '../features/search/presentation/pages/search_page.dart';
+import '../features/settings/presentation/pages/auto_collect_guide_page.dart';
+import '../features/settings/presentation/pages/guide_page.dart';
 import '../features/settings/presentation/pages/privacy_policy_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/settings/presentation/pages/terms_of_service_page.dart';
@@ -57,6 +59,8 @@ class Routes {
   static const String termsOfService = '/terms-of-service';
   static const String privacyPolicy = '/privacy-policy';
   static const String resetPassword = '/reset-password';
+  static const String guide = '/guide';
+  static const String autoCollectGuide = '/guide/auto-collect';
   static const String debugTest = '/debug-test';
 }
 
@@ -290,6 +294,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => slideTransition(
           key: state.pageKey,
           child: const PendingTransactionsPage(),
+        ),
+      ),
+
+      // 사용 가이드 - 슬라이드 전환
+      GoRoute(
+        path: Routes.guide,
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const GuidePage(),
+        ),
+      ),
+
+      // 자동수집 가이드 - 슬라이드 전환
+      GoRoute(
+        path: Routes.autoCollectGuide,
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const AutoCollectGuidePage(),
         ),
       ),
 

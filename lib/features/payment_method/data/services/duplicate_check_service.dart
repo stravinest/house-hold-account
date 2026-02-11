@@ -3,6 +3,7 @@ import 'package:crypto/crypto.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 
 /// 중복 체크 결과
 class DuplicateCheckResult {
@@ -112,9 +113,8 @@ class DuplicateCheckService {
   /// - created_at이 5초 이내인 경우는 중복으로 보지 않음
   /// - 이렇게 하면 SMS와 Push 알림이 동시에 수신되어도 서로를 중복으로 감지하지 않음
   Future<String?> _checkPendingDuplicate(String hash, String ledgerId) async {
-    final fiveSecondsAgo = DateTime.now()
-        .subtract(const Duration(seconds: 5))
-        .toIso8601String();
+    final fiveSecondsAgo = DateTimeUtils.toUtcIso(
+        DateTime.now().subtract(const Duration(seconds: 5)));
 
     final response = await _client
         .from('pending_transactions')

@@ -764,6 +764,216 @@ abstract class AppLocalizations {
   /// **'버전 {version}'**
   String settingsVersion(String version);
 
+  /// No description provided for @settingsGuide.
+  ///
+  /// In ko, this message translates to:
+  /// **'사용 가이드'**
+  String get settingsGuide;
+
+  /// No description provided for @guideWelcomeTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'우생부에 오신 것을 환영합니다!'**
+  String get guideWelcomeTitle;
+
+  /// No description provided for @guideWelcomeDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'가족, 커플, 룸메이트와 함께 수입과 지출을 관리하세요.'**
+  String get guideWelcomeDescription;
+
+  /// No description provided for @guideRecordTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'1. 거래 기록하기'**
+  String get guideRecordTitle;
+
+  /// No description provided for @guideRecordDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'+ 버튼을 눌러 수입/지출을 기록하세요. 금액, 카테고리, 메모를 입력할 수 있습니다.'**
+  String get guideRecordDescription;
+
+  /// No description provided for @guideShareTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'2. 가계부 공유하기'**
+  String get guideShareTitle;
+
+  /// No description provided for @guideShareDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정에서 멤버를 초대하여 함께 가계부를 관리하세요. 각 멤버의 기록이 실시간으로 동기화됩니다.'**
+  String get guideShareDescription;
+
+  /// No description provided for @guideStatsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'3. 통계 확인하기'**
+  String get guideStatsTitle;
+
+  /// No description provided for @guideStatsDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'월별/카테고리별 지출 통계와 차트를 확인하고 예산 대비 사용 현황을 파악하세요.'**
+  String get guideStatsDescription;
+
+  /// No description provided for @guideAutoCollectTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'4. 자동수집 설정'**
+  String get guideAutoCollectTitle;
+
+  /// No description provided for @guideAutoCollectDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단을 등록하면 SMS/Push 알림에서 거래를 자동으로 수집합니다. (Android 전용)'**
+  String get guideAutoCollectDescription;
+
+  /// No description provided for @guideDetailView.
+  ///
+  /// In ko, this message translates to:
+  /// **'자세히 보기'**
+  String get guideDetailView;
+
+  /// No description provided for @guideTipLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'Tip'**
+  String get guideTipLabel;
+
+  /// No description provided for @guideTip.
+  ///
+  /// In ko, this message translates to:
+  /// **'문의사항이 있으시면 설정 > 정보 > 이용약관 하단의 이메일(stravinest@naver.com)로 연락해 주세요.'**
+  String get guideTip;
+
+  /// No description provided for @autoCollectGuideTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집 설정 가이드'**
+  String get autoCollectGuideTitle;
+
+  /// No description provided for @autoCollectGuideIntro.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제 알림(SMS/Push)을 자동으로 읽어 거래를 기록합니다. Android 기기에서만 지원됩니다.'**
+  String get autoCollectGuideIntro;
+
+  /// No description provided for @autoCollectGuideStep1Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단 등록'**
+  String get autoCollectGuideStep1Title;
+
+  /// No description provided for @autoCollectGuideStep1Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단 관리에서 + 버튼을 눌러 카드나 계좌를 등록하세요.'**
+  String get autoCollectGuideStep1Desc;
+
+  /// No description provided for @autoCollectGuideStep2Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'수신 방식 선택'**
+  String get autoCollectGuideStep2Title;
+
+  /// No description provided for @autoCollectGuideStep2Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집 설정 화면에서 SMS 또는 Push 알림 중 수신 방식을 선택합니다.'**
+  String get autoCollectGuideStep2Desc;
+
+  /// No description provided for @autoCollectGuideStep2Note.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS: 문자 수신 권한 필요\nPush: 알림 접근 권한 필요'**
+  String get autoCollectGuideStep2Note;
+
+  /// No description provided for @autoCollectGuideStep3Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'처리 모드 선택'**
+  String get autoCollectGuideStep3Title;
+
+  /// No description provided for @autoCollectGuideModeSuggest.
+  ///
+  /// In ko, this message translates to:
+  /// **'제안 모드'**
+  String get autoCollectGuideModeSuggest;
+
+  /// No description provided for @autoCollectGuideModeSuggestDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'수집 후 사용자 확인이 필요합니다'**
+  String get autoCollectGuideModeSuggestDesc;
+
+  /// No description provided for @autoCollectGuideModeAuto.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 모드'**
+  String get autoCollectGuideModeAuto;
+
+  /// No description provided for @autoCollectGuideModeAutoDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'수집 즉시 거래를 자동 저장합니다'**
+  String get autoCollectGuideModeAutoDesc;
+
+  /// No description provided for @autoCollectGuideStep4Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'수집내역 확인'**
+  String get autoCollectGuideStep4Title;
+
+  /// No description provided for @autoCollectGuideStep4Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단 관리 > 수집내역 탭에서 자동 수집된 거래를 확인하고 승인/거부할 수 있습니다.'**
+  String get autoCollectGuideStep4Desc;
+
+  /// No description provided for @autoCollectGuideStepLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'{number}단계. {title}'**
+  String autoCollectGuideStepLabel(String number, String title);
+
+  /// No description provided for @autoCollectGuideMockCardName.
+  ///
+  /// In ko, this message translates to:
+  /// **'KB국민카드'**
+  String get autoCollectGuideMockCardName;
+
+  /// No description provided for @autoCollectGuideMockStoreName.
+  ///
+  /// In ko, this message translates to:
+  /// **'스타벅스 강남점'**
+  String get autoCollectGuideMockStoreName;
+
+  /// No description provided for @autoCollectGuideMockAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'-5,500원'**
+  String get autoCollectGuideMockAmount;
+
+  /// No description provided for @autoCollectGuideMockDetail.
+  ///
+  /// In ko, this message translates to:
+  /// **'2026.02.10 14:32 | KB국민카드'**
+  String get autoCollectGuideMockDetail;
+
+  /// No description provided for @autoCollectGuideReject.
+  ///
+  /// In ko, this message translates to:
+  /// **'거부'**
+  String get autoCollectGuideReject;
+
+  /// No description provided for @autoCollectGuideApprove.
+  ///
+  /// In ko, this message translates to:
+  /// **'승인'**
+  String get autoCollectGuideApprove;
+
   /// No description provided for @settingsTerms.
   ///
   /// In ko, this message translates to:
@@ -1507,6 +1717,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'날짜'**
   String get labelDate;
+
+  /// No description provided for @labelRegisteredAt.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록일시'**
+  String get labelRegisteredAt;
 
   /// No description provided for @labelCategory.
   ///

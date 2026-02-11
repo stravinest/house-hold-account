@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
@@ -25,6 +26,9 @@ class TransactionDetailSheet extends ConsumerWidget {
     final dateFormat = locale == 'ko'
         ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
         : DateFormat('MMMM d, yyyy (E)', 'en_US');
+    final dateTimeFormat = locale == 'ko'
+        ? DateFormat('yyyy년 M월 d일 (E) HH:mm', 'ko_KR')
+        : DateFormat('MMMM d, yyyy (E) HH:mm', 'en_US');
     final amountColor = transaction.isIncome
         ? colorScheme.primary
         : transaction.isAssetType
@@ -133,12 +137,20 @@ class TransactionDetailSheet extends ConsumerWidget {
                     valueColor: amountColor,
                   ),
 
-                  // 날짜
+                  // 거래일
                   _buildDetailRow(
                     context,
                     icon: Icons.calendar_today,
                     label: l10n.labelDate,
                     value: dateFormat.format(transaction.date),
+                  ),
+
+                  // 등록일시
+                  _buildDetailRow(
+                    context,
+                    icon: Icons.access_time,
+                    label: l10n.labelRegisteredAt,
+                    value: DateTimeUtils.formatLocal(transaction.createdAt, dateTimeFormat),
                   ),
 
                   // 카테고리

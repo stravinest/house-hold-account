@@ -1,4 +1,5 @@
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../../domain/entities/notification_type.dart';
 
 class NotificationSettingsRepository {
@@ -90,7 +91,7 @@ class NotificationSettingsRepository {
       await _client.from('notification_settings').upsert({
         'user_id': userId,
         columnName: enabled,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTimeUtils.nowUtcIso(),
       }, onConflict: 'user_id');
     } catch (e) {
       // 에러를 호출자에게 전파

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../models/pending_transaction_model.dart';
 
@@ -150,7 +151,7 @@ class PendingTransactionRepository {
     String? paymentMethodId,
   }) async {
     final updates = <String, dynamic>{
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTimeUtils.nowUtcIso(),
     };
     if (parsedAmount != null) updates['parsed_amount'] = parsedAmount;
     if (parsedType != null) updates['parsed_type'] = parsedType;
@@ -259,7 +260,7 @@ class PendingTransactionRepository {
         .from('pending_transactions')
         .update({
           'status': 'confirmed',
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTimeUtils.nowUtcIso(),
         })
         .eq('ledger_id', ledgerId)
         .eq('user_id', userId)
@@ -276,7 +277,7 @@ class PendingTransactionRepository {
         .from('pending_transactions')
         .update({
           'status': 'rejected',
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTimeUtils.nowUtcIso(),
         })
         .eq('ledger_id', ledgerId)
         .eq('user_id', userId)
@@ -329,7 +330,7 @@ class PendingTransactionRepository {
         .from('pending_transactions')
         .update({
           'is_viewed': true,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTimeUtils.nowUtcIso(),
         })
         .eq('ledger_id', ledgerId)
         .eq('user_id', userId)

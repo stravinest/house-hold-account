@@ -1,3 +1,4 @@
+import '../../../../core/utils/date_time_utils.dart';
 import '../../domain/entities/fixed_expense_settings.dart';
 
 /// 고정비 설정 모델 (JSON 변환)
@@ -31,7 +32,7 @@ class FixedExpenseSettingsModel extends FixedExpenseSettings {
   static Map<String, dynamic> toUpdateJson({required bool includeInExpense}) {
     return {
       'include_in_expense': includeInExpense,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTimeUtils.nowUtcIso(),
     };
   }
 

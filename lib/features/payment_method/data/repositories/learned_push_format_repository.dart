@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../models/learned_push_format_model.dart';
 
 class LearnedPushFormatRepository {
@@ -92,7 +93,7 @@ class LearnedPushFormatRepository {
     double? confidence,
   }) async {
     final updates = <String, dynamic>{
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTimeUtils.nowUtcIso(),
     };
     if (packageName != null) updates['package_name'] = packageName;
     if (appKeywords != null) updates['app_keywords'] = appKeywords;
@@ -136,7 +137,7 @@ class LearnedPushFormatRepository {
               .from('learned_push_formats')
               .update({
                 'match_count': (current['match_count'] as int? ?? 0) + 1,
-                'updated_at': DateTime.now().toIso8601String(),
+                'updated_at': DateTimeUtils.nowUtcIso(),
               })
               .eq('id', id);
         }

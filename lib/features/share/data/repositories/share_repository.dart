@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../ledger/domain/entities/ledger.dart';
@@ -54,7 +55,7 @@ class ShareRepository {
         .eq('ledger_id', ledgerId)
         .eq('invitee_email', email.toLowerCase().trim())
         .eq('status', 'pending')
-        .gt('expires_at', DateTime.now().toIso8601String())
+        .gt('expires_at', DateTimeUtils.nowUtcIso())
         .maybeSingle();
 
     return invite != null;
@@ -116,7 +117,8 @@ class ShareRepository {
     }
 
     // 만료일: 7일 후
-    final expiresAt = DateTime.now().add(const Duration(days: 7));
+    final expiresAt = DateTimeUtils.toUtcIso(
+        DateTime.now().add(const Duration(days: 7)));
 
     final response = await _client
         .from('ledger_invites')
@@ -125,7 +127,7 @@ class ShareRepository {
           'inviter_user_id': userId,
           'invitee_email': normalizedEmail,
           'role': role,
-          'expires_at': expiresAt.toIso8601String(),
+          'expires_at': expiresAt,
         })
         .select(
           '*, ledger:ledgers!ledger_invites_ledger_id_fkey(name), inviter:profiles!ledger_invites_inviter_user_id_fkey(email)',

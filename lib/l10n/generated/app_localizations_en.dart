@@ -365,6 +365,126 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get settingsGuide => 'User Guide';
+
+  @override
+  String get guideWelcomeTitle => 'Welcome to Shared Household Account!';
+
+  @override
+  String get guideWelcomeDescription =>
+      'Manage income and expenses together with family, couples, or roommates.';
+
+  @override
+  String get guideRecordTitle => '1. Record Transactions';
+
+  @override
+  String get guideRecordDescription =>
+      'Tap the + button to record income/expenses. Enter amount, category, and memo.';
+
+  @override
+  String get guideShareTitle => '2. Share Your Ledger';
+
+  @override
+  String get guideShareDescription =>
+      'Invite members from settings to manage the ledger together. Records sync in real-time.';
+
+  @override
+  String get guideStatsTitle => '3. View Statistics';
+
+  @override
+  String get guideStatsDescription =>
+      'Check monthly/category spending statistics and charts to track your budget.';
+
+  @override
+  String get guideAutoCollectTitle => '4. Auto-Collect Setup';
+
+  @override
+  String get guideAutoCollectDescription =>
+      'Register payment methods to automatically collect transactions from SMS/Push notifications. (Android only)';
+
+  @override
+  String get guideDetailView => 'View Details';
+
+  @override
+  String get guideTipLabel => 'Tip';
+
+  @override
+  String get guideTip =>
+      'For inquiries, please contact us via email (stravinest@naver.com) at the bottom of Settings > Info > Terms of Service.';
+
+  @override
+  String get autoCollectGuideTitle => 'Auto-Collect Setup Guide';
+
+  @override
+  String get autoCollectGuideIntro =>
+      'Automatically reads payment notifications (SMS/Push) to record transactions. Only supported on Android devices.';
+
+  @override
+  String get autoCollectGuideStep1Title => 'Register Payment Method';
+
+  @override
+  String get autoCollectGuideStep1Desc =>
+      'Tap the + button in Payment Methods to register a card or account.';
+
+  @override
+  String get autoCollectGuideStep2Title => 'Select Receive Method';
+
+  @override
+  String get autoCollectGuideStep2Desc =>
+      'Choose between SMS or Push notifications in the auto-collect settings.';
+
+  @override
+  String get autoCollectGuideStep2Note =>
+      'SMS: Requires SMS permission\nPush: Requires notification access permission';
+
+  @override
+  String get autoCollectGuideStep3Title => 'Select Processing Mode';
+
+  @override
+  String get autoCollectGuideModeSuggest => 'Suggest Mode';
+
+  @override
+  String get autoCollectGuideModeSuggestDesc =>
+      'Requires user confirmation after collection';
+
+  @override
+  String get autoCollectGuideModeAuto => 'Auto Mode';
+
+  @override
+  String get autoCollectGuideModeAutoDesc =>
+      'Automatically saves transactions immediately';
+
+  @override
+  String get autoCollectGuideStep4Title => 'Review Collected Items';
+
+  @override
+  String get autoCollectGuideStep4Desc =>
+      'Check and approve/reject auto-collected transactions in Payment Methods > Collection History tab.';
+
+  @override
+  String autoCollectGuideStepLabel(String number, String title) {
+    return 'Step $number. $title';
+  }
+
+  @override
+  String get autoCollectGuideMockCardName => 'KB Card';
+
+  @override
+  String get autoCollectGuideMockStoreName => 'Starbucks Gangnam';
+
+  @override
+  String get autoCollectGuideMockAmount => '-5,500 KRW';
+
+  @override
+  String get autoCollectGuideMockDetail => '2026.02.10 14:32 | KB Card';
+
+  @override
+  String get autoCollectGuideReject => 'Reject';
+
+  @override
+  String get autoCollectGuideApprove => 'Approve';
+
+  @override
   String get settingsTerms => 'Terms of Service';
 
   @override
@@ -764,6 +884,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get labelDate => 'Date';
+
+  @override
+  String get labelRegisteredAt => 'Registered';
 
   @override
   String get labelCategory => 'Category';

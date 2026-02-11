@@ -355,6 +355,121 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
+  String get settingsGuide => '사용 가이드';
+
+  @override
+  String get guideWelcomeTitle => '우생부에 오신 것을 환영합니다!';
+
+  @override
+  String get guideWelcomeDescription => '가족, 커플, 룸메이트와 함께 수입과 지출을 관리하세요.';
+
+  @override
+  String get guideRecordTitle => '1. 거래 기록하기';
+
+  @override
+  String get guideRecordDescription =>
+      '+ 버튼을 눌러 수입/지출을 기록하세요. 금액, 카테고리, 메모를 입력할 수 있습니다.';
+
+  @override
+  String get guideShareTitle => '2. 가계부 공유하기';
+
+  @override
+  String get guideShareDescription =>
+      '설정에서 멤버를 초대하여 함께 가계부를 관리하세요. 각 멤버의 기록이 실시간으로 동기화됩니다.';
+
+  @override
+  String get guideStatsTitle => '3. 통계 확인하기';
+
+  @override
+  String get guideStatsDescription =>
+      '월별/카테고리별 지출 통계와 차트를 확인하고 예산 대비 사용 현황을 파악하세요.';
+
+  @override
+  String get guideAutoCollectTitle => '4. 자동수집 설정';
+
+  @override
+  String get guideAutoCollectDescription =>
+      '결제수단을 등록하면 SMS/Push 알림에서 거래를 자동으로 수집합니다. (Android 전용)';
+
+  @override
+  String get guideDetailView => '자세히 보기';
+
+  @override
+  String get guideTipLabel => 'Tip';
+
+  @override
+  String get guideTip =>
+      '문의사항이 있으시면 설정 > 정보 > 이용약관 하단의 이메일(stravinest@naver.com)로 연락해 주세요.';
+
+  @override
+  String get autoCollectGuideTitle => '자동수집 설정 가이드';
+
+  @override
+  String get autoCollectGuideIntro =>
+      '결제 알림(SMS/Push)을 자동으로 읽어 거래를 기록합니다. Android 기기에서만 지원됩니다.';
+
+  @override
+  String get autoCollectGuideStep1Title => '결제수단 등록';
+
+  @override
+  String get autoCollectGuideStep1Desc => '결제수단 관리에서 + 버튼을 눌러 카드나 계좌를 등록하세요.';
+
+  @override
+  String get autoCollectGuideStep2Title => '수신 방식 선택';
+
+  @override
+  String get autoCollectGuideStep2Desc =>
+      '자동수집 설정 화면에서 SMS 또는 Push 알림 중 수신 방식을 선택합니다.';
+
+  @override
+  String get autoCollectGuideStep2Note => 'SMS: 문자 수신 권한 필요\nPush: 알림 접근 권한 필요';
+
+  @override
+  String get autoCollectGuideStep3Title => '처리 모드 선택';
+
+  @override
+  String get autoCollectGuideModeSuggest => '제안 모드';
+
+  @override
+  String get autoCollectGuideModeSuggestDesc => '수집 후 사용자 확인이 필요합니다';
+
+  @override
+  String get autoCollectGuideModeAuto => '자동 모드';
+
+  @override
+  String get autoCollectGuideModeAutoDesc => '수집 즉시 거래를 자동 저장합니다';
+
+  @override
+  String get autoCollectGuideStep4Title => '수집내역 확인';
+
+  @override
+  String get autoCollectGuideStep4Desc =>
+      '결제수단 관리 > 수집내역 탭에서 자동 수집된 거래를 확인하고 승인/거부할 수 있습니다.';
+
+  @override
+  String autoCollectGuideStepLabel(String number, String title) {
+    return '$number단계. $title';
+  }
+
+  @override
+  String get autoCollectGuideMockCardName => 'KB국민카드';
+
+  @override
+  String get autoCollectGuideMockStoreName => '스타벅스 강남점';
+
+  @override
+  String get autoCollectGuideMockAmount => '-5,500원';
+
+  @override
+  String get autoCollectGuideMockDetail => '2026.02.10 14:32 | KB국민카드';
+
+  @override
+  String get autoCollectGuideReject => '거부';
+
+  @override
+  String get autoCollectGuideApprove => '승인';
+
+  @override
   String get settingsTerms => '이용약관';
 
   @override
@@ -751,6 +866,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get labelDate => '날짜';
+
+  @override
+  String get labelRegisteredAt => '등록일시';
 
   @override
   String get labelCategory => '카테고리';

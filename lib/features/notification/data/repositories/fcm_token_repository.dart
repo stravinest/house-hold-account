@@ -1,4 +1,5 @@
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../models/fcm_token_model.dart';
 
 /// FCM 토큰 Repository
@@ -58,7 +59,7 @@ class FcmTokenRepository {
       // 2. 현재 사용자에게 토큰 저장 (UPSERT)
       await _client.from('fcm_tokens').upsert({
         ...data,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTimeUtils.nowUtcIso(),
       }, onConflict: 'user_id,token');
     } catch (e) {
       // 에러를 호출자에게 전파

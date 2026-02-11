@@ -628,7 +628,9 @@ class _PaymentMethodListView extends ConsumerWidget {
   void _showPermissionDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (dialogContext) => const PermissionRequestDialog(),
+      builder: (dialogContext) => const PermissionRequestDialog(
+        permissionType: AutoSavePermissionType.all,
+      ),
     );
   }
 

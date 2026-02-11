@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../ledger/data/repositories/ledger_repository.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../notification/services/firebase_messaging_service.dart';
@@ -323,7 +324,7 @@ class AuthService {
       _validateHexColor(color);
       updates['color'] = color;
     }
-    updates['updated_at'] = DateTime.now().toIso8601String();
+    updates['updated_at'] = DateTimeUtils.nowUtcIso();
 
     await _client
         .from('profiles')

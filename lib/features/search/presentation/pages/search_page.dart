@@ -5,12 +5,14 @@ import 'package:intl/intl.dart';
 import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
-import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
+import '../../../../shared/widgets/category_icon.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
+import '../../../transaction/data/models/transaction_model.dart';
 import '../../../transaction/domain/entities/transaction.dart';
+import '../../../transaction/presentation/widgets/transaction_detail_sheet.dart';
 
 // 검색 쿼리 프로바이더
 final searchQueryProvider = StateProvider<String>((ref) => '');
@@ -42,13 +44,13 @@ final searchResultsProvider = FutureProvider<List<Transaction>>((ref) async {
 
   final response = await client
       .from('transactions')
-      .select('*, categories(name, icon, color)')
+      .select('*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name)')
       .eq('ledger_id', ledgerId)
       .or('title.ilike.%$escapedQuery%,memo.ilike.%$escapedQuery%')
       .order('date', ascending: false)
       .limit(50);
 
-  return (response as List).map((json) => Transaction.fromJson(json)).toList();
+  return (response as List).map((json) => TransactionModel.fromJson(json as Map<String, dynamic>)).toList();
 });
 
 class SearchPage extends ConsumerStatefulWidget {
@@ -123,11 +125,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             }
 
             return ListView.builder(
-              cacheExtent: 500, // 성능 최적화: 스크롤 시 미리 렌더링
+              cacheExtent: 500,
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewPadding.bottom,
+              ),
               itemCount: results.length,
               itemBuilder: (context, index) {
                 final transaction = results[index];
-                return _SearchResultItem(transaction: transaction);
+                return _SearchResultItem(
+                  transaction: transaction,
+                  onDetailClosed: () {
+                    ref.invalidate(searchResultsProvider);
+                  },
+                );
               },
             );
           },
@@ -142,8 +152,12 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
 class _SearchResultItem extends StatelessWidget {
   final Transaction transaction;
+  final VoidCallback? onDetailClosed;
 
-  const _SearchResultItem({required this.transaction});
+  const _SearchResultItem({
+    required this.transaction,
+    this.onDetailClosed,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -162,19 +176,21 @@ class _SearchResultItem extends StatelessWidget {
         : '-';
 
     return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: _parseColor(transaction.categoryColor).withAlpha(51),
-          borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
-        ),
-        child: Center(
-          child: Text(
-            transaction.categoryIcon ?? '',
-            style: const TextStyle(fontSize: 20),
-          ),
-        ),
+      onTap: () async {
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          useSafeArea: true,
+          builder: (context) =>
+              TransactionDetailSheet(transaction: transaction),
+        );
+        onDetailClosed?.call();
+      },
+      leading: CategoryIcon(
+        icon: transaction.categoryIcon ?? '',
+        name: transaction.categoryName ?? '',
+        color: transaction.categoryColor ?? '#9E9E9E',
+        size: CategoryIconSize.medium,
       ),
       title: Text(transaction.categoryName ?? l10n.searchUncategorized),
       subtitle: Column(
@@ -201,16 +217,4 @@ class _SearchResultItem extends StatelessWidget {
     );
   }
 
-  Color _parseColor(String? hexColor) {
-    // fallback 색상은 onSurfaceVariant 대신 중립적 회색 상수 사용
-    // (context 없이 호출되므로 ColorScheme 접근 불가)
-    const fallbackColor = Color(0xFF9E9E9E); // Grey 500
-    if (hexColor == null) return fallbackColor;
-    try {
-      final hex = hexColor.replaceFirst('#', '');
-      return Color(int.parse('FF$hex', radix: 16));
-    } catch (e) {
-      return fallbackColor;
-    }
-  }
 }

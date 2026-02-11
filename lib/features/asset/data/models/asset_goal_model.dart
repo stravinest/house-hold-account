@@ -1,3 +1,4 @@
+import '../../../../core/utils/date_time_utils.dart';
 import '../../domain/entities/asset_goal.dart';
 
 class AssetGoalModel extends AssetGoal {
@@ -70,7 +71,7 @@ class AssetGoalModel extends AssetGoal {
         'target_date': targetDate!.toIso8601String().split('T')[0],
       'asset_type': assetType,
       'category_ids': categoryIds,
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTimeUtils.nowUtcIso(),
     };
   }
 }

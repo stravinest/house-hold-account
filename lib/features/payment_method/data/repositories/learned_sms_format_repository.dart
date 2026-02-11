@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../models/learned_sms_format_model.dart';
 
 class LearnedSmsFormatRepository {
@@ -93,7 +94,7 @@ class LearnedSmsFormatRepository {
     double? confidence,
   }) async {
     final updates = <String, dynamic>{
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTimeUtils.nowUtcIso(),
     };
     if (senderPattern != null) updates['sender_pattern'] = senderPattern;
     if (senderKeywords != null) updates['sender_keywords'] = senderKeywords;
@@ -137,7 +138,7 @@ class LearnedSmsFormatRepository {
               .from('learned_sms_formats')
               .update({
                 'match_count': (current['match_count'] as int? ?? 0) + 1,
-                'updated_at': DateTime.now().toIso8601String(),
+                'updated_at': DateTimeUtils.nowUtcIso(),
               })
               .eq('id', id);
         }

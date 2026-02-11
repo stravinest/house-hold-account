@@ -67,7 +67,8 @@ class TransactionModel extends Transaction {
       categoryName: category?['name'] as String?,
       categoryIcon: category?['icon'] as String?,
       categoryColor: category?['color'] as String?,
-      userName: profile?['display_name'] as String?,
+      userName: (profile?['display_name'] as String?)
+          ?? (profile?['email'] as String?),
       userColor: profile?['color'] as String?,
       paymentMethodName: paymentMethod?['name'] as String?,
       fixedExpenseCategoryName: fixedExpenseCategory?['name'] as String?,

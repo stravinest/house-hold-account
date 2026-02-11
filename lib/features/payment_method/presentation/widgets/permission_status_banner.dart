@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
+import '../../../notification/services/local_notification_service.dart';
 import '../../data/services/notification_listener_wrapper.dart';
 import '../../data/services/sms_listener_service.dart';
 
@@ -35,11 +36,6 @@ mixin _PermissionResumeHandler<T extends StatefulWidget> on State<T> {
   }
 }
 
-/// 투명도 상수
-class _OpacityConstants {
-  static const double errorButtonBackground = 0.1;
-}
-
 /// 안드로이드 플랫폼 여부
 bool get _isAndroidPlatform {
   try {
@@ -49,9 +45,30 @@ bool get _isAndroidPlatform {
   }
 }
 
+/// pencil 디자인 기준 색상
+class _BannerColors {
+  static const Color background = Color(0xFFEFEEE6);
+  static const Color cardBackground = Color(0xFFFFFFFF);
+  static const Color iconGranted = Color(0xFFA8DAB5);
+  static const Color iconDenied = Color(0xFFFFF3E0);
+  static const Color iconGrantedFg = Color(0xFF2E7D32);
+  static const Color iconDeniedFg = Color(0xFFE65100);
+  static const Color badgeGrantedBg = Color(0xFFA8DAB5);
+  static const Color badgeGrantedText = Color(0xFF2E7D32);
+  static const Color badgeDeniedBg = Color(0xFFFFF3E0);
+  static const Color badgeDeniedText = Color(0xFFE65100);
+  static const Color buttonBorder = Color(0xFF74796D);
+  static const Color buttonText = Color(0xFF2E7D32);
+  static const Color titleColor = Color(0xFF1A1C19);
+  static const Color descColor = Color(0xFF44483E);
+  static const Color warningColor = Color(0xFF74796D);
+  static const Color successBg = Color(0xFFA8DAB5);
+  static const Color successText = Color(0xFF2E7D32);
+}
+
 /// 권한 상태 배너 위젯 (체크리스트 스타일)
 ///
-/// SMS 읽기 권한과 알림 접근 권한의 상태를 표시하고 요청할 수 있는 배너
+/// 푸시 알림, SMS 읽기, 알림 접근 권한의 상태를 표시하고 요청할 수 있는 배너
 class PermissionStatusBanner extends StatefulWidget {
   final VoidCallback onPermissionDialogRequested;
 
@@ -66,6 +83,7 @@ class PermissionStatusBanner extends StatefulWidget {
 
 class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     with _PermissionResumeHandler {
+  _PermissionCheckStatus _pushPermissionStatus = _PermissionCheckStatus.error;
   _PermissionCheckStatus _smsPermissionStatus = _PermissionCheckStatus.error;
   _PermissionCheckStatus _notificationPermissionStatus =
       _PermissionCheckStatus.error;
@@ -95,10 +113,24 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
       return;
     }
 
+    _PermissionCheckStatus pushStatus = _PermissionCheckStatus.error;
     _PermissionCheckStatus smsStatus = _PermissionCheckStatus.error;
     _PermissionCheckStatus notificationStatus = _PermissionCheckStatus.error;
 
     // 각 권한을 독립적으로 체크 (하나 실패해도 다른 것은 계속 체크)
+    try {
+      final granted = await LocalNotificationService()
+          .checkPushNotificationPermission();
+      pushStatus = granted
+          ? _PermissionCheckStatus.granted
+          : _PermissionCheckStatus.denied;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('푸시 알림 권한 체크 실패: $e');
+      }
+      pushStatus = _PermissionCheckStatus.error;
+    }
+
     try {
       final granted = await SmsListenerService.instance.checkPermissions();
       smsStatus = granted
@@ -126,6 +158,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
 
     if (mounted) {
       setState(() {
+        _pushPermissionStatus = pushStatus;
         _smsPermissionStatus = smsStatus;
         _notificationPermissionStatus = notificationStatus;
         _isLoading = false;
@@ -133,8 +166,34 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     }
   }
 
+  Future<void> _requestPushPermission() async {
+    _shouldCheckOnResume = true;
+
+    try {
+      final granted = await LocalNotificationService()
+          .requestPushNotificationPermission();
+      if (mounted) {
+        setState(() {
+          _pushPermissionStatus = granted
+              ? _PermissionCheckStatus.granted
+              : _PermissionCheckStatus.denied;
+          _shouldCheckOnResume = false;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('푸시 알림 권한 요청 중 에러: $e');
+      }
+      if (mounted) {
+        setState(() {
+          _pushPermissionStatus = _PermissionCheckStatus.error;
+          _shouldCheckOnResume = false;
+        });
+      }
+    }
+  }
+
   Future<void> _requestSmsPermission() async {
-    // 권한 요청 다이얼로그가 표시되므로 돌아올 때 재확인
     _shouldCheckOnResume = true;
 
     try {
@@ -161,7 +220,6 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
   }
 
   Future<void> _requestNotificationPermission() async {
-    // 설정 화면으로 이동하므로 돌아올 때 권한 재확인 플래그 설정
     _shouldCheckOnResume = true;
 
     try {
@@ -189,15 +247,14 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     if (_isLoading) {
       return Container(
         padding: const EdgeInsets.all(Spacing.md),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
+          color: _BannerColors.background,
+          borderRadius: BorderRadius.circular(BorderRadiusToken.md),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -211,7 +268,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             Text(
               l10n.permissionCheckingStatus,
               style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+                color: _BannerColors.descColor,
               ),
             ),
           ],
@@ -220,13 +277,14 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     }
 
     final allGranted =
+        _pushPermissionStatus == _PermissionCheckStatus.granted &&
         _smsPermissionStatus == _PermissionCheckStatus.granted &&
         _notificationPermissionStatus == _PermissionCheckStatus.granted;
 
     return Container(
       padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: const Color(0xFFE8F5E9),
+        color: _BannerColors.background,
         borderRadius: BorderRadius.circular(BorderRadiusToken.md),
       ),
       child: Column(
@@ -236,21 +294,32 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             l10n.autoSaveSettingsRequiredPermissions,
             style: textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: colorScheme.onSurface,
+              color: _BannerColors.titleColor,
             ),
           ),
           const SizedBox(height: Spacing.md),
 
+          // 푸시 알림 권한
+          _buildPermissionItem(
+            icon: Icons.notifications_active_outlined,
+            title: '푸시 알림',
+            description: '공유 가계부 알림, 초대 알림 등을 받습니다',
+            status: _pushPermissionStatus,
+            onRequest: _requestPushPermission,
+            onRetry: _checkPermissions,
+            textTheme: textTheme,
+          ),
+
+          const SizedBox(height: Spacing.sm),
+
           // SMS 권한
           _buildPermissionItem(
-            context: context,
             icon: Icons.sms_outlined,
             title: 'SMS 읽기',
             description: '문자 메시지에서 거래 정보를 읽습니다',
             status: _smsPermissionStatus,
             onRequest: _requestSmsPermission,
             onRetry: _checkPermissions,
-            colorScheme: colorScheme,
             textTheme: textTheme,
           ),
 
@@ -258,45 +327,42 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
 
           // 알림 접근 권한
           _buildPermissionItem(
-            context: context,
-            icon: Icons.notifications_outlined,
+            icon: Icons.app_settings_alt_outlined,
             title: '알림 접근',
             description: '푸시 알림에서 거래 정보를 읽습니다',
             status: _notificationPermissionStatus,
             onRequest: _requestNotificationPermission,
             onRetry: _checkPermissions,
             isNotificationPermission: true,
-            colorScheme: colorScheme,
             textTheme: textTheme,
           ),
 
           if (allGranted) ...[
             const SizedBox(height: Spacing.sm),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: Spacing.xs),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md,
+                vertical: Spacing.sm,
+              ),
+              decoration: BoxDecoration(
+                color: _BannerColors.successBg,
+                borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
+              ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 20,
-                    height: 20,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF2E7D32),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 14,
-                    ),
+                  const Icon(
+                    Icons.check_circle_outline,
+                    color: _BannerColors.successText,
+                    size: 18,
                   ),
                   const SizedBox(width: Spacing.sm),
-                  Expanded(
-                    child: Text(
-                      '모든 권한이 허용되었습니다',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF1B5E20),
-                        fontWeight: FontWeight.w500,
-                      ),
+                  Text(
+                    '모든 권한이 허용되었습니다',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: _BannerColors.successText,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -309,14 +375,12 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
   }
 
   Widget _buildPermissionItem({
-    required BuildContext context,
     required IconData icon,
     required String title,
     required String description,
     required _PermissionCheckStatus status,
     required VoidCallback onRequest,
     required VoidCallback onRetry,
-    required ColorScheme colorScheme,
     required TextTheme textTheme,
     bool isNotificationPermission = false,
   }) {
@@ -326,124 +390,117 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     return Container(
       padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
+        color: _BannerColors.cardBackground,
         borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
       ),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: isGranted ? const Color(0xFF2E7D32) : colorScheme.error,
-              borderRadius: BorderRadius.circular(BorderRadiusToken.xs),
-            ),
-            child: Icon(
-              isGranted
-                  ? Icons.check
-                  : (isError
-                        ? Icons.error_outline
-                        : Icons.warning_amber_rounded),
-              color: Colors.white,
-              size: 16,
-            ),
-          ),
-          const SizedBox(width: Spacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: isGranted
+                      ? _BannerColors.iconGranted
+                      : _BannerColors.iconDenied,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  isGranted
+                      ? Icons.check
+                      : (isError ? Icons.error_outline : Icons.priority_high),
+                  color: isGranted
+                      ? _BannerColors.iconGrantedFg
+                      : _BannerColors.iconDeniedFg,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: Spacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ),
-                    if (isGranted)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: Spacing.sm,
-                          vertical: Spacing.xs,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2E7D32),
-                          borderRadius: BorderRadius.circular(
-                            BorderRadiusToken.xs,
-                          ),
-                        ),
-                        child: Text(
-                          '허용됨',
-                          style: textTheme.labelSmall?.copyWith(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 12,
-                  ),
-                ),
-                if (isNotificationPermission && !isGranted)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
+                    Row(
                       children: [
-                        Icon(
-                          Icons.info_outline,
-                          size: 12,
-                          color: colorScheme.error,
-                        ),
-                        const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            '시스템 설정에서 직접 허용 필요',
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.error,
+                            title,
+                            style: textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: _BannerColors.titleColor,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: Spacing.sm,
+                            vertical: Spacing.xs,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isGranted
+                                ? _BannerColors.badgeGrantedBg
+                                : _BannerColors.badgeDeniedBg,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            isGranted ? '허용됨' : '필요',
+                            style: TextStyle(
                               fontSize: 11,
-                              fontStyle: FontStyle.italic,
+                              fontWeight: FontWeight.w500,
+                              color: isGranted
+                                  ? _BannerColors.badgeGrantedText
+                                  : _BannerColors.badgeDeniedText,
                             ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-              ],
-            ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: _BannerColors.descColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                    if (isNotificationPermission && !isGranted)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '시스템 설정에서 직접 허용 필요',
+                          style: textTheme.bodySmall?.copyWith(
+                            color: _BannerColors.warningColor,
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
           if (!isGranted) ...[
-            const SizedBox(width: Spacing.xs),
-            TextButton(
-              onPressed: isError ? onRetry : onRequest,
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.sm,
-                  vertical: Spacing.xs,
+            const SizedBox(height: Spacing.sm),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: isError ? onRetry : onRequest,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _BannerColors.buttonText,
+                  side: const BorderSide(color: _BannerColors.buttonBorder),
+                  padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                minimumSize: const Size(0, 0),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                backgroundColor: colorScheme.error.withValues(
-                  alpha: _OpacityConstants.errorButtonBackground,
-                ),
-                foregroundColor: colorScheme.error,
-              ),
-              child: Text(
-                isError ? '재시도' : (isNotificationPermission ? '설정 열기' : '허용'),
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                child: Text(
+                  isError
+                      ? '재시도'
+                      : (isNotificationPermission ? '설정 열기' : '허용하기'),
                 ),
               ),
             ),

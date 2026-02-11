@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../../core/utils/supabase_error_handler.dart';
 import '../models/ledger_model.dart';
 
@@ -80,7 +81,7 @@ class LedgerRepository {
     bool? isShared,
   }) async {
     final updates = <String, dynamic>{
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTimeUtils.nowUtcIso(),
     };
     if (name != null) updates['name'] = name;
     if (description != null) updates['description'] = description;

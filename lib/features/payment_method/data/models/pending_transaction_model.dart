@@ -1,3 +1,4 @@
+import '../../../../core/utils/date_time_utils.dart';
 import '../../domain/entities/pending_transaction.dart';
 
 class PendingTransactionModel extends PendingTransaction {
@@ -124,7 +125,7 @@ class PendingTransactionModel extends PendingTransaction {
   }) {
     return {
       'status': status.toJson(),
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTimeUtils.nowUtcIso(),
       if (transactionId != null) 'transaction_id': transactionId,
     };
   }

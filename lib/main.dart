@@ -23,6 +23,7 @@ import 'features/notification/presentation/providers/notification_provider.dart'
 import 'features/notification/services/firebase_messaging_service.dart';
 import 'features/notification/services/local_notification_service.dart';
 import 'features/payment_method/presentation/widgets/permission_request_dialog.dart';
+import 'features/settings/presentation/widgets/guide_dialog.dart';
 import 'features/widget/data/services/widget_data_service.dart';
 import 'features/payment_method/presentation/providers/auto_save_manager.dart';
 import 'features/payment_method/data/services/app_badge_service.dart';
@@ -112,38 +113,11 @@ class _SharedHouseholdAccountAppState
     _initDeepLinks();
     _setupNotificationTapHandlers();
 
-    // 앱 첫 실행 시 권한 다이얼로그 표시 준비 (Android 전용)
-    _prepareInitialPermissionDialog();
-
-    // 로그인 시 권한 확인 설정 (Android 전용)
+    // 로그인 시 가이드 + 권한 확인 설정 (Android 전용)
     _setupLoginPermissionCheck();
   }
 
-  /// 앱 첫 실행 시 권한 다이얼로그 표시 준비
-  Future<void> _prepareInitialPermissionDialog() async {
-    // Android가 아니면 스킵
-    if (!Platform.isAndroid) return;
-
-    final prefs = ref.read(sharedPreferencesProvider);
-    const flagKey = 'initial_permission_dialog_shown';
-
-    // 이미 표시한 적이 있으면 스킵
-    if (prefs.getBool(flagKey) == true) return;
-
-    // 첫 프레임 렌더링 완료 후 즉시 다이얼로그 표시
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final navigatorContext = rootNavigatorKey.currentContext;
-      if (navigatorContext == null || !navigatorContext.mounted) return;
-
-      // 다이얼로그 표시
-      await PermissionRequestDialog.showInitialPermissions(navigatorContext);
-
-      // 다이얼로그가 실제로 표시된 후 플래그 설정
-      await prefs.setBool(flagKey, true);
-    });
-  }
-
-  /// 로그인 시 권한 확인 설정
+  /// 로그인 시 가이드 + 권한 확인 설정
   void _setupLoginPermissionCheck() {
     // Android가 아니면 스킵
     if (!Platform.isAndroid) return;
@@ -161,7 +135,7 @@ class _SharedHouseholdAccountAppState
     });
   }
 
-  /// 로그인 시 권한 확인 및 다이얼로그 표시
+  /// 로그인 시 가이드 및 권한 다이얼로그 표시
   Future<void> _checkPermissionsOnLogin() async {
     // 약간의 딜레이 후 확인 (홈 화면 로딩 완료 후)
     await Future.delayed(const Duration(milliseconds: 2000));
@@ -169,8 +143,25 @@ class _SharedHouseholdAccountAppState
     final navigatorContext = rootNavigatorKey.currentContext;
     if (navigatorContext == null || !navigatorContext.mounted) return;
 
-    // 비허용된 권한이 있으면 다이얼로그 표시
-    await PermissionRequestDialog.showIfAnyDenied(navigatorContext);
+    final prefs = ref.read(sharedPreferencesProvider);
+    const guideFlag = 'guide_dialog_shown';
+
+    if (prefs.getBool(guideFlag) != true) {
+      // 가이드 다이얼로그 표시 (첫 로그인)
+      await GuideDialog.show(navigatorContext);
+
+      // 플래그 설정
+      await prefs.setBool(guideFlag, true);
+
+      // 가이드 닫힌 후 권한 다이얼로그 표시 (Android 전용)
+      if (!navigatorContext.mounted) return;
+      if (Platform.isAndroid) {
+        await PermissionRequestDialog.showInitialPermissions(navigatorContext);
+      }
+    } else {
+      // 이미 가이드를 본 경우, 비허용 권한 있으면 권한 다이얼로그만 표시
+      await PermissionRequestDialog.showIfAnyDenied(navigatorContext);
+    }
   }
 
   /// 알림 탭 핸들러 설정

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../models/transaction_model.dart';
 
 class TransactionRepository {
@@ -17,7 +18,7 @@ class TransactionRepository {
     final response = await _client
         .from('transactions')
         .select(
-          '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
+          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, color)',
         )
         .eq('ledger_id', ledgerId)
         .eq('date', dateStr)
@@ -40,7 +41,7 @@ class TransactionRepository {
     final response = await _client
         .from('transactions')
         .select(
-          '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
+          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, color)',
         )
         .eq('ledger_id', ledgerId)
         .gte('date', startStr)
@@ -117,7 +118,7 @@ class TransactionRepository {
         .from('transactions')
         .insert(data)
         .select(
-          '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
+          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, color)',
         )
         .single();
 
@@ -142,7 +143,7 @@ class TransactionRepository {
     String? fixedExpenseCategoryId,
   }) async {
     final updates = <String, dynamic>{
-      'updated_at': DateTime.now().toIso8601String(),
+      'updated_at': DateTimeUtils.nowUtcIso(),
     };
     if (categoryId != null) updates['category_id'] = categoryId;
     if (paymentMethodId != null) updates['payment_method_id'] = paymentMethodId;
@@ -170,7 +171,7 @@ class TransactionRepository {
         .update(updates)
         .eq('id', id)
         .select(
-          '*, categories(name, icon, color), profiles(display_name, color), payment_methods(name), fixed_expense_categories(name, color)',
+          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, color)',
         )
         .single();
 
@@ -461,7 +462,7 @@ class TransactionRepository {
         .from('recurring_templates')
         .update({
           'is_active': false,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTimeUtils.nowUtcIso(),
         })
         .eq('id', templateId);
   }
