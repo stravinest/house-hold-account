@@ -431,6 +431,143 @@ export default function PrivacyPolicyPage() {
           </p>
         </section>
 
+        {/* 계정 및 데이터 삭제 */}
+        <section
+          id='account-deletion'
+          className='mb-8 rounded-xl border-2 border-red-200 bg-red-50 p-6'
+        >
+          <h2 className='mb-4 text-2xl font-bold text-red-800'>
+            계정 및 데이터 삭제 요청
+          </h2>
+          <p className='mb-4 text-base leading-relaxed text-gray-700'>
+            <strong>우생가계부</strong> 이용자는 언제든지 계정 삭제를 요청할 수
+            있습니다. 아래의 절차에 따라 계정 삭제를 진행해 주세요.
+          </p>
+
+          <h3 className='mb-3 text-lg font-semibold text-gray-900'>
+            계정 삭제 방법
+          </h3>
+          <div className='mb-6 rounded-lg bg-white p-4'>
+            <ol className='list-inside list-decimal space-y-2 text-gray-700'>
+              <li>
+                우생가계부 앱에 로그인합니다.
+              </li>
+              <li>
+                <strong>설정</strong> 메뉴로 이동합니다.
+              </li>
+              <li>
+                <strong>계정 삭제 (회원 탈퇴)</strong> 항목을 선택합니다.
+              </li>
+              <li>
+                안내 사항을 확인한 후 <strong>삭제 확인</strong> 버튼을 눌러
+                계정 삭제를 완료합니다.
+              </li>
+            </ol>
+            <p className='mt-4 text-sm text-gray-600'>
+              앱 내에서 삭제가 어려운 경우, 아래 이메일로 삭제를 요청하실 수
+              있습니다.
+            </p>
+            <p className='mt-2 font-medium text-gray-800'>
+              문의 이메일:{' '}
+              <a
+                href='mailto:stravinest@gmail.com'
+                className='text-blue-600 underline'
+              >
+                stravinest@gmail.com
+              </a>
+            </p>
+          </div>
+
+          <h3 className='mb-3 text-lg font-semibold text-gray-900'>
+            삭제되는 데이터
+          </h3>
+          <p className='mb-2 leading-relaxed text-gray-700'>
+            계정 삭제 시 다음 데이터가 <strong>즉시 영구 삭제</strong>됩니다:
+          </p>
+          <ul className='mb-4 list-inside list-disc space-y-1 text-gray-700'>
+            <li>계정 정보 (이메일, 프로필, 비밀번호)</li>
+            <li>모든 거래 기록 (수입, 지출, 자산)</li>
+            <li>카테고리 및 예산 설정</li>
+            <li>결제수단 정보 및 자동수집 설정</li>
+            <li>SMS 자동수집 데이터 (학습된 패턴 포함)</li>
+            <li>푸시 알림 토큰 및 알림 설정</li>
+            <li>업로드된 이미지 (영수증 등)</li>
+          </ul>
+
+          <h3 className='mb-3 text-lg font-semibold text-gray-900'>
+            보관되는 데이터 및 보관 기간
+          </h3>
+          <p className='mb-2 leading-relaxed text-gray-700'>
+            관련 법령에 따라 다음 데이터는 일정 기간 보관 후 파기됩니다:
+          </p>
+          <div className='overflow-x-auto'>
+            <table className='w-full border-collapse border border-gray-300 bg-white'>
+              <thead>
+                <tr className='bg-gray-100'>
+                  <th className='border border-gray-300 px-4 py-2 text-left text-sm font-semibold'>
+                    데이터 유형
+                  </th>
+                  <th className='border border-gray-300 px-4 py-2 text-left text-sm font-semibold'>
+                    보관 기간
+                  </th>
+                  <th className='border border-gray-300 px-4 py-2 text-left text-sm font-semibold'>
+                    근거 법령
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td className='border border-gray-300 px-4 py-2 text-sm text-gray-600'>
+                    서비스 이용 관련 로그
+                  </td>
+                  <td className='border border-gray-300 px-4 py-2 text-sm text-gray-600'>
+                    3개월
+                  </td>
+                  <td className='border border-gray-300 px-4 py-2 text-sm text-gray-600'>
+                    통신비밀보호법
+                  </td>
+                </tr>
+                <tr>
+                  <td className='border border-gray-300 px-4 py-2 text-sm text-gray-600'>
+                    소비자 불만/분쟁처리 기록
+                  </td>
+                  <td className='border border-gray-300 px-4 py-2 text-sm text-gray-600'>
+                    3년
+                  </td>
+                  <td className='border border-gray-300 px-4 py-2 text-sm text-gray-600'>
+                    전자상거래법
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3 className='mb-3 mt-6 text-lg font-semibold text-gray-900'>
+            계정 삭제 없이 데이터만 삭제
+          </h3>
+          <p className='leading-relaxed text-gray-700'>
+            계정을 유지하면서 특정 데이터만 삭제하고 싶은 경우, 앱 내에서 다음
+            데이터를 직접 삭제할 수 있습니다:
+          </p>
+          <ul className='mt-2 list-inside list-disc space-y-1 text-gray-700'>
+            <li>개별 거래 기록 삭제</li>
+            <li>카테고리 삭제</li>
+            <li>결제수단 삭제</li>
+            <li>자동수집된 임시 거래 삭제</li>
+            <li>업로드된 이미지 삭제</li>
+          </ul>
+          <p className='mt-2 text-sm text-gray-600'>
+            위 항목 외에 추가 데이터 삭제가 필요한 경우{' '}
+            <a
+              href='mailto:stravinest@gmail.com'
+              className='text-blue-600 underline'
+            >
+              stravinest@gmail.com
+            </a>
+            으로 문의해 주세요.
+          </p>
+        </section>
+
         {/* 부칙 */}
         <section className='mb-8 border-t border-gray-200 pt-8'>
           <h2 className='mb-3 text-xl font-bold text-gray-900'>부칙</h2>
