@@ -896,8 +896,8 @@ class _DailyDateHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // 포맷: "2026년 1월 17일 토요일"
-    final dateFormatter = DateFormat('yyyy년 M월 d일 EEEE', 'ko_KR');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormatter = DateFormat.yMMMMEEEEd(locale);
     final dateText = dateFormatter.format(date);
 
     return Container(
@@ -1053,7 +1053,7 @@ class _DailyUserSummary extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final dailyTransactionsAsync = ref.watch(dailyTransactionsProvider);
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final formatter = NumberFormat('#,###', Localizations.localeOf(context).toString());
 
     return dailyTransactionsAsync.when(
       data: (transactions) {

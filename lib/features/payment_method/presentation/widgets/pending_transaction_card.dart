@@ -39,7 +39,6 @@ class _PendingTransactionCardState
     extends ConsumerState<PendingTransactionCard> {
   // NumberFormat 캐싱 (매 빌드마다 생성하지 않음)
   static final _currencyFormat = NumberFormat.currency(
-    locale: 'ko_KR',
     symbol: '',
     decimalDigits: 0,
   );

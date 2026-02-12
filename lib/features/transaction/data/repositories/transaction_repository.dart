@@ -6,7 +6,10 @@ import '../../../../core/utils/date_time_utils.dart';
 import '../models/transaction_model.dart';
 
 class TransactionRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  TransactionRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   // 날짜별 거래 조회
   Future<List<TransactionModel>> getTransactionsByDate({
@@ -91,7 +94,7 @@ class TransactionRepository {
     String? sourceType,
   }) async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw Exception('로그인이 필요합니다');
+    if (userId == null) throw Exception('Login required');
 
     final data = TransactionModel.toCreateJson(
       ledgerId: ledgerId,
@@ -218,7 +221,7 @@ class TransactionRepository {
         final displayName =
             (profileData != null && profileData['display_name'] != null)
             ? profileData['display_name'] as String
-            : '사용자';
+            : 'User';
         final userColor = (profileData != null && profileData['color'] != null)
             ? profileData['color'] as String
             : '#A8D8EA';
@@ -301,7 +304,7 @@ class TransactionRepository {
         final displayName =
             (profileData != null && profileData['display_name'] != null)
             ? profileData['display_name'] as String
-            : '사용자';
+            : 'User';
         final userColor = (profileData != null && profileData['color'] != null)
             ? profileData['color'] as String
             : '#A8D8EA';
@@ -401,7 +404,7 @@ class TransactionRepository {
     String? fixedExpenseCategoryId,
   }) async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw Exception('로그인이 필요합니다');
+    if (userId == null) throw Exception('Login required');
 
     // 반복 실행일 계산 (매월/매년 반복 시)
     final recurringDay = startDate.day;

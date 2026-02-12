@@ -119,7 +119,7 @@ class _EditTransactionSheetState extends ConsumerState<EditTransactionSheet> {
       initialDate: _selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime(2030),
-      locale: const Locale('ko', 'KR'),
+      locale: Localizations.localeOf(context),
     );
 
     if (picked != null) {

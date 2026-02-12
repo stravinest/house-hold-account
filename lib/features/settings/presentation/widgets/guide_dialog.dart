@@ -2,6 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
+
 /// 첫 로그인 시 표시되는 환영 다이얼로그
 /// pencil 노드 jSspO 디자인 기반
 class GuideDialog extends StatelessWidget {
@@ -18,6 +20,8 @@ class GuideDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+
     return Dialog(
       backgroundColor: const Color(0xFFFDFDF5),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -43,9 +47,9 @@ class GuideDialog extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             // 타이틀
-            const Text(
-              '환영합니다!',
-              style: TextStyle(
+            Text(
+              l10n.guideDialogWelcome,
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF1A1C19),
@@ -54,9 +58,9 @@ class GuideDialog extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             // 서브타이틀
-            const Text(
-              '우리의 생활 공유 가계부',
-              style: TextStyle(fontSize: 14, color: Color(0xFF44483E)),
+            Text(
+              l10n.guideDialogSubtitle,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF44483E)),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -64,9 +68,9 @@ class GuideDialog extends StatelessWidget {
             const Divider(color: Color(0xFFC4C8BB), height: 1),
             const SizedBox(height: 20),
             // 본문 그룹
-            const Text(
-              '함께하는 가계부 관리!\n설정에서 가이드를 확인하고\n시작하는 방법을 알아보세요.',
-              style: TextStyle(
+            Text(
+              l10n.guideDialogBody,
+              style: const TextStyle(
                 fontSize: 14,
                 color: Color(0xFF44483E),
                 height: 1.6,
@@ -82,18 +86,18 @@ class GuideDialog extends StatelessWidget {
                 color: const Color(0xFFA8DAB5),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.lightbulb_outline,
                     size: 16,
                     color: Color(0xFF2E7D32),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Text(
-                    '설정 > 정보 > 가이드',
-                    style: TextStyle(fontSize: 13, color: Color(0xFF2E7D32)),
+                    l10n.guideDialogTip,
+                    style: const TextStyle(fontSize: 13, color: Color(0xFF2E7D32)),
                   ),
                 ],
               ),
@@ -111,19 +115,19 @@ class GuideDialog extends StatelessWidget {
                   color: const Color(0xFFFFF3E0),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.notifications_active_outlined,
                       size: 18,
                       color: Color(0xFFE65100),
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '알림 권한을 모두 허용해야 자동수집 등\n모든 기능을 원활하게 사용할 수 있습니다.',
-                        style: TextStyle(
+                        l10n.guideDialogNotificationNotice,
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFFBF360C),
                           height: 1.5,
@@ -147,9 +151,9 @@ class GuideDialog extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  '확인',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                child: Text(
+                  l10n.commonConfirm,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                 ),
               ),
             ),

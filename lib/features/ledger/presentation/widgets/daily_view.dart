@@ -354,7 +354,8 @@ class _DailyTransactionList extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final dailyTransactionsAsync = ref.watch(dailyTransactionsProvider);
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final locale = Localizations.localeOf(context).toString();
+    final formatter = NumberFormat('#,###', locale);
 
     return dailyTransactionsAsync.when(
       data: (transactions) {
@@ -400,7 +401,15 @@ class _DailyTransactionList extends ConsumerWidget {
           itemBuilder: (context, index) {
             // 첫 번째 아이템: 날짜 헤더 (impCdDayHeader)
             if (index == 0) {
-              final weekdays = ['월', '화', '수', '목', '금', '토', '일'];
+              final weekdays = [
+                l10n.calendarDayMon,
+                l10n.calendarDayTue,
+                l10n.calendarDayWed,
+                l10n.calendarDayThu,
+                l10n.calendarDayFri,
+                l10n.calendarDaySat,
+                l10n.calendarDaySun,
+              ];
               final weekday = weekdays[date.weekday - 1];
               return Container(
                 padding: const EdgeInsets.symmetric(
@@ -412,7 +421,7 @@ class _DailyTransactionList extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '${date.month}월 ${date.day}일 ($weekday)',
+                      l10n.calendarDailyDateHeader(date.month, date.day, weekday),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

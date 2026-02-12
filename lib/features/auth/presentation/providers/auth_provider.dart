@@ -266,11 +266,20 @@ class AuthService {
     await _auth.signOut();
   }
 
-  // 비밀번호 재설정 이메일 전송
+  // 비밀번호 재설정 이메일 전송 (OTP 코드 방식)
   Future<void> resetPassword(String email) async {
-    await _auth.resetPasswordForEmail(
-      email,
-      redirectTo: 'sharedhousehold://auth-callback/',
+    await _auth.resetPasswordForEmail(email);
+  }
+
+  // OTP 코드 검증 (비밀번호 재설정)
+  Future<AuthResponse> verifyPasswordResetOtp(
+    String email,
+    String token,
+  ) async {
+    return await _auth.verifyOTP(
+      type: OtpType.recovery,
+      token: token,
+      email: email,
     );
   }
 

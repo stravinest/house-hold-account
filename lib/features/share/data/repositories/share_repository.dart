@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/date_time_utils.dart';
 import 'package:flutter/foundation.dart';
@@ -8,7 +10,10 @@ import '../../../ledger/domain/entities/ledger.dart';
 import '../../domain/entities/ledger_invite.dart';
 
 class ShareRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  ShareRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   Future<Map<String, dynamic>?> findUserByEmail(String email) async {
     final response = await _client.rpc(
@@ -83,36 +88,36 @@ class ShareRepository {
   }) async {
     const role = 'admin'; // 모든 멤버는 동일한 권한
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw Exception('로그인이 필요합니다');
+    if (userId == null) throw Exception('Login required');
 
     final normalizedEmail = inviteeEmail.toLowerCase().trim();
 
     // 1. 자기 자신에게 초대 방지
     final currentUserEmail = _client.auth.currentUser?.email;
     if (currentUserEmail?.toLowerCase() == normalizedEmail) {
-      throw Exception('자기 자신에게는 초대를 보낼 수 없습니다');
+      throw Exception('Cannot invite yourself');
     }
 
     // 2. 가입된 사용자인지 확인
     final targetUser = await findUserByEmail(normalizedEmail);
     if (targetUser == null) {
-      throw Exception('가입되지 않은 이메일입니다. 가입된 사용자만 초대할 수 있습니다.');
+      throw Exception('Email not registered. Only registered users can be invited.');
     }
 
     // 3. 이미 멤버인지 확인
     if (await isAlreadyMember(ledgerId: ledgerId, email: normalizedEmail)) {
-      throw Exception('이미 가계부의 멤버입니다');
+      throw Exception('Already a member of this ledger');
     }
 
     // 4. 이미 대기 중인 초대가 있는지 확인
     if (await hasPendingInvite(ledgerId: ledgerId, email: normalizedEmail)) {
-      throw Exception('이미 초대를 보냈습니다. 상대방의 수락을 기다려주세요.');
+      throw Exception('Invitation already sent. Please wait for acceptance.');
     }
 
     // 5. 멤버 수 제한 확인
     if (await isMemberLimitReached(ledgerId)) {
       throw Exception(
-        '가계부 멤버는 최대 ${AppConstants.maxMembersPerLedger}명까지만 가능합니다.',
+        'Maximum ${AppConstants.maxMembersPerLedger} members per ledger.',
       );
     }
 
@@ -222,16 +227,16 @@ class ShareRepository {
       String message;
       switch (errorCode) {
         case 'NOT_FOUND':
-          message = '존재하지 않거나 삭제된 초대입니다.';
+          message = 'Invitation not found or deleted.';
           break;
         case 'MEMBER_LIMIT_REACHED':
-          message = '가계부 멤버 정원이 초과되어 수락할 수 없습니다.';
+          message = 'Cannot accept. Ledger member limit exceeded.';
           break;
         case 'INVALID_STATUS':
-          message = '이미 처리되었거나 만료된 초대입니다.';
+          message = 'Invitation already processed or expired.';
           break;
         default:
-          message = result['error'] ?? '초대 수락 중 오류가 발생했습니다.';
+          message = result['error'] ?? 'Error occurred while accepting invitation.';
       }
       throw Exception(message);
     }
@@ -358,7 +363,7 @@ class ShareRepository {
   // 가계부 나가기
   Future<void> leaveLedger(String ledgerId) async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw Exception('로그인이 필요합니다');
+    if (userId == null) throw Exception('Login required');
 
     final userEmail = _client.auth.currentUser?.email?.toLowerCase().trim();
 

@@ -31,7 +31,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
     super.initState();
     final amount = widget.goal?.targetAmount;
     _amountController = TextEditingController(
-      text: amount != null ? NumberFormat('#,###', 'ko_KR').format(amount) : '',
+      text: amount != null ? NumberFormat('#,###').format(amount) : '',
     );
     _targetDate = widget.goal?.targetDate;
   }
@@ -228,9 +228,8 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                   Expanded(
                     child: Text(
                       _targetDate != null
-                          ? DateFormat(
-                              'yyyy년 M월 d일 (E)',
-                              'ko_KR',
+                          ? DateFormat.yMMMEd(
+                              Localizations.localeOf(context).toString(),
                             ).format(_targetDate!)
                           : l10n.assetGoalDateHint,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -393,7 +392,7 @@ class _AmountInputFormatter extends TextInputFormatter {
     final number = int.tryParse(cleanText);
     if (number == null) return oldValue;
 
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final formatter = NumberFormat('#,###');
     final formatted = formatter.format(number);
 
     return TextEditingValue(

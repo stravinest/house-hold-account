@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../providers/calendar_view_provider.dart';
 
 class CalendarViewModeSelector extends StatelessWidget {
@@ -14,6 +15,7 @@ class CalendarViewModeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
     // impCmViewTabs 디자인 적용: 배경색 surface-container, cornerRadius 8
@@ -29,7 +31,7 @@ class CalendarViewModeSelector extends StatelessWidget {
           _buildIconTab(
             icon: Icons.view_day_outlined,
             selectedIcon: Icons.view_day,
-            label: '일',
+            label: l10n.calendarViewDayShort,
             mode: CalendarViewMode.daily,
             isSelected: selectedMode == CalendarViewMode.daily,
             colorScheme: colorScheme,
@@ -37,7 +39,7 @@ class CalendarViewModeSelector extends StatelessWidget {
           _buildIconTab(
             icon: Icons.view_week_outlined,
             selectedIcon: Icons.view_week,
-            label: '주',
+            label: l10n.calendarViewWeekShort,
             mode: CalendarViewMode.weekly,
             isSelected: selectedMode == CalendarViewMode.weekly,
             colorScheme: colorScheme,
@@ -45,7 +47,7 @@ class CalendarViewModeSelector extends StatelessWidget {
           _buildIconTab(
             icon: Icons.calendar_month_outlined,
             selectedIcon: Icons.calendar_month,
-            label: '월',
+            label: l10n.calendarViewMonthShort,
             mode: CalendarViewMode.monthly,
             isSelected: selectedMode == CalendarViewMode.monthly,
             colorScheme: colorScheme,

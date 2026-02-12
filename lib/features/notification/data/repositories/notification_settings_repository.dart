@@ -1,9 +1,14 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/date_time_utils.dart';
 import '../../domain/entities/notification_type.dart';
 
 class NotificationSettingsRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  NotificationSettingsRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   /// NotificationType을 컬럼명으로 변환
   String _getColumnName(NotificationType type) {

@@ -1,11 +1,15 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/date_time_utils.dart';
 import '../models/learned_push_format_model.dart';
 
 class LearnedPushFormatRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  LearnedPushFormatRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   Future<List<LearnedPushFormatModel>> getFormatsByPaymentMethod(
     String paymentMethodId,

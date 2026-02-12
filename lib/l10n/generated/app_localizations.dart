@@ -485,26 +485,80 @@ abstract class AppLocalizations {
   /// No description provided for @authForgotPasswordSubtitle.
   ///
   /// In ko, this message translates to:
-  /// **'가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 링크를 보내드립니다.'**
+  /// **'가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 인증 코드를 보내드립니다.'**
   String get authForgotPasswordSubtitle;
 
   /// No description provided for @authForgotPasswordSend.
   ///
   /// In ko, this message translates to:
-  /// **'재설정 링크 보내기'**
+  /// **'인증 코드 보내기'**
   String get authForgotPasswordSend;
 
   /// No description provided for @authForgotPasswordSent.
   ///
   /// In ko, this message translates to:
-  /// **'비밀번호 재설정 이메일을 보냈습니다'**
+  /// **'인증 코드를 보냈습니다'**
   String get authForgotPasswordSent;
 
   /// No description provided for @authForgotPasswordSentSubtitle.
   ///
   /// In ko, this message translates to:
-  /// **'이메일을 확인하고 링크를 클릭하여\n비밀번호를 재설정하세요.'**
+  /// **'이메일로 전송된 인증 코드를 입력해주세요.'**
   String get authForgotPasswordSentSubtitle;
+
+  /// No description provided for @authOtpInputTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'인증 코드 입력'**
+  String get authOtpInputTitle;
+
+  /// No description provided for @authOtpInputSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'아래 이메일로 전송된 코드를 입력하세요.'**
+  String get authOtpInputSubtitle;
+
+  /// No description provided for @authOtpResend.
+  ///
+  /// In ko, this message translates to:
+  /// **'코드 재전송'**
+  String get authOtpResend;
+
+  /// No description provided for @authOtpResendCooldown.
+  ///
+  /// In ko, this message translates to:
+  /// **'재전송 ({seconds}초 후 가능)'**
+  String authOtpResendCooldown(int seconds);
+
+  /// No description provided for @authOtpResent.
+  ///
+  /// In ko, this message translates to:
+  /// **'인증 코드를 다시 보냈습니다'**
+  String get authOtpResent;
+
+  /// No description provided for @authOtpExpiredError.
+  ///
+  /// In ko, this message translates to:
+  /// **'코드가 만료되었습니다. 재전송해주세요.'**
+  String get authOtpExpiredError;
+
+  /// No description provided for @authOtpInvalidError.
+  ///
+  /// In ko, this message translates to:
+  /// **'잘못된 코드입니다. 다시 확인해주세요.'**
+  String get authOtpInvalidError;
+
+  /// No description provided for @authOtpVerifying.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인 중...'**
+  String get authOtpVerifying;
+
+  /// No description provided for @authOtpExpiryNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'코드는 1시간 동안 유효합니다'**
+  String get authOtpExpiryNotice;
 
   /// No description provided for @authForgotPasswordBackToLogin.
   ///
@@ -4938,6 +4992,408 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'자동수집 결제수단은 결제수단 관리에서 삭제할 수 있습니다'**
   String get paymentMethodAutoCollectDeleteNotice;
+
+  /// No description provided for @pendingConfirmAllTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 거래 확인'**
+  String get pendingConfirmAllTitle;
+
+  /// No description provided for @pendingConfirmAllMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 중인 모든 거래를 확인하시겠습니까?\n파싱 정보가 있는 거래만 저장됩니다.'**
+  String get pendingConfirmAllMessage;
+
+  /// No description provided for @pendingRejectAllTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 거래 거부'**
+  String get pendingRejectAllTitle;
+
+  /// No description provided for @pendingRejectAllMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 중인 모든 거래를 거부하시겠습니까?'**
+  String get pendingRejectAllMessage;
+
+  /// No description provided for @pendingAllProcessed.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 거래가 처리되었습니다'**
+  String get pendingAllProcessed;
+
+  /// No description provided for @pendingAllRejected.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 거래가 거부되었습니다'**
+  String get pendingAllRejected;
+
+  /// No description provided for @pendingMenuConfirmAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 확인'**
+  String get pendingMenuConfirmAll;
+
+  /// No description provided for @pendingMenuRejectAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'모두 거부'**
+  String get pendingMenuRejectAll;
+
+  /// No description provided for @pendingMenuDeletePending.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 중 모두 삭제'**
+  String get pendingMenuDeletePending;
+
+  /// No description provided for @pendingMenuDeleteRecords.
+  ///
+  /// In ko, this message translates to:
+  /// **'기록 삭제'**
+  String get pendingMenuDeleteRecords;
+
+  /// No description provided for @pendingMenuDeleteRejected.
+  ///
+  /// In ko, this message translates to:
+  /// **'거부된 항목 삭제'**
+  String get pendingMenuDeleteRejected;
+
+  /// No description provided for @pendingDeletePendingTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 중인 거래 모두 삭제'**
+  String get pendingDeletePendingTitle;
+
+  /// No description provided for @pendingDeletePendingMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'대기 중인 모든 거래를 삭제하시겠습니까?'**
+  String get pendingDeletePendingMessage;
+
+  /// No description provided for @pendingDeleteRejectedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'거부된 거래 모두 삭제'**
+  String get pendingDeleteRejectedTitle;
+
+  /// No description provided for @pendingDeleteRejectedMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'거부된 모든 거래를 삭제하시겠습니까?'**
+  String get pendingDeleteRejectedMessage;
+
+  /// No description provided for @pendingDeleteConfirmedTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인된 거래 모두 삭제'**
+  String get pendingDeleteConfirmedTitle;
+
+  /// No description provided for @pendingDeleteConfirmedMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'확인된 모든 거래 기록을 삭제하시겠습니까?'**
+  String get pendingDeleteConfirmedMessage;
+
+  /// No description provided for @pendingEditTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 정보 수정'**
+  String get pendingEditTitle;
+
+  /// No description provided for @pendingOriginalMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'원본 메시지'**
+  String get pendingOriginalMessage;
+
+  /// No description provided for @pendingMerchantName.
+  ///
+  /// In ko, this message translates to:
+  /// **'상호명'**
+  String get pendingMerchantName;
+
+  /// No description provided for @pendingSelectDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'날짜 선택'**
+  String get pendingSelectDate;
+
+  /// No description provided for @commonDeletedMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제되었습니다'**
+  String get commonDeletedMessage;
+
+  /// No description provided for @permissionAppSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'앱 권한 설정'**
+  String get permissionAppSettings;
+
+  /// No description provided for @permissionAutoSaveSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 저장 권한 설정'**
+  String get permissionAutoSaveSettings;
+
+  /// No description provided for @permissionBetterServiceDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'더 나은 서비스를 위해 다음 권한이 필요합니다.'**
+  String get permissionBetterServiceDesc;
+
+  /// No description provided for @permissionAutoSaveDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 내역을 자동으로 저장하려면 다음 권한이 필요합니다.'**
+  String get permissionAutoSaveDesc;
+
+  /// No description provided for @permissionAllGrantedMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 권한이 허용되었습니다.'**
+  String get permissionAllGrantedMessage;
+
+  /// No description provided for @permissionAllGrantedBanner.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 권한이 허용되었습니다'**
+  String get permissionAllGrantedBanner;
+
+  /// No description provided for @permissionPushNotification.
+  ///
+  /// In ko, this message translates to:
+  /// **'푸시 알림'**
+  String get permissionPushNotification;
+
+  /// No description provided for @permissionPushDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유 가계부 알림, 초대 알림 등을 받습니다.'**
+  String get permissionPushDesc;
+
+  /// No description provided for @permissionSmsRead.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS 읽기'**
+  String get permissionSmsRead;
+
+  /// No description provided for @permissionSmsDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'카드사/은행 문자에서 거래 정보를 읽습니다.'**
+  String get permissionSmsDesc;
+
+  /// No description provided for @permissionNotificationAccess.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림 접근'**
+  String get permissionNotificationAccess;
+
+  /// No description provided for @permissionNotificationDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'카드/은행 앱 푸시 알림에서 거래 정보를 읽습니다.'**
+  String get permissionNotificationDesc;
+
+  /// No description provided for @permissionGranted.
+  ///
+  /// In ko, this message translates to:
+  /// **'허용됨'**
+  String get permissionGranted;
+
+  /// No description provided for @permissionRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'필요'**
+  String get permissionRequired;
+
+  /// No description provided for @permissionLater.
+  ///
+  /// In ko, this message translates to:
+  /// **'나중에'**
+  String get permissionLater;
+
+  /// No description provided for @permissionSystemSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'시스템 설정에서 직접 허용해야 합니다.'**
+  String get permissionSystemSettings;
+
+  /// No description provided for @permissionOpenSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정 열기'**
+  String get permissionOpenSettings;
+
+  /// No description provided for @permissionAllow.
+  ///
+  /// In ko, this message translates to:
+  /// **'허용'**
+  String get permissionAllow;
+
+  /// No description provided for @permissionPushDescShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유 가계부 알림, 초대 알림 등을 받습니다'**
+  String get permissionPushDescShort;
+
+  /// No description provided for @permissionSmsDescShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'문자 메시지에서 거래 정보를 읽습니다'**
+  String get permissionSmsDescShort;
+
+  /// No description provided for @permissionNotificationDescShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'푸시 알림에서 거래 정보를 읽습니다'**
+  String get permissionNotificationDescShort;
+
+  /// No description provided for @permissionSystemSettingsShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'시스템 설정에서 직접 허용 필요'**
+  String get permissionSystemSettingsShort;
+
+  /// No description provided for @permissionRetry.
+  ///
+  /// In ko, this message translates to:
+  /// **'재시도'**
+  String get permissionRetry;
+
+  /// No description provided for @permissionAllowAction.
+  ///
+  /// In ko, this message translates to:
+  /// **'허용하기'**
+  String get permissionAllowAction;
+
+  /// No description provided for @guideDialogWelcome.
+  ///
+  /// In ko, this message translates to:
+  /// **'환영합니다!'**
+  String get guideDialogWelcome;
+
+  /// No description provided for @guideDialogSubtitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'우리의 생활 공유 가계부'**
+  String get guideDialogSubtitle;
+
+  /// No description provided for @guideDialogBody.
+  ///
+  /// In ko, this message translates to:
+  /// **'함께하는 가계부 관리!\n설정에서 가이드를 확인하고\n시작하는 방법을 알아보세요.'**
+  String get guideDialogBody;
+
+  /// No description provided for @guideDialogTip.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정 > 정보 > 가이드'**
+  String get guideDialogTip;
+
+  /// No description provided for @guideDialogNotificationNotice.
+  ///
+  /// In ko, this message translates to:
+  /// **'알림 권한을 모두 허용해야 자동수집 등\n모든 기능을 원활하게 사용할 수 있습니다.'**
+  String get guideDialogNotificationNotice;
+
+  /// No description provided for @settingsAppPermissionsDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'푸시 알림, SMS, 알림 접근 권한 관리'**
+  String get settingsAppPermissionsDesc;
+
+  /// No description provided for @settingsDeveloperOptions.
+  ///
+  /// In ko, this message translates to:
+  /// **'개발자 옵션'**
+  String get settingsDeveloperOptions;
+
+  /// No description provided for @settingsAutoCollectDebug.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집 디버그'**
+  String get settingsAutoCollectDebug;
+
+  /// No description provided for @settingsAutoCollectDebugDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS/Push 시뮬레이션 및 파싱 테스트'**
+  String get settingsAutoCollectDebugDesc;
+
+  /// No description provided for @settingsDisplayNameRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'표시 이름을 입력해주세요'**
+  String get settingsDisplayNameRequired;
+
+  /// No description provided for @settingsPasswordCurrentIncorrect.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 비밀번호가 올바르지 않습니다'**
+  String get settingsPasswordCurrentIncorrect;
+
+  /// No description provided for @settingsPasswordChangeFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'비밀번호 변경에 실패했습니다'**
+  String get settingsPasswordChangeFailed;
+
+  /// No description provided for @calendarViewDayShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'일'**
+  String get calendarViewDayShort;
+
+  /// No description provided for @calendarViewWeekShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'주'**
+  String get calendarViewWeekShort;
+
+  /// No description provided for @calendarViewMonthShort.
+  ///
+  /// In ko, this message translates to:
+  /// **'월'**
+  String get calendarViewMonthShort;
+
+  /// No description provided for @calendarDailyDateHeader.
+  ///
+  /// In ko, this message translates to:
+  /// **'{month}월 {day}일 ({weekday})'**
+  String calendarDailyDateHeader(int month, int day, String weekday);
+
+  /// No description provided for @assetGoalLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표'**
+  String get assetGoalLabel;
+
+  /// No description provided for @assetGoalCurrentWithAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 {amount}'**
+  String assetGoalCurrentWithAmount(String amount);
+
+  /// No description provided for @assetGoalTargetWithAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 {amount}'**
+  String assetGoalTargetWithAmount(String amount);
+
+  /// No description provided for @assetGoalAchievementPercent.
+  ///
+  /// In ko, this message translates to:
+  /// **'{percent}% 달성'**
+  String assetGoalAchievementPercent(String percent);
+
+  /// No description provided for @assetGoalRemainingWithUnit.
+  ///
+  /// In ko, this message translates to:
+  /// **'{amount} 남음'**
+  String assetGoalRemainingWithUnit(String amount);
 }
 
 class _AppLocalizationsDelegate

@@ -175,7 +175,7 @@ class AssetRepository {
       final categoryId = entry.key;
       final transactions = entry.value;
 
-      String categoryName = '미지정';
+      String categoryName = 'Uncategorized';
       String? categoryIcon;
       String? categoryColor;
 
@@ -183,7 +183,7 @@ class AssetRepository {
         final category =
             transactions.first['categories'] as Map<String, dynamic>?;
         if (category != null) {
-          categoryName = category['name'] as String? ?? '미지정';
+          categoryName = category['name'] as String? ?? 'Uncategorized';
           categoryIcon = category['icon'] as String?;
           categoryColor = category['color'] as String?;
         }
@@ -237,7 +237,7 @@ class AssetRepository {
           .map((json) => AssetGoalModel.fromJson(json))
           .toList();
     } catch (e, st) {
-      Error.throwWithStackTrace(Exception('목표 조회 실패: $e'), st);
+      Error.throwWithStackTrace(Exception('Failed to load goals: $e'), st);
     }
   }
 
@@ -266,10 +266,10 @@ class AssetRepository {
     } catch (e, st) {
       // 중복 데이터 에러 처리
       if (SupabaseErrorHandler.isDuplicateError(e)) {
-        throw DuplicateItemException(itemType: '자산 목표', itemName: goal.title);
+        throw DuplicateItemException(itemType: 'asset goal', itemName: goal.title);
       }
       // RLS 정책에 의해 가계부 멤버라면 생성 가능
-      Error.throwWithStackTrace(Exception('목표 생성 실패: $e'), st);
+      Error.throwWithStackTrace(Exception('Failed to create goal: $e'), st);
     }
   }
 
@@ -298,7 +298,7 @@ class AssetRepository {
 
       return AssetGoalModel.fromJson(response);
     } catch (e, st) {
-      Error.throwWithStackTrace(Exception('목표 수정 실패: $e'), st);
+      Error.throwWithStackTrace(Exception('Failed to update goal: $e'), st);
     }
   }
 
@@ -307,7 +307,7 @@ class AssetRepository {
       // RLS 정책: 가계부 멤버라면 누구나 삭제 가능하도록 DB 정책 수정됨
       await _client.from('asset_goals').delete().eq('id', goalId);
     } catch (e, st) {
-      Error.throwWithStackTrace(Exception('목표 삭제 실패: $e'), st);
+      Error.throwWithStackTrace(Exception('Failed to delete goal: $e'), st);
     }
   }
 
@@ -336,7 +336,7 @@ class AssetRepository {
 
       return total;
     } catch (e, st) {
-      Error.throwWithStackTrace(Exception('현재 자산 조회 실패: $e'), st);
+      Error.throwWithStackTrace(Exception('Failed to load current assets: $e'), st);
     }
   }
 
@@ -393,7 +393,7 @@ class AssetRepository {
         byCategory: byCategory,
       );
     } catch (e, st) {
-      Error.throwWithStackTrace(Exception('통계 조회 실패: $e'), st);
+      Error.throwWithStackTrace(Exception('Failed to load statistics: $e'), st);
     }
   }
 

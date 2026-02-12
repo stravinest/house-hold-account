@@ -108,8 +108,8 @@ class SettingsPage extends ConsumerWidget {
             if (Platform.isAndroid)
               ListTile(
                 leading: const Icon(Icons.security_outlined),
-                title: const Text('앱 권한 설정'),
-                subtitle: const Text('푸시 알림, SMS, 알림 접근 권한 관리'),
+                title: Text(l10n.permissionAppSettings),
+                subtitle: Text(l10n.settingsAppPermissionsDesc),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () {
                   PermissionRequestDialog.show(
@@ -208,11 +208,11 @@ class SettingsPage extends ConsumerWidget {
 
             // 개발자 옵션 (디버그 모드에서만 표시)
             if (kDebugMode) ...[
-              const SectionHeader(title: '개발자 옵션'),
+              SectionHeader(title: l10n.settingsDeveloperOptions),
               ListTile(
                 leading: const Icon(Icons.bug_report_outlined),
-                title: const Text('자동수집 디버그'),
-                subtitle: const Text('SMS/Push 시뮬레이션 및 파싱 테스트'),
+                title: Text(l10n.settingsAutoCollectDebug),
+                subtitle: Text(l10n.settingsAutoCollectDebugDesc),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.push(Routes.debugTest),
               ),
@@ -690,7 +690,7 @@ class _DisplayNameEditorState extends ConsumerState<_DisplayNameEditor> {
   Future<void> _saveDisplayName() async {
     final newName = _controller.text.trim();
     if (newName.isEmpty) {
-      SnackBarUtils.showError(context, '표시 이름을 입력해주세요');
+      SnackBarUtils.showError(context, l10n.settingsDisplayNameRequired);
       return;
     }
 
@@ -834,8 +834,8 @@ class _PasswordChangeDialogState extends State<_PasswordChangeDialog> {
       if (mounted) {
         // 보안: 에러 원본 노출 방지 - 일반화된 메시지 사용
         final errorMessage = e.toString().contains('현재 비밀번호')
-            ? '현재 비밀번호가 올바르지 않습니다'
-            : '비밀번호 변경에 실패했습니다';
+            ? l10n.settingsPasswordCurrentIncorrect
+            : l10n.settingsPasswordChangeFailed;
         SnackBarUtils.showError(context, errorMessage);
       }
     } finally {

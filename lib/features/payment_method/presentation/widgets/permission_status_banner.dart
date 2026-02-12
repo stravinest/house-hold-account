@@ -51,56 +51,41 @@ class _BannerColors {
   final bool isDark;
 
   _BannerColors(BuildContext context)
-      : colorScheme = Theme.of(context).colorScheme,
-        isDark = Theme.of(context).brightness == Brightness.dark;
+    : colorScheme = Theme.of(context).colorScheme,
+      isDark = Theme.of(context).brightness == Brightness.dark;
 
-  Color get background => isDark
-      ? colorScheme.surfaceContainerHigh
-      : const Color(0xFFEFEEE6);
-  Color get cardBackground => isDark
-      ? colorScheme.surfaceContainerHighest
-      : const Color(0xFFFFFFFF);
-  Color get iconGranted => isDark
-      ? const Color(0xFF1B5E20)
-      : const Color(0xFFA8DAB5);
-  Color get iconDenied => isDark
-      ? const Color(0xFF4E2600)
-      : const Color(0xFFFFF3E0);
-  Color get iconGrantedFg => isDark
-      ? const Color(0xFFA8DAB5)
-      : const Color(0xFF2E7D32);
-  Color get iconDeniedFg => isDark
-      ? const Color(0xFFFFB74D)
-      : const Color(0xFFE65100);
-  Color get badgeGrantedBg => isDark
-      ? const Color(0xFF1B5E20)
-      : const Color(0xFFA8DAB5);
-  Color get badgeGrantedText => isDark
-      ? const Color(0xFFA8DAB5)
-      : const Color(0xFF2E7D32);
-  Color get badgeDeniedBg => isDark
-      ? const Color(0xFF4E2600)
-      : const Color(0xFFFFF3E0);
-  Color get badgeDeniedText => isDark
-      ? const Color(0xFFFFB74D)
-      : const Color(0xFFE65100);
-  Color get buttonBorder => isDark
-      ? colorScheme.outline
-      : const Color(0xFF74796D);
-  Color get buttonText => isDark
-      ? const Color(0xFFA8DAB5)
-      : const Color(0xFF2E7D32);
+  Color get background =>
+      isDark ? colorScheme.surfaceContainerHigh : const Color(0xFFEFEEE6);
+  Color get cardBackground =>
+      isDark ? colorScheme.surfaceContainerHighest : const Color(0xFFFFFFFF);
+  Color get iconGranted =>
+      isDark ? const Color(0xFF1B5E20) : const Color(0xFFA8DAB5);
+  Color get iconDenied =>
+      isDark ? const Color(0xFF4E2600) : const Color(0xFFFFF3E0);
+  Color get iconGrantedFg =>
+      isDark ? const Color(0xFFA8DAB5) : const Color(0xFF2E7D32);
+  Color get iconDeniedFg =>
+      isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100);
+  Color get badgeGrantedBg =>
+      isDark ? const Color(0xFF1B5E20) : const Color(0xFFA8DAB5);
+  Color get badgeGrantedText =>
+      isDark ? const Color(0xFFA8DAB5) : const Color(0xFF2E7D32);
+  Color get badgeDeniedBg =>
+      isDark ? const Color(0xFF4E2600) : const Color(0xFFFFF3E0);
+  Color get badgeDeniedText =>
+      isDark ? const Color(0xFFFFB74D) : const Color(0xFFE65100);
+  Color get buttonBorder =>
+      isDark ? colorScheme.outline : const Color(0xFF74796D);
+  Color get buttonText =>
+      isDark ? const Color(0xFFA8DAB5) : const Color(0xFF2E7D32);
   Color get titleColor => colorScheme.onSurface;
   Color get descColor => colorScheme.onSurfaceVariant;
-  Color get warningColor => isDark
-      ? colorScheme.onSurfaceVariant
-      : const Color(0xFF74796D);
-  Color get successBg => isDark
-      ? const Color(0xFF1B5E20)
-      : const Color(0xFFA8DAB5);
-  Color get successText => isDark
-      ? const Color(0xFFA8DAB5)
-      : const Color(0xFF2E7D32);
+  Color get warningColor =>
+      isDark ? colorScheme.onSurfaceVariant : const Color(0xFF74796D);
+  Color get successBg =>
+      isDark ? const Color(0xFF1B5E20) : const Color(0xFFA8DAB5);
+  Color get successText =>
+      isDark ? const Color(0xFFA8DAB5) : const Color(0xFF2E7D32);
 }
 
 /// 권한 상태 배너 위젯 (체크리스트 스타일)
@@ -305,9 +290,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             const SizedBox(height: Spacing.sm),
             Text(
               l10n.permissionCheckingStatus,
-              style: textTheme.bodySmall?.copyWith(
-                color: colors.descColor,
-              ),
+              style: textTheme.bodySmall?.copyWith(color: colors.descColor),
             ),
           ],
         ),
@@ -340,13 +323,14 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
           // 푸시 알림 권한
           _buildPermissionItem(
             icon: Icons.notifications_active_outlined,
-            title: '푸시 알림',
-            description: '공유 가계부 알림, 초대 알림 등을 받습니다',
+            title: l10n.permissionPushNotification,
+            description: l10n.permissionPushDescShort,
             status: _pushPermissionStatus,
             onRequest: _requestPushPermission,
             onRetry: _checkPermissions,
             textTheme: textTheme,
             colors: colors,
+            l10n: l10n,
           ),
 
           const SizedBox(height: Spacing.sm),
@@ -354,13 +338,14 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
           // SMS 권한
           _buildPermissionItem(
             icon: Icons.sms_outlined,
-            title: 'SMS 읽기',
-            description: '문자 메시지에서 거래 정보를 읽습니다',
+            title: l10n.permissionSmsRead,
+            description: l10n.permissionSmsDescShort,
             status: _smsPermissionStatus,
             onRequest: _requestSmsPermission,
             onRetry: _checkPermissions,
             textTheme: textTheme,
             colors: colors,
+            l10n: l10n,
           ),
 
           const SizedBox(height: Spacing.sm),
@@ -368,14 +353,15 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
           // 알림 접근 권한
           _buildPermissionItem(
             icon: Icons.app_settings_alt_outlined,
-            title: '알림 접근',
-            description: '푸시 알림에서 거래 정보를 읽습니다',
+            title: l10n.permissionNotificationAccess,
+            description: l10n.permissionNotificationDescShort,
             status: _notificationPermissionStatus,
             onRequest: _requestNotificationPermission,
             onRetry: _checkPermissions,
             isNotificationPermission: true,
             textTheme: textTheme,
             colors: colors,
+            l10n: l10n,
           ),
 
           if (allGranted) ...[
@@ -400,7 +386,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                   ),
                   const SizedBox(width: Spacing.sm),
                   Text(
-                    '모든 권한이 허용되었습니다',
+                    l10n.permissionAllGrantedBanner,
                     style: textTheme.bodyMedium?.copyWith(
                       color: colors.successText,
                       fontWeight: FontWeight.w500,
@@ -424,6 +410,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     required VoidCallback onRetry,
     required TextTheme textTheme,
     required _BannerColors colors,
+    required AppLocalizations l10n,
     bool isNotificationPermission = false,
   }) {
     final isGranted = status == _PermissionCheckStatus.granted;
@@ -445,18 +432,14 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: isGranted
-                      ? colors.iconGranted
-                      : colors.iconDenied,
+                  color: isGranted ? colors.iconGranted : colors.iconDenied,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
                   isGranted
                       ? Icons.check
                       : (isError ? Icons.error_outline : Icons.priority_high),
-                  color: isGranted
-                      ? colors.iconGrantedFg
-                      : colors.iconDeniedFg,
+                  color: isGranted ? colors.iconGrantedFg : colors.iconDeniedFg,
                   size: 16,
                 ),
               ),
@@ -488,7 +471,9 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            isGranted ? '허용됨' : '필요',
+                            isGranted
+                                ? l10n.permissionGranted
+                                : l10n.permissionRequired,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
@@ -512,7 +497,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          '시스템 설정에서 직접 허용 필요',
+                          l10n.permissionSystemSettingsShort,
                           style: textTheme.bodySmall?.copyWith(
                             color: colors.warningColor,
                             fontSize: 11,
@@ -541,8 +526,10 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                 ),
                 child: Text(
                   isError
-                      ? '재시도'
-                      : (isNotificationPermission ? '설정 열기' : '허용하기'),
+                      ? l10n.permissionRetry
+                      : (isNotificationPermission
+                            ? l10n.permissionOpenSettings
+                            : l10n.permissionAllowAction),
                 ),
               ),
             ),

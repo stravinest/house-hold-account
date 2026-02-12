@@ -5,7 +5,10 @@ import '../models/fixed_expense_settings_model.dart';
 
 /// 고정비 설정 Repository
 class FixedExpenseSettingsRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  FixedExpenseSettingsRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   // 가계부의 고정비 설정 조회
   Future<FixedExpenseSettingsModel?> getSettings(String ledgerId) async {

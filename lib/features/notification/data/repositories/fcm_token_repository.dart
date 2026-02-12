@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/date_time_utils.dart';
 import '../models/fcm_token_model.dart';
@@ -5,7 +7,10 @@ import '../models/fcm_token_model.dart';
 /// FCM 토큰 Repository
 /// Supabase fcm_tokens 테이블과 상호작용하여 FCM 토큰을 관리합니다.
 class FcmTokenRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  FcmTokenRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   /// 사용자의 모든 FCM 토큰 조회
   ///

@@ -6,12 +6,15 @@ import '../../../../core/utils/supabase_error_handler.dart';
 import '../models/ledger_model.dart';
 
 class LedgerRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  LedgerRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   // 사용자의 모든 가계부 조회 (멤버로 등록된 가계부만)
   Future<List<LedgerModel>> getLedgers() async {
     final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw Exception('로그인이 필요합니다');
+    if (userId == null) throw Exception('Login required');
 
     // ledger_members를 통해 실제 멤버로 등록된 가계부만 조회
     // pending 초대 상태는 제외됨
@@ -48,7 +51,7 @@ class LedgerRepository {
   }) async {
     try {
       final userId = _client.auth.currentUser?.id;
-      if (userId == null) throw Exception('로그인이 필요합니다');
+      if (userId == null) throw Exception('Login required');
 
       final data = LedgerModel.toCreateJson(
         name: name,
@@ -66,7 +69,7 @@ class LedgerRepository {
       return LedgerModel.fromJson(response);
     } catch (e) {
       if (SupabaseErrorHandler.isDuplicateError(e)) {
-        throw DuplicateItemException(itemType: '가계부', itemName: name);
+        throw DuplicateItemException(itemType: 'ledger', itemName: name);
       }
       rethrow;
     }

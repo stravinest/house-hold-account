@@ -398,8 +398,9 @@ class _WeeklyTransactionList extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final weeklyTransactionsAsync = ref.watch(weeklyTransactionsProvider);
-    final formatter = NumberFormat('#,###', 'ko_KR');
-    final dateFormatter = DateFormat('M월 d일 (E)', 'ko_KR');
+    final locale = Localizations.localeOf(context).toString();
+    final formatter = NumberFormat('#,###', locale);
+    final dateFormatter = DateFormat.MMMEd(locale);
 
     // 이전 데이터 유지하면서 새 데이터 로딩 (레이아웃 점프 방지)
     final transactions = weeklyTransactionsAsync.valueOrNull ?? [];

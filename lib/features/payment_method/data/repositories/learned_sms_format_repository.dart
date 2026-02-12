@@ -1,11 +1,15 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/date_time_utils.dart';
 import '../models/learned_sms_format_model.dart';
 
 class LearnedSmsFormatRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  LearnedSmsFormatRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   Future<List<LearnedSmsFormatModel>> getFormatsByPaymentMethod(
     String paymentMethodId,

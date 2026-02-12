@@ -80,6 +80,9 @@ dependencies:
   permission_handler: ^11.3.1
   flutter_app_badger: ^1.5.0
 
+  # OTP 코드 입력 UI
+  pin_code_fields: ^8.0.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -6,7 +6,10 @@ import '../models/fixed_expense_category_model.dart';
 
 /// 고정비 카테고리 Repository
 class FixedExpenseCategoryRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  FixedExpenseCategoryRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   // 가계부의 모든 고정비 카테고리 조회
   Future<List<FixedExpenseCategoryModel>> getCategories(String ledgerId) async {

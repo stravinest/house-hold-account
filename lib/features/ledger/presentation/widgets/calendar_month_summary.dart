@@ -135,7 +135,7 @@ class SummaryColumn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final formatter = NumberFormat('#,###', Localizations.localeOf(context).toString());
     final colorScheme = Theme.of(context).colorScheme;
 
     // 유저별 금액 계산 (공유 가계부일 때만 수행)
@@ -235,7 +235,7 @@ class UserAmountIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final formatter = NumberFormat('#,###', Localizations.localeOf(context).toString());
     final isNegative = amount < 0;
 
     return Row(

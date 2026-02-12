@@ -202,17 +202,45 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get authForgotPasswordSubtitle =>
-      '가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 링크를 보내드립니다.';
+      '가입하신 이메일 주소를 입력하시면\n비밀번호 재설정 인증 코드를 보내드립니다.';
 
   @override
-  String get authForgotPasswordSend => '재설정 링크 보내기';
+  String get authForgotPasswordSend => '인증 코드 보내기';
 
   @override
-  String get authForgotPasswordSent => '비밀번호 재설정 이메일을 보냈습니다';
+  String get authForgotPasswordSent => '인증 코드를 보냈습니다';
 
   @override
-  String get authForgotPasswordSentSubtitle =>
-      '이메일을 확인하고 링크를 클릭하여\n비밀번호를 재설정하세요.';
+  String get authForgotPasswordSentSubtitle => '이메일로 전송된 인증 코드를 입력해주세요.';
+
+  @override
+  String get authOtpInputTitle => '인증 코드 입력';
+
+  @override
+  String get authOtpInputSubtitle => '아래 이메일로 전송된 코드를 입력하세요.';
+
+  @override
+  String get authOtpResend => '코드 재전송';
+
+  @override
+  String authOtpResendCooldown(int seconds) {
+    return '재전송 ($seconds초 후 가능)';
+  }
+
+  @override
+  String get authOtpResent => '인증 코드를 다시 보냈습니다';
+
+  @override
+  String get authOtpExpiredError => '코드가 만료되었습니다. 재전송해주세요.';
+
+  @override
+  String get authOtpInvalidError => '잘못된 코드입니다. 다시 확인해주세요.';
+
+  @override
+  String get authOtpVerifying => '확인 중...';
+
+  @override
+  String get authOtpExpiryNotice => '코드는 1시간 동안 유효합니다';
 
   @override
   String get authForgotPasswordBackToLogin => '로그인으로 돌아가기';
@@ -2604,4 +2632,217 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get paymentMethodAutoCollectDeleteNotice =>
       '자동수집 결제수단은 결제수단 관리에서 삭제할 수 있습니다';
+
+  @override
+  String get pendingConfirmAllTitle => '모든 거래 확인';
+
+  @override
+  String get pendingConfirmAllMessage =>
+      '대기 중인 모든 거래를 확인하시겠습니까?\n파싱 정보가 있는 거래만 저장됩니다.';
+
+  @override
+  String get pendingRejectAllTitle => '모든 거래 거부';
+
+  @override
+  String get pendingRejectAllMessage => '대기 중인 모든 거래를 거부하시겠습니까?';
+
+  @override
+  String get pendingAllProcessed => '모든 거래가 처리되었습니다';
+
+  @override
+  String get pendingAllRejected => '모든 거래가 거부되었습니다';
+
+  @override
+  String get pendingMenuConfirmAll => '모두 확인';
+
+  @override
+  String get pendingMenuRejectAll => '모두 거부';
+
+  @override
+  String get pendingMenuDeletePending => '대기 중 모두 삭제';
+
+  @override
+  String get pendingMenuDeleteRecords => '기록 삭제';
+
+  @override
+  String get pendingMenuDeleteRejected => '거부된 항목 삭제';
+
+  @override
+  String get pendingDeletePendingTitle => '대기 중인 거래 모두 삭제';
+
+  @override
+  String get pendingDeletePendingMessage => '대기 중인 모든 거래를 삭제하시겠습니까?';
+
+  @override
+  String get pendingDeleteRejectedTitle => '거부된 거래 모두 삭제';
+
+  @override
+  String get pendingDeleteRejectedMessage => '거부된 모든 거래를 삭제하시겠습니까?';
+
+  @override
+  String get pendingDeleteConfirmedTitle => '확인된 거래 모두 삭제';
+
+  @override
+  String get pendingDeleteConfirmedMessage => '확인된 모든 거래 기록을 삭제하시겠습니까?';
+
+  @override
+  String get pendingEditTitle => '거래 정보 수정';
+
+  @override
+  String get pendingOriginalMessage => '원본 메시지';
+
+  @override
+  String get pendingMerchantName => '상호명';
+
+  @override
+  String get pendingSelectDate => '날짜 선택';
+
+  @override
+  String get commonDeletedMessage => '삭제되었습니다';
+
+  @override
+  String get permissionAppSettings => '앱 권한 설정';
+
+  @override
+  String get permissionAutoSaveSettings => '자동 저장 권한 설정';
+
+  @override
+  String get permissionBetterServiceDesc => '더 나은 서비스를 위해 다음 권한이 필요합니다.';
+
+  @override
+  String get permissionAutoSaveDesc => '거래 내역을 자동으로 저장하려면 다음 권한이 필요합니다.';
+
+  @override
+  String get permissionAllGrantedMessage => '모든 권한이 허용되었습니다.';
+
+  @override
+  String get permissionAllGrantedBanner => '모든 권한이 허용되었습니다';
+
+  @override
+  String get permissionPushNotification => '푸시 알림';
+
+  @override
+  String get permissionPushDesc => '공유 가계부 알림, 초대 알림 등을 받습니다.';
+
+  @override
+  String get permissionSmsRead => 'SMS 읽기';
+
+  @override
+  String get permissionSmsDesc => '카드사/은행 문자에서 거래 정보를 읽습니다.';
+
+  @override
+  String get permissionNotificationAccess => '알림 접근';
+
+  @override
+  String get permissionNotificationDesc => '카드/은행 앱 푸시 알림에서 거래 정보를 읽습니다.';
+
+  @override
+  String get permissionGranted => '허용됨';
+
+  @override
+  String get permissionRequired => '필요';
+
+  @override
+  String get permissionLater => '나중에';
+
+  @override
+  String get permissionSystemSettings => '시스템 설정에서 직접 허용해야 합니다.';
+
+  @override
+  String get permissionOpenSettings => '설정 열기';
+
+  @override
+  String get permissionAllow => '허용';
+
+  @override
+  String get permissionPushDescShort => '공유 가계부 알림, 초대 알림 등을 받습니다';
+
+  @override
+  String get permissionSmsDescShort => '문자 메시지에서 거래 정보를 읽습니다';
+
+  @override
+  String get permissionNotificationDescShort => '푸시 알림에서 거래 정보를 읽습니다';
+
+  @override
+  String get permissionSystemSettingsShort => '시스템 설정에서 직접 허용 필요';
+
+  @override
+  String get permissionRetry => '재시도';
+
+  @override
+  String get permissionAllowAction => '허용하기';
+
+  @override
+  String get guideDialogWelcome => '환영합니다!';
+
+  @override
+  String get guideDialogSubtitle => '우리의 생활 공유 가계부';
+
+  @override
+  String get guideDialogBody => '함께하는 가계부 관리!\n설정에서 가이드를 확인하고\n시작하는 방법을 알아보세요.';
+
+  @override
+  String get guideDialogTip => '설정 > 정보 > 가이드';
+
+  @override
+  String get guideDialogNotificationNotice =>
+      '알림 권한을 모두 허용해야 자동수집 등\n모든 기능을 원활하게 사용할 수 있습니다.';
+
+  @override
+  String get settingsAppPermissionsDesc => '푸시 알림, SMS, 알림 접근 권한 관리';
+
+  @override
+  String get settingsDeveloperOptions => '개발자 옵션';
+
+  @override
+  String get settingsAutoCollectDebug => '자동수집 디버그';
+
+  @override
+  String get settingsAutoCollectDebugDesc => 'SMS/Push 시뮬레이션 및 파싱 테스트';
+
+  @override
+  String get settingsDisplayNameRequired => '표시 이름을 입력해주세요';
+
+  @override
+  String get settingsPasswordCurrentIncorrect => '현재 비밀번호가 올바르지 않습니다';
+
+  @override
+  String get settingsPasswordChangeFailed => '비밀번호 변경에 실패했습니다';
+
+  @override
+  String get calendarViewDayShort => '일';
+
+  @override
+  String get calendarViewWeekShort => '주';
+
+  @override
+  String get calendarViewMonthShort => '월';
+
+  @override
+  String calendarDailyDateHeader(int month, int day, String weekday) {
+    return '$month월 $day일 ($weekday)';
+  }
+
+  @override
+  String get assetGoalLabel => '목표';
+
+  @override
+  String assetGoalCurrentWithAmount(String amount) {
+    return '현재 $amount';
+  }
+
+  @override
+  String assetGoalTargetWithAmount(String amount) {
+    return '목표 $amount';
+  }
+
+  @override
+  String assetGoalAchievementPercent(String percent) {
+    return '$percent% 달성';
+  }
+
+  @override
+  String assetGoalRemainingWithUnit(String amount) {
+    return '$amount 남음';
+  }
 }

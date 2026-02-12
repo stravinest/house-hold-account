@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -11,9 +12,6 @@ import '../../data/models/pending_transaction_model.dart';
 import '../../domain/entities/pending_transaction.dart';
 import '../providers/pending_transaction_provider.dart';
 import '../widgets/pending_transaction_card.dart';
-
-// DateFormat 캐싱 (매 빌드마다 생성하지 않음)
-final _dateFormat = DateFormat('M월 d일 (E)', 'ko');
 
 class PendingTransactionsPage extends ConsumerStatefulWidget {
   const PendingTransactionsPage({super.key});
@@ -54,6 +52,7 @@ class _PendingTransactionsPageState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final pendingTxAsync = ref.watch(pendingTransactionNotifierProvider);
     final ledgerId = ref.watch(selectedLedgerIdProvider);
@@ -62,7 +61,7 @@ class _PendingTransactionsPageState
     // ledgerId나 userId가 없으면 로딩 표시
     if (ledgerId == null || currentUser == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('자동 수집')),
+        appBar: AppBar(title: Text(l10n.autoCollectTitle)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -71,7 +70,7 @@ class _PendingTransactionsPageState
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('자동 수집'),
+        title: Text(l10n.autoCollectTitle),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.more_vert),
@@ -95,53 +94,54 @@ class _PendingTransactionsPageState
               }
             },
             itemBuilder: (context) {
+              final l10n = AppLocalizations.of(context);
               final index = _tabController.index;
               if (index == 0) {
                 return [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'confirm_all',
                     child: ListTile(
-                      leading: Icon(Icons.check_circle_outline),
-                      title: Text('모두 확인'),
+                      leading: const Icon(Icons.check_circle_outline),
+                      title: Text(l10n.pendingMenuConfirmAll),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'reject_all',
                     child: ListTile(
-                      leading: Icon(Icons.cancel_outlined),
-                      title: Text('모두 거부'),
+                      leading: const Icon(Icons.cancel_outlined),
+                      title: Text(l10n.pendingMenuRejectAll),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
                   const PopupMenuDivider(),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete_pending',
                     child: ListTile(
-                      leading: Icon(Icons.delete_outline),
-                      title: Text('대기 중 모두 삭제'),
+                      leading: const Icon(Icons.delete_outline),
+                      title: Text(l10n.pendingMenuDeletePending),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
                 ];
               } else if (index == 1) {
                 return [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete_confirmed',
                     child: ListTile(
-                      leading: Icon(Icons.delete_outline),
-                      title: Text('기록 삭제'),
+                      leading: const Icon(Icons.delete_outline),
+                      title: Text(l10n.pendingMenuDeleteRecords),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
                 ];
               } else {
                 return [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'delete_rejected',
                     child: ListTile(
-                      leading: Icon(Icons.delete_outline),
-                      title: Text('거부된 항목 삭제'),
+                      leading: const Icon(Icons.delete_outline),
+                      title: Text(l10n.pendingMenuDeleteRejected),
                       contentPadding: EdgeInsets.zero,
                     ),
                   ),
@@ -152,10 +152,10 @@ class _PendingTransactionsPageState
         ],
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
-            Tab(text: '대기 중'),
-            Tab(text: '확인됨'),
-            Tab(text: '거부됨'),
+          tabs: [
+            Tab(text: l10n.pendingTransactionStatusPending),
+            Tab(text: l10n.pendingTransactionStatusConfirmed),
+            Tab(text: l10n.pendingTransactionStatusRejected),
           ],
         ),
       ),
@@ -172,7 +172,7 @@ class _PendingTransactionsPageState
                     .toList(),
                 ledgerId: ledgerId,
                 userId: userId,
-                emptyMessage: '대기 중인 거래가 없습니다',
+                emptyMessage: l10n.pendingTransactionEmptyPending,
                 emptyIcon: Icons.hourglass_empty,
               ),
               _buildTransactionList(
@@ -186,7 +186,7 @@ class _PendingTransactionsPageState
                     .toList(),
                 ledgerId: ledgerId,
                 userId: userId,
-                emptyMessage: '확인된 거래가 없습니다',
+                emptyMessage: l10n.pendingTransactionEmptyConfirmed,
                 emptyIcon: Icons.check_circle_outline,
               ),
               _buildTransactionList(
@@ -196,7 +196,7 @@ class _PendingTransactionsPageState
                     .toList(),
                 ledgerId: ledgerId,
                 userId: userId,
-                emptyMessage: '거부된 거래가 없습니다',
+                emptyMessage: l10n.pendingTransactionEmptyRejected,
                 emptyIcon: Icons.cancel_outlined,
               ),
             ],
@@ -204,7 +204,7 @@ class _PendingTransactionsPageState
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, _) => Center(
             child: Text(
-              '오류: $error',
+              l10n.errorWithMessage(error.toString()),
               style: TextStyle(color: colorScheme.error),
             ),
           ),
@@ -283,6 +283,7 @@ class _PendingTransactionsPageState
   }
 
   Widget _buildDateHeader(BuildContext context, DateTime date) {
+    final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -292,11 +293,12 @@ class _PendingTransactionsPageState
 
     String dateText;
     if (date == today) {
-      dateText = '오늘';
+      dateText = l10n.dateGroupToday;
     } else if (date == yesterday) {
-      dateText = '어제';
+      dateText = l10n.dateGroupYesterday;
     } else {
-      dateText = _dateFormat.format(date);
+      final localeStr = Localizations.localeOf(context).toString();
+      dateText = DateFormat.MMMEd(localeStr).format(date);
     }
 
     return Padding(
@@ -312,39 +314,41 @@ class _PendingTransactionsPageState
   }
 
   Future<void> _confirmTransaction(String id) async {
+    final l10n = AppLocalizations.of(context);
     try {
       await ref
           .read(pendingTransactionNotifierProvider.notifier)
           .confirmTransaction(id);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('거래가 저장되었습니다')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.pendingTransactionConfirmed)),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+        );
       }
     }
   }
 
   Future<void> _rejectTransaction(String id) async {
+    final l10n = AppLocalizations.of(context);
     try {
       await ref
           .read(pendingTransactionNotifierProvider.notifier)
           .rejectTransaction(id);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('거래가 거부되었습니다')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.pendingTransactionRejected)),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+        );
       }
     }
   }
@@ -359,22 +363,26 @@ class _PendingTransactionsPageState
   }
 
   Future<void> _confirmAll() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('모든 거래 확인'),
-        content: const Text('대기 중인 모든 거래를 확인하시겠습니까?\n파싱 정보가 있는 거래만 저장됩니다.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('확인'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.pendingConfirmAllTitle),
+          content: Text(l10n.pendingConfirmAllMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.commonConfirm),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true) {
@@ -385,35 +393,39 @@ class _PendingTransactionsPageState
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('모든 거래가 처리되었습니다')));
+          ).showSnackBar(SnackBar(content: Text(l10n.pendingAllProcessed)));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('오류: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+          );
         }
       }
     }
   }
 
   Future<void> _rejectAll() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('모든 거래 거부'),
-        content: const Text('대기 중인 모든 거래를 거부하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('거부'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.pendingRejectAllTitle),
+          content: Text(l10n.pendingRejectAllMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.commonReject),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true) {
@@ -422,13 +434,13 @@ class _PendingTransactionsPageState
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('모든 거래가 거부되었습니다')));
+          ).showSnackBar(SnackBar(content: Text(l10n.pendingAllRejected)));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('오류: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+          );
         }
       }
     }
@@ -439,22 +451,26 @@ class _PendingTransactionsPageState
   }
 
   Future<void> _deleteTransaction(String id) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('거래 삭제'),
-        content: const Text('이 거래를 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.pendingTransactionDeleteConfirmTitle),
+          content: Text(l10n.pendingTransactionDeleteConfirmMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.commonDelete),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true) {
@@ -463,56 +479,60 @@ class _PendingTransactionsPageState
             .read(pendingTransactionNotifierProvider.notifier)
             .deleteTransaction(id);
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('거래가 삭제되었습니다')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.pendingTransactionDeleted)),
+          );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('오류: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+          );
         }
       }
     }
   }
 
   Future<void> _deleteAllByStatus(PendingTransactionStatus status) async {
+    final l10n = AppLocalizations.of(context);
     String title;
     String content;
 
     switch (status) {
       case PendingTransactionStatus.pending:
-        title = '대기 중인 거래 모두 삭제';
-        content = '대기 중인 모든 거래를 삭제하시겠습니까?';
+        title = l10n.pendingDeletePendingTitle;
+        content = l10n.pendingDeletePendingMessage;
         break;
       case PendingTransactionStatus.rejected:
-        title = '거부된 거래 모두 삭제';
-        content = '거부된 모든 거래를 삭제하시겠습니까?';
+        title = l10n.pendingDeleteRejectedTitle;
+        content = l10n.pendingDeleteRejectedMessage;
         break;
       case PendingTransactionStatus.confirmed:
       case PendingTransactionStatus.converted:
-        title = '확인된 거래 모두 삭제';
-        content = '확인된 모든 거래 기록을 삭제하시겠습니까?';
+        title = l10n.pendingDeleteConfirmedTitle;
+        content = l10n.pendingDeleteConfirmedMessage;
         break;
     }
 
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.commonDelete),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true) {
@@ -523,35 +543,39 @@ class _PendingTransactionsPageState
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('삭제되었습니다')));
+          ).showSnackBar(SnackBar(content: Text(l10n.commonDeletedMessage)));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('오류: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+          );
         }
       }
     }
   }
 
   Future<void> _deleteAllConfirmed() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('확인된 거래 모두 삭제'),
-        content: const Text('확인된 모든 거래 기록을 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('삭제'),
-          ),
-        ],
-      ),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(l10n.pendingDeleteConfirmedTitle),
+          content: Text(l10n.pendingDeleteConfirmedMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(l10n.commonCancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(l10n.commonDelete),
+            ),
+          ],
+        );
+      },
     );
 
     if (confirmed == true) {
@@ -564,13 +588,13 @@ class _PendingTransactionsPageState
         if (mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(const SnackBar(content: Text('삭제되었습니다')));
+          ).showSnackBar(SnackBar(content: Text(l10n.commonDeletedMessage)));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('오류: $e')));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+          );
         }
       }
     }
@@ -617,6 +641,7 @@ class _EditPendingTransactionSheetState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final bottomPadding = MediaQuery.of(context).viewPadding.bottom;
@@ -636,7 +661,7 @@ class _EditPendingTransactionSheetState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '거래 정보 수정',
+                l10n.pendingEditTitle,
                 style: textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -658,7 +683,7 @@ class _EditPendingTransactionSheetState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '원본 메시지',
+                    l10n.pendingOriginalMessage,
                     style: textTheme.labelSmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -679,10 +704,10 @@ class _EditPendingTransactionSheetState
           // 금액
           TextField(
             controller: _amountController,
-            decoration: const InputDecoration(
-              labelText: '금액',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.attach_money),
+            decoration: InputDecoration(
+              labelText: l10n.transactionAmount,
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.attach_money),
             ),
             keyboardType: TextInputType.number,
           ),
@@ -691,26 +716,26 @@ class _EditPendingTransactionSheetState
           // 상호명
           TextField(
             controller: _merchantController,
-            decoration: const InputDecoration(
-              labelText: '상호명',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.store),
+            decoration: InputDecoration(
+              labelText: l10n.pendingMerchantName,
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.store),
             ),
           ),
           const SizedBox(height: Spacing.md),
 
           // 거래 유형
           SegmentedButton<String>(
-            segments: const [
+            segments: [
               ButtonSegment(
                 value: 'expense',
-                label: Text('지출'),
-                icon: Icon(Icons.remove_circle_outline),
+                label: Text(l10n.transactionExpense),
+                icon: const Icon(Icons.remove_circle_outline),
               ),
               ButtonSegment(
                 value: 'income',
-                label: Text('수입'),
-                icon: Icon(Icons.add_circle_outline),
+                label: Text(l10n.transactionIncome),
+                icon: const Icon(Icons.add_circle_outline),
               ),
             ],
             selected: {_selectedType ?? 'expense'},
@@ -741,7 +766,7 @@ class _EditPendingTransactionSheetState
             label: Text(
               _selectedDate != null
                   ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
-                  : '날짜 선택',
+                  : l10n.pendingSelectDate,
             ),
           ),
           const SizedBox(height: Spacing.lg),
@@ -755,7 +780,7 @@ class _EditPendingTransactionSheetState
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('저장'),
+                : Text(l10n.commonSave),
           ),
         ],
       ),
@@ -763,6 +788,7 @@ class _EditPendingTransactionSheetState
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
     setState(() {
       _isLoading = true;
     });
@@ -786,13 +812,13 @@ class _EditPendingTransactionSheetState
         Navigator.pop(context);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('수정되었습니다')));
+        ).showSnackBar(SnackBar(content: Text(l10n.pendingTransactionUpdated)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('오류: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.errorWithMessage(e.toString()))),
+        );
       }
     } finally {
       if (mounted) {

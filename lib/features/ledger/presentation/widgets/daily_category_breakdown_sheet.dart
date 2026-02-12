@@ -16,6 +16,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final locale = Localizations.localeOf(context).toString();
     final transactionsAsync = ref.watch(dailyTransactionsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -41,7 +42,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(date),
+                        DateFormat.yMMMEd(locale).format(date),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
@@ -136,7 +137,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
 
   Widget _buildDailySummary(BuildContext context, Map<String, int> totals) {
     final l10n = AppLocalizations.of(context);
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final formatter = NumberFormat('#,###', Localizations.localeOf(context).toString());
     final income = totals['income'] ?? 0;
     final expense = totals['expense'] ?? 0;
 
@@ -205,7 +206,7 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
   ) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final formatter = NumberFormat('#,###', Localizations.localeOf(context).toString());
     final isIncome = transactions.first.isIncome;
     final categoryIcon = transactions.first.categoryIcon ?? '📦';
     final categoryColor =

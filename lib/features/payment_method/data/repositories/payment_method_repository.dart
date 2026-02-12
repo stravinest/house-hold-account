@@ -9,7 +9,10 @@ import '../models/payment_method_model.dart';
 import '../services/notification_listener_wrapper.dart';
 
 class PaymentMethodRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  PaymentMethodRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   /// 결제수단 쿼리를 위한 공통 헬퍼 메서드
   Future<List<PaymentMethodModel>> _queryPaymentMethods({
@@ -100,7 +103,7 @@ class PaymentMethodRepository {
       // 현재 로그인한 사용자 ID 가져오기
       final currentUserId = _client.auth.currentUser?.id;
       if (currentUserId == null) {
-        throw Exception('로그인이 필요합니다');
+        throw Exception('Login required');
       }
 
       // 현재 최대 sort_order 조회
@@ -133,7 +136,7 @@ class PaymentMethodRepository {
       return PaymentMethodModel.fromJson(response);
     } catch (e) {
       if (SupabaseErrorHandler.isDuplicateError(e)) {
-        throw DuplicateItemException(itemType: '결제수단', itemName: name);
+        throw DuplicateItemException(itemType: 'payment method', itemName: name);
       }
       rethrow;
     }
@@ -166,7 +169,7 @@ class PaymentMethodRepository {
       return PaymentMethodModel.fromJson(response);
     } catch (e) {
       if (SupabaseErrorHandler.isDuplicateError(e)) {
-        throw DuplicateItemException(itemType: '결제수단', itemName: name);
+        throw DuplicateItemException(itemType: 'payment method', itemName: name);
       }
       rethrow;
     }
@@ -181,7 +184,7 @@ class PaymentMethodRepository {
         .select();
 
     if ((response as List).isEmpty) {
-      throw Exception('결제수단 삭제에 실패했습니다. 권한이 없거나 존재하지 않는 결제수단입니다.');
+      throw Exception('Failed to delete payment method. No permission or payment method not found.');
     }
   }
 
@@ -195,10 +198,10 @@ class PaymentMethodRepository {
 
       // RPC가 false를 반환하면 실패로 간주
       if (response == false) {
-        throw Exception('결제수단 순서 변경에 실패했습니다.');
+        throw Exception('Failed to reorder payment methods.');
       }
     } catch (e) {
-      debugPrint('결제수단 순서 변경 실패: $e');
+      debugPrint('Payment method reorder failed: $e');
       rethrow;
     }
   }

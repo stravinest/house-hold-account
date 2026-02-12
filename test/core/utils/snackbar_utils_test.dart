@@ -55,7 +55,7 @@ void main() {
         await tester.pump();
 
         final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
-        expect(snackBar.backgroundColor, equals(Colors.green[700]));
+        expect(snackBar.backgroundColor, equals(Colors.transparent));
       });
 
       testWidgets('기본 지속 시간은 SnackBarDuration.short를 사용한다', (
@@ -165,7 +165,7 @@ void main() {
         await tester.pump();
 
         final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
-        expect(snackBar.backgroundColor, equals(Colors.red[700]));
+        expect(snackBar.backgroundColor, equals(Colors.transparent));
       });
 
       testWidgets('기본 지속 시간은 SnackBarDuration.short를 사용한다', (
@@ -275,8 +275,8 @@ void main() {
         await tester.pump();
 
         final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
-        // 정보 메시지는 backgroundColor가 null (테마 기본값 사용)
-        expect(snackBar.backgroundColor, isNull);
+        // 정보 메시지도 transparent 사용
+        expect(snackBar.backgroundColor, equals(Colors.transparent));
       });
 
       testWidgets('기본 지속 시간은 SnackBarDuration.short를 사용한다', (

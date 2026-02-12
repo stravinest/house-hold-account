@@ -21,14 +21,10 @@ class TransactionDetailSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final locale = Localizations.localeOf(context).languageCode;
-    final formatter = NumberFormat('#,###', locale == 'ko' ? 'ko_KR' : 'en_US');
-    final dateFormat = locale == 'ko'
-        ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
-        : DateFormat('MMMM d, yyyy (E)', 'en_US');
-    final dateTimeFormat = locale == 'ko'
-        ? DateFormat('yyyy년 M월 d일 (E) HH:mm', 'ko_KR')
-        : DateFormat('MMMM d, yyyy (E) HH:mm', 'en_US');
+    final localeStr = Localizations.localeOf(context).toString();
+    final formatter = NumberFormat('#,###');
+    final dateFormat = DateFormat.yMMMEd(localeStr);
+    final dateTimeFormat = DateFormat.yMMMEd(localeStr).add_Hm();
     final amountColor = transaction.isIncome
         ? colorScheme.primary
         : transaction.isAssetType

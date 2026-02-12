@@ -124,13 +124,33 @@ export async function resetPassword(formData: FormData) {
   }
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?type=recovery`,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
 
   if (error) {
     return { error: error.message };
   }
 
-  return { success: '비밀번호 재설정 이메일을 발송했습니다.' };
+  return { success: '인증 코드를 발송했습니다.', email };
+}
+
+export async function verifyPasswordResetOtp(email: string, token: string) {
+  if (!email || !token) {
+    return { error: '이메일과 인증 코드를 입력하세요.' };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({
+    type: 'recovery',
+    email,
+    token,
+  });
+
+  if (error) {
+    if (error.message.includes('expired') || error.message.includes('Token')) {
+      return { error: '코드가 만료되었습니다. 재전송해주세요.' };
+    }
+    return { error: '잘못된 코드입니다. 다시 확인해주세요.' };
+  }
+
+  return { success: true };
 }

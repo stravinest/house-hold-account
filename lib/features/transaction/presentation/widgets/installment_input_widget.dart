@@ -146,20 +146,16 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
   }
 
   String _formatAmount(int amount, String locale) {
-    return NumberFormat(
-      '#,###',
-      locale == 'ko' ? 'ko_KR' : 'en_US',
-    ).format(amount);
+    return NumberFormat('#,###').format(amount);
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final localeStr = Localizations.localeOf(context).toString();
     final locale = Localizations.localeOf(context).languageCode;
     final colorScheme = Theme.of(context).colorScheme;
-    final dateFormat = locale == 'ko'
-        ? DateFormat('yyyy년 M월', 'ko_KR')
-        : DateFormat('MMMM yyyy', 'en_US');
+    final dateFormat = DateFormat.yMMM(localeStr);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,7 +449,7 @@ class _AmountInputFormatter extends TextInputFormatter {
     final number = int.tryParse(newValue.text.replaceAll(',', ''));
     if (number == null) return oldValue;
 
-    final formatter = NumberFormat('#,###', locale == 'ko' ? 'ko_KR' : 'en_US');
+    final formatter = NumberFormat('#,###');
     final formatted = formatter.format(number);
 
     return TextEditingValue(

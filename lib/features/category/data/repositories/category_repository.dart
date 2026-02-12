@@ -5,7 +5,10 @@ import '../../../../core/utils/supabase_error_handler.dart';
 import '../models/category_model.dart';
 
 class CategoryRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  CategoryRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   // 가계부의 모든 카테고리 조회
   Future<List<CategoryModel>> getCategories(String ledgerId) async {
@@ -76,7 +79,7 @@ class CategoryRepository {
       return CategoryModel.fromJson(response);
     } catch (e) {
       if (SupabaseErrorHandler.isDuplicateError(e)) {
-        throw DuplicateItemException(itemType: '카테고리', itemName: name);
+        throw DuplicateItemException(itemType: 'category', itemName: name);
       }
       rethrow;
     }
@@ -107,7 +110,7 @@ class CategoryRepository {
       return CategoryModel.fromJson(response);
     } catch (e) {
       if (SupabaseErrorHandler.isDuplicateError(e)) {
-        throw DuplicateItemException(itemType: '카테고리', itemName: name);
+        throw DuplicateItemException(itemType: 'category', itemName: name);
       }
       rethrow;
     }

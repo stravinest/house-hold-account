@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../../../config/supabase_config.dart';
 import '../../domain/entities/statistics_entities.dart';
 
@@ -10,7 +12,10 @@ class StatisticsRepository {
   static const _uncategorizedIcon = '';
   static const _uncategorizedColor = '#9E9E9E';
 
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  StatisticsRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   // 카테고리별 지출/수입 합계
   Future<List<CategoryStatistics>> getCategoryStatistics({

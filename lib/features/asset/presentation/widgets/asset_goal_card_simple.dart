@@ -101,9 +101,9 @@ class AssetGoalCardSimple extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
-                    '목표',
-                    style: TextStyle(
+                  Text(
+                    l10n.assetGoalLabel,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
                       color: Color(0xFF1A1C19),
@@ -156,7 +156,7 @@ class AssetGoalCardSimple extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '현재 ${numberFormat.format(currentAmount)}${l10n.transactionAmountUnit}',
+                    l10n.assetGoalCurrentWithAmount('${numberFormat.format(currentAmount)}${l10n.transactionAmountUnit}'),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -164,7 +164,7 @@ class AssetGoalCardSimple extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    '목표 ${numberFormat.format(goal.targetAmount)}${l10n.transactionAmountUnit}',
+                    l10n.assetGoalTargetWithAmount('${numberFormat.format(goal.targetAmount)}${l10n.transactionAmountUnit}'),
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.normal,
@@ -221,7 +221,7 @@ class AssetGoalCardSimple extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      '${progressPercent.toStringAsFixed(1)}% 달성',
+                      l10n.assetGoalAchievementPercent(progressPercent.toStringAsFixed(1)),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -231,7 +231,7 @@ class AssetGoalCardSimple extends ConsumerWidget {
                   ),
                   if (remaining > 0)
                     Text(
-                      '${numberFormat.format(remaining)}${l10n.transactionAmountUnit} 남음',
+                      l10n.assetGoalRemainingWithUnit('${numberFormat.format(remaining)}${l10n.transactionAmountUnit}'),
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.normal,
@@ -245,10 +245,10 @@ class AssetGoalCardSimple extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // 하단 안내 텍스트
-          const Center(
+          Center(
             child: Text(
-              '탭하여 상세 금액 보기',
-              style: TextStyle(
+              l10n.assetGoalTapForDetails,
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.normal,
                 color: Color(0xFF44483E),
@@ -277,8 +277,8 @@ class AssetGoalCardSimple extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('목표 삭제'),
-        content: Text('${goal.title} 목표를 삭제하시겠습니까?'),
+        title: Text(l10n.assetGoalDeleteTitle),
+        content: Text(l10n.assetGoalDeleteMessage(goal.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

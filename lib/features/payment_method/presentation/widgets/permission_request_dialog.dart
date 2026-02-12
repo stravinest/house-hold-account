@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../notification/services/local_notification_service.dart';
 import '../../data/services/notification_listener_wrapper.dart';
@@ -300,12 +301,13 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final colors = _PermissionColors(context);
+    final l10n = AppLocalizations.of(context);
 
     // 초기 설정 모드에 따른 타이틀/설명
-    final title = widget.isInitialSetup ? '앱 권한 설정' : '자동 저장 권한 설정';
+    final title = widget.isInitialSetup ? l10n.permissionAppSettings : l10n.permissionAutoSaveSettings;
     final description = widget.isInitialSetup
-        ? '더 나은 서비스를 위해 다음 권한이 필요합니다.'
-        : '거래 내역을 자동으로 저장하려면 다음 권한이 필요합니다.';
+        ? l10n.permissionBetterServiceDesc
+        : l10n.permissionAutoSaveDesc;
 
     return Dialog(
       backgroundColor: colors.dialogBackground,
@@ -334,7 +336,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                     const SizedBox(height: Spacing.sm),
                     // 설명
                     Text(
-                      _allPermissionsGranted ? '모든 권한이 허용되었습니다.' : description,
+                      _allPermissionsGranted ? l10n.permissionAllGrantedMessage : description,
                       style: textTheme.bodyMedium?.copyWith(
                         color: _allPermissionsGranted
                             ? colors.successText
@@ -348,11 +350,12 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                     if (_needsPushPermission) ...[
                       _buildPermissionItem(
                         icon: Icons.notifications_active_outlined,
-                        title: '푸시 알림',
-                        description: '공유 가계부 알림, 초대 알림 등을 받습니다.',
+                        title: l10n.permissionPushNotification,
+                        description: l10n.permissionPushDesc,
                         isGranted: _pushPermissionGranted,
                         onRequest: _requestPushPermission,
                         colors: colors,
+                        l10n: l10n,
                       ),
                       const SizedBox(height: Spacing.sm),
                     ],
@@ -360,11 +363,12 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                     if (_needsSmsPermission) ...[
                       _buildPermissionItem(
                         icon: Icons.sms_outlined,
-                        title: 'SMS 읽기',
-                        description: '카드사/은행 문자에서 거래 정보를 읽습니다.',
+                        title: l10n.permissionSmsRead,
+                        description: l10n.permissionSmsDesc,
                         isGranted: _smsPermissionGranted,
                         onRequest: _requestSmsPermission,
                         colors: colors,
+                        l10n: l10n,
                       ),
                       const SizedBox(height: Spacing.sm),
                     ],
@@ -372,12 +376,13 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                     if (_needsNotificationPermission)
                       _buildPermissionItem(
                         icon: Icons.app_settings_alt_outlined,
-                        title: '알림 접근',
-                        description: '카드/은행 앱 푸시 알림에서 거래 정보를 읽습니다.',
+                        title: l10n.permissionNotificationAccess,
+                        description: l10n.permissionNotificationDesc,
                         isGranted: _notificationPermissionGranted,
                         onRequest: _requestNotificationPermission,
                         isNotificationPermission: true,
                         colors: colors,
+                        l10n: l10n,
                       ),
                     // 완료 메시지 (모든 권한 허용 시)
                     if (_allPermissionsGranted) ...[
@@ -404,7 +409,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                             ),
                             const SizedBox(width: Spacing.sm),
                             Text(
-                              '모든 권한이 허용되었습니다',
+                              l10n.permissionAllGrantedBanner,
                               style: textTheme.bodyMedium?.copyWith(
                                 color: colors.successText,
                                 fontWeight: FontWeight.w500,
@@ -427,14 +432,14 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                               widget.onPermissionDenied?.call();
                               Navigator.of(context).pop(false);
                             },
-                            child: const Text('취소'),
+                            child: Text(l10n.commonCancel),
                           ),
                           const SizedBox(width: Spacing.sm),
                           TextButton(
                             onPressed: () {
                               Navigator.of(context).pop(false);
                             },
-                            child: const Text('나중에'),
+                            child: Text(l10n.permissionLater),
                           ),
                         ] else
                           OutlinedButton(
@@ -451,7 +456,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                             ),
-                            child: const Text('완료'),
+                            child: Text(l10n.commonDone),
                           ),
                       ],
                     ),
@@ -469,6 +474,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
     required bool isGranted,
     required VoidCallback onRequest,
     required _PermissionColors colors,
+    required AppLocalizations l10n,
     bool isNotificationPermission = false,
   }) {
     final textTheme = Theme.of(context).textTheme;
@@ -524,7 +530,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            isGranted ? '허용됨' : '필요',
+                            isGranted ? l10n.permissionGranted : l10n.permissionRequired,
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
@@ -547,7 +553,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                       Padding(
                         padding: const EdgeInsets.only(top: Spacing.xs),
                         child: Text(
-                          '시스템 설정에서 직접 허용해야 합니다.',
+                          l10n.permissionSystemSettings,
                           style: textTheme.bodySmall?.copyWith(
                             color: colors.warningColor,
                             fontStyle: FontStyle.italic,
@@ -574,7 +580,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Text(isNotificationPermission ? '설정 열기' : '허용'),
+                child: Text(isNotificationPermission ? l10n.permissionOpenSettings : l10n.permissionAllow),
               ),
             ),
           ],

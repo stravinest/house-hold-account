@@ -84,7 +84,8 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final dateFormat = DateFormat('M월 d일 (E)', 'ko_KR');
+    final locale = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat.MMMEd(locale);
 
     return ListView(
       padding: const EdgeInsets.all(Spacing.md),
@@ -122,7 +123,7 @@ class _TransactionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final formatter = NumberFormat('#,###', 'ko_KR');
+    final formatter = NumberFormat('#,###', Localizations.localeOf(context).toString());
     final amountColor = transaction.isIncome
         ? colorScheme.primary
         : transaction.isAssetType

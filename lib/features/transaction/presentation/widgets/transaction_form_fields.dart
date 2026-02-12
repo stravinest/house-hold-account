@@ -128,10 +128,8 @@ class DateSelectorTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final locale = Localizations.localeOf(context).languageCode;
-    final dateFormat = locale == 'ko'
-        ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
-        : DateFormat('MMMM d, yyyy (E)', 'en_US');
+    final localeStr = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat.yMMMEd(localeStr);
     return ListTile(
       leading: const Icon(Icons.calendar_today),
       title: Text(dateFormat.format(selectedDate)),
@@ -157,10 +155,8 @@ class MaturityDateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).languageCode;
-    final dateFormat = locale == 'ko'
-        ? DateFormat('yyyy년 M월 d일 (E)', 'ko_KR')
-        : DateFormat('MMMM d, yyyy (E)', 'en_US');
+    final localeStr = Localizations.localeOf(context).toString();
+    final dateFormat = DateFormat.yMMMEd(localeStr);
     return ListTile(
       leading: const Icon(Icons.event_available),
       title: Text(
@@ -292,10 +288,7 @@ class AmountInputFormatter extends TextInputFormatter {
     final number = int.tryParse(cleanText);
     if (number == null) return oldValue;
 
-    final formatted = NumberFormat(
-      '#,###',
-      locale == 'ko' ? 'ko_KR' : 'en_US',
-    ).format(number);
+    final formatted = NumberFormat('#,###').format(number);
 
     return TextEditingValue(
       text: formatted,

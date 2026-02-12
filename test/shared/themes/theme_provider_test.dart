@@ -11,7 +11,7 @@ void main() {
   });
 
   group('ThemeModeNotifier 기본 동작', () {
-    test('저장된 값이 없을 때 ThemeMode.system을 기본값으로 반환한다', () async {
+    test('저장된 값이 없을 때 ThemeMode.light를 기본값으로 반환한다', () async {
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
         overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
@@ -20,7 +20,7 @@ void main() {
 
       final state = container.read(themeModeProvider);
 
-      expect(state, ThemeMode.system);
+      expect(state, ThemeMode.light);
     });
 
     test('light 테마로 변경하고 SharedPreferences에 저장한다', () async {
@@ -99,7 +99,7 @@ void main() {
       expect(state, ThemeMode.dark);
     });
 
-    test('SharedPreferences에 system이 저장되어 있으면 system 테마로 초기화한다', () async {
+    test('SharedPreferences에 system이 저장되어 있으면 light 테마로 마이그레이션한다', () async {
       SharedPreferences.setMockInitialValues({'theme_mode': 'system'});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
@@ -109,12 +109,12 @@ void main() {
 
       final state = container.read(themeModeProvider);
 
-      expect(state, ThemeMode.system);
+      expect(state, ThemeMode.light);
     });
   });
 
   group('ThemeModeNotifier 에러 처리', () {
-    test('잘못된 값이 저장되어 있으면 기본값 ThemeMode.system으로 fallback한다', () async {
+    test('잘못된 값이 저장되어 있으면 기본값 ThemeMode.light로 fallback한다', () async {
       SharedPreferences.setMockInitialValues({'theme_mode': 'invalid_value'});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
@@ -124,10 +124,10 @@ void main() {
 
       final state = container.read(themeModeProvider);
 
-      expect(state, ThemeMode.system);
+      expect(state, ThemeMode.light);
     });
 
-    test('빈 문자열이 저장되어 있으면 기본값 ThemeMode.system으로 fallback한다', () async {
+    test('빈 문자열이 저장되어 있으면 기본값 ThemeMode.light로 fallback한다', () async {
       SharedPreferences.setMockInitialValues({'theme_mode': ''});
       final prefs = await SharedPreferences.getInstance();
       final container = ProviderContainer(
@@ -137,7 +137,7 @@ void main() {
 
       final state = container.read(themeModeProvider);
 
-      expect(state, ThemeMode.system);
+      expect(state, ThemeMode.light);
     });
   });
 

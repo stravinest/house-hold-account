@@ -205,17 +205,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authForgotPasswordSubtitle =>
-      'Enter your email address and we\'ll send you\na link to reset your password.';
+      'Enter your email address and we\'ll send you\na verification code to reset your password.';
 
   @override
-  String get authForgotPasswordSend => 'Send Reset Link';
+  String get authForgotPasswordSend => 'Send Verification Code';
 
   @override
-  String get authForgotPasswordSent => 'Password reset email sent';
+  String get authForgotPasswordSent => 'Verification code sent';
 
   @override
   String get authForgotPasswordSentSubtitle =>
-      'Check your email and click the link\nto reset your password.';
+      'Enter the verification code sent to your email.';
+
+  @override
+  String get authOtpInputTitle => 'Enter Verification Code';
+
+  @override
+  String get authOtpInputSubtitle => 'Enter the code sent to the email below.';
+
+  @override
+  String get authOtpResend => 'Resend Code';
+
+  @override
+  String authOtpResendCooldown(int seconds) {
+    return 'Resend available in ${seconds}s';
+  }
+
+  @override
+  String get authOtpResent => 'Verification code resent';
+
+  @override
+  String get authOtpExpiredError => 'Code has expired. Please resend.';
+
+  @override
+  String get authOtpInvalidError => 'Invalid code. Please try again.';
+
+  @override
+  String get authOtpVerifying => 'Verifying...';
+
+  @override
+  String get authOtpExpiryNotice => 'Code is valid for 1 hour';
 
   @override
   String get authForgotPasswordBackToLogin => 'Back to Login';
@@ -2667,4 +2696,234 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paymentMethodAutoCollectDeleteNotice =>
       'Auto-collect payment methods can be deleted in Payment Method Management';
+
+  @override
+  String get pendingConfirmAllTitle => 'Confirm All Transactions';
+
+  @override
+  String get pendingConfirmAllMessage =>
+      'Confirm all pending transactions?\nOnly transactions with parsed info will be saved.';
+
+  @override
+  String get pendingRejectAllTitle => 'Reject All Transactions';
+
+  @override
+  String get pendingRejectAllMessage => 'Reject all pending transactions?';
+
+  @override
+  String get pendingAllProcessed => 'All transactions have been processed';
+
+  @override
+  String get pendingAllRejected => 'All transactions have been rejected';
+
+  @override
+  String get pendingMenuConfirmAll => 'Confirm All';
+
+  @override
+  String get pendingMenuRejectAll => 'Reject All';
+
+  @override
+  String get pendingMenuDeletePending => 'Delete All Pending';
+
+  @override
+  String get pendingMenuDeleteRecords => 'Delete Records';
+
+  @override
+  String get pendingMenuDeleteRejected => 'Delete Rejected Items';
+
+  @override
+  String get pendingDeletePendingTitle => 'Delete All Pending Transactions';
+
+  @override
+  String get pendingDeletePendingMessage => 'Delete all pending transactions?';
+
+  @override
+  String get pendingDeleteRejectedTitle => 'Delete All Rejected Transactions';
+
+  @override
+  String get pendingDeleteRejectedMessage =>
+      'Delete all rejected transactions?';
+
+  @override
+  String get pendingDeleteConfirmedTitle => 'Delete All Confirmed Transactions';
+
+  @override
+  String get pendingDeleteConfirmedMessage =>
+      'Delete all confirmed transaction records?';
+
+  @override
+  String get pendingEditTitle => 'Edit Transaction Info';
+
+  @override
+  String get pendingOriginalMessage => 'Original Message';
+
+  @override
+  String get pendingMerchantName => 'Merchant Name';
+
+  @override
+  String get pendingSelectDate => 'Select Date';
+
+  @override
+  String get commonDeletedMessage => 'Deleted';
+
+  @override
+  String get permissionAppSettings => 'App Permission Settings';
+
+  @override
+  String get permissionAutoSaveSettings => 'Auto Save Permission Settings';
+
+  @override
+  String get permissionBetterServiceDesc =>
+      'The following permissions are required for better service.';
+
+  @override
+  String get permissionAutoSaveDesc =>
+      'The following permissions are required to auto-save transactions.';
+
+  @override
+  String get permissionAllGrantedMessage =>
+      'All permissions have been granted.';
+
+  @override
+  String get permissionAllGrantedBanner => 'All permissions granted';
+
+  @override
+  String get permissionPushNotification => 'Push Notifications';
+
+  @override
+  String get permissionPushDesc =>
+      'Receive shared ledger and invitation notifications.';
+
+  @override
+  String get permissionSmsRead => 'SMS Read';
+
+  @override
+  String get permissionSmsDesc =>
+      'Read transaction info from card/bank messages.';
+
+  @override
+  String get permissionNotificationAccess => 'Notification Access';
+
+  @override
+  String get permissionNotificationDesc =>
+      'Read transaction info from card/bank app push notifications.';
+
+  @override
+  String get permissionGranted => 'Granted';
+
+  @override
+  String get permissionRequired => 'Required';
+
+  @override
+  String get permissionLater => 'Later';
+
+  @override
+  String get permissionSystemSettings =>
+      'Must be allowed directly in system settings.';
+
+  @override
+  String get permissionOpenSettings => 'Open Settings';
+
+  @override
+  String get permissionAllow => 'Allow';
+
+  @override
+  String get permissionPushDescShort =>
+      'Receive shared ledger and invitation notifications';
+
+  @override
+  String get permissionSmsDescShort =>
+      'Read transaction info from text messages';
+
+  @override
+  String get permissionNotificationDescShort =>
+      'Read transaction info from push notifications';
+
+  @override
+  String get permissionSystemSettingsShort =>
+      'Must be allowed in system settings';
+
+  @override
+  String get permissionRetry => 'Retry';
+
+  @override
+  String get permissionAllowAction => 'Allow';
+
+  @override
+  String get guideDialogWelcome => 'Welcome!';
+
+  @override
+  String get guideDialogSubtitle => 'Our shared household account book';
+
+  @override
+  String get guideDialogBody =>
+      'Manage finances together!\nCheck the guide in Settings\nto learn how to get started.';
+
+  @override
+  String get guideDialogTip => 'Settings > Info > Guide';
+
+  @override
+  String get guideDialogNotificationNotice =>
+      'All notification permissions must be granted\nfor full functionality including auto-collect.';
+
+  @override
+  String get settingsAppPermissionsDesc =>
+      'Manage push, SMS, notification access permissions';
+
+  @override
+  String get settingsDeveloperOptions => 'Developer Options';
+
+  @override
+  String get settingsAutoCollectDebug => 'Auto Collect Debug';
+
+  @override
+  String get settingsAutoCollectDebugDesc =>
+      'SMS/Push simulation and parsing test';
+
+  @override
+  String get settingsDisplayNameRequired => 'Please enter display name';
+
+  @override
+  String get settingsPasswordCurrentIncorrect =>
+      'Current password is incorrect';
+
+  @override
+  String get settingsPasswordChangeFailed => 'Failed to change password';
+
+  @override
+  String get calendarViewDayShort => 'D';
+
+  @override
+  String get calendarViewWeekShort => 'W';
+
+  @override
+  String get calendarViewMonthShort => 'M';
+
+  @override
+  String calendarDailyDateHeader(int month, int day, String weekday) {
+    return '$month/$day ($weekday)';
+  }
+
+  @override
+  String get assetGoalLabel => 'Goal';
+
+  @override
+  String assetGoalCurrentWithAmount(String amount) {
+    return 'Current $amount';
+  }
+
+  @override
+  String assetGoalTargetWithAmount(String amount) {
+    return 'Target $amount';
+  }
+
+  @override
+  String assetGoalAchievementPercent(String percent) {
+    return '$percent% achieved';
+  }
+
+  @override
+  String assetGoalRemainingWithUnit(String amount) {
+    return '$amount remaining';
+  }
 }

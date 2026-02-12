@@ -185,7 +185,7 @@ class _RecurringSettingsWidgetState
       initialDate: _endDate ?? widget.startDate,
       firstDate: widget.startDate,
       lastDate: widget.startDate.add(const Duration(days: 365)),
-      locale: const Locale('ko', 'KR'),
+      locale: Localizations.localeOf(context),
     );
 
     if (picked != null) {
@@ -241,20 +241,14 @@ class _RecurringSettingsWidgetState
     }
   }
 
-  String _getEndDateDisplayText(AppLocalizations l10n, String locale) {
+  String _getEndDateDisplayText(AppLocalizations l10n, String localeStr) {
     if (_endDate == null) return l10n.recurringContinueRepeat;
 
     switch (_selectedType) {
       case RecurringType.daily:
-        final dateFormat = locale == 'ko'
-            ? DateFormat('yyyy년 M월 d일', 'ko_KR')
-            : DateFormat('MMMM d, yyyy', 'en_US');
-        return dateFormat.format(_endDate!);
+        return DateFormat.yMMMd(localeStr).format(_endDate!);
       case RecurringType.monthly:
-        final dateFormat = locale == 'ko'
-            ? DateFormat('yyyy년 M월', 'ko_KR')
-            : DateFormat('MMMM yyyy', 'en_US');
-        return dateFormat.format(_endDate!);
+        return DateFormat.yMMM(localeStr).format(_endDate!);
       case RecurringType.yearly:
         return l10n.yearFormat(_endDate!.year);
       case RecurringType.none:
@@ -278,7 +272,7 @@ class _RecurringSettingsWidgetState
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).languageCode;
+    final localeStr = Localizations.localeOf(context).toString();
     final colorScheme = Theme.of(context).colorScheme;
     final transactionCount = _calculateTransactionCount();
 
@@ -329,7 +323,7 @@ class _RecurringSettingsWidgetState
             leading: const Icon(Icons.event),
             title: Text(_getEndDateLabel(l10n)),
             subtitle: Text(
-              _getEndDateDisplayText(l10n, locale),
+              _getEndDateDisplayText(l10n, localeStr),
               style: TextStyle(color: colorScheme.onSurface),
             ),
             trailing: Row(

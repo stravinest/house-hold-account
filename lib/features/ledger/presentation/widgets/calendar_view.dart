@@ -122,7 +122,7 @@ class CalendarView extends ConsumerWidget {
           selectedDayPredicate: (day) => isSameDay(selectedDate, day),
           calendarFormat: CalendarFormat.month,
           startingDayOfWeek: startingDayOfWeek,
-          locale: 'ko_KR',
+          locale: Localizations.localeOf(context).toString(),
           headerVisible: false,
           rowHeight: CalendarConstants.rowHeight,
           daysOfWeekHeight: CalendarConstants.daysOfWeekHeight,
