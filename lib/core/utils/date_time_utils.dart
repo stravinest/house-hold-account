@@ -36,6 +36,25 @@ class DateTimeUtils {
   /// DateTime에서 날짜 부분만 ISO 문자열로 추출 (Supabase DATE 컬럼용)
   ///
   /// 예: '2026-02-10'
+  @Deprecated('toLocalDateOnly()를 사용하세요. UTC DateTime 전달 시 날짜가 달라질 수 있습니다.')
   static String toDateOnly(DateTime dt) =>
       dt.toIso8601String().split('T').first;
+
+  /// DATE 문자열을 로컬 자정 DateTime으로 파싱 (Supabase DATE 컬럼 읽기용)
+  /// "2026-02-12" -> DateTime(2026, 2, 12) (로컬 자정, UTC 아님)
+  static DateTime parseLocalDate(String dateStr) {
+    final parts = dateStr.split('-');
+    return DateTime(
+      int.parse(parts[0]),
+      int.parse(parts[1]),
+      int.parse(parts[2]),
+    );
+  }
+
+  /// DateTime에서 로컬 날짜만 추출 (Supabase DATE 컬럼 저장용)
+  /// 로컬 시간 기준으로 날짜를 추출하여 KST/UTC 혼동 방지
+  static String toLocalDateOnly(DateTime dt) {
+    final local = dt.toLocal();
+    return '${local.year}-${local.month.toString().padLeft(2, '0')}-${local.day.toString().padLeft(2, '0')}';
+  }
 }

@@ -7,7 +7,10 @@ import '../../domain/entities/pending_transaction.dart';
 import '../models/pending_transaction_model.dart';
 
 class PendingTransactionRepository {
-  final _client = SupabaseConfig.client;
+  final SupabaseClient _client;
+
+  PendingTransactionRepository({SupabaseClient? client})
+      : _client = client ?? SupabaseConfig.client;
 
   Future<List<PendingTransactionModel>> getPendingTransactions(
     String ledgerId, {
@@ -158,7 +161,7 @@ class PendingTransactionRepository {
       updates['parsed_category_id'] = parsedCategoryId;
     }
     if (parsedDate != null) {
-      updates['parsed_date'] = parsedDate.toIso8601String().split('T').first;
+      updates['parsed_date'] = DateTimeUtils.toLocalDateOnly(parsedDate);
     }
     if (paymentMethodId != null) {
       updates['payment_method_id'] = paymentMethodId;

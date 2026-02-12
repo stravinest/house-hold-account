@@ -1,3 +1,4 @@
+import '../../../../core/utils/date_time_utils.dart';
 import '../../domain/entities/transaction.dart';
 
 class TransactionModel extends Transaction {
@@ -47,20 +48,22 @@ class TransactionModel extends Transaction {
       paymentMethodId: json['payment_method_id'] as String?,
       amount: json['amount'] as int,
       type: json['type'] as String,
-      date: DateTime.parse(json['date'] as String),
+      date: DateTimeUtils.parseLocalDate(json['date'] as String),
       title: json['title'] as String?,
       memo: json['memo'] as String?,
       imageUrl: json['image_url'] as String?,
       isRecurring: json['is_recurring'] as bool,
       recurringType: json['recurring_type'] as String?,
       recurringEndDate: json['recurring_end_date'] != null
-          ? DateTime.parse(json['recurring_end_date'] as String)
+          ? DateTimeUtils.parseLocalDate(
+              json['recurring_end_date'] as String,
+            )
           : null,
       isFixedExpense: json['is_fixed_expense'] as bool? ?? false,
       fixedExpenseCategoryId: json['fixed_expense_category_id'] as String?,
       isAsset: json['is_asset'] as bool? ?? false,
       maturityDate: json['maturity_date'] != null
-          ? DateTime.parse(json['maturity_date'] as String)
+          ? DateTimeUtils.parseLocalDate(json['maturity_date'] as String)
           : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -86,20 +89,21 @@ class TransactionModel extends Transaction {
       'payment_method_id': paymentMethodId,
       'amount': amount,
       'type': type,
-      'date': date.toIso8601String().split('T').first,
+      'date': DateTimeUtils.toLocalDateOnly(date),
       'title': title,
       'memo': memo,
       'image_url': imageUrl,
       'is_recurring': isRecurring,
       'recurring_type': recurringType,
-      'recurring_end_date': recurringEndDate
-          ?.toIso8601String()
-          .split('T')
-          .first,
+      'recurring_end_date': recurringEndDate != null
+          ? DateTimeUtils.toLocalDateOnly(recurringEndDate!)
+          : null,
       'is_fixed_expense': isFixedExpense,
       'fixed_expense_category_id': fixedExpenseCategoryId,
       'is_asset': isAsset,
-      'maturity_date': maturityDate?.toIso8601String().split('T').first,
+      'maturity_date': maturityDate != null
+          ? DateTimeUtils.toLocalDateOnly(maturityDate!)
+          : null,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -132,20 +136,21 @@ class TransactionModel extends Transaction {
       'payment_method_id': paymentMethodId,
       'amount': amount,
       'type': type,
-      'date': date.toIso8601String().split('T').first,
+      'date': DateTimeUtils.toLocalDateOnly(date),
       'title': title,
       'memo': memo,
       'image_url': imageUrl,
       'is_recurring': isRecurring,
       'recurring_type': recurringType,
-      'recurring_end_date': recurringEndDate
-          ?.toIso8601String()
-          .split('T')
-          .first,
+      'recurring_end_date': recurringEndDate != null
+          ? DateTimeUtils.toLocalDateOnly(recurringEndDate)
+          : null,
       'is_fixed_expense': isFixedExpense,
       'fixed_expense_category_id': fixedExpenseCategoryId,
       'is_asset': isAsset,
-      'maturity_date': maturityDate?.toIso8601String().split('T').first,
+      'maturity_date': maturityDate != null
+          ? DateTimeUtils.toLocalDateOnly(maturityDate)
+          : null,
       'source_type': sourceType,
     };
   }

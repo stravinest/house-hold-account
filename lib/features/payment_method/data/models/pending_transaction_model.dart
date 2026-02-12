@@ -41,7 +41,7 @@ class PendingTransactionModel extends PendingTransaction {
       parsedMerchant: json['parsed_merchant'] as String?,
       parsedCategoryId: json['parsed_category_id'] as String?,
       parsedDate: json['parsed_date'] != null
-          ? DateTime.parse(json['parsed_date'] as String)
+          ? DateTimeUtils.parseLocalDate(json['parsed_date'] as String)
           : null,
       status: PendingTransactionStatus.fromString(json['status'] as String),
       transactionId: json['transaction_id'] as String?,
@@ -68,7 +68,8 @@ class PendingTransactionModel extends PendingTransaction {
       'parsed_type': parsedType,
       'parsed_merchant': parsedMerchant,
       'parsed_category_id': parsedCategoryId,
-      'parsed_date': parsedDate?.toIso8601String().split('T').first,
+      'parsed_date':
+          parsedDate != null ? DateTimeUtils.toLocalDateOnly(parsedDate!) : null,
       'status': status.toJson(),
       'transaction_id': transactionId,
       'duplicate_hash': duplicateHash,
@@ -114,7 +115,7 @@ class PendingTransactionModel extends PendingTransaction {
       if (parsedMerchant != null) 'parsed_merchant': parsedMerchant,
       if (parsedCategoryId != null) 'parsed_category_id': parsedCategoryId,
       if (parsedDate != null)
-        'parsed_date': parsedDate.toIso8601String().split('T').first,
+        'parsed_date': DateTimeUtils.toLocalDateOnly(parsedDate),
       if (duplicateHash != null) 'duplicate_hash': duplicateHash,
     };
   }
