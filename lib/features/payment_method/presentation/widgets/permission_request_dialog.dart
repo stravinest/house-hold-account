@@ -7,38 +7,71 @@ import '../../../notification/services/local_notification_service.dart';
 import '../../data/services/notification_listener_wrapper.dart';
 import '../../data/services/sms_listener_service.dart';
 
-/// 권한 상태 표시용 색상 상수 (pencil 디자인 umYUS/v8XwX 기준)
+/// 권한 상태 표시용 색상 (다크모드 지원)
 class _PermissionColors {
+  final ColorScheme colorScheme;
+  final bool isDark;
+
+  _PermissionColors(BuildContext context)
+      : colorScheme = Theme.of(context).colorScheme,
+        isDark = Theme.of(context).brightness == Brightness.dark;
+
   // 다이얼로그
-  static const Color dialogBackground = Color(0xFFFDFDF5);
+  Color get dialogBackground => isDark
+      ? colorScheme.surfaceContainerHigh
+      : const Color(0xFFFDFDF5);
 
-  // 카드 (허용/비허용 동일)
-  static const Color cardBackground = Color(0xFFEFEEE6);
+  // 카드
+  Color get cardBackground => isDark
+      ? colorScheme.surfaceContainerHighest
+      : const Color(0xFFEFEEE6);
 
-  // 아이콘 배경 (허용/비허용 동일)
-  static const Color iconBackground = Color(0xFFA8DAB5);
-  static const Color iconColor = Color(0xFF2E7D32);
+  // 아이콘 배경
+  Color get iconBackground => isDark
+      ? const Color(0xFF1B5E20)
+      : const Color(0xFFA8DAB5);
+  Color get iconColor => isDark
+      ? const Color(0xFFA8DAB5)
+      : const Color(0xFF2E7D32);
 
   // 배지 - 비허용
-  static const Color deniedBadgeBackground = Color(0xFFFFF3E0);
-  static const Color deniedBadgeText = Color(0xFFE65100);
+  Color get deniedBadgeBackground => isDark
+      ? const Color(0xFF4E2600)
+      : const Color(0xFFFFF3E0);
+  Color get deniedBadgeText => isDark
+      ? const Color(0xFFFFB74D)
+      : const Color(0xFFE65100);
 
   // 배지 - 허용
-  static const Color grantedBadgeBackground = Color(0xFFA8DAB5);
-  static const Color grantedBadgeText = Color(0xFF2E7D32);
+  Color get grantedBadgeBackground => isDark
+      ? const Color(0xFF1B5E20)
+      : const Color(0xFFA8DAB5);
+  Color get grantedBadgeText => isDark
+      ? const Color(0xFFA8DAB5)
+      : const Color(0xFF2E7D32);
 
   // 버튼
-  static const Color buttonBorder = Color(0xFF74796D);
-  static const Color buttonText = Color(0xFF2E7D32);
+  Color get buttonBorder => isDark
+      ? colorScheme.outline
+      : const Color(0xFF74796D);
+  Color get buttonText => isDark
+      ? const Color(0xFFA8DAB5)
+      : const Color(0xFF2E7D32);
 
   // 텍스트
-  static const Color titleColor = Color(0xFF1A1C19);
-  static const Color descColor = Color(0xFF44483E);
-  static const Color warningColor = Color(0xFF74796D);
+  Color get titleColor => colorScheme.onSurface;
+  Color get descColor => colorScheme.onSurfaceVariant;
+  Color get warningColor => isDark
+      ? colorScheme.onSurfaceVariant
+      : const Color(0xFF74796D);
 
   // 성공 메시지
-  static const Color successBackground = Color(0xFFA8DAB5);
-  static const Color successText = Color(0xFF2E7D32);
+  Color get successBackground => isDark
+      ? const Color(0xFF1B5E20)
+      : const Color(0xFFA8DAB5);
+  Color get successText => isDark
+      ? const Color(0xFFA8DAB5)
+      : const Color(0xFF2E7D32);
 }
 
 /// 권한 요청 타입
@@ -266,6 +299,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colors = _PermissionColors(context);
 
     // 초기 설정 모드에 따른 타이틀/설명
     final title = widget.isInitialSetup ? '앱 권한 설정' : '자동 저장 권한 설정';
@@ -274,7 +308,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
         : '거래 내역을 자동으로 저장하려면 다음 권한이 필요합니다.';
 
     return Dialog(
-      backgroundColor: _PermissionColors.dialogBackground,
+      backgroundColor: colors.dialogBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
@@ -293,7 +327,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                       title,
                       style: textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: _PermissionColors.titleColor,
+                        color: colors.titleColor,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -303,8 +337,8 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                       _allPermissionsGranted ? '모든 권한이 허용되었습니다.' : description,
                       style: textTheme.bodyMedium?.copyWith(
                         color: _allPermissionsGranted
-                            ? _PermissionColors.successText
-                            : _PermissionColors.descColor,
+                            ? colors.successText
+                            : colors.descColor,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -318,6 +352,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                         description: '공유 가계부 알림, 초대 알림 등을 받습니다.',
                         isGranted: _pushPermissionGranted,
                         onRequest: _requestPushPermission,
+                        colors: colors,
                       ),
                       const SizedBox(height: Spacing.sm),
                     ],
@@ -329,6 +364,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                         description: '카드사/은행 문자에서 거래 정보를 읽습니다.',
                         isGranted: _smsPermissionGranted,
                         onRequest: _requestSmsPermission,
+                        colors: colors,
                       ),
                       const SizedBox(height: Spacing.sm),
                     ],
@@ -341,6 +377,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                         isGranted: _notificationPermissionGranted,
                         onRequest: _requestNotificationPermission,
                         isNotificationPermission: true,
+                        colors: colors,
                       ),
                     // 완료 메시지 (모든 권한 허용 시)
                     if (_allPermissionsGranted) ...[
@@ -352,7 +389,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                           vertical: Spacing.sm,
                         ),
                         decoration: BoxDecoration(
-                          color: _PermissionColors.successBackground,
+                          color: colors.successBackground,
                           borderRadius: BorderRadius.circular(
                             BorderRadiusToken.sm,
                           ),
@@ -360,16 +397,16 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.check_circle_outline,
-                              color: _PermissionColors.successText,
+                              color: colors.successText,
                               size: 18,
                             ),
                             const SizedBox(width: Spacing.sm),
                             Text(
                               '모든 권한이 허용되었습니다',
                               style: textTheme.bodyMedium?.copyWith(
-                                color: _PermissionColors.successText,
+                                color: colors.successText,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -405,9 +442,9 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                               Navigator.of(context).pop(true);
                             },
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: _PermissionColors.buttonText,
-                              side: const BorderSide(
-                                color: _PermissionColors.buttonBorder,
+                              foregroundColor: colors.buttonText,
+                              side: BorderSide(
+                                color: colors.buttonBorder,
                               ),
                               minimumSize: const Size(120, 48),
                               shape: RoundedRectangleBorder(
@@ -431,6 +468,7 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
     required String description,
     required bool isGranted,
     required VoidCallback onRequest,
+    required _PermissionColors colors,
     bool isNotificationPermission = false,
   }) {
     final textTheme = Theme.of(context).textTheme;
@@ -438,37 +476,33 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
     return Container(
       padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: _PermissionColors.cardBackground,
+        color: colors.cardBackground,
         borderRadius: BorderRadius.circular(BorderRadiusToken.md),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 헤더 (아이콘 + 제목 + 배지)
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 상태 아이콘 박스
               Container(
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: _PermissionColors.iconBackground,
+                  color: colors.iconBackground,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
                   isGranted ? Icons.check : Icons.priority_high,
                   size: 18,
-                  color: _PermissionColors.iconColor,
+                  color: colors.iconColor,
                 ),
               ),
               const SizedBox(width: Spacing.sm),
-              // 제목 + 설명
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 제목 + 배지
                     Row(
                       children: [
                         Text(
@@ -478,7 +512,6 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                           ),
                         ),
                         const SizedBox(width: Spacing.sm),
-                        // 상태 배지
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: Spacing.sm,
@@ -486,8 +519,8 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                           ),
                           decoration: BoxDecoration(
                             color: isGranted
-                                ? _PermissionColors.grantedBadgeBackground
-                                : _PermissionColors.deniedBadgeBackground,
+                                ? colors.grantedBadgeBackground
+                                : colors.deniedBadgeBackground,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -496,29 +529,27 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                               color: isGranted
-                                  ? _PermissionColors.grantedBadgeText
-                                  : _PermissionColors.deniedBadgeText,
+                                  ? colors.grantedBadgeText
+                                  : colors.deniedBadgeText,
                             ),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: Spacing.xs),
-                    // 설명
                     Text(
                       description,
                       style: textTheme.bodySmall?.copyWith(
-                        color: _PermissionColors.descColor,
+                        color: colors.descColor,
                       ),
                     ),
-                    // 알림 접근 권한 경고 텍스트
                     if (isNotificationPermission && !isGranted)
                       Padding(
                         padding: const EdgeInsets.only(top: Spacing.xs),
                         child: Text(
                           '시스템 설정에서 직접 허용해야 합니다.',
                           style: textTheme.bodySmall?.copyWith(
-                            color: _PermissionColors.warningColor,
+                            color: colors.warningColor,
                             fontStyle: FontStyle.italic,
                             fontSize: 11,
                           ),
@@ -529,7 +560,6 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
               ),
             ],
           ),
-          // 허용 버튼 (비허용 상태일 때만)
           if (!isGranted) ...[
             const SizedBox(height: Spacing.sm),
             SizedBox(
@@ -537,8 +567,8 @@ class _PermissionRequestDialogState extends State<PermissionRequestDialog> {
               child: OutlinedButton(
                 onPressed: _isLoading ? null : onRequest,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: _PermissionColors.buttonText,
-                  side: const BorderSide(color: _PermissionColors.buttonBorder),
+                  foregroundColor: colors.buttonText,
+                  side: BorderSide(color: colors.buttonBorder),
                   padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),

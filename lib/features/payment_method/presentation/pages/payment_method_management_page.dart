@@ -253,8 +253,8 @@ class _PaymentMethodManagementPageState
                           constraints: const BoxConstraints(minWidth: 18),
                           child: Text(
                             '$pendingCount',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.onError,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -724,13 +724,13 @@ class _PaymentMethodListView extends ConsumerWidget {
                     vertical: Spacing.sm,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFCDD2),
+                    color: colorScheme.errorContainer,
                     borderRadius: BorderRadius.circular(BorderRadiusToken.md),
                   ),
                   child: Text(
                     paymentMethod.name,
                     style: textTheme.titleMedium?.copyWith(
-                      color: colorScheme.error,
+                      color: colorScheme.onErrorContainer,
                       fontWeight: FontWeight.w600,
                     ),
                     textAlign: TextAlign.center,
@@ -913,7 +913,7 @@ class _SharedPaymentMethodChip extends StatelessWidget {
                       Icon(
                         Icons.star,
                         size: _starIconSize,
-                        color: Colors.amber[700],
+                        color: colorScheme.tertiary,
                         semanticLabel: l10n.paymentMethodDefault,
                       ),
                     ],
@@ -947,7 +947,7 @@ class _SharedPaymentMethodChip extends StatelessWidget {
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: colorScheme.shadow.withValues(alpha: 0.1),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -1791,7 +1791,7 @@ class _PendingTransactionEditSheetState
                   color: colorScheme.surface,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
+                      color: colorScheme.shadow.withValues(alpha: 0.1),
                       blurRadius: 8,
                       offset: const Offset(0, -2),
                     ),
@@ -1806,8 +1806,8 @@ class _PendingTransactionEditSheetState
                         child: FilledButton(
                           onPressed: _isLoading ? null : _rejectTransaction,
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFFFE4E4),
-                            foregroundColor: const Color(0xFFD32F2F),
+                            backgroundColor: colorScheme.errorContainer,
+                            foregroundColor: colorScheme.onErrorContainer,
                             padding: const EdgeInsets.symmetric(
                               vertical: Spacing.md,
                             ),
@@ -1821,8 +1821,8 @@ class _PendingTransactionEditSheetState
                         child: FilledButton(
                           onPressed: _isLoading ? null : _updateTransaction,
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFE8E8E8),
-                            foregroundColor: const Color(0xFF666666),
+                            backgroundColor: colorScheme.surfaceContainerHighest,
+                            foregroundColor: colorScheme.onSurfaceVariant,
                             padding: const EdgeInsets.symmetric(
                               vertical: Spacing.md,
                             ),
@@ -1836,20 +1836,20 @@ class _PendingTransactionEditSheetState
                         child: FilledButton(
                           onPressed: _isLoading ? null : _confirmTransaction,
                           style: FilledButton.styleFrom(
-                            backgroundColor: const Color(0xFFE4F5E4),
-                            foregroundColor: const Color(0xFF2E7D32),
+                            backgroundColor: colorScheme.primaryContainer,
+                            foregroundColor: colorScheme.onPrimaryContainer,
                             padding: const EdgeInsets.symmetric(
                               vertical: Spacing.md,
                             ),
                           ),
                           child: _isLoading
-                              ? const SizedBox(
+                              ? SizedBox(
                                   height: 20,
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
-                                      Color(0xFF2E7D32),
+                                      colorScheme.onPrimaryContainer,
                                     ),
                                   ),
                                 )
@@ -2252,12 +2252,12 @@ class _SharedPaymentMethodDialogState
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
           ),
           child: _isSubmitting
-              ? const SizedBox(
+              ? SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: colorScheme.onPrimary,
                   ),
                 )
               : Text(

@@ -45,25 +45,62 @@ bool get _isAndroidPlatform {
   }
 }
 
-/// pencil 디자인 기준 색상
+/// 다크모드 지원 배너 색상
 class _BannerColors {
-  static const Color background = Color(0xFFEFEEE6);
-  static const Color cardBackground = Color(0xFFFFFFFF);
-  static const Color iconGranted = Color(0xFFA8DAB5);
-  static const Color iconDenied = Color(0xFFFFF3E0);
-  static const Color iconGrantedFg = Color(0xFF2E7D32);
-  static const Color iconDeniedFg = Color(0xFFE65100);
-  static const Color badgeGrantedBg = Color(0xFFA8DAB5);
-  static const Color badgeGrantedText = Color(0xFF2E7D32);
-  static const Color badgeDeniedBg = Color(0xFFFFF3E0);
-  static const Color badgeDeniedText = Color(0xFFE65100);
-  static const Color buttonBorder = Color(0xFF74796D);
-  static const Color buttonText = Color(0xFF2E7D32);
-  static const Color titleColor = Color(0xFF1A1C19);
-  static const Color descColor = Color(0xFF44483E);
-  static const Color warningColor = Color(0xFF74796D);
-  static const Color successBg = Color(0xFFA8DAB5);
-  static const Color successText = Color(0xFF2E7D32);
+  final ColorScheme colorScheme;
+  final bool isDark;
+
+  _BannerColors(BuildContext context)
+      : colorScheme = Theme.of(context).colorScheme,
+        isDark = Theme.of(context).brightness == Brightness.dark;
+
+  Color get background => isDark
+      ? colorScheme.surfaceContainerHigh
+      : const Color(0xFFEFEEE6);
+  Color get cardBackground => isDark
+      ? colorScheme.surfaceContainerHighest
+      : const Color(0xFFFFFFFF);
+  Color get iconGranted => isDark
+      ? const Color(0xFF1B5E20)
+      : const Color(0xFFA8DAB5);
+  Color get iconDenied => isDark
+      ? const Color(0xFF4E2600)
+      : const Color(0xFFFFF3E0);
+  Color get iconGrantedFg => isDark
+      ? const Color(0xFFA8DAB5)
+      : const Color(0xFF2E7D32);
+  Color get iconDeniedFg => isDark
+      ? const Color(0xFFFFB74D)
+      : const Color(0xFFE65100);
+  Color get badgeGrantedBg => isDark
+      ? const Color(0xFF1B5E20)
+      : const Color(0xFFA8DAB5);
+  Color get badgeGrantedText => isDark
+      ? const Color(0xFFA8DAB5)
+      : const Color(0xFF2E7D32);
+  Color get badgeDeniedBg => isDark
+      ? const Color(0xFF4E2600)
+      : const Color(0xFFFFF3E0);
+  Color get badgeDeniedText => isDark
+      ? const Color(0xFFFFB74D)
+      : const Color(0xFFE65100);
+  Color get buttonBorder => isDark
+      ? colorScheme.outline
+      : const Color(0xFF74796D);
+  Color get buttonText => isDark
+      ? const Color(0xFFA8DAB5)
+      : const Color(0xFF2E7D32);
+  Color get titleColor => colorScheme.onSurface;
+  Color get descColor => colorScheme.onSurfaceVariant;
+  Color get warningColor => isDark
+      ? colorScheme.onSurfaceVariant
+      : const Color(0xFF74796D);
+  Color get successBg => isDark
+      ? const Color(0xFF1B5E20)
+      : const Color(0xFFA8DAB5);
+  Color get successText => isDark
+      ? const Color(0xFFA8DAB5)
+      : const Color(0xFF2E7D32);
 }
 
 /// 권한 상태 배너 위젯 (체크리스트 스타일)
@@ -248,12 +285,13 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final textTheme = Theme.of(context).textTheme;
+    final colors = _BannerColors(context);
 
     if (_isLoading) {
       return Container(
         padding: const EdgeInsets.all(Spacing.md),
         decoration: BoxDecoration(
-          color: _BannerColors.background,
+          color: colors.background,
           borderRadius: BorderRadius.circular(BorderRadiusToken.md),
         ),
         child: Column(
@@ -268,7 +306,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             Text(
               l10n.permissionCheckingStatus,
               style: textTheme.bodySmall?.copyWith(
-                color: _BannerColors.descColor,
+                color: colors.descColor,
               ),
             ),
           ],
@@ -284,7 +322,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     return Container(
       padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: _BannerColors.background,
+        color: colors.background,
         borderRadius: BorderRadius.circular(BorderRadiusToken.md),
       ),
       child: Column(
@@ -294,7 +332,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             l10n.autoSaveSettingsRequiredPermissions,
             style: textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: _BannerColors.titleColor,
+              color: colors.titleColor,
             ),
           ),
           const SizedBox(height: Spacing.md),
@@ -308,6 +346,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             onRequest: _requestPushPermission,
             onRetry: _checkPermissions,
             textTheme: textTheme,
+            colors: colors,
           ),
 
           const SizedBox(height: Spacing.sm),
@@ -321,6 +360,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             onRequest: _requestSmsPermission,
             onRetry: _checkPermissions,
             textTheme: textTheme,
+            colors: colors,
           ),
 
           const SizedBox(height: Spacing.sm),
@@ -335,6 +375,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
             onRetry: _checkPermissions,
             isNotificationPermission: true,
             textTheme: textTheme,
+            colors: colors,
           ),
 
           if (allGranted) ...[
@@ -346,22 +387,22 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                 vertical: Spacing.sm,
               ),
               decoration: BoxDecoration(
-                color: _BannerColors.successBg,
+                color: colors.successBg,
                 borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.check_circle_outline,
-                    color: _BannerColors.successText,
+                    color: colors.successText,
                     size: 18,
                   ),
                   const SizedBox(width: Spacing.sm),
                   Text(
                     '모든 권한이 허용되었습니다',
                     style: textTheme.bodyMedium?.copyWith(
-                      color: _BannerColors.successText,
+                      color: colors.successText,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -382,6 +423,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     required VoidCallback onRequest,
     required VoidCallback onRetry,
     required TextTheme textTheme,
+    required _BannerColors colors,
     bool isNotificationPermission = false,
   }) {
     final isGranted = status == _PermissionCheckStatus.granted;
@@ -390,7 +432,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
     return Container(
       padding: const EdgeInsets.all(Spacing.md),
       decoration: BoxDecoration(
-        color: _BannerColors.cardBackground,
+        color: colors.cardBackground,
         borderRadius: BorderRadius.circular(BorderRadiusToken.sm),
       ),
       child: Column(
@@ -404,8 +446,8 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                 height: 28,
                 decoration: BoxDecoration(
                   color: isGranted
-                      ? _BannerColors.iconGranted
-                      : _BannerColors.iconDenied,
+                      ? colors.iconGranted
+                      : colors.iconDenied,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Icon(
@@ -413,8 +455,8 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                       ? Icons.check
                       : (isError ? Icons.error_outline : Icons.priority_high),
                   color: isGranted
-                      ? _BannerColors.iconGrantedFg
-                      : _BannerColors.iconDeniedFg,
+                      ? colors.iconGrantedFg
+                      : colors.iconDeniedFg,
                   size: 16,
                 ),
               ),
@@ -430,7 +472,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                             title,
                             style: textTheme.labelLarge?.copyWith(
                               fontWeight: FontWeight.w600,
-                              color: _BannerColors.titleColor,
+                              color: colors.titleColor,
                             ),
                           ),
                         ),
@@ -441,8 +483,8 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                           ),
                           decoration: BoxDecoration(
                             color: isGranted
-                                ? _BannerColors.badgeGrantedBg
-                                : _BannerColors.badgeDeniedBg,
+                                ? colors.badgeGrantedBg
+                                : colors.badgeDeniedBg,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -451,8 +493,8 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                               fontSize: 11,
                               fontWeight: FontWeight.w500,
                               color: isGranted
-                                  ? _BannerColors.badgeGrantedText
-                                  : _BannerColors.badgeDeniedText,
+                                  ? colors.badgeGrantedText
+                                  : colors.badgeDeniedText,
                             ),
                           ),
                         ),
@@ -462,7 +504,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                     Text(
                       description,
                       style: textTheme.bodySmall?.copyWith(
-                        color: _BannerColors.descColor,
+                        color: colors.descColor,
                         fontSize: 12,
                       ),
                     ),
@@ -472,7 +514,7 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
                         child: Text(
                           '시스템 설정에서 직접 허용 필요',
                           style: textTheme.bodySmall?.copyWith(
-                            color: _BannerColors.warningColor,
+                            color: colors.warningColor,
                             fontSize: 11,
                             fontStyle: FontStyle.italic,
                           ),
@@ -490,8 +532,8 @@ class _PermissionStatusBannerState extends State<PermissionStatusBanner>
               child: OutlinedButton(
                 onPressed: isError ? onRetry : onRequest,
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: _BannerColors.buttonText,
-                  side: const BorderSide(color: _BannerColors.buttonBorder),
+                  foregroundColor: colors.buttonText,
+                  side: BorderSide(color: colors.buttonBorder),
                   padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
