@@ -90,10 +90,13 @@ class GoogleSignInService {
       debugPrint('[GoogleSignInService] Supabase 인증 성공');
 
       return response;
-    } on AuthException {
+    } on AuthException catch (e) {
+      debugPrint('[GoogleSignInService] AuthException: ${e.message} / statusCode: ${e.statusCode}');
       rethrow;
-    } catch (e) {
+    } catch (e, st) {
       debugPrint('[GoogleSignInService] 로그인 실패: ${e.runtimeType}');
+      debugPrint('[GoogleSignInService] 에러 상세: $e');
+      debugPrint('[GoogleSignInService] 스택: $st');
 
       if (e.toString().contains('sign_in_canceled') ||
           e.toString().contains('canceled') ||
