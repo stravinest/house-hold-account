@@ -94,39 +94,54 @@ class AuthService {
   }
 
   // 백업 안전장치: 프로필이 없으면 생성 (Google 로그인 시 트리거 실패 대비)
+  // timeout + 재시도로 네트워크 지연 시 무한 대기 방지
   Future<void> _ensureProfileExists(User user) async {
     debugPrint('[AuthService] Checking profile existence...');
 
-    try {
-      final profile = await _client
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .maybeSingle();
+    for (int i = 0; i < 3; i++) {
+      try {
+        final profile = await _client
+            .from('profiles')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle()
+            .timeout(const Duration(seconds: 3));
 
-      if (profile != null) {
-        debugPrint('[AuthService] Profile exists');
+        if (profile != null) {
+          debugPrint('[AuthService] Profile exists');
+          return;
+        }
+
+        // 트리거 완료 대기 후 재시도
+        if (i < 2) {
+          debugPrint('[AuthService] Profile not found, waiting for trigger (retry ${i + 1}/3)');
+          await Future.delayed(const Duration(milliseconds: 500));
+          continue;
+        }
+
+        // 3회 시도 후에도 없으면 직접 생성
+        debugPrint('[AuthService] Profile not found after 3 attempts, creating...');
+        final displayName = _getDisplayName(user);
+
+        await _client.from('profiles').insert({
+          'id': user.id,
+          'email': user.email,
+          'display_name': displayName,
+        }).timeout(const Duration(seconds: 3));
+        debugPrint('[AuthService] Profile created');
         return;
+      } catch (e) {
+        debugPrint('[AuthService] Profile check failed (retry ${i + 1}/3): $e');
+        if (i == 2) rethrow;
       }
-
-      // 프로필이 없으면 생성
-      debugPrint('[AuthService] Profile not found, creating...');
-      final displayName =
-          user.userMetadata?['full_name'] ??
-          user.userMetadata?['name'] ??
-          user.email?.split('@').first ??
-          'User';
-
-      await _client.from('profiles').insert({
-        'id': user.id,
-        'email': user.email,
-        'display_name': displayName,
-      });
-      debugPrint('[AuthService] Profile created');
-    } catch (e) {
-      debugPrint('[AuthService] Profile creation failed: ${e.runtimeType}');
-      rethrow;
     }
+  }
+
+  String _getDisplayName(User user) {
+    return user.userMetadata?['full_name'] ??
+        user.userMetadata?['name'] ??
+        user.email?.split('@').first ??
+        'User';
   }
 
   // 백업 안전장치: 가계부가 0개면 기본 가계부 생성
@@ -211,13 +226,24 @@ class AuthService {
 
       // 2. 로그인 성공 시 프로필/가계부 확인 및 FCM 초기화
       if (response.session != null && response.user != null) {
-        // 백업 안전장치: DB 트리거가 실패했을 경우를 대비
-        // 프로필 먼저 확인 (가계부의 owner_id가 profiles를 참조하므로)
-        await _ensureProfileExists(response.user!);
-        // 가계부 확인 및 생성
-        await _ensureDefaultLedgerExists();
+        try {
+          // 백업 안전장치: DB 트리거가 실패했을 경우를 대비
+          // 프로필 먼저 확인 (가계부의 owner_id가 profiles를 참조하므로)
+          await _ensureProfileExists(response.user!);
+          // 가계부 확인 및 생성
+          await _ensureDefaultLedgerExists();
+        } catch (e) {
+          // Profile/Ledger 설정 실패 시 세션 정리하여 불일치 상태 방지
+          debugPrint('[AuthService] Post-login setup failed, cleaning up session: $e');
+          try {
+            await _auth.signOut();
+          } catch (signOutError) {
+            debugPrint('[AuthService] Session cleanup also failed: $signOutError');
+          }
+          rethrow;
+        }
 
-        // FCM 토큰 등록
+        // FCM 토큰 등록 (실패해도 로그인은 성공 처리)
         try {
           await _firebaseMessaging.initialize(response.user!.id);
           debugPrint('[AuthService] FCM initialized');
@@ -235,6 +261,7 @@ class AuthService {
 
   // 로그아웃
   Future<void> signOut() async {
+    debugPrint('[AuthService] signOut called');
     // 로그아웃 전에 FCM 토큰 삭제
     final userId = currentUser?.id;
     if (userId != null) {

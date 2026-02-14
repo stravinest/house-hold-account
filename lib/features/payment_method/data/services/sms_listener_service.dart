@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../notification/data/services/notification_service.dart';
 import '../../../notification/domain/entities/notification_type.dart';
+import '../../../notification/services/local_notification_service.dart';
 import '../../../transaction/data/repositories/transaction_repository.dart';
 import '../../domain/entities/learned_sms_format.dart';
 import '../../domain/entities/payment_method.dart';
@@ -597,6 +598,17 @@ class SmsListenerService {
       return pendingTx;
     } catch (e) {
       debugPrint('Failed to create pending transaction: $e');
+      // 토큰 만료 등으로 저장 실패 시 로컬 알림으로 사용자에게 알림
+      if (e is AuthException) {
+        try {
+          await LocalNotificationService().showNotification(
+            title: '자동수집 저장 실패',
+            body: '인증이 만료되었습니다. 앱을 열어 다시 로그인해주세요.',
+          );
+        } catch (_) {
+          // 알림 전송 실패는 무시
+        }
+      }
       rethrow;
     }
   }

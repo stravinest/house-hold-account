@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
+import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
@@ -54,6 +55,7 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   int _selectedIndex = 0;
   bool _showUserSummary = true;
+  bool _isSigningOut = false;
 
   @override
   void initState() {
@@ -181,13 +183,22 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   void _handleAuthError(AuthException error) {
-    final l10n = AppLocalizations.of(context);
+    if (_isSigningOut) return;
+
+    // 세션이 유효하면 SDK 자동 갱신에 맡김 (일시적 에러)
+    final session = SupabaseConfig.auth.currentSession;
+    if (session != null) {
+      debugPrint('[HomePage] 일시적 인증 에러, 세션 유효: ${error.message}');
+      return;
+    }
+
     final errorMessage = error.message.toLowerCase();
 
-    if (errorMessage.contains('expired') ||
-        errorMessage.contains('refresh') ||
-        errorMessage.contains('invalid') ||
-        error.statusCode == '401') {
+    if (error.statusCode == '401' ||
+        errorMessage.contains('session expired') ||
+        errorMessage.contains('refresh_token_not_found')) {
+      _isSigningOut = true;
+      final l10n = AppLocalizations.of(context);
       SnackBarUtils.showError(
         context,
         l10n.errorSessionExpired,
@@ -195,7 +206,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       );
 
       Future.delayed(const Duration(seconds: 1), () async {
-        await ref.read(authNotifierProvider.notifier).signOut();
+        if (!mounted) return;
+        try {
+          await ref.read(authNotifierProvider.notifier).signOut();
+        } catch (_) {
+          _isSigningOut = false;
+        }
       });
     }
   }

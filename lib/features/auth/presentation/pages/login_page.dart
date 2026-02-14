@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
+import '../../../../config/supabase_config.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../providers/auth_provider.dart';
@@ -109,6 +110,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
         final authState = ref.read(authStateProvider);
         if (authState.valueOrNull != null) {
+          context.go(Routes.home);
+          return;
+        }
+      }
+
+      // 3초 polling 실패 시 currentSession 직접 확인
+      if (mounted) {
+        final session = SupabaseConfig.auth.currentSession;
+        if (session != null) {
+          debugPrint('[LoginPage] Polling failed but session exists, navigating to home');
           context.go(Routes.home);
           return;
         }

@@ -313,6 +313,18 @@ class PendingTransactionRepository {
     for (var i = 0; i < maxAttempts; i++) {
       try {
         return await block();
+      } on AuthException catch (e) {
+        // 401 토큰 만료 시 세션 갱신 후 재시도
+        if (e.statusCode == '401' && i < maxAttempts - 1) {
+          debugPrint('[PendingTransaction] Token expired, refreshing session (retry ${i + 1})');
+          try {
+            await _client.auth.refreshSession();
+            continue;
+          } catch (_) {
+            rethrow;
+          }
+        }
+        rethrow;
       } catch (e) {
         if (i == maxAttempts - 1) rethrow;
         await Future.delayed(
