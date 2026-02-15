@@ -769,7 +769,8 @@ class SupabaseHelper private constructor(private val context: Context) {
         parsedAmount: Int?,
         parsedType: String?,
         parsedMerchant: String?,
-        parsedCategoryId: String?
+        parsedCategoryId: String?,
+        duplicateHash: String
     ): Boolean = withContext(Dispatchers.IO) {
         try {
             val baseUrl = supabaseUrl ?: return@withContext false
@@ -786,6 +787,7 @@ class SupabaseHelper private constructor(private val context: Context) {
                 put("source_timestamp", formatUtcTimestamp(sourceTimestamp))
                 put("status", "confirmed")
                 put("is_viewed", false)
+                put("duplicate_hash", duplicateHash)
                 if (parsedAmount != null) put("parsed_amount", parsedAmount)
                 if (parsedType != null) put("parsed_type", parsedType)
                 if (parsedMerchant != null) put("parsed_merchant", parsedMerchant)
@@ -811,6 +813,9 @@ class SupabaseHelper private constructor(private val context: Context) {
                 return@withContext false
             }
             Log.d(TAG, "Pending transaction (confirmed) created successfully")
+
+            // pending_transactions에서 방금 생성한 레코드의 ID를 조회 (rollback용)
+            val pendingId = getPendingTransactionIdByHash(baseUrl, apiKey, token, duplicateHash)
 
             val transactionJson = JSONObject().apply {
                 put("ledger_id", ledgerId)
@@ -842,11 +847,69 @@ class SupabaseHelper private constructor(private val context: Context) {
             } else {
                 val errorBody = transactionResponse.body?.string() ?: "No error body"
                 Log.e(TAG, "Failed to create transaction: ${transactionResponse.code}\n$errorBody")
+                // 보상 로직: transaction 실패 시 pending 레코드 삭제하여 데이터 불일치 방지
+                if (pendingId != null) {
+                    rollbackPendingTransaction(baseUrl, apiKey, token, pendingId)
+                }
                 false
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exception while creating confirmed transaction", e)
             false
+        }
+    }
+
+    /**
+     * duplicate_hash로 pending_transactions의 ID를 조회
+     * createConfirmedTransaction에서 rollback용으로 사용
+     */
+    private fun getPendingTransactionIdByHash(
+        baseUrl: String, apiKey: String, token: String, duplicateHash: String
+    ): String? {
+        return try {
+            val encodedHash = URLEncoder.encode(duplicateHash, "UTF-8")
+            val request = Request.Builder()
+                .url("$baseUrl/rest/v1/pending_transactions?duplicate_hash=eq.$encodedHash&select=id&order=created_at.desc&limit=1")
+                .get()
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("apikey", apiKey)
+                .addHeader("Accept-Profile", SCHEMA)
+                .build()
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                val body = response.body?.string() ?: return null
+                val arr = JSONArray(body)
+                if (arr.length() > 0) arr.getJSONObject(0).getString("id") else null
+            } else null
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to get pending transaction id by hash", e)
+            null
+        }
+    }
+
+    /**
+     * pending_transactions 레코드 삭제 (보상 로직)
+     * transaction INSERT 실패 시 데이터 불일치 방지
+     */
+    private fun rollbackPendingTransaction(
+        baseUrl: String, apiKey: String, token: String, pendingId: String
+    ) {
+        try {
+            val request = Request.Builder()
+                .url("$baseUrl/rest/v1/pending_transactions?id=eq.$pendingId")
+                .delete()
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("apikey", apiKey)
+                .addHeader("Content-Profile", SCHEMA)
+                .build()
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                Log.w(TAG, "Rolled back pending transaction $pendingId due to transaction creation failure")
+            } else {
+                Log.e(TAG, "Failed to rollback pending transaction $pendingId: ${response.code}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception during pending transaction rollback", e)
         }
     }
 

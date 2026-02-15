@@ -68,6 +68,14 @@ class NotificationStorageHelper(context: Context) : SQLiteOpenHelper(
         db.execSQL("CREATE INDEX idx_is_synced ON $TABLE_NAME($COLUMN_IS_SYNCED)")
         db.execSQL("CREATE INDEX idx_received_at ON $TABLE_NAME($COLUMN_RECEIVED_AT)")
         db.execSQL("CREATE INDEX idx_retry_count ON $TABLE_NAME($COLUMN_RETRY_COUNT)")
+        // 중복 방지 UNIQUE 인덱스 (text + 1분 버킷)
+        db.execSQL("""
+            CREATE UNIQUE INDEX idx_unique_content
+            ON $TABLE_NAME (
+                $COLUMN_TEXT,
+                ($COLUMN_RECEIVED_AT / 60000)
+            )
+        """.trimIndent())
 
         Log.d(TAG, "Database created successfully (version $DATABASE_VERSION)")
     }
