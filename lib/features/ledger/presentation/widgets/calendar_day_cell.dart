@@ -22,7 +22,6 @@ class CalendarConstants {
   static const double dotSize = 6.0;
   static const double dotSpacing = 2.0;
   static const double rowHeight = 76.0;
-  static const double smallScreenThreshold = 360.0;
   static const double daysOfWeekHeight = 28.0;
 }
 
@@ -345,9 +344,6 @@ class _UserAmountList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final showAmount = screenWidth > CalendarConstants.smallScreenThreshold;
-
     // 모든 항목을 수집 (색상, 금액)
     final List<AmountItem> allItems = [];
 
@@ -417,7 +413,6 @@ class _UserAmountList extends StatelessWidget {
           type: item.type,
           isSelected: isSelected,
           colorScheme: colorScheme,
-          showAmount: showAmount,
         ),
       );
     }
@@ -480,7 +475,6 @@ class _UserAmountRow extends StatelessWidget {
   final TransactionDisplayType type;
   final bool isSelected;
   final ColorScheme colorScheme;
-  final bool showAmount;
 
   const _UserAmountRow({
     required this.color,
@@ -488,7 +482,6 @@ class _UserAmountRow extends StatelessWidget {
     required this.type,
     required this.isSelected,
     required this.colorScheme,
-    required this.showAmount,
   });
 
   @override
@@ -521,21 +514,19 @@ class _UserAmountRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           indicator,
-          if (showAmount) ...[
-            const SizedBox(width: CalendarConstants.dotSpacing),
-            Flexible(
-              child: Text(
-                NumberFormatUtils.currency.format(amount),
-                style: TextStyle(
-                  fontSize: CalendarConstants.amountFontSize,
-                  color: amountColor,
-                  fontWeight: FontWeight.w500,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+          const SizedBox(width: CalendarConstants.dotSpacing),
+          Flexible(
+            child: Text(
+              NumberFormatUtils.currency.format(amount),
+              style: TextStyle(
+                fontSize: CalendarConstants.amountFontSize,
+                color: amountColor,
+                fontWeight: FontWeight.w500,
               ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
-          ],
+          ),
         ],
       ),
     );
