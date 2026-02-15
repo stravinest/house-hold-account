@@ -987,5 +987,6 @@
   "assetGoalRemainingWithUnit": "{amount} remaining",
   "@assetGoalRemainingWithUnit": {
     "placeholders": { "amount": {"type": "String"} }
-  }
+  },
+  "commonBackPressToExit": "Press back again to exit"
 }

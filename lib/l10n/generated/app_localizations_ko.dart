@@ -2845,4 +2845,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String assetGoalRemainingWithUnit(String amount) {
     return '$amount 남음';
   }
+
+  @override
+  String get commonBackPressToExit => '뒤로 버튼을 한 번 더 누르면 종료됩니다';
 }

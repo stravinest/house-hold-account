@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -56,6 +57,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   int _selectedIndex = 0;
   bool _showUserSummary = true;
   bool _isSigningOut = false;
+  DateTime? _lastBackPress;
+  final GlobalKey<_CalendarTabViewState> _calendarTabKey = GlobalKey();
 
   @override
   void initState() {
@@ -245,7 +248,39 @@ class _HomePageState extends ConsumerState<HomePage> {
     // 위젯 데이터 자동 업데이트 (월별 합계 변경 시)
     ref.watch(widgetDataUpdaterProvider);
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        // 1순위: 캘린더 탭이면 내부 상태 복원 시도
+        if (_selectedIndex == 0) {
+          final handled =
+              _calendarTabKey.currentState?.handleBackPress() ?? false;
+          if (handled) return;
+        }
+
+        // 2순위: 비-홈 탭이면 홈 탭으로 이동
+        if (_selectedIndex != 0) {
+          setState(() {
+            _selectedIndex = 0;
+            _showUserSummary = true;
+          });
+          _refreshCalendarData();
+          return;
+        }
+
+        // 3순위: 더블 탭 종료
+        final now = DateTime.now();
+        if (_lastBackPress != null &&
+            now.difference(_lastBackPress!) < const Duration(seconds: 2)) {
+          SystemNavigator.pop();
+          return;
+        }
+        _lastBackPress = now;
+        SnackBarUtils.showInfo(context, l10n.commonBackPressToExit);
+      },
+      child: Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
         scrolledUnderElevation: 0,
@@ -300,6 +335,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           index: _selectedIndex,
           children: [
             CalendarTabView(
+              key: _calendarTabKey,
               selectedDate: selectedDate,
               focusedDate: selectedDate,
               showUserSummary: _showUserSummary,
@@ -384,6 +420,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -700,6 +737,22 @@ class CalendarTabView extends ConsumerStatefulWidget {
 class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _calendarKey = GlobalKey();
+  bool _isAnimating = false;
+
+  /// 뒤로가기를 자체 처리했으면 true, 아니면 false
+  bool handleBackPress() {
+    if (_isAnimating) return true;
+    if (_scrollController.hasClients && _scrollController.offset > 0) {
+      _isAnimating = true;
+      _scrollController
+          .animateTo(0,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut)
+          .whenComplete(() => _isAnimating = false);
+      return true;
+    }
+    return false;
+  }
 
   @override
   void dispose() {
@@ -735,11 +788,20 @@ class _CalendarTabViewState extends ConsumerState<CalendarTabView> {
     super.didUpdateWidget(oldWidget);
     final viewMode = ref.read(calendarViewModeProvider);
     // 월별 뷰에서만 날짜가 변경되고 사용자 요약이 표시되는 경우 스크롤
+    // 단, 해당 날짜에 거래가 있을 때만 스크롤
     if (viewMode == CalendarViewMode.monthly &&
         widget.showUserSummary &&
         (oldWidget.selectedDate != widget.selectedDate ||
             !oldWidget.showUserSummary)) {
-      _scrollToTransactionList();
+      final dailyTotals = ref.read(dailyTotalsProvider).valueOrNull ?? {};
+      final normalizedDate = DateTime(
+        widget.selectedDate.year,
+        widget.selectedDate.month,
+        widget.selectedDate.day,
+      );
+      if (dailyTotals.containsKey(normalizedDate)) {
+        _scrollToTransactionList();
+      }
     }
   }
 

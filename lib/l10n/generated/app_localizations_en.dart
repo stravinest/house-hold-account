@@ -2926,4 +2926,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String assetGoalRemainingWithUnit(String amount) {
     return '$amount remaining';
   }
+
+  @override
+  String get commonBackPressToExit => 'Press back again to exit';
 }

@@ -5394,6 +5394,12 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'{amount} 남음'**
   String assetGoalRemainingWithUnit(String amount);
+
+  /// No description provided for @commonBackPressToExit.
+  ///
+  /// In ko, this message translates to:
+  /// **'뒤로 버튼을 한 번 더 누르면 종료됩니다'**
+  String get commonBackPressToExit;
 }
 
 class _AppLocalizationsDelegate
