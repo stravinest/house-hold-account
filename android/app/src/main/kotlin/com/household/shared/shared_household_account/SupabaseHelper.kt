@@ -76,6 +76,20 @@ class SupabaseHelper private constructor(private val context: Context) {
         @Volatile
         private var instance: SupabaseHelper? = null
         
+        // Supabase TIMESTAMPTZ 컬럼 저장용 (UTC 기준 ISO 8601)
+        fun formatUtcTimestamp(epochMillis: Long): String {
+            val format = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+            format.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            return format.format(Date(epochMillis))
+        }
+
+        // Supabase DATE 컬럼 저장용 (기기 로컬 타임존 기준)
+        // Flutter의 DateTimeUtils.toLocalDateOnly()와 동일한 동작
+        fun formatLocalDate(epochMillis: Long): String {
+            val format = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+            return format.format(Date(epochMillis))
+        }
+
         fun getInstance(context: Context): SupabaseHelper {
             return instance ?: synchronized(this) {
                 instance ?: SupabaseHelper(context.applicationContext).also {
@@ -418,7 +432,7 @@ class SupabaseHelper private constructor(private val context: Context) {
     }
 
     fun getTodayDate(): String {
-        return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        return formatLocalDate(System.currentTimeMillis())
     }
 
     suspend fun getMonthlyTotal(ledgerId: String): Pair<Int, Int>? = withContext(Dispatchers.IO) {
@@ -697,9 +711,6 @@ class SupabaseHelper private constructor(private val context: Context) {
             val apiKey = anonKey ?: return@withContext false
             val token = getValidToken() ?: return@withContext false
 
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-            dateFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
-
             val json = JSONObject().apply {
                 put("ledger_id", ledgerId)
                 put("user_id", userId)
@@ -707,7 +718,7 @@ class SupabaseHelper private constructor(private val context: Context) {
                 put("source_type", sourceType)
                 put("source_sender", sourceSender)
                 put("source_content", sourceContent)
-                put("source_timestamp", dateFormat.format(Date(sourceTimestamp)))
+                put("source_timestamp", formatUtcTimestamp(sourceTimestamp))
                 put("status", "pending")
                 put("duplicate_hash", duplicateHash)
                 put("is_duplicate", isDuplicate)
@@ -716,7 +727,7 @@ class SupabaseHelper private constructor(private val context: Context) {
                 if (parsedType != null) put("parsed_type", parsedType)
                 if (parsedMerchant != null) put("parsed_merchant", parsedMerchant)
                 if (parsedCategoryId != null) put("parsed_category_id", parsedCategoryId)
-                put("parsed_date", dateFormat.format(Date(sourceTimestamp)))
+                put("parsed_date", formatLocalDate(sourceTimestamp))
             }
 
             val requestBody = json.toString().toRequestBody("application/json".toMediaType())
@@ -765,11 +776,6 @@ class SupabaseHelper private constructor(private val context: Context) {
             val apiKey = anonKey ?: return@withContext false
             val token = getValidToken() ?: return@withContext false
 
-            val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-            dateFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
-            val dateOnlyFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
-            dateOnlyFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
-
             val pendingJson = JSONObject().apply {
                 put("ledger_id", ledgerId)
                 put("user_id", userId)
@@ -777,14 +783,14 @@ class SupabaseHelper private constructor(private val context: Context) {
                 put("source_type", sourceType)
                 put("source_sender", sourceSender)
                 put("source_content", sourceContent)
-                put("source_timestamp", dateFormat.format(Date(sourceTimestamp)))
+                put("source_timestamp", formatUtcTimestamp(sourceTimestamp))
                 put("status", "confirmed")
                 put("is_viewed", false)
                 if (parsedAmount != null) put("parsed_amount", parsedAmount)
                 if (parsedType != null) put("parsed_type", parsedType)
                 if (parsedMerchant != null) put("parsed_merchant", parsedMerchant)
                 if (parsedCategoryId != null) put("parsed_category_id", parsedCategoryId)
-                put("parsed_date", dateOnlyFormat.format(Date(sourceTimestamp)))
+                put("parsed_date", formatLocalDate(sourceTimestamp))
             }
 
             val pendingRequestBody = pendingJson.toString().toRequestBody("application/json".toMediaType())
@@ -813,7 +819,7 @@ class SupabaseHelper private constructor(private val context: Context) {
                 put("amount", parsedAmount ?: 0)
                 put("type", parsedType ?: "expense")
                 put("title", parsedMerchant ?: "")
-                put("date", dateOnlyFormat.format(Date(sourceTimestamp)))
+                put("date", formatLocalDate(sourceTimestamp))
                 if (parsedCategoryId != null) put("category_id", parsedCategoryId)
                 put("source_type", sourceType)
             }

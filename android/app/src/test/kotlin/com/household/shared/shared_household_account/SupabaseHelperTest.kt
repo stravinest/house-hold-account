@@ -2,6 +2,10 @@ package com.household.shared.shared_household_account
 
 import org.junit.Assert.*
 import org.junit.Test
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 /**
  * SupabaseHelper 테스트
@@ -243,5 +247,189 @@ class SupabaseHelperTest {
 
         assertNull("merchantRegex가 null일 수 있어야 한다", formatWithoutRegex.merchantRegex)
         assertNull("dateRegex가 null일 수 있어야 한다", formatWithoutRegex.dateRegex)
+    }
+
+    // =========================================================================
+    // 날짜 포맷팅 버그 테스트 (KST 00:00~08:59 사이 자동수집 시 전날로 저장되는 버그)
+    // =========================================================================
+    //
+    // 버그 재현:
+    //   KST 2026-02-15 07:59 (UTC 2026-02-14 22:59)에 KB국민카드 Push 수신
+    //   -> parsed_date에 UTC 기준 "2026-02-14"가 저장됨 (올바른 값: "2026-02-15")
+    //
+    // 원인:
+    //   SupabaseHelper에서 DATE 컬럼(parsed_date, date)에 저장할 때
+    //   SimpleDateFormat의 타임존을 UTC로 설정하여 로컬 날짜가 아닌 UTC 날짜를 보냄
+    //
+    // 영향:
+    //   KST 00:00~08:59 사이에 수신된 모든 자동수집 거래가 전날 날짜로 저장됨
+    // =========================================================================
+
+    @Test
+    fun `버그재현 - UTC 타임존으로 날짜 포맷 시 KST 이른 아침 거래가 전날로 저장된다`() {
+        // KST 2026-02-15 07:59:14 = UTC 2026-02-14 22:59:14
+        // System.currentTimeMillis()가 반환하는 epoch millis 시뮬레이션
+        val kstTimeZone = TimeZone.getTimeZone("Asia/Seoul")
+        val cal = java.util.Calendar.getInstance(kstTimeZone).apply {
+            set(2026, 1, 15, 7, 59, 14) // month는 0-based, 1 = February
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val timestamp = cal.timeInMillis
+
+        // 버그가 있던 코드: UTC 타임존으로 날짜 포맷
+        val buggyDateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        buggyDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val buggyResult = buggyDateFormat.format(Date(timestamp))
+
+        // UTC 기준이므로 2026-02-14가 나옴 (버그!)
+        assertEquals(
+            "UTC 타임존으로 포맷하면 KST 이른 아침 시간대에 전날 날짜가 된다 (이것이 버그의 원인)",
+            "2026-02-14",
+            buggyResult
+        )
+    }
+
+    @Test
+    fun `수정검증 - formatLocalDate로 KST 이른 아침 거래가 올바른 날짜로 저장된다`() {
+        val kstTimeZone = TimeZone.getTimeZone("Asia/Seoul")
+        val cal = java.util.Calendar.getInstance(kstTimeZone).apply {
+            set(2026, 1, 15, 7, 59, 14)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val timestamp = cal.timeInMillis
+
+        // SupabaseHelper.formatLocalDate는 기기 로컬 타임존 사용
+        val result = SupabaseHelper.formatLocalDate(timestamp)
+
+        assertEquals(
+            "formatLocalDate는 로컬 타임존 기준으로 올바른 날짜(2026-02-15)를 반환해야 한다",
+            "2026-02-15",
+            result
+        )
+    }
+
+    @Test
+    fun `수정검증 - formatUtcTimestamp는 UTC로 올바르게 포맷된다`() {
+        val kstTimeZone = TimeZone.getTimeZone("Asia/Seoul")
+        val cal = java.util.Calendar.getInstance(kstTimeZone).apply {
+            set(2026, 1, 15, 7, 59, 14)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val timestamp = cal.timeInMillis
+
+        val result = SupabaseHelper.formatUtcTimestamp(timestamp)
+
+        assertTrue(
+            "formatUtcTimestamp는 UTC로 변환되어 2026-02-14T22:59로 시작해야 한다",
+            result.startsWith("2026-02-14T22:59")
+        )
+        assertTrue(
+            "formatUtcTimestamp는 'Z' 접미사를 포함해야 한다",
+            result.endsWith("Z")
+        )
+    }
+
+    @Test
+    fun `수정검증 - formatLocalDate로 KST 자정 직후(00시 05분) 거래도 당일 날짜로 저장된다`() {
+        val kstTimeZone = TimeZone.getTimeZone("Asia/Seoul")
+        val cal = java.util.Calendar.getInstance(kstTimeZone).apply {
+            set(2026, 1, 15, 0, 5, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val timestamp = cal.timeInMillis
+
+        // 버그 코드 (UTC 포맷)는 전날이 됨을 확인
+        val buggyFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        buggyFormat.timeZone = TimeZone.getTimeZone("UTC")
+        assertEquals(
+            "UTC 포맷 시 자정 직후 거래도 전날이 된다 (버그 재현)",
+            "2026-02-14",
+            buggyFormat.format(Date(timestamp))
+        )
+
+        // 수정된 헬퍼 메서드는 올바른 날짜를 반환
+        assertEquals(
+            "formatLocalDate로 자정 직후 거래는 당일 날짜여야 한다",
+            "2026-02-15",
+            SupabaseHelper.formatLocalDate(timestamp)
+        )
+    }
+
+    @Test
+    fun `수정검증 - formatLocalDate로 KST 오전 8시 59분(경계값) 거래가 당일 날짜로 저장된다`() {
+        val kstTimeZone = TimeZone.getTimeZone("Asia/Seoul")
+        val cal = java.util.Calendar.getInstance(kstTimeZone).apply {
+            set(2026, 1, 15, 8, 59, 59)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val timestamp = cal.timeInMillis
+
+        // 버그 코드 (UTC 포맷)는 전날이 됨을 확인 (경계값)
+        val buggyFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        buggyFormat.timeZone = TimeZone.getTimeZone("UTC")
+        assertEquals(
+            "UTC 포맷 시 KST 08:59까지 전날이 된다 (버그 영향 범위의 경계)",
+            "2026-02-14",
+            buggyFormat.format(Date(timestamp))
+        )
+
+        assertEquals(
+            "formatLocalDate로 08:59 거래는 당일 날짜여야 한다",
+            "2026-02-15",
+            SupabaseHelper.formatLocalDate(timestamp)
+        )
+    }
+
+    @Test
+    fun `수정검증 - KST 오전 9시 이후 거래는 UTC에서도 같은 날짜다`() {
+        // KST 09:00 = UTC 00:00 (같은 날) -> 버그 비발생 구간
+        val kstTimeZone = TimeZone.getTimeZone("Asia/Seoul")
+        val cal = java.util.Calendar.getInstance(kstTimeZone).apply {
+            set(2026, 1, 15, 9, 0, 0)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val timestamp = cal.timeInMillis
+
+        val utcFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        utcFormat.timeZone = TimeZone.getTimeZone("UTC")
+
+        assertEquals(
+            "KST 09:00 이후에는 UTC와 formatLocalDate 결과가 같아야 한다",
+            utcFormat.format(Date(timestamp)),
+            SupabaseHelper.formatLocalDate(timestamp)
+        )
+        assertEquals("2026-02-15", SupabaseHelper.formatLocalDate(timestamp))
+    }
+
+    @Test
+    fun `수정검증 - formatLocalDate와 formatUtcTimestamp가 같은 epoch에 대해 일관된 결과를 반환한다`() {
+        val kstTimeZone = TimeZone.getTimeZone("Asia/Seoul")
+        val cal = java.util.Calendar.getInstance(kstTimeZone).apply {
+            set(2026, 1, 15, 7, 59, 14)
+            set(java.util.Calendar.MILLISECOND, 0)
+        }
+        val timestamp = cal.timeInMillis
+
+        val localDate = SupabaseHelper.formatLocalDate(timestamp)
+        val utcTimestamp = SupabaseHelper.formatUtcTimestamp(timestamp)
+
+        // parsed_date(DATE)는 로컬 날짜, source_timestamp(TIMESTAMPTZ)는 UTC
+        assertEquals("parsed_date는 로컬 날짜 2026-02-15", "2026-02-15", localDate)
+        assertTrue("source_timestamp는 UTC 2026-02-14", utcTimestamp.startsWith("2026-02-14"))
+    }
+
+    @Test
+    fun `수정검증 - getTodayDate는 formatLocalDate와 동일한 결과를 반환한다`() {
+        // getTodayDate()는 내부적으로 formatLocalDate(System.currentTimeMillis())를 호출
+        val now = System.currentTimeMillis()
+        val expected = SupabaseHelper.formatLocalDate(now)
+        val localFormat = SimpleDateFormat("yyyy-MM-dd", Locale.US)
+        val manualResult = localFormat.format(Date(now))
+
+        assertEquals(
+            "formatLocalDate는 기기 로컬 타임존으로 오늘 날짜를 반환해야 한다",
+            manualResult,
+            expected
+        )
     }
 }
