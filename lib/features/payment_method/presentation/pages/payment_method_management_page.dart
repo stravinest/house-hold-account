@@ -649,7 +649,11 @@ class _PaymentMethodListView extends ConsumerWidget {
   void _showAddSharedDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => const _SharedPaymentMethodDialog(),
+      builder: (context) => MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: const _SharedPaymentMethodDialog(),
+      ),
     );
   }
 
@@ -670,8 +674,11 @@ class _PaymentMethodListView extends ConsumerWidget {
     if (!paymentMethod.canAutoSave) {
       showDialog(
         context: context,
-        builder: (context) =>
-            _SharedPaymentMethodDialog(paymentMethod: paymentMethod),
+        builder: (context) => MediaQuery.removeViewInsets(
+          context: context,
+          removeBottom: true,
+          child: _SharedPaymentMethodDialog(paymentMethod: paymentMethod),
+        ),
       );
     } else {
       Navigator.push(

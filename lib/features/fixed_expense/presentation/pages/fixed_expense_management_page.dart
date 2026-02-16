@@ -63,7 +63,14 @@ class _FixedExpenseManagementPageState
   }
 
   void _showAddCategoryDialog(BuildContext context) {
-    showDialog(context: context, builder: (context) => const _CategoryDialog());
+    showDialog(
+      context: context,
+      builder: (context) => MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: const _CategoryDialog(),
+      ),
+    );
   }
 }
 
@@ -224,7 +231,11 @@ class _CategoryTile extends ConsumerWidget {
   void _showEditDialog(BuildContext context, FixedExpenseCategory category) {
     showDialog(
       context: context,
-      builder: (context) => _CategoryDialog(category: category),
+      builder: (context) => MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: _CategoryDialog(category: category),
+      ),
     );
   }
 

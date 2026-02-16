@@ -79,7 +79,11 @@ class _CategoryManagementPageState extends ConsumerState<CategoryManagementPage>
     final type = types[_tabController.index];
     showDialog(
       context: context,
-      builder: (context) => _CategoryDialog(type: type),
+      builder: (context) => MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: _CategoryDialog(type: type),
+      ),
     );
   }
 }
@@ -210,8 +214,11 @@ class _CategoryTile extends ConsumerWidget {
   void _showEditDialog(BuildContext context, Category category) {
     showDialog(
       context: context,
-      builder: (context) =>
-          _CategoryDialog(type: category.type, category: category),
+      builder: (context) => MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: _CategoryDialog(type: category.type, category: category),
+      ),
     );
   }
 
