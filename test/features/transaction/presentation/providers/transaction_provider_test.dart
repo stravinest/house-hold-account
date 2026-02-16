@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_household_account/features/fixed_expense/presentation/providers/fixed_expense_settings_provider.dart';
 import 'package:shared_household_account/features/ledger/presentation/providers/ledger_provider.dart';
 import 'package:shared_household_account/features/transaction/data/models/transaction_model.dart';
 import 'package:shared_household_account/features/transaction/data/repositories/transaction_repository.dart';
@@ -269,6 +270,7 @@ void main() {
             ledgerId: testLedgerId,
             year: any(named: 'year'),
             month: any(named: 'month'),
+            excludeFixedExpense: any(named: 'excludeFixedExpense'),
           ),
         ).thenAnswer(
           (_) async => {
@@ -279,12 +281,31 @@ void main() {
           },
         );
 
+        when(
+          () => mockRepository.getDailyTotals(
+            ledgerId: testLedgerId,
+            year: any(named: 'year'),
+            month: any(named: 'month'),
+            excludeFixedExpense: any(named: 'excludeFixedExpense'),
+          ),
+        ).thenAnswer((_) async => {});
+
+        when(
+          () => mockRepository.getTransactionsByMonth(
+            ledgerId: testLedgerId,
+            year: any(named: 'year'),
+            month: any(named: 'month'),
+          ),
+        ).thenAnswer((_) async => []);
+
         container = createContainer(
           overrides: [
             selectedLedgerIdProvider.overrideWith((ref) => testLedgerId),
             selectedDateProvider.overrideWith((ref) => testDate),
             transactionRepositoryProvider
                 .overrideWith((ref) => mockRepository),
+            fixedExpenseSettingsProvider
+                .overrideWith((ref) async => null),
           ],
         );
 
@@ -322,6 +343,7 @@ void main() {
             ledgerId: testLedgerId,
             year: any(named: 'year'),
             month: any(named: 'month'),
+            excludeFixedExpense: any(named: 'excludeFixedExpense'),
           ),
         ).thenAnswer(
           (_) async => {
@@ -332,11 +354,30 @@ void main() {
           },
         );
 
+        when(
+          () => mockRepository.getDailyTotals(
+            ledgerId: testLedgerId,
+            year: any(named: 'year'),
+            month: any(named: 'month'),
+            excludeFixedExpense: any(named: 'excludeFixedExpense'),
+          ),
+        ).thenAnswer((_) async => {});
+
+        when(
+          () => mockRepository.getTransactionsByMonth(
+            ledgerId: testLedgerId,
+            year: any(named: 'year'),
+            month: any(named: 'month'),
+          ),
+        ).thenAnswer((_) async => []);
+
         container = createContainer(
           overrides: [
             selectedLedgerIdProvider.overrideWith((ref) => testLedgerId),
             transactionRepositoryProvider
                 .overrideWith((ref) => mockRepository),
+            fixedExpenseSettingsProvider
+                .overrideWith((ref) async => null),
           ],
         );
 
