@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   X,
   Pencil,
@@ -15,23 +15,31 @@ import {
   Loader2,
 } from 'lucide-react';
 import { formatAmount, formatDateWithDay } from '@/lib/utils';
+import { removeTransaction, updateTransaction } from '@/lib/actions/transaction';
+import { useRouter } from 'next/navigation';
+import { EditTransactionForm } from '@/components/transaction/EditTransactionForm';
 
 export type TransactionDetail = {
   id: string;
   description: string;
   amount: number;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'asset';
   date: string;
   memo?: string;
   categoryName?: string;
   categoryIcon?: string;
   categoryColor?: string;
+  categoryId?: string;
   paymentMethodName?: string;
+  paymentMethodId?: string;
   authorName?: string;
   authorColor?: string;
   isFixedExpense?: boolean;
   isRecurring?: boolean;
   recurringType?: string;
+  recurringEndDate?: string;
+  fixedExpenseCategoryId?: string;
+  ledgerId?: string;
 };
 
 type TransactionDetailModalProps = {
@@ -39,6 +47,7 @@ type TransactionDetailModalProps = {
   onClose: () => void;
   transaction: TransactionDetail | null;
   loading?: boolean;
+  onSuccess?: () => void;
 };
 
 function getRecurringLabel(type?: string): string {
@@ -59,16 +68,31 @@ export function TransactionDetailModal({
   onClose,
   transaction,
   loading = false,
+  onSuccess,
 }: TransactionDetailModalProps) {
+  const router = useRouter();
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   // ESC 키로 닫기
   useEffect(() => {
     if (!open) return;
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') {
+        if (confirmDelete) {
+          setConfirmDelete(false);
+        } else if (editing) {
+          setEditing(false);
+        } else {
+          onClose();
+        }
+      }
     };
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
-  }, [open, onClose]);
+  }, [open, onClose, confirmDelete, editing]);
 
   // body 스크롤 잠금
   useEffect(() => {
@@ -80,6 +104,15 @@ export function TransactionDetailModal({
     };
   }, [open]);
 
+  // 모달 닫을 때 상태 초기화
+  useEffect(() => {
+    if (!open) {
+      setConfirmDelete(false);
+      setEditing(false);
+      setError(null);
+    }
+  }, [open]);
+
   if (!open) return null;
 
   const showContent = !loading && transaction;
@@ -89,6 +122,42 @@ export function TransactionDetailModal({
       ? -transaction.amount
       : transaction.amount
     : 0;
+
+  const handleDelete = async () => {
+    if (!transaction) return;
+    setDeleting(true);
+    setError(null);
+    try {
+      const result = await removeTransaction(transaction.id);
+      if ('error' in result && result.error) {
+        setError(result.error);
+        setDeleting(false);
+        return;
+      }
+      onClose();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setError('삭제 중 오류가 발생했습니다. 다시 시도해주세요.');
+      setDeleting(false);
+      return;
+    } finally {
+      setConfirmDelete(false);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    setEditing(false);
+    onClose();
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      router.refresh();
+    }
+  };
 
   return (
     <div
@@ -108,25 +177,35 @@ export function TransactionDetailModal({
             id='tx-detail-title'
             className='text-lg font-bold text-on-surface'
           >
-            거래 상세
+            {editing ? '거래 수정' : '거래 상세'}
           </h2>
           <div className='flex items-center gap-2'>
+            {!editing && showContent && (
+              <>
+                <button
+                  onClick={() => setEditing(true)}
+                  className='inline-flex h-8 items-center gap-1.5 rounded-lg border border-primary/30 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/5'
+                >
+                  <Pencil size={14} />
+                  수정
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(true)}
+                  className='inline-flex h-8 items-center gap-1.5 rounded-lg border border-expense/30 px-3 text-xs font-medium text-expense transition-colors hover:bg-expense/5'
+                >
+                  <Trash2 size={14} />
+                  삭제
+                </button>
+              </>
+            )}
             <button
-              disabled
-              className='inline-flex h-8 cursor-not-allowed items-center gap-1.5 rounded-lg border border-primary/30 px-3 text-xs font-medium text-primary opacity-50'
-            >
-              <Pencil size={14} />
-              수정
-            </button>
-            <button
-              disabled
-              className='inline-flex h-8 cursor-not-allowed items-center gap-1.5 rounded-lg border border-expense/30 px-3 text-xs font-medium text-expense opacity-50'
-            >
-              <Trash2 size={14} />
-              삭제
-            </button>
-            <button
-              onClick={onClose}
+              onClick={() => {
+                if (editing) {
+                  setEditing(false);
+                } else {
+                  onClose();
+                }
+              }}
               aria-label='닫기'
               className='flex h-8 w-8 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-surface-container'
             >
@@ -135,6 +214,38 @@ export function TransactionDetailModal({
           </div>
         </div>
 
+        {/* Error */}
+        {error && (
+          <div className='mx-6 mt-4 rounded-lg border border-expense/20 bg-expense/5 px-4 py-2 text-sm text-expense'>
+            {error}
+          </div>
+        )}
+
+        {/* Delete Confirmation */}
+        {confirmDelete && (
+          <div className='border-b border-separator px-6 py-4'>
+            <p className='mb-3 text-sm text-on-surface'>
+              이 거래를 삭제하시겠습니까? 삭제 후 복구할 수 없습니다.
+            </p>
+            <div className='flex justify-end gap-2'>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className='rounded-lg px-4 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container'
+              >
+                취소
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className='inline-flex items-center gap-1.5 rounded-lg bg-expense px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-expense/90 disabled:opacity-50'
+              >
+                {deleting && <Loader2 size={14} className='animate-spin' />}
+                삭제
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Loading */}
         {loading && (
           <div className='flex items-center justify-center py-16'>
@@ -142,8 +253,17 @@ export function TransactionDetailModal({
           </div>
         )}
 
-        {/* Content */}
-        {showContent && (
+        {/* Edit Mode */}
+        {editing && transaction && (
+          <EditTransactionForm
+            transaction={transaction}
+            onSuccess={handleEditSuccess}
+            onCancel={() => setEditing(false)}
+          />
+        )}
+
+        {/* View Content */}
+        {showContent && !editing && (
           <>
             {/* Amount Section */}
             <div className='flex flex-col items-center gap-2 px-6 py-6'>
@@ -169,14 +289,11 @@ export function TransactionDetailModal({
             {/* Detail Rows */}
             <div className='border-t border-separator px-6 py-4'>
               <div className='flex flex-col divide-y divide-separator'>
-                {/* 날짜 */}
                 <DetailRow
                   icon={<Calendar size={18} />}
                   label='날짜'
                   value={formatDateWithDay(transaction.date)}
                 />
-
-                {/* 카테고리 */}
                 {transaction.categoryName && (
                   <DetailRow
                     icon={<Tag size={18} />}
@@ -196,8 +313,6 @@ export function TransactionDetailModal({
                     }
                   />
                 )}
-
-                {/* 결제수단 */}
                 {transaction.paymentMethodName && (
                   <DetailRow
                     icon={<CreditCard size={18} />}
@@ -205,8 +320,6 @@ export function TransactionDetailModal({
                     value={transaction.paymentMethodName}
                   />
                 )}
-
-                {/* 작성자 */}
                 {transaction.authorName && (
                   <DetailRow
                     icon={<User size={18} />}
@@ -227,8 +340,6 @@ export function TransactionDetailModal({
                     }
                   />
                 )}
-
-                {/* 고정비 */}
                 {transaction.isFixedExpense && (
                   <DetailRow
                     icon={<Pin size={18} />}
@@ -240,8 +351,6 @@ export function TransactionDetailModal({
                     }
                   />
                 )}
-
-                {/* 반복 */}
                 {transaction.isRecurring && (
                   <DetailRow
                     icon={<Repeat size={18} />}
@@ -249,8 +358,6 @@ export function TransactionDetailModal({
                     value={getRecurringLabel(transaction.recurringType)}
                   />
                 )}
-
-                {/* 메모 */}
                 {transaction.memo && (
                   <div className='py-3'>
                     <div className='mb-2 flex items-center gap-2 text-on-surface-variant'>

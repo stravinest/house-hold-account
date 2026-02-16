@@ -704,6 +704,79 @@ class StatisticsRepository {
     );
   }
 
+  // 카테고리 내 Top5 거래 조회 - 단일 쿼리로 총액 + Top5 동시 처리
+  Future<CategoryTopResult> getCategoryTopTransactions({
+    required String ledgerId,
+    required int year,
+    required int month,
+    required String type,
+    required String categoryId,
+    int limit = 5,
+  }) async {
+    final startDate = DateTime(year, month, 1);
+    final endDate = DateTime(year, month + 1, 0);
+
+    var query = _client
+        .from('transactions')
+        .select(
+          'id, title, amount, date, user_id, profiles!user_id(display_name, color)',
+        )
+        .eq('ledger_id', ledgerId)
+        .eq('type', type)
+        .gte('date', startDate.toIso8601String().split('T').first)
+        .lte('date', endDate.toIso8601String().split('T').first);
+
+    if (categoryId == '_uncategorized_') {
+      query = query.isFilter('category_id', null);
+    } else if (categoryId == '_fixed_expense_') {
+      query = query.eq('is_fixed_expense', true);
+    } else {
+      query = query.eq('category_id', categoryId);
+    }
+
+    final allRows = await query;
+
+    // 클라이언트에서 총액 계산
+    final totalAmount = allRows.fold<int>(
+      0,
+      (sum, row) => sum + ((row['amount'] as num?)?.toInt() ?? 0),
+    );
+
+    // 금액순 정렬 후 상위 limit개 추출
+    allRows.sort(
+      (a, b) => ((b['amount'] as num?) ?? 0).compareTo((a['amount'] as num?) ?? 0),
+    );
+    final topRows = allRows.take(limit).toList();
+
+    // 요일 배열: DateTime.weekday는 1(월)~7(일)
+    const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+    final items = <CategoryTopTransaction>[];
+
+    for (int i = 0; i < topRows.length; i++) {
+      final row = topRows[i];
+      final amount = (row['amount'] as num?)?.toInt() ?? 0;
+      final profile = row['profiles'] as Map<String, dynamic>?;
+      final dateStr = row['date'] as String;
+      final txDate = DateTime.parse(dateStr);
+      final formattedDate =
+          '${txDate.month}월 ${txDate.day}일 (${dayNames[txDate.weekday - 1]})';
+
+      items.add(CategoryTopTransaction(
+        rank: i + 1,
+        title: row['title'] as String? ?? '',
+        amount: amount,
+        percentage: totalAmount > 0
+            ? ((amount / totalAmount) * 1000).round() / 10
+            : 0.0,
+        date: formattedDate,
+        userName: profile?['display_name'] as String? ?? '',
+        userColor: profile?['color'] as String? ?? '#A8D8EA',
+      ));
+    }
+
+    return CategoryTopResult(items: items, totalAmount: totalAmount);
+  }
+
   // 연별 추이 (선택된 날짜 기준, 평균값 포함, 0원 제외) - 단일 쿼리로 최적화
   Future<TrendStatisticsData> getYearlyTrendWithAverage({
     required String ledgerId,
@@ -903,4 +976,33 @@ class UserCategoryStatistics {
       ..sort((a, b) => b.amount.compareTo(a.amount));
     return list;
   }
+}
+
+// 카테고리 Top 거래 결과
+class CategoryTopResult {
+  final List<CategoryTopTransaction> items;
+  final int totalAmount;
+
+  const CategoryTopResult({required this.items, required this.totalAmount});
+}
+
+// 카테고리 Top 거래 모델
+class CategoryTopTransaction {
+  final int rank;
+  final String title;
+  final int amount;
+  final double percentage;
+  final String date;
+  final String userName;
+  final String userColor;
+
+  const CategoryTopTransaction({
+    required this.rank,
+    required this.title,
+    required this.amount,
+    required this.percentage,
+    required this.date,
+    required this.userName,
+    required this.userColor,
+  });
 }

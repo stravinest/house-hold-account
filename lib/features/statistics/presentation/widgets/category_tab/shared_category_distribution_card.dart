@@ -11,6 +11,7 @@ import '../../../../ledger/domain/entities/ledger.dart';
 import '../../../../share/presentation/providers/share_provider.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../providers/statistics_provider.dart';
+import 'category_detail_bottom_sheet.dart';
 
 /// 공유 가계부용 카테고리 분포 카드 - Pencil Nzqas + memberTabs 디자인 적용
 class SharedCategoryDistributionCard extends ConsumerWidget {
@@ -98,7 +99,7 @@ class SharedCategoryDistributionCard extends ConsumerWidget {
               final users = userStats.values.toList()
                 ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
 
-              return _SharedLegendList(users: users, sharedState: sharedState);
+              return _SharedLegendList(users: users, sharedState: sharedState, ref: ref);
             },
             loading: () => const SizedBox.shrink(),
             error: (error, stack) => const SizedBox.shrink(),
@@ -488,14 +489,20 @@ class _SharedDonutChart extends StatelessWidget {
 class _SharedLegendList extends StatelessWidget {
   final List<UserCategoryStatistics> users;
   final SharedStatisticsState sharedState;
+  final WidgetRef ref;
 
-  const _SharedLegendList({required this.users, required this.sharedState});
+  const _SharedLegendList({
+    required this.users,
+    required this.sharedState,
+    required this.ref,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final numberFormat = NumberFormatUtils.currency;
+    final type = ref.read(selectedStatisticsTypeProvider);
 
     // 모드에 따라 데이터 처리
     List<CategoryStatistics> categories;
@@ -504,14 +511,12 @@ class _SharedLegendList extends StatelessWidget {
     switch (sharedState.mode) {
       case SharedStatisticsMode.combined:
       case SharedStatisticsMode.overlay:
-        // 합계: 모든 사용자의 카테고리 합산
         final combined = _getCombinedCategories();
         categories = combined.$1;
         totalAmount = combined.$2;
         break;
 
       case SharedStatisticsMode.singleUser:
-        // 특정 사용자만
         final selectedUser = users.firstWhere(
           (u) => u.userId == sharedState.selectedUserId,
           orElse: () => users.first,
@@ -525,55 +530,93 @@ class _SharedLegendList extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    // 상위 5개만 표시
     final displayStats = categories.take(5).toList();
 
     return Column(
-      children: displayStats.map((item) {
-        final percentage = totalAmount > 0
-            ? (item.amount / totalAmount) * 100
-            : 0.0;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              // 카테고리 아이콘
-              CategoryIcon(
-                icon: item.categoryIcon,
-                name: item.categoryName,
-                color: item.categoryColor,
-                size: CategoryIconSize.small,
-              ),
-              const SizedBox(width: 8),
-              // 카테고리명
-              Text(
-                CategoryL10nHelper.translate(item.categoryName, l10n),
-                style: const TextStyle(fontSize: 14),
-              ),
-              // Spacer
-              const Spacer(),
-              // 퍼센트
-              Text(
-                '${percentage.toStringAsFixed(1)}%',
+      children: [
+        if (displayStats.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                l10n.statisticsTapToDetail,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 11,
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(width: 12),
-              // 금액
-              Text(
-                '${numberFormat.format(item.amount)}${l10n.transactionAmountUnit}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+            ),
           ),
-        );
-      }).toList(),
+        ...displayStats.map((item) {
+          final percentage = totalAmount > 0
+              ? (item.amount / totalAmount) * 100
+              : 0.0;
+
+          return GestureDetector(
+            onTap: () {
+              CategoryDetailBottomSheet.show(
+                context,
+                ref,
+                categoryId: item.categoryId,
+                categoryName: CategoryL10nHelper.translate(
+                  item.categoryName,
+                  l10n,
+                ),
+                categoryColor: item.categoryColor,
+                categoryIcon: item.categoryIcon,
+                categoryPercentage: percentage,
+                type: type,
+                totalAmount: item.amount,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  CategoryIcon(
+                    icon: item.categoryIcon,
+                    name: item.categoryName,
+                    color: item.categoryColor,
+                    size: CategoryIconSize.small,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    CategoryL10nHelper.translate(item.categoryName, l10n),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${percentage.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${numberFormat.format(item.amount)}${l10n.transactionAmountUnit}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 

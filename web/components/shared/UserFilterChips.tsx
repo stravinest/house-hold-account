@@ -10,12 +10,15 @@ type UserFilterChipsProps = {
   members: Member[];
   activeFilter: string; // 'all' | 'me' | member id
   onChange: (filter: string) => void;
+  compact?: boolean;
 };
 
-export function UserFilterChips({ members, activeFilter, onChange }: UserFilterChipsProps) {
+export function UserFilterChips({ members, activeFilter, onChange, compact }: UserFilterChipsProps) {
   return (
     <div className='flex items-center gap-3'>
-      <span className='text-[13px] font-medium text-on-surface-variant'>통계 범위</span>
+      {!compact && (
+        <span className='text-[13px] font-medium text-on-surface-variant'>통계 범위</span>
+      )}
       <div className='flex items-center gap-2'>
         <button
           onClick={() => onChange('all')}

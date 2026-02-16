@@ -17,6 +17,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='ko'>
+      <head>
+        <link
+          href='https://fonts.googleapis.com/icon?family=Material+Icons+Outlined'
+          rel='stylesheet'
+        />
+      </head>
       <body className={`${inter.className} antialiased`}>
         <NavigationProvider>{children}</NavigationProvider>
       </body>

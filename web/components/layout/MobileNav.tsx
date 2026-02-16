@@ -8,7 +8,9 @@ import {
   PieChart,
   Landmark,
   Settings,
+  Loader2,
 } from 'lucide-react';
+import { useNavigation } from '@/components/ui/NavigationProgress';
 
 const navigation = [
   { name: '대시보드', href: '/dashboard', icon: LayoutDashboard },
@@ -20,6 +22,7 @@ const navigation = [
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { navigatingTo, startNavigation } = useNavigation();
 
   return (
     <nav className='fixed bottom-0 left-0 right-0 z-40 flex border-t border-card-border bg-white md:hidden'>
@@ -27,16 +30,26 @@ export function MobileNav() {
         const isActive =
           pathname === item.href ||
           (item.href !== '/settings' && pathname.startsWith(item.href + '/'));
+        const isNavigating = navigatingTo === item.href;
         const Icon = item.icon;
         return (
           <Link
             key={item.name}
             href={item.href}
+            onClick={() => startNavigation(item.href)}
             className={`flex flex-1 flex-col items-center gap-1 py-2 text-xs transition-colors ${
-              isActive ? 'text-primary' : 'text-on-surface-variant'
+              isActive
+                ? 'text-primary'
+                : isNavigating
+                  ? 'text-primary/60'
+                  : 'text-on-surface-variant'
             }`}
           >
-            <Icon size={20} />
+            {isNavigating ? (
+              <Loader2 size={20} className='animate-spin' />
+            ) : (
+              <Icon size={20} />
+            )}
             <span className='font-medium'>{item.name}</span>
           </Link>
         );

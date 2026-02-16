@@ -2984,6 +2984,36 @@ abstract class AppLocalizations {
   /// **'데이터가 없습니다'**
   String get statisticsNoData;
 
+  /// No description provided for @statisticsMonthTotal.
+  ///
+  /// In ko, this message translates to:
+  /// **'이번 달 총액'**
+  String get statisticsMonthTotal;
+
+  /// No description provided for @statisticsCategoryTopExpense.
+  ///
+  /// In ko, this message translates to:
+  /// **'지출 항목 TOP 5'**
+  String get statisticsCategoryTopExpense;
+
+  /// No description provided for @statisticsCategoryTopIncome.
+  ///
+  /// In ko, this message translates to:
+  /// **'수입 항목 TOP 5'**
+  String get statisticsCategoryTopIncome;
+
+  /// No description provided for @statisticsCategoryTopAsset.
+  ///
+  /// In ko, this message translates to:
+  /// **'자산 항목 TOP 5'**
+  String get statisticsCategoryTopAsset;
+
+  /// No description provided for @statisticsTapToDetail.
+  ///
+  /// In ko, this message translates to:
+  /// **'탭하여 상세 보기'**
+  String get statisticsTapToDetail;
+
   /// No description provided for @statisticsOther.
   ///
   /// In ko, this message translates to:

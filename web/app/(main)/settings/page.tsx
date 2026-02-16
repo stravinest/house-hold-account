@@ -38,8 +38,6 @@ export default async function SettingsPage() {
 
   return (
     <div className='flex flex-col gap-6'>
-      <h1 className='text-[22px] font-semibold text-on-surface'>설정</h1>
-
       {/* Profile Card */}
       <div className='rounded-[16px] border border-card-border bg-white p-6'>
         <div className='flex items-center gap-4'>

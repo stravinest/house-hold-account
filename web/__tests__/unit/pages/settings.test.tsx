@@ -22,12 +22,6 @@ vi.mock('next/navigation', () => ({
 import SettingsPage from '@/app/(main)/settings/page';
 
 describe('설정 페이지', () => {
-  it('설정 제목이 렌더링되어야 함', async () => {
-    const page = await SettingsPage();
-    render(page);
-    expect(screen.getByText('설정')).toBeInTheDocument();
-  });
-
   it('프로필 정보가 렌더링되어야 함', async () => {
     const page = await SettingsPage();
     render(page);

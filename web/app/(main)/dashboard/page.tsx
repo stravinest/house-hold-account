@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { getCurrentUserLedger } from '@/lib/queries/ledger';
+import { getCurrentUserLedger, getLedgerMembers } from '@/lib/queries/ledger';
 import { getTransactions } from '@/lib/queries/transaction';
 import { extractDay } from '@/lib/utils';
 import { DashboardClient } from './dashboard-client';
@@ -16,10 +16,17 @@ export default async function DashboardPage() {
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
 
-  const [monthTransactions, recentTransactions] = await Promise.all([
+  const [monthTransactions, recentTransactions, memberRows] = await Promise.all([
     getTransactions(ledgerId, { year, month }),
     getTransactions(ledgerId, { limit: 10 }),
+    getLedgerMembers(ledgerId),
   ]);
+
+  const members = memberRows.map((m: any) => ({
+    id: m.user_id,
+    name: m.profiles?.display_name || '',
+    color: m.profiles?.color || '#9E9E9E',
+  }));
 
   // 수입/지출 요약
   const income = (monthTransactions as any[])
@@ -33,7 +40,7 @@ export default async function DashboardPage() {
   const categoryColorMap: Record<string, { value: number; color: string }> = {};
   for (const tx of monthTransactions as any[]) {
     if (tx.type === 'expense') {
-      const catName = tx.categories?.name || '기타';
+      const catName = tx.categories?.name || '미지정';
       const catColor = tx.categories?.color || '#78909C';
       if (!categoryColorMap[catName]) categoryColorMap[catName] = { value: 0, color: catColor };
       categoryColorMap[catName].value += tx.amount;
@@ -91,6 +98,7 @@ export default async function DashboardPage() {
       ledgerId={ledgerId}
       initialYear={year}
       initialMonth={month}
+      members={members}
       initialData={{
         income,
         expense,

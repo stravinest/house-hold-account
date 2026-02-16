@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { X, Upload, FileSpreadsheet, AlertTriangle, CheckCircle } from 'lucide-react';
-import { parseImportFile, autoMapColumns, mapRowsToPreview } from '@/lib/utils/excel';
+import { X, Upload, FileSpreadsheet, AlertTriangle, CheckCircle, Download } from 'lucide-react';
+import { parseImportFile, autoMapColumns, mapRowsToPreview, generateSampleExcel } from '@/lib/utils/excel';
 import { importTransactions } from '@/lib/actions/excel';
 import type { ColumnMapping, ImportPreviewRow, ImportResult } from '@/lib/types/excel';
 import { cn } from '@/lib/utils';
@@ -61,6 +61,7 @@ export function ImportPanel({ open, onClose, ledgerId, onSuccess }: ImportPanelP
     setResult(null);
     setError('');
     setDragOver(false);
+    setTruncatedWarning('');
   };
 
   const handleClose = () => {
@@ -68,12 +69,19 @@ export function ImportPanel({ open, onClose, ledgerId, onSuccess }: ImportPanelP
     onClose();
   };
 
+  const [truncatedWarning, setTruncatedWarning] = useState('');
+
   const processFile = async (file: File) => {
     setError('');
+    setTruncatedWarning('');
     try {
       const parsed = await parseImportFile(file);
       setHeaders(parsed.headers);
       setRows(parsed.rows);
+
+      if (parsed.truncated) {
+        setTruncatedWarning(`데이터가 5,000건을 초과하여 처음 5,000건만 가져옵니다.`);
+      }
 
       const autoMapping = autoMapColumns(parsed.headers);
       setMapping(autoMapping);
@@ -185,6 +193,7 @@ export function ImportPanel({ open, onClose, ledgerId, onSuccess }: ImportPanelP
         <div className='flex flex-col gap-4 overflow-y-auto px-6 py-5'>
           {/* Step 1: Upload */}
           {step === 'upload' && (
+            <>
             <div
               onDrop={handleDrop}
               onDragOver={handleDragOver}
@@ -205,7 +214,7 @@ export function ImportPanel({ open, onClose, ledgerId, onSuccess }: ImportPanelP
                   파일을 드래그하거나 클릭하여 업로드
                 </p>
                 <p className='mt-1 text-xs text-on-surface-variant'>
-                  .xlsx, .csv 파일을 지원합니다
+                  .xlsx, .csv 파일 (최대 5MB, 5,000건)
                 </p>
               </div>
               <input
@@ -216,6 +225,22 @@ export function ImportPanel({ open, onClose, ledgerId, onSuccess }: ImportPanelP
                 className='hidden'
               />
             </div>
+            <div className='flex items-center justify-between'>
+              <p className='text-xs text-on-surface-variant'>
+                처음이라면 샘플 파일을 참고하세요. 입력 안내가 포함되어 있습니다.
+              </p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  generateSampleExcel();
+                }}
+                className='flex shrink-0 items-center gap-2 rounded-[10px] border border-[#E0E0E0] px-4 py-2.5 text-sm font-medium text-on-surface-variant transition-colors hover:bg-surface-container'
+              >
+                <Download size={16} />
+                샘플 다운로드
+              </button>
+            </div>
+            </>
           )}
 
           {/* Step 2: Column Mapping */}
@@ -227,6 +252,12 @@ export function ImportPanel({ open, onClose, ledgerId, onSuccess }: ImportPanelP
                   {headers.length}개 컬럼, {rows.length}개 행 감지됨
                 </p>
               </div>
+              {truncatedWarning && (
+                <div className='flex items-center gap-2 rounded-[10px] bg-[#FFF3E0] px-3 py-2'>
+                  <AlertTriangle size={16} className='shrink-0 text-[#E65100]' />
+                  <p className='text-sm text-[#E65100]'>{truncatedWarning}</p>
+                </div>
+              )}
 
               <div className='flex flex-col gap-3'>
                 {MAPPING_FIELDS.map((field) => (

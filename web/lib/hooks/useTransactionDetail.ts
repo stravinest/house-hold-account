@@ -11,9 +11,14 @@ type SupabaseTransactionRow = {
   type: string;
   date: string;
   memo?: string | null;
+  ledger_id?: string;
+  category_id?: string | null;
+  payment_method_id?: string | null;
   is_fixed_expense?: boolean;
   is_recurring?: boolean;
   recurring_type?: string | null;
+  recurring_end_date?: string | null;
+  fixed_expense_category_id?: string | null;
   categories?: { name: string; icon: string; color: string } | null;
   payment_methods?: { name: string } | null;
   profiles?: { display_name: string; color: string } | null;
@@ -30,12 +35,17 @@ function mapToTransactionDetail(row: SupabaseTransactionRow): TransactionDetail 
     categoryName: row.categories?.name || undefined,
     categoryIcon: row.categories?.icon || undefined,
     categoryColor: row.categories?.color || undefined,
+    categoryId: row.category_id || undefined,
     paymentMethodName: row.payment_methods?.name || undefined,
+    paymentMethodId: row.payment_method_id || undefined,
+    ledgerId: row.ledger_id || undefined,
     authorName: row.profiles?.display_name || undefined,
     authorColor: row.profiles?.color || undefined,
     isFixedExpense: row.is_fixed_expense || false,
     isRecurring: row.is_recurring || false,
     recurringType: row.recurring_type || undefined,
+    recurringEndDate: row.recurring_end_date || undefined,
+    fixedExpenseCategoryId: row.fixed_expense_category_id || undefined,
   };
 }
 

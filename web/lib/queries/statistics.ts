@@ -7,6 +7,7 @@ export type StatisticsData = {
   expense: number;
   thirdValue: number;
   thirdLabel: string;
+  thirdSub?: string;
   prevIncome: number;
   prevExpense: number;
   prevThirdValue: number;
@@ -20,7 +21,7 @@ export type StatisticsData = {
   memberSpending: { name: string; amount: number; color: string; isMe: boolean }[];
 };
 
-function getDateRange(period: PeriodType, date: Date): { start: string; end: string } {
+export function getDateRange(period: PeriodType, date: Date): { start: string; end: string } {
   const y = date.getFullYear();
   const m = date.getMonth();
   const d = date.getDate();
@@ -99,8 +100,8 @@ function getThirdLabel(period: PeriodType): string {
   switch (period) {
     case 'day': return '거래 건수';
     case 'week': return '일평균 지출';
-    case 'month': return '절약액';
-    case 'year': return '연간 저축';
+    case 'month': return '합계';
+    case 'year': return '연간 합계';
   }
 }
 
@@ -135,10 +136,10 @@ export async function getStatisticsData(
   const { start, end } = getDateRange(period, date);
   const prev = getPrevDateRange(period, date);
 
-  // 현재 기간 + 이전 기간 거래를 병렬 조회
+  // 현재 기간 + 이전 기간 거래를 병렬 조회 (relation embedding 없이 단순 select)
   let query = supabase
     .from('transactions')
-    .select('*, categories(name, icon, color), payment_methods(name, type, icon, color), profiles(display_name, color)')
+    .select('id, type, amount, date, user_id, category_id, payment_method_id, created_at')
     .eq('ledger_id', ledgerId)
     .gte('date', start)
     .lt('date', end)
@@ -159,12 +160,52 @@ export async function getStatisticsData(
     prevQuery = prevQuery.eq('user_id', userId);
   }
 
-  const [{ data: transactions }, { data: prevTransactions }] = await Promise.all([
+  // 카테고리, 결제수단, 멤버 정보를 별도로 조회
+  const categoriesQuery = supabase
+    .from('categories')
+    .select('id, name, icon, color')
+    .eq('ledger_id', ledgerId);
+
+  const pmQuery = supabase
+    .from('payment_methods')
+    .select('id, name, type, icon, color')
+    .eq('ledger_id', ledgerId);
+
+  const membersQuery = supabase
+    .from('ledger_members')
+    .select('user_id')
+    .eq('ledger_id', ledgerId);
+
+  const [currentResult, prevResult, catResult, pmResult, memberResult] = await Promise.all([
     query,
     prevQuery,
+    categoriesQuery,
+    pmQuery,
+    membersQuery,
   ]);
-  const txs = transactions || [];
-  const prevTxs = prevTransactions || [];
+
+  const txs = currentResult.data || [];
+  const prevTxs = prevResult.data || [];
+  const memberUserIds = new Set((memberResult.data || []).map((m) => m.user_id));
+
+  // 멤버 user_id로만 profiles 조회
+  const { data: profileData } = memberUserIds.size > 0
+    ? await supabase
+        .from('profiles')
+        .select('id, display_name, color')
+        .in('id', Array.from(memberUserIds))
+    : { data: [] };
+
+  // lookup maps 생성
+  const catMap = new Map((catResult.data || []).map((c) => [c.id, c]));
+  const pmLookup = new Map((pmResult.data || []).map((p) => [p.id, p]));
+  const profileMap = new Map((profileData || []).map((p) => [p.id, p]));
+  const memberLookup = new Map(
+    Array.from(memberUserIds).map((uid) => {
+      const profile = profileMap.get(uid);
+      return [uid, { name: profile?.display_name || '알 수 없음', color: profile?.color || '#A8DAB5' }];
+    })
+  );
 
   // 수입/지출 합계
   const income = txs.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
@@ -175,11 +216,21 @@ export async function getStatisticsData(
   // 3번째 카드 값 계산
   let thirdValue = 0;
   let prevThirdValue = 0;
+  let thirdSub = '';
   switch (period) {
-    case 'day':
+    case 'day': {
       thirdValue = txs.length;
       prevThirdValue = prevTxs.length;
+      const expCount = txs.filter((t) => t.type === 'expense').length;
+      const incCount = txs.filter((t) => t.type === 'income').length;
+      const astCount = txs.filter((t) => t.type === 'asset').length;
+      const parts = [];
+      if (expCount > 0) parts.push(`지출 ${expCount}건`);
+      if (incCount > 0) parts.push(`수입 ${incCount}건`);
+      if (astCount > 0) parts.push(`자산 ${astCount}건`);
+      thirdSub = parts.length > 0 ? parts.join(', ') : '거래 없음';
       break;
+    }
     case 'week':
       thirdValue = Math.round(expense / 7);
       prevThirdValue = Math.round(prevExpense / 7);
@@ -257,7 +308,8 @@ export async function getStatisticsData(
   // 카테고리별 지출
   const catExpenseMap: Record<string, number> = {};
   for (const tx of expenseTxs) {
-    const name = (tx as any).categories?.name || '기타';
+    const cat = tx.category_id ? catMap.get(tx.category_id) : null;
+    const name = cat?.name || '미지정';
     catExpenseMap[name] = (catExpenseMap[name] || 0) + tx.amount;
   }
   const categoryExpense = Object.entries(catExpenseMap)
@@ -268,7 +320,8 @@ export async function getStatisticsData(
   const incomeTxs = txs.filter((t) => t.type === 'income');
   const catIncomeMap: Record<string, number> = {};
   for (const tx of incomeTxs) {
-    const name = (tx as any).categories?.name || '기타';
+    const cat = tx.category_id ? catMap.get(tx.category_id) : null;
+    const name = cat?.name || '미지정';
     catIncomeMap[name] = (catIncomeMap[name] || 0) + tx.amount;
   }
   const totalIncome = income || 1;
@@ -281,17 +334,18 @@ export async function getStatisticsData(
     .sort((a, b) => b.amount - a.amount);
 
   // 결제수단별 지출
-  const pmMap: Record<string, { amount: number; type: string; color: string }> = {};
+  const pmAggMap: Record<string, { amount: number; type: string; color: string }> = {};
   for (const tx of expenseTxs) {
-    const pmName = (tx as any).payment_methods?.name || '현금';
-    const pmType = (tx as any).payment_methods?.type || 'cash';
-    const pmColor = (tx as any).payment_methods?.color;
-    if (!pmMap[pmName]) {
-      pmMap[pmName] = { amount: 0, type: pmType, color: pmColor || '' };
+    const pm = tx.payment_method_id ? pmLookup.get(tx.payment_method_id) : null;
+    const pmName = pm?.name || '미지정';
+    const pmType = pm?.type || 'cash';
+    const pmColor = pm?.color;
+    if (!pmAggMap[pmName]) {
+      pmAggMap[pmName] = { amount: 0, type: pmType, color: pmColor || '' };
     }
-    pmMap[pmName].amount += tx.amount;
+    pmAggMap[pmName].amount += tx.amount;
   }
-  const paymentMethods = Object.entries(pmMap)
+  const paymentMethods = Object.entries(pmAggMap)
     .map(([name, info], idx) => ({
       name,
       amount: info.amount,
@@ -300,21 +354,29 @@ export async function getStatisticsData(
     }))
     .sort((a, b) => b.amount - a.amount);
 
-  // 멤버별 지출 (필터 없을 때만 의미 있음)
-  const memberMap: Record<string, { amount: number; name: string; color: string }> = {};
+  // 멤버별 지출 (지출 없는 멤버도 0원으로 포함)
+  const memberAggMap: Record<string, { amount: number; name: string; color: string }> = {};
+  for (const [uid, info] of memberLookup) {
+    memberAggMap[uid] = {
+      amount: 0,
+      name: info.name,
+      color: info.color,
+    };
+  }
   for (const tx of txs.filter((t) => t.type === 'expense')) {
     const uid = tx.user_id;
-    const profile = (tx as any).profiles;
-    if (!memberMap[uid]) {
-      memberMap[uid] = {
-        amount: 0,
-        name: profile?.display_name || '알 수 없음',
-        color: profile?.color || '#A8DAB5',
+    if (memberAggMap[uid]) {
+      memberAggMap[uid].amount += tx.amount;
+    } else {
+      const member = memberLookup.get(uid);
+      memberAggMap[uid] = {
+        amount: tx.amount,
+        name: member?.name || '알 수 없음',
+        color: member?.color || '#A8DAB5',
       };
     }
-    memberMap[uid].amount += tx.amount;
   }
-  const memberSpending = Object.entries(memberMap)
+  const memberSpending = Object.entries(memberAggMap)
     .map(([uid, info]) => ({
       name: info.name,
       amount: info.amount,
@@ -330,6 +392,7 @@ export async function getStatisticsData(
     expense,
     thirdValue,
     thirdLabel: getThirdLabel(period),
+    thirdSub: thirdSub || undefined,
     prevIncome,
     prevExpense,
     prevThirdValue,

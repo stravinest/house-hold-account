@@ -51,7 +51,7 @@ export function SpendingBarChart({
   }, [measure]);
 
   return (
-    <div className='flex flex-col rounded-[16px] border border-card-border bg-white p-6'>
+    <div className='flex flex-1 flex-col rounded-[16px] border border-card-border bg-white p-6'>
       <div className='mb-4 flex items-center justify-between'>
         <h3 className='text-[15px] font-semibold text-on-surface'>{title}</h3>
         {subText ? (

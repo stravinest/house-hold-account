@@ -1580,6 +1580,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statisticsNoData => 'No data available';
 
   @override
+  String get statisticsMonthTotal => 'Monthly Total';
+
+  @override
+  String get statisticsCategoryTopExpense => 'Expense TOP 5';
+
+  @override
+  String get statisticsCategoryTopIncome => 'Income TOP 5';
+
+  @override
+  String get statisticsCategoryTopAsset => 'Asset TOP 5';
+
+  @override
+  String get statisticsTapToDetail => 'Tap for details';
+
+  @override
   String get statisticsOther => 'Other';
 
   @override

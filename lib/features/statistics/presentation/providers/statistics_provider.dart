@@ -341,6 +341,58 @@ final categoryStatisticsByUserProvider =
       return orderedStats;
     });
 
+// 카테고리 상세 팝업 상태
+class CategoryDetailState {
+  final bool isOpen;
+  final String categoryId;
+  final String categoryName;
+  final String categoryColor;
+  final String categoryIcon;
+  final double categoryPercentage;
+  final String type; // expense, income, asset
+  final int totalAmount;
+
+  const CategoryDetailState({
+    this.isOpen = false,
+    this.categoryId = '',
+    this.categoryName = '',
+    this.categoryColor = '',
+    this.categoryIcon = '',
+    this.categoryPercentage = 0,
+    this.type = 'expense',
+    this.totalAmount = 0,
+  });
+}
+
+final categoryDetailStateProvider = StateProvider<CategoryDetailState>(
+  (ref) => const CategoryDetailState(),
+);
+
+// 카테고리 Top5 거래 조회
+final categoryTopTransactionsProvider =
+    FutureProvider<CategoryTopResult>((ref) async {
+      final state = ref.watch(categoryDetailStateProvider);
+      if (!state.isOpen || state.categoryId.isEmpty) {
+        return const CategoryTopResult(items: [], totalAmount: 0);
+      }
+
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      if (ledgerId == null) {
+        return const CategoryTopResult(items: [], totalAmount: 0);
+      }
+
+      final date = ref.watch(statisticsSelectedDateProvider);
+      final repository = ref.watch(statisticsRepositoryProvider);
+
+      return repository.getCategoryTopTransactions(
+        ledgerId: ledgerId,
+        year: date.year,
+        month: date.month,
+        type: state.type,
+        categoryId: state.categoryId,
+      );
+    });
+
 // 공유 가계부 여부 확인
 final isSharedLedgerProvider = Provider<bool>((ref) {
   final ledgerAsync = ref.watch(currentLedgerProvider);

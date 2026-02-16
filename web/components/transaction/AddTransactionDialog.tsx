@@ -5,13 +5,21 @@ import { X, Minus, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { addTransaction } from '@/lib/actions/transaction';
 import { cn } from '@/lib/utils';
+import { CategoryIcon } from '@/components/shared/CategoryIcon';
 
 type TransactionType = 'expense' | 'income' | 'asset';
+type RecurringType = 'daily' | 'monthly' | 'yearly';
 
 type Category = {
   id: string;
   name: string;
   type: string;
+  icon: string | null;
+};
+
+type FixedExpenseCategory = {
+  id: string;
+  name: string;
   icon: string | null;
 };
 
@@ -43,24 +51,34 @@ export function AddTransactionDialog({
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null);
   const [memo, setMemo] = useState('');
-  const [isRecurring, setIsRecurring] = useState(false);
   const [isFixedExpense, setIsFixedExpense] = useState(false);
+  const [fixedExpenseCategoryId, setFixedExpenseCategoryId] = useState<string | null>(null);
+  // 반복 설정
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringType, setRecurringType] = useState<RecurringType>('monthly');
+  const [recurringEndDate, setRecurringEndDate] = useState('');
+  // 자산 만기일
+  const [maturityDate, setMaturityDate] = useState('');
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const [categories, setCategories] = useState<Category[]>([]);
+  const [fixedExpenseCategories, setFixedExpenseCategories] = useState<FixedExpenseCategory[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
 
   useEffect(() => {
     if (!open) return;
     const fetchData = async () => {
       const supabase = createClient();
-      const [catRes, pmRes] = await Promise.all([
+      const [catRes, pmRes, fecRes] = await Promise.all([
         supabase.from('categories').select('id, name, type, icon').eq('ledger_id', ledgerId).order('sort_order'),
         supabase.from('payment_methods').select('id, name').eq('ledger_id', ledgerId).order('created_at'),
+        supabase.from('fixed_expense_categories').select('id, name, icon').eq('ledger_id', ledgerId).order('sort_order'),
       ]);
       setCategories(catRes.data || []);
       setPaymentMethods(pmRes.data || []);
+      setFixedExpenseCategories(fecRes.data || []);
     };
     fetchData();
   }, [open, ledgerId]);
@@ -91,7 +109,11 @@ export function AddTransactionDialog({
     setPaymentMethodId(null);
     setMemo('');
     setIsRecurring(false);
+    setRecurringType('monthly');
+    setRecurringEndDate('');
     setIsFixedExpense(false);
+    setFixedExpenseCategoryId(null);
+    setMaturityDate('');
     setError('');
   };
 
@@ -120,10 +142,21 @@ export function AddTransactionDialog({
     formData.set('description', description.trim());
     formData.set('date', date);
     if (categoryId) formData.set('category_id', categoryId);
-    if (paymentMethodId) formData.set('payment_method_id', paymentMethodId);
+    if (paymentMethodId && type === 'expense') formData.set('payment_method_id', paymentMethodId);
     if (memo.trim()) formData.set('memo', memo.trim());
-    if (isRecurring) formData.set('is_recurring', 'true');
-    if (isFixedExpense) formData.set('is_fixed_expense', 'true');
+    if (isFixedExpense && type === 'expense') {
+      formData.set('is_fixed_expense', 'true');
+      if (fixedExpenseCategoryId) formData.set('fixed_expense_category_id', fixedExpenseCategoryId);
+    }
+    if (isRecurring) {
+      formData.set('is_recurring', 'true');
+      formData.set('recurring_type', recurringType);
+      if (recurringEndDate) formData.set('recurring_end_date', recurringEndDate);
+    }
+    if (type === 'asset') {
+      formData.set('is_asset', 'true');
+      if (maturityDate) formData.set('maturity_date', maturityDate);
+    }
 
     const result = await addTransaction(formData);
 
@@ -145,6 +178,15 @@ export function AddTransactionDialog({
     }
   };
 
+  // 고정비 토글 시 반복을 자동으로 monthly로 설정
+  const handleFixedExpenseChange = (checked: boolean) => {
+    setIsFixedExpense(checked);
+    if (checked) {
+      setIsRecurring(true);
+      setRecurringType('monthly');
+    }
+  };
+
   const filteredCategories = categories.filter((c) => c.type === type);
 
   const typeColor = type === 'income' ? 'text-income' : type === 'expense' ? 'text-expense' : 'text-primary';
@@ -153,12 +195,17 @@ export function AddTransactionDialog({
   if (!open) return null;
 
   return (
-    <div className='fixed inset-0 z-50 flex items-center justify-center'>
+    <div
+      className='fixed inset-0 z-50 flex items-center justify-center'
+      role='dialog'
+      aria-modal='true'
+      aria-labelledby='add-tx-title'
+    >
       <div className='fixed inset-0 bg-black/50' onClick={handleClose} />
       <div className='relative z-10 flex max-h-[90vh] w-full max-w-[580px] flex-col rounded-[20px] bg-white shadow-xl'>
         {/* Header */}
         <div className='flex items-center justify-between border-b border-separator px-6 py-[18px]'>
-          <h2 className='text-lg font-bold text-on-surface'>거래 추가</h2>
+          <h2 id='add-tx-title' className='text-lg font-bold text-on-surface'>거래 추가</h2>
           <button
             onClick={handleClose}
             className='flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-container'
@@ -177,6 +224,11 @@ export function AddTransactionDialog({
                 onClick={() => {
                   setType(t);
                   setCategoryId(null);
+                  if (t !== 'expense') {
+                    setIsFixedExpense(false);
+                    setIsRecurring(false);
+                    setPaymentMethodId(null);
+                  }
                 }}
                 className={cn(
                   'flex-1 rounded-[10px] py-2.5 text-sm font-semibold transition-all',
@@ -200,7 +252,10 @@ export function AddTransactionDialog({
               <input
                 type='number'
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || Number(val) >= 0) setAmount(val);
+                }}
                 placeholder='0'
                 min='0'
                 autoFocus
@@ -221,6 +276,7 @@ export function AddTransactionDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder='거래 내용을 입력하세요'
+              maxLength={40}
               className='h-[46px] w-full rounded-[10px] border border-card-border bg-tab-bg px-4 text-sm outline-none focus:border-primary'
             />
           </div>
@@ -236,8 +292,127 @@ export function AddTransactionDialog({
             />
           </div>
 
-          {/* Category Chips */}
-          {filteredCategories.length > 0 && (
+          {/* Maturity Date (asset only) */}
+          {type === 'asset' && (
+            <div className='flex flex-col gap-1.5'>
+              <label className='text-[13px] font-medium text-on-surface-variant'>만기일 (선택)</label>
+              <input
+                type='date'
+                value={maturityDate}
+                onChange={(e) => setMaturityDate(e.target.value)}
+                className='h-[46px] w-full rounded-[10px] border border-card-border bg-tab-bg px-4 text-sm outline-none focus:border-primary'
+              />
+            </div>
+          )}
+
+          {/* Fixed Expense Toggle (expense only) */}
+          {type === 'expense' && (
+            <div className='flex flex-col gap-3'>
+              <div className='flex items-center gap-4'>
+                <label className='flex cursor-pointer items-center gap-2 text-sm text-on-surface'>
+                  <input
+                    type='checkbox'
+                    checked={isFixedExpense}
+                    onChange={(e) => handleFixedExpenseChange(e.target.checked)}
+                    className='h-4 w-4 rounded accent-primary'
+                  />
+                  고정비
+                </label>
+              </div>
+
+              {/* Fixed Expense Category (when isFixedExpense) */}
+              {isFixedExpense && fixedExpenseCategories.length > 0 && (
+                <div className='flex flex-col gap-1.5'>
+                  <label className='text-[13px] font-medium text-on-surface-variant'>고정비 카테고리</label>
+                  <div className='flex flex-wrap gap-2'>
+                    {fixedExpenseCategories.map((fec) => (
+                      <button
+                        key={fec.id}
+                        onClick={() => setFixedExpenseCategoryId(fixedExpenseCategoryId === fec.id ? null : fec.id)}
+                        className={cn(
+                          'flex items-center gap-1.5 rounded-[20px] border px-3 py-1.5 text-sm transition-all',
+                          fixedExpenseCategoryId === fec.id
+                            ? 'border-primary bg-primary/10 font-medium text-primary'
+                            : 'border-card-border bg-white text-on-surface-variant hover:border-primary/50',
+                        )}
+                      >
+                        <CategoryIcon icon={fec.icon} name={fec.name} />
+                        {fec.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Recurring Settings */}
+          {type === 'expense' && (
+            <div className='flex flex-col gap-3'>
+              <label className='flex cursor-pointer items-center gap-2 text-sm text-on-surface'>
+                <input
+                  type='checkbox'
+                  checked={isRecurring}
+                  onChange={(e) => {
+                    setIsRecurring(e.target.checked);
+                    if (!e.target.checked && !isFixedExpense) {
+                      setRecurringEndDate('');
+                    }
+                  }}
+                  disabled={isFixedExpense}
+                  className='h-4 w-4 rounded accent-primary disabled:opacity-50'
+                />
+                반복
+                {isFixedExpense && <span className='text-xs text-on-surface-variant'>(고정비 선택 시 자동 활성화)</span>}
+              </label>
+
+              {isRecurring && (
+                <div className='flex flex-col gap-3 rounded-[12px] border border-card-border bg-tab-bg p-4'>
+                  {/* Recurring Type */}
+                  <div className='flex flex-col gap-1.5'>
+                    <label className='text-[13px] font-medium text-on-surface-variant'>반복 주기</label>
+                    <div className='flex rounded-md bg-white p-1'>
+                      {([
+                        { value: 'daily' as RecurringType, label: '매일' },
+                        { value: 'monthly' as RecurringType, label: '매월' },
+                        { value: 'yearly' as RecurringType, label: '매년' },
+                      ]).map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setRecurringType(opt.value)}
+                          className={cn(
+                            'flex-1 rounded-[8px] py-2 text-sm font-medium transition-all',
+                            recurringType === opt.value
+                              ? 'bg-primary text-white shadow-sm'
+                              : 'text-on-surface-variant hover:text-on-surface',
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* End Date */}
+                  <div className='flex flex-col gap-1.5'>
+                    <label className='text-[13px] font-medium text-on-surface-variant'>
+                      종료일 (선택, 미입력 시 무기한)
+                    </label>
+                    <input
+                      type='date'
+                      value={recurringEndDate}
+                      onChange={(e) => setRecurringEndDate(e.target.value)}
+                      min={date}
+                      className='h-[42px] w-full rounded-[10px] border border-card-border bg-white px-4 text-sm outline-none focus:border-primary'
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Category Chips (고정비가 아닐 때만 표시) */}
+          {!isFixedExpense && filteredCategories.length > 0 && (
             <div className='flex flex-col gap-2'>
               <label className='text-[13px] font-medium text-on-surface-variant'>카테고리</label>
               <div className='flex flex-wrap gap-2'>
@@ -246,13 +421,14 @@ export function AddTransactionDialog({
                     key={cat.id}
                     onClick={() => setCategoryId(categoryId === cat.id ? null : cat.id)}
                     className={cn(
-                      'rounded-[20px] border px-3 py-1.5 text-sm transition-all',
+                      'flex items-center gap-1.5 rounded-[20px] border px-3 py-1.5 text-sm transition-all',
                       categoryId === cat.id
                         ? 'border-primary bg-primary/10 font-medium text-primary'
                         : 'border-card-border bg-white text-on-surface-variant hover:border-primary/50',
                     )}
                   >
-                    {cat.icon ? `${cat.icon} ` : ''}{cat.name}
+                    <CategoryIcon icon={cat.icon} name={cat.name} />
+                    {cat.name}
                   </button>
                 ))}
               </div>
@@ -282,30 +458,6 @@ export function AddTransactionDialog({
             </div>
           )}
 
-          {/* Options Row */}
-          {type === 'expense' && (
-            <div className='flex items-center gap-4'>
-              <label className='flex cursor-pointer items-center gap-2 text-sm text-on-surface-variant'>
-                <input
-                  type='checkbox'
-                  checked={isRecurring}
-                  onChange={(e) => setIsRecurring(e.target.checked)}
-                  className='h-4 w-4 rounded accent-primary'
-                />
-                반복
-              </label>
-              <label className='flex cursor-pointer items-center gap-2 text-sm text-on-surface-variant'>
-                <input
-                  type='checkbox'
-                  checked={isFixedExpense}
-                  onChange={(e) => setIsFixedExpense(e.target.checked)}
-                  className='h-4 w-4 rounded accent-primary'
-                />
-                고정비
-              </label>
-            </div>
-          )}
-
           {/* Memo */}
           <div className='flex flex-col gap-1.5'>
             <label className='text-[13px] font-medium text-on-surface-variant'>메모</label>
@@ -314,6 +466,7 @@ export function AddTransactionDialog({
               onChange={(e) => setMemo(e.target.value)}
               placeholder='메모를 입력하세요 (선택)'
               rows={2}
+              maxLength={500}
               className='w-full resize-none rounded-[10px] border border-card-border bg-tab-bg px-4 py-3 text-sm outline-none focus:border-primary'
             />
           </div>

@@ -22,7 +22,7 @@ export async function getAssetSummary(ledgerId: string) {
   // 카테고리별 그룹화
   const byCategory: Record<string, { name: string; total: number; count: number }> = {};
   for (const asset of assets) {
-    const catName = (asset as any).categories?.name || '기타';
+    const catName = (asset as any).categories?.name || '미지정';
     if (!byCategory[catName]) {
       byCategory[catName] = { name: catName, total: 0, count: 0 };
     }

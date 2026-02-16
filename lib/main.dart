@@ -23,6 +23,8 @@ import 'features/notification/presentation/providers/notification_provider.dart'
 import 'features/notification/services/firebase_messaging_service.dart';
 import 'features/notification/services/local_notification_service.dart';
 import 'features/payment_method/presentation/widgets/permission_request_dialog.dart';
+import 'features/settings/data/services/app_update_service.dart';
+import 'features/settings/presentation/widgets/app_update_dialog.dart';
 import 'features/settings/presentation/widgets/guide_dialog.dart';
 import 'features/widget/data/services/widget_data_service.dart';
 import 'features/payment_method/presentation/providers/auto_save_manager.dart';
@@ -113,15 +115,12 @@ class _SharedHouseholdAccountAppState
     _initDeepLinks();
     _setupNotificationTapHandlers();
 
-    // 로그인 시 가이드 + 권한 확인 설정 (Android 전용)
+    // 로그인 시 가이드 + 권한 확인 + 업데이트 체크 설정
     _setupLoginPermissionCheck();
   }
 
-  /// 로그인 시 가이드 + 권한 확인 설정
+  /// 로그인 시 가이드 + 권한 확인 + 업데이트 체크 설정
   void _setupLoginPermissionCheck() {
-    // Android가 아니면 스킵
-    if (!Platform.isAndroid) return;
-
     // 인증 상태 변경 감지
     _authSubscription = SupabaseConfig.auth.onAuthStateChange.listen((data) {
       final event = data.event;
@@ -129,8 +128,12 @@ class _SharedHouseholdAccountAppState
 
       // 로그인 이벤트 (signedIn) 및 세션이 있을 때만 처리
       if (event == AuthChangeEvent.signedIn && session != null) {
-        // 권한 확인 후 비허용된 권한이 있으면 다이얼로그 표시
-        _checkPermissionsOnLogin();
+        // 권한 확인 후 비허용된 권한이 있으면 다이얼로그 표시 (Android 전용)
+        if (Platform.isAndroid) {
+          _checkPermissionsOnLogin();
+        }
+        // 앱 업데이트 확인 (모든 플랫폼)
+        _checkForAppUpdate();
       }
     });
   }
@@ -161,6 +164,25 @@ class _SharedHouseholdAccountAppState
     } else {
       // 이미 가이드를 본 경우, 비허용 권한 있으면 권한 다이얼로그만 표시
       await PermissionRequestDialog.showIfAnyDenied(navigatorContext);
+    }
+  }
+
+  /// 앱 업데이트 확인
+  Future<void> _checkForAppUpdate() async {
+    // 가이드/권한 다이얼로그 이후 체크하도록 딜레이
+    await Future.delayed(const Duration(milliseconds: 3000));
+
+    final navigatorContext = rootNavigatorKey.currentContext;
+    if (navigatorContext == null || !navigatorContext.mounted) return;
+
+    final prefs = ref.read(sharedPreferencesProvider);
+    final versionInfo = await AppUpdateService.checkForUpdate(prefs: prefs);
+
+    if (versionInfo != null) {
+      final ctx = rootNavigatorKey.currentContext;
+      if (ctx != null && ctx.mounted) {
+        await AppUpdateDialog.show(ctx, versionInfo);
+      }
     }
   }
 

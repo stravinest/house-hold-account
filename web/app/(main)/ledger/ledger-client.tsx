@@ -1,15 +1,25 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { TrendingUp, TrendingDown, Wallet, Plus, Calendar, Download, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useCallback, useMemo } from 'react';
+import { TrendingUp, TrendingDown, Wallet, Plus, Download, Upload, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatAmount, formatDateTime } from '@/lib/utils';
 import { SummaryCard } from '@/components/shared/SummaryCard';
+import { PeriodTabs, type PeriodType } from '@/components/shared/PeriodTabs';
+import { DateNavigation } from '@/components/shared/DateNavigation';
 import { TransactionDetailModal } from '@/components/shared/TransactionDetailModal';
 import { useTransactionDetail } from '@/lib/hooks/useTransactionDetail';
 import { AddTransactionDialog } from '@/components/transaction/AddTransactionDialog';
 import { ExportPanel } from '@/components/transaction/ExportPanel';
 import { ImportPanel } from '@/components/transaction/ImportPanel';
+import { generateSampleExcel } from '@/lib/utils/excel';
+import {
+  type TypeFilter,
+  getFilteredSummary,
+  getFilteredTransactions,
+  getDateLabel,
+  navigateDate,
+} from '@/lib/utils/dashboard';
 
 type Transaction = {
   id: string;
@@ -51,8 +61,6 @@ type LedgerClientProps = {
   initialMonth: number;
 };
 
-type FilterType = 'all' | 'income' | 'expense';
-
 export function LedgerClient({
   ledgerId,
   initialData,
@@ -60,9 +68,11 @@ export function LedgerClient({
   initialMonth,
 }: LedgerClientProps) {
   const [data, setData] = useState<LedgerData>(initialData);
-  const [filter, setFilter] = useState<FilterType>('all');
-  const [year, setYear] = useState(initialYear);
-  const [month, setMonth] = useState(initialMonth);
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [period, setPeriod] = useState<PeriodType>('month');
+  const [currentDate, setCurrentDate] = useState(
+    () => new Date(initialYear, initialMonth - 1, 1)
+  );
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -77,16 +87,57 @@ export function LedgerClient({
     closeDetail,
   } = useTransactionDetail();
 
+  const filteredSummary = useMemo(
+    () => getFilteredSummary(data, typeFilter),
+    [data, typeFilter],
+  );
+  const filteredTransactions = useMemo(
+    () => {
+      if (typeFilter === 'all') return data.transactions;
+      return data.transactions.filter((tx) => tx.type === typeFilter);
+    },
+    [data.transactions, typeFilter],
+  );
+
   const fetchData = useCallback(
-    async (y: number, m: number) => {
+    async (p: PeriodType, d: Date) => {
       setLoading(true);
       setFetchError(null);
       try {
         const supabase = createClient();
-        const startDate = `${y}-${String(m).padStart(2, '0')}-01`;
-        const nextMonth = m === 12 ? 1 : m + 1;
-        const nextYear = m === 12 ? y + 1 : y;
-        const endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+        const y = d.getFullYear();
+        const m = d.getMonth() + 1;
+        const day = d.getDate();
+
+        let startDate: string;
+        let endDate: string;
+
+        switch (p) {
+          case 'day': {
+            startDate = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const nextDay = new Date(y, m - 1, day + 1);
+            endDate = `${nextDay.getFullYear()}-${String(nextDay.getMonth() + 1).padStart(2, '0')}-${String(nextDay.getDate()).padStart(2, '0')}`;
+            break;
+          }
+          case 'week': {
+            const weekEnd = new Date(d);
+            weekEnd.setDate(weekEnd.getDate() + 7);
+            startDate = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            endDate = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`;
+            break;
+          }
+          case 'month': {
+            startDate = `${y}-${String(m).padStart(2, '0')}-01`;
+            const nextMonth = m === 12 ? 1 : m + 1;
+            const nextYear = m === 12 ? y + 1 : y;
+            endDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+            break;
+          }
+          case 'year':
+            startDate = `${y}-01-01`;
+            endDate = `${y + 1}-01-01`;
+            break;
+        }
 
         const { data: txData } = await supabase
           .from('transactions')
@@ -104,7 +155,7 @@ export function LedgerClient({
           .filter((t) => t.type === 'expense')
           .reduce((s, t) => s + t.amount, 0);
 
-        const serialized = transactions.map((tx: TransactionQueryRow) => ({
+        const serialized = transactions.map((tx: any) => ({
           id: tx.id,
           description: tx.title,
           amount: tx.amount,
@@ -124,9 +175,8 @@ export function LedgerClient({
           balance: income - expense,
           transactions: serialized,
         });
-      } catch (err) {
+      } catch {
         setFetchError('데이터를 불러오는 중 오류가 발생했습니다.');
-        console.error('Failed to fetch ledger data:', err);
       } finally {
         setLoading(false);
       }
@@ -134,98 +184,90 @@ export function LedgerClient({
     [ledgerId]
   );
 
-  const handleMonthChange = (direction: number) => {
-    let newMonth = month + direction;
-    let newYear = year;
-    if (newMonth > 12) {
-      newMonth = 1;
-      newYear += 1;
-    } else if (newMonth < 1) {
-      newMonth = 12;
-      newYear -= 1;
-    }
-    setMonth(newMonth);
-    setYear(newYear);
-    fetchData(newYear, newMonth);
+  const handlePeriodChange = (p: PeriodType) => {
+    setPeriod(p);
+    fetchData(p, currentDate);
   };
 
-  const filteredTransactions = data.transactions.filter((tx) => {
-    if (filter === 'all') return true;
-    return tx.type === filter;
-  });
+  const handleDateNav = (direction: number) => {
+    const next = navigateDate(period, currentDate, direction);
+    setCurrentDate(next);
+    fetchData(period, next);
+  };
 
   return (
-    <div className={`flex flex-col gap-6 ${loading ? 'pointer-events-none opacity-60' : ''}`}>
+    <div className='relative flex flex-col gap-6'>
+      {loading && (
+        <div className='absolute inset-0 z-10 flex items-start justify-center pt-40'>
+          <div className='flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-lg'>
+            <Loader2 size={16} className='animate-spin text-primary' />
+            <span className='text-sm text-on-surface-variant'>불러오는 중...</span>
+          </div>
+        </div>
+      )}
       {fetchError && (
         <div className='rounded-lg border border-expense/20 bg-expense/5 px-4 py-3 text-sm text-expense'>
           {fetchError}
         </div>
       )}
-      {/* Header */}
-      <div className='flex items-center justify-between'>
-        <h1 className='text-[22px] font-semibold text-on-surface'>거래 내역</h1>
-        <div className='flex items-center gap-2'>
+
+      {/* welcomeRow: tabRow + btnGroup (디자인 TGzU4) */}
+      <div className='flex flex-col gap-4'>
+        {/* tabRow: PeriodTabs + DateNav + TypeTabs */}
+        <div className='flex items-center justify-between'>
+          <PeriodTabs value={period} onChange={handlePeriodChange} />
+          <DateNavigation
+            label={getDateLabel(period, currentDate)}
+            onPrev={() => handleDateNav(-1)}
+            onNext={() => handleDateNav(1)}
+          />
+          <div className='flex items-center gap-1'>
+            {(['all', 'income', 'expense'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTypeFilter(t)}
+                className={`rounded-[8px] px-[14px] py-[6px] text-xs font-medium transition-colors ${
+                  typeFilter === t
+                    ? 'bg-primary text-white'
+                    : 'bg-tab-bg text-on-surface-variant hover:bg-surface-container'
+                }`}
+              >
+                {t === 'all' ? '전체' : t === 'income' ? '수입' : '지출'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* btnGroup */}
+        <div className='flex items-center justify-end gap-2'>
+          <button
+            onClick={() => generateSampleExcel()}
+            className='flex items-center gap-1.5 rounded-[10px] border border-[#E0E0E0] px-4 py-[10px] text-[13px] font-medium text-on-surface-variant transition-colors hover:bg-surface-container'
+          >
+            <FileSpreadsheet size={14} />
+            샘플 다운로드
+          </button>
           <button
             onClick={() => setExportOpen(true)}
-            className='flex h-9 items-center gap-1.5 rounded-[8px] bg-tab-bg px-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container'
-            title='내보내기'
+            className='flex items-center gap-1.5 rounded-[10px] border border-[#E0E0E0] px-4 py-[10px] text-[13px] font-medium text-on-surface-variant transition-colors hover:bg-surface-container'
           >
-            <Download size={16} />
+            <Download size={14} />
             내보내기
           </button>
           <button
             onClick={() => setImportOpen(true)}
-            className='flex h-9 items-center gap-1.5 rounded-[8px] bg-tab-bg px-3 text-sm text-on-surface-variant transition-colors hover:bg-surface-container'
-            title='가져오기'
+            className='flex items-center gap-1.5 rounded-[10px] border border-[#E0E0E0] px-4 py-[10px] text-[13px] font-medium text-on-surface-variant transition-colors hover:bg-surface-container'
           >
-            <Upload size={16} />
+            <Upload size={14} />
             가져오기
           </button>
           <button
             onClick={() => setAddDialogOpen(true)}
-            className='flex items-center gap-2 rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary/90'
+            className='flex items-center gap-1.5 rounded-[10px] bg-primary px-4 py-[10px] text-[13px] font-semibold text-white transition-colors hover:bg-primary/90'
           >
             <Plus size={16} />
             거래 추가
           </button>
-        </div>
-      </div>
-
-      {/* Month Navigation & Filters */}
-      <div className='flex flex-col gap-3 md:flex-row md:items-center md:justify-between'>
-        <div className='flex items-center gap-2 text-sm text-on-surface-variant'>
-          <Calendar size={16} />
-          <button
-            onClick={() => handleMonthChange(-1)}
-            className='flex h-7 w-7 items-center justify-center rounded-[6px] hover:bg-surface-container'
-          >
-            <ChevronLeft size={14} />
-          </button>
-          <span className='font-medium text-on-surface'>
-            {year}년 {month}월
-          </span>
-          <button
-            onClick={() => handleMonthChange(1)}
-            className='flex h-7 w-7 items-center justify-center rounded-[6px] hover:bg-surface-container'
-          >
-            <ChevronRight size={14} />
-          </button>
-        </div>
-
-        <div className='flex rounded-[8px] bg-tab-bg p-[2px]'>
-          {(['all', 'income', 'expense'] as FilterType[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`rounded-[8px] px-4 py-1.5 text-sm font-medium transition-all ${
-                filter === f
-                  ? 'bg-primary text-white'
-                  : 'text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              {f === 'all' ? '전체' : f === 'income' ? '수입' : '지출'}
-            </button>
-          ))}
         </div>
       </div>
 
@@ -235,27 +277,27 @@ export function LedgerClient({
           icon={TrendingUp}
           iconColor='#2E7D32'
           label='수입'
-          value={formatAmount(data.income)}
+          value={formatAmount(filteredSummary.income)}
           valueColor='text-income'
         />
         <SummaryCard
           icon={TrendingDown}
           iconColor='#BA1A1A'
           label='지출'
-          value={formatAmount(data.expense)}
+          value={formatAmount(filteredSummary.expense)}
           valueColor='text-expense'
         />
         <SummaryCard
           icon={Wallet}
           iconColor='#2E7D32'
           label='합계'
-          value={formatAmount(data.balance)}
+          value={formatAmount(filteredSummary.balance)}
           valueColor='text-primary'
         />
       </div>
 
       {/* Transaction List */}
-      <div className='rounded-[16px] border border-card-border bg-white'>
+      <div className='rounded-[16px] border border-card-border bg-white p-6'>
         {filteredTransactions.length > 0 ? (
           <div className='flex flex-col'>
             {filteredTransactions.map((tx) => (
@@ -263,42 +305,50 @@ export function LedgerClient({
                 key={tx.id}
                 onClick={() => handleTxClick(tx.id)}
                 onDoubleClick={() => handleTxDoubleClick(tx.id)}
-                className={`flex cursor-pointer items-center justify-between border-b border-separator px-6 py-4 transition-colors last:border-b-0 hover:bg-surface ${
-                  selectedTxId === tx.id ? 'bg-primary/5' : ''
+                className={`flex cursor-pointer items-center justify-between border-b border-[#F5F5F3] py-[14px] transition-colors last:border-b-0 hover:bg-surface ${
+                  selectedTxId === tx.id
+                    ? 'bg-primary/5'
+                    : ''
                 }`}
               >
-                <div className='flex flex-col gap-1'>
-                  <p className='text-sm font-medium text-on-surface'>
-                    {tx.description}
-                  </p>
-                  <div className='flex items-center gap-2 text-xs text-on-surface-variant'>
-                    <span>{formatDateTime(tx.createdAt)}</span>
-                    {tx.categoryName && (
-                      <>
-                        <span className='text-separator'>|</span>
-                        <span>{tx.categoryName}</span>
-                      </>
+                <div className='flex items-center gap-3'>
+                  <div className='flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-surface-container'>
+                    {tx.categoryIcon ? (
+                      <span className='material-icons-outlined text-[18px] text-on-surface-variant'>{tx.categoryIcon}</span>
+                    ) : (
+                      <span className='text-base text-on-surface-variant'>?</span>
                     )}
                   </div>
-                  {tx.userName && (
+                  <div className='min-w-0 flex-1'>
+                    <p className='truncate text-sm font-medium text-on-surface'>{tx.description}</p>
                     <div className='flex items-center gap-1.5'>
-                      <span
-                        className='inline-block h-2.5 w-2.5 rounded-full'
-                        style={{ backgroundColor: tx.userColor }}
-                      />
-                      <span className='text-xs text-on-surface-variant'>
-                        {tx.userName}
-                      </span>
+                      {tx.userName && (
+                        <span className='flex shrink-0 items-center gap-1'>
+                          <span
+                            className='flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white'
+                            style={{ backgroundColor: tx.userColor || '#9E9E9E' }}
+                          >
+                            {tx.userName.charAt(0)}
+                          </span>
+                          <span className='shrink-0 text-xs text-on-surface-variant'>{tx.userName}</span>
+                        </span>
+                      )}
+                      <p className='truncate text-xs text-on-surface-variant'>
+                        {formatDateTime(tx.createdAt)}
+                        {tx.categoryName ? ` / ${tx.categoryName}` : ''}
+                      </p>
                     </div>
-                  )}
+                  </div>
                 </div>
-                <p
-                  className={`text-sm font-semibold whitespace-nowrap ${
-                    tx.type === 'income' ? 'text-income' : 'text-expense'
-                  }`}
-                >
-                  {formatAmount(tx.type === 'expense' ? -tx.amount : tx.amount, true)}
-                </p>
+                <div className='flex shrink-0 items-center'>
+                  <p
+                    className={`text-[14px] font-semibold whitespace-nowrap ${
+                      tx.type === 'income' ? 'text-income' : 'text-expense'
+                    }`}
+                  >
+                    {formatAmount(tx.type === 'expense' ? -tx.amount : tx.amount, true)}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
@@ -314,13 +364,14 @@ export function LedgerClient({
         onClose={closeDetail}
         transaction={detailModalTx}
         loading={detailLoading}
+        onSuccess={() => fetchData(period, currentDate)}
       />
 
       <AddTransactionDialog
         open={addDialogOpen}
         onClose={() => setAddDialogOpen(false)}
         ledgerId={ledgerId}
-        onSuccess={() => fetchData(year, month)}
+        onSuccess={() => fetchData(period, currentDate)}
       />
 
       <ExportPanel
@@ -333,7 +384,7 @@ export function LedgerClient({
         open={importOpen}
         onClose={() => setImportOpen(false)}
         ledgerId={ledgerId}
-        onSuccess={() => fetchData(year, month)}
+        onSuccess={() => fetchData(period, currentDate)}
       />
     </div>
   );

@@ -9,7 +9,9 @@ import {
   PieChart,
   Landmark,
   Settings,
+  Loader2,
 } from 'lucide-react';
+import { useNavigation } from '@/components/ui/NavigationProgress';
 
 const navigation = [
   { name: '대시보드', href: '/dashboard', icon: LayoutDashboard },
@@ -21,6 +23,7 @@ const navigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { navigatingTo, startNavigation } = useNavigation();
 
   return (
     <aside className='hidden h-screen w-[260px] flex-col border-r border-card-border bg-sidebar px-4 py-6 md:flex'>
@@ -36,18 +39,26 @@ export function Sidebar() {
           const isActive =
             pathname === item.href ||
             (item.href !== '/settings' && pathname.startsWith(item.href + '/'));
+          const isNavigating = navigatingTo === item.href;
           const Icon = item.icon;
           return (
             <Link
               key={item.name}
               href={item.href}
+              onClick={() => startNavigation(item.href)}
               className={`flex items-center gap-[10px] rounded-[10px] px-[14px] py-[10px] text-sm font-medium transition-colors ${
                 isActive
                   ? 'bg-primary text-white'
-                  : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                  : isNavigating
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
               }`}
             >
-              <Icon size={20} />
+              {isNavigating ? (
+                <Loader2 size={20} className='animate-spin' />
+              ) : (
+                <Icon size={20} />
+              )}
               <span>{item.name}</span>
             </Link>
           );

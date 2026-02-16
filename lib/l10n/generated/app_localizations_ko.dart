@@ -1539,6 +1539,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get statisticsNoData => '데이터가 없습니다';
 
   @override
+  String get statisticsMonthTotal => '이번 달 총액';
+
+  @override
+  String get statisticsCategoryTopExpense => '지출 항목 TOP 5';
+
+  @override
+  String get statisticsCategoryTopIncome => '수입 항목 TOP 5';
+
+  @override
+  String get statisticsCategoryTopAsset => '자산 항목 TOP 5';
+
+  @override
+  String get statisticsTapToDetail => '탭하여 상세 보기';
+
+  @override
   String get statisticsOther => '기타';
 
   @override

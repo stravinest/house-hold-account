@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Loader2 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { formatAmount, formatDate, generateChartData } from '@/lib/utils';
 import { SummaryCard } from '@/components/shared/SummaryCard';
@@ -12,6 +12,18 @@ import { SpendingBarChart } from '@/components/charts/SpendingBarChart';
 import { TopSpendingSection } from '@/components/charts/TopSpendingSection';
 import { TransactionDetailModal } from '@/components/shared/TransactionDetailModal';
 import { useTransactionDetail } from '@/lib/hooks/useTransactionDetail';
+import {
+  type TypeFilter,
+  type MemberInfo,
+  getFilteredSummary,
+  getFilteredChartData,
+  getChartMode,
+  getChartTitle,
+  getFilteredTransactions,
+  getUserBreakdowns,
+  getDateLabel,
+  navigateDate,
+} from '@/lib/utils/dashboard';
 
 type Transaction = {
   id: string;
@@ -60,64 +72,17 @@ type DashboardClientProps = {
   initialData: DashboardData;
   initialYear: number;
   initialMonth: number;
+  members: MemberInfo[];
 };
-
-function getDateLabel(period: PeriodType, date: Date): string {
-  const y = date.getFullYear();
-  const m = date.getMonth() + 1;
-  const d = date.getDate();
-
-  switch (period) {
-    case 'day':
-      return `${y}.${String(m).padStart(2, '0')}.${String(d).padStart(2, '0')}`;
-    case 'week': {
-      const weekEnd = new Date(date);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      const em = weekEnd.getMonth() + 1;
-      const ed = weekEnd.getDate();
-      return `${m}.${String(d).padStart(2, '0')} - ${em}.${String(ed).padStart(2, '0')}`;
-    }
-    case 'month':
-      return `${y}년 ${m}월`;
-    case 'year':
-      return `${y}년`;
-  }
-}
-
-function navigateDate(period: PeriodType, date: Date, direction: number): Date {
-  const next = new Date(date);
-  switch (period) {
-    case 'day':
-      next.setDate(next.getDate() + direction);
-      break;
-    case 'week':
-      next.setDate(next.getDate() + direction * 7);
-      break;
-    case 'month':
-      next.setMonth(next.getMonth() + direction);
-      break;
-    case 'year':
-      next.setFullYear(next.getFullYear() + direction);
-      break;
-  }
-  return next;
-}
-
-function getChartTitle(period: PeriodType): string {
-  switch (period) {
-    case 'day': return '시간대별 수입/지출';
-    case 'week': return '요일별 수입/지출';
-    case 'month': return '주별 수입/지출';
-    case 'year': return '월별 수입/지출';
-  }
-}
 
 export function DashboardClient({
   ledgerId,
   initialData,
   initialYear,
   initialMonth,
+  members,
 }: DashboardClientProps) {
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [period, setPeriod] = useState<PeriodType>('month');
   const [currentDate, setCurrentDate] = useState(
     () => new Date(initialYear, initialMonth - 1, 1)
@@ -133,6 +98,24 @@ export function DashboardClient({
     handleTxDoubleClick,
     closeDetail,
   } = useTransactionDetail();
+
+  // 필터 적용된 데이터
+  const filteredSummary = useMemo(
+    () => getFilteredSummary(data, typeFilter),
+    [data, typeFilter],
+  );
+  const filteredChartData = useMemo(
+    () => getFilteredChartData(data.chartData, typeFilter),
+    [data.chartData, typeFilter],
+  );
+  const filteredTransactions = useMemo(
+    () => getFilteredTransactions(data.transactions, typeFilter),
+    [data.transactions, typeFilter],
+  );
+  const userBreakdowns = useMemo(
+    () => getUserBreakdowns(data.transactions, members),
+    [data.transactions, members],
+  );
 
   const fetchData = useCallback(
     async (p: PeriodType, d: Date) => {
@@ -197,7 +180,7 @@ export function DashboardClient({
         for (const tx of transactions) {
           if (tx.type === 'expense') {
             const row = tx as unknown as TransactionQueryRow;
-            const name = row.categories?.name || '기타';
+            const name = row.categories?.name || '미지정';
             const color = row.categories?.color || '#78909C';
             if (!categoryMap[name]) categoryMap[name] = { value: 0, color };
             categoryMap[name].value += tx.amount;
@@ -246,7 +229,7 @@ export function DashboardClient({
           categoryData,
           chartData,
         });
-      } catch (err) {
+      } catch {
         setFetchError('데이터를 불러오는 중 오류가 발생했습니다.');
       } finally {
         setLoading(false);
@@ -267,16 +250,21 @@ export function DashboardClient({
   };
 
   return (
-    <div className={`flex flex-col gap-6 ${loading ? 'pointer-events-none opacity-60' : ''}`}>
+    <div className='relative flex flex-col gap-6'>
+      {loading && (
+        <div className='absolute inset-0 z-10 flex items-start justify-center pt-40'>
+          <div className='flex items-center gap-2 rounded-full bg-white px-4 py-2 shadow-lg'>
+            <Loader2 size={16} className='animate-spin text-primary' />
+            <span className='text-sm text-on-surface-variant'>불러오는 중...</span>
+          </div>
+        </div>
+      )}
       {fetchError && (
         <div className='rounded-lg border border-expense/20 bg-expense/5 px-4 py-3 text-sm text-expense'>
           {fetchError}
         </div>
       )}
-      {/* Title centered */}
-      <h1 className='text-center text-[22px] font-semibold text-on-surface'>대시보드</h1>
-
-      {/* Tabs (left) + Date (right) */}
+      {/* Tabs (left) + Date (center) + TypeFilter (right) */}
       <div className='flex items-center justify-between'>
         <PeriodTabs value={period} onChange={handlePeriodChange} />
         <DateNavigation
@@ -284,6 +272,21 @@ export function DashboardClient({
           onPrev={() => handleDateNav(-1)}
           onNext={() => handleDateNav(1)}
         />
+        <div className='flex items-center gap-1'>
+          {(['all', 'income', 'expense'] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTypeFilter(t)}
+              className={`rounded-[8px] px-[14px] py-[6px] text-xs font-medium transition-colors ${
+                typeFilter === t
+                  ? 'bg-primary text-white'
+                  : 'bg-tab-bg text-on-surface-variant hover:bg-surface-container'
+              }`}
+            >
+              {t === 'all' ? '전체' : t === 'income' ? '수입' : '지출'}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Summary Cards */}
@@ -292,30 +295,45 @@ export function DashboardClient({
           icon={TrendingUp}
           iconColor='#2E7D32'
           label='수입'
-          value={formatAmount(data.income)}
+          value={formatAmount(filteredSummary.income)}
           valueColor='text-income'
+          userBreakdowns={members.length > 1 ? userBreakdowns.income.map((u) => ({
+            name: u.name,
+            color: u.color,
+            value: formatAmount(u.value),
+          })) : undefined}
         />
         <SummaryCard
           icon={TrendingDown}
           iconColor='#BA1A1A'
           label='지출'
-          value={formatAmount(data.expense)}
+          value={formatAmount(filteredSummary.expense)}
           valueColor='text-expense'
+          userBreakdowns={members.length > 1 ? userBreakdowns.expense.map((u) => ({
+            name: u.name,
+            color: u.color,
+            value: formatAmount(u.value),
+          })) : undefined}
         />
         <SummaryCard
           icon={Wallet}
           iconColor='#2E7D32'
           label='합계'
-          value={formatAmount(data.balance)}
+          value={formatAmount(filteredSummary.balance)}
           valueColor='text-primary'
+          userBreakdowns={members.length > 1 ? userBreakdowns.balance.map((u) => ({
+            name: u.name,
+            color: u.color,
+            value: formatAmount(u.value),
+          })) : undefined}
         />
       </div>
 
       {/* Chart */}
       <SpendingBarChart
-        title={getChartTitle(period)}
-        data={data.chartData}
-        mode='dual'
+        title={getChartTitle(period, typeFilter)}
+        data={filteredChartData}
+        mode={getChartMode(typeFilter)}
       />
 
       {/* Top Spending */}
@@ -337,9 +355,9 @@ export function DashboardClient({
             모두 보기
           </Link>
         </div>
-        {data.transactions.length > 0 ? (
+        {filteredTransactions.length > 0 ? (
           <div className='flex flex-col'>
-            {data.transactions.map((tx) => (
+            {filteredTransactions.map((tx) => (
               <div
                 key={tx.id}
                 onClick={() => handleTxClick(tx.id)}
@@ -352,28 +370,34 @@ export function DashboardClient({
               >
                 <div className='flex items-center gap-3'>
                   <div className='flex h-9 w-9 items-center justify-center rounded-full bg-surface-container'>
-                    <span className='text-base'>{tx.categoryIcon || ''}</span>
+                    {tx.categoryIcon ? (
+                      <span className='material-icons-outlined text-[18px] text-on-surface-variant'>{tx.categoryIcon}</span>
+                    ) : (
+                      <span className='text-base text-on-surface-variant'>?</span>
+                    )}
                   </div>
-                  <div>
-                    <p className='text-sm font-medium text-on-surface'>{tx.description}</p>
-                    <p className='text-xs text-on-surface-variant'>
-                      {formatDate(tx.date)}
-                      {tx.categoryName ? ` / ${tx.categoryName}` : ''}
-                    </p>
+                  <div className='min-w-0 flex-1'>
+                    <p className='truncate text-sm font-medium text-on-surface'>{tx.description}</p>
+                    <div className='flex items-center gap-1.5'>
+                      {tx.authorName && (
+                        <span className='flex shrink-0 items-center gap-1'>
+                          <span
+                            className='flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white'
+                            style={{ backgroundColor: tx.authorColor || '#9E9E9E' }}
+                          >
+                            {tx.authorName.charAt(0)}
+                          </span>
+                          <span className='shrink-0 text-xs text-on-surface-variant'>{tx.authorName}</span>
+                        </span>
+                      )}
+                      <p className='truncate text-xs text-on-surface-variant'>
+                        {formatDate(tx.date)}
+                        {tx.categoryName ? ` / ${tx.categoryName}` : ''}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <div className='flex items-center gap-3'>
-                  {tx.authorName && (
-                    <span className='flex shrink-0 items-center gap-1.5'>
-                      <span
-                        className='flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white'
-                        style={{ backgroundColor: tx.authorColor || '#9E9E9E' }}
-                      >
-                        {tx.authorName.charAt(0)}
-                      </span>
-                      <span className='max-w-[60px] truncate text-xs text-on-surface-variant'>{tx.authorName}</span>
-                    </span>
-                  )}
+                <div className='flex shrink-0 items-center'>
                   <p
                     className={`text-sm font-semibold ${
                       tx.type === 'income' ? 'text-income' : 'text-expense'
@@ -402,6 +426,7 @@ export function DashboardClient({
         onClose={closeDetail}
         transaction={detailModalTx}
         loading={detailLoading}
+        onSuccess={() => fetchData(period, currentDate)}
       />
     </div>
   );

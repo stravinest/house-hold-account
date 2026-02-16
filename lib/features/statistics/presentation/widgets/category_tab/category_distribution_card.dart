@@ -7,6 +7,7 @@ import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../../shared/widgets/category_icon.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../providers/statistics_provider.dart';
+import 'category_detail_bottom_sheet.dart';
 import 'category_donut_chart.dart';
 
 /// 카테고리 분포 카드 - Pencil Nzqas 디자인 적용
@@ -52,7 +53,7 @@ class CategoryDistributionCard extends ConsumerWidget {
               if (statistics.isEmpty) {
                 return const SizedBox.shrink();
               }
-              return _CategoryLegendList(statistics: statistics);
+              return _CategoryLegendList(statistics: statistics, ref: ref);
             },
             loading: () => const SizedBox.shrink(),
             error: (error, stack) => const SizedBox.shrink(),
@@ -66,14 +67,16 @@ class CategoryDistributionCard extends ConsumerWidget {
 /// 카테고리 범례 리스트 - Pencil legend 디자인
 class _CategoryLegendList extends StatelessWidget {
   final List<CategoryStatistics> statistics;
+  final WidgetRef ref;
 
-  const _CategoryLegendList({required this.statistics});
+  const _CategoryLegendList({required this.statistics, required this.ref});
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
     final numberFormat = NumberFormatUtils.currency;
+    final type = ref.read(selectedStatisticsTypeProvider);
 
     final totalAmount = statistics.fold(0, (sum, item) => sum + item.amount);
 
@@ -81,51 +84,96 @@ class _CategoryLegendList extends StatelessWidget {
     final displayStats = statistics.take(5).toList();
 
     return Column(
-      children: displayStats.map((item) {
-        final percentage = totalAmount > 0
-            ? (item.amount / totalAmount) * 100
-            : 0.0;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              // 카테고리 아이콘
-              CategoryIcon(
-                icon: item.categoryIcon,
-                name: item.categoryName,
-                color: item.categoryColor,
-                size: CategoryIconSize.small,
-              ),
-              const SizedBox(width: 8),
-              // 카테고리명
-              Text(
-                CategoryL10nHelper.translate(item.categoryName, l10n),
-                style: const TextStyle(fontSize: 14),
-              ),
-              // Spacer
-              const Spacer(),
-              // 퍼센트
-              Text(
-                '${percentage.toStringAsFixed(1)}%',
+      children: [
+        // UX 힌트
+        if (displayStats.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                l10n.statisticsTapToDetail,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 11,
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
-              const SizedBox(width: 12),
-              // 금액
-              Text(
-                '${numberFormat.format(item.amount)}${l10n.transactionAmountUnit}',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
+            ),
           ),
-        );
-      }).toList(),
+        ...displayStats.map((item) {
+          final percentage = totalAmount > 0
+              ? (item.amount / totalAmount) * 100
+              : 0.0;
+
+          return GestureDetector(
+            onTap: () {
+              CategoryDetailBottomSheet.show(
+                context,
+                ref,
+                categoryId: item.categoryId,
+                categoryName: CategoryL10nHelper.translate(
+                  item.categoryName,
+                  l10n,
+                ),
+                categoryColor: item.categoryColor,
+                categoryIcon: item.categoryIcon,
+                categoryPercentage: percentage,
+                type: type,
+                totalAmount: item.amount,
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              margin: const EdgeInsets.only(bottom: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  // 카테고리 아이콘
+                  CategoryIcon(
+                    icon: item.categoryIcon,
+                    name: item.categoryName,
+                    color: item.categoryColor,
+                    size: CategoryIconSize.small,
+                  ),
+                  const SizedBox(width: 8),
+                  // 카테고리명
+                  Text(
+                    CategoryL10nHelper.translate(item.categoryName, l10n),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  // Spacer
+                  const Spacer(),
+                  // 퍼센트
+                  Text(
+                    '${percentage.toStringAsFixed(1)}%',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // 금액
+                  Text(
+                    '${numberFormat.format(item.amount)}${l10n.transactionAmountUnit}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 16,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 }

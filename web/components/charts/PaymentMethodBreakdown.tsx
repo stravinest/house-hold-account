@@ -16,6 +16,7 @@ type PaymentMethodBreakdownProps = {
 
 export function PaymentMethodBreakdown({ data }: PaymentMethodBreakdownProps) {
   const maxAmount = Math.max(...data.map((d) => d.amount), 1);
+  const totalAmount = data.reduce((sum, d) => sum + d.amount, 0);
 
   return (
     <div className='flex flex-1 flex-col rounded-[16px] border border-card-border bg-white p-6'>
@@ -24,7 +25,8 @@ export function PaymentMethodBreakdown({ data }: PaymentMethodBreakdownProps) {
         {data.length > 0 ? (
           data.map((item) => {
             const IconComponent = item.icon === 'credit-card' ? CreditCard : Banknote;
-            const percentage = (item.amount / maxAmount) * 100;
+            const barPercentage = (item.amount / maxAmount) * 100;
+            const percent = totalAmount > 0 ? Math.round((item.amount / totalAmount) * 100) : 0;
             return (
               <div key={item.name} className='flex flex-col gap-2'>
                 <div className='flex items-center justify-between'>
@@ -32,13 +34,16 @@ export function PaymentMethodBreakdown({ data }: PaymentMethodBreakdownProps) {
                     <IconComponent size={16} style={{ color: item.color }} />
                     <span className='text-[13px] text-on-surface'>{item.name}</span>
                   </div>
-                  <span className='text-[13px] text-expense'>{formatAmount(item.amount)}</span>
+                  <div className='flex items-center gap-3'>
+                    <span className='text-xs text-on-surface-variant'>{percent}%</span>
+                    <span className='text-[13px] text-expense'>{formatAmount(item.amount)}</span>
+                  </div>
                 </div>
                 <div className='h-1.5 w-full rounded-[3px] bg-[#F0F0EC]'>
                   <div
                     className='h-full rounded-[3px] transition-all'
                     style={{
-                      width: `${percentage}%`,
+                      width: `${barPercentage}%`,
                       backgroundColor: item.color,
                     }}
                   />

@@ -24,6 +24,7 @@ type TopSpendingSectionProps = {
 
 export function TopSpendingSection({ topExpenses, categoryData }: TopSpendingSectionProps) {
   const top5Categories = categoryData.slice(0, 5);
+  const totalExpense = categoryData.reduce((sum, c) => sum + c.value, 0);
 
   return (
     <div className='flex flex-col overflow-hidden rounded-[16px] border border-card-border bg-white md:flex-row'>
@@ -84,9 +85,14 @@ export function TopSpendingSection({ topExpenses, categoryData }: TopSpendingSec
                   />
                   <span className='text-sm font-medium text-on-surface'>{cat.name}</span>
                 </div>
-                <span className='shrink-0 text-sm font-semibold text-expense'>
-                  {formatAmount(-cat.value)}
-                </span>
+                <div className='flex shrink-0 items-center gap-2'>
+                  <span className='text-xs text-on-surface-variant'>
+                    {totalExpense > 0 ? Math.round((cat.value / totalExpense) * 100) : 0}%
+                  </span>
+                  <span className='text-sm font-semibold text-expense'>
+                    {formatAmount(-cat.value)}
+                  </span>
+                </div>
               </div>
             ))
           ) : (

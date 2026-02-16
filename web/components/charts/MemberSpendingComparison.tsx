@@ -32,7 +32,8 @@ export function MemberSpendingComparison({
         {members.length > 0 ? (
           <>
             {members.map((member) => {
-              const percentage = (member.amount / maxAmount) * 100;
+              const barPercentage = (member.amount / maxAmount) * 100;
+              const percent = total > 0 ? Math.round((member.amount / total) * 100) : 0;
               return (
                 <div key={member.name} className='flex flex-col gap-2'>
                   <div className='flex items-center justify-between'>
@@ -46,15 +47,18 @@ export function MemberSpendingComparison({
                         {member.isMe ? ' (나)' : ''}
                       </span>
                     </div>
-                    <span className='text-[13px] text-expense'>
-                      {formatAmount(member.amount)}
-                    </span>
+                    <div className='flex items-center gap-3'>
+                      <span className='text-xs text-on-surface-variant'>{percent}%</span>
+                      <span className='text-[13px] text-expense'>
+                        {formatAmount(member.amount)}
+                      </span>
+                    </div>
                   </div>
                   <div className='h-2 w-full rounded-[4px] bg-[#F0F0EC]'>
                     <div
                       className='h-full rounded-[4px] transition-all'
                       style={{
-                        width: `${percentage}%`,
+                        width: `${barPercentage}%`,
                         backgroundColor: member.color || '#A8DAB5',
                       }}
                     />

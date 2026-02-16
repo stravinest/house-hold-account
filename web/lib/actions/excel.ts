@@ -19,6 +19,18 @@ interface ImportTransaction {
 const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_AMOUNT = 999_999_999;
 const MAX_DESCRIPTION_LENGTH = 500;
+const MAX_IMPORT_ROWS = 5000;
+
+// HTML/스크립트 태그 제거
+function sanitizeString(str: string): string {
+  return str.replace(/<[^>]*>/g, '').replace(/[<>]/g, '').trim();
+}
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function earlyError(message: string): ImportResult {
+  return { total: 0, success: 0, skipped: 0, failed: 0, errors: [{ row: 0, message }] };
+}
 
 export async function importTransactions(
   ledgerId: string,
@@ -36,10 +48,22 @@ export async function importTransactions(
     matchPaymentMethods: boolean;
   },
 ): Promise<ImportResult> {
+  if (!UUID_REGEX.test(ledgerId)) {
+    return earlyError('유효하지 않은 가계부입니다.');
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return { total: 0, success: 0, skipped: 0, failed: 0, errors: [{ row: 0, message: '로그인이 필요합니다.' }] };
+    return earlyError('로그인이 필요합니다.');
+  }
+
+  // [S-00] 행 수 제한
+  if (transactions.length > MAX_IMPORT_ROWS) {
+    return earlyError(`최대 ${MAX_IMPORT_ROWS}건까지 가져올 수 있습니다.`);
+  }
+  if (transactions.length === 0) {
+    return earlyError('가져올 데이터가 없습니다.');
   }
 
   // [S-01] 가계부 멤버십 검증
@@ -50,7 +74,7 @@ export async function importTransactions(
     .eq('user_id', user.id)
     .single();
   if (!membership) {
-    return { total: 0, success: 0, skipped: 0, failed: 0, errors: [{ row: 0, message: '해당 가계부에 대한 권한이 없습니다.' }] };
+    return earlyError('해당 가계부에 대한 권한이 없습니다.');
   }
 
   // [P-01] import 데이터의 날짜 범위로 중복 체크 쿼리 최적화
@@ -63,7 +87,7 @@ export async function importTransactions(
 
   const [categoriesRes, paymentMethodsRes, existingTxRes] = await Promise.all([
     supabase.from('categories').select('id, name, type').eq('ledger_id', ledgerId),
-    supabase.from('payment_methods').select('id, name').eq('ledger_id', ledgerId),
+    supabase.from('payment_methods').select('id, name, owner_user_id').eq('ledger_id', ledgerId),
     supabase
       .from('transactions')
       .select('date, amount, title')
@@ -77,7 +101,7 @@ export async function importTransactions(
   const existingTx = existingTxRes.data || [];
 
   const existingKeys = new Set(
-    existingTx.map((t) => `${t.date}_${t.amount}_${t.title}`),
+    existingTx.map((t) => `${t.date}_${t.amount}_${sanitizeString(t.title)}`),
   );
 
   // [P-02] 누락 카테고리 일괄 생성
@@ -143,7 +167,7 @@ export async function importTransactions(
       continue;
     }
 
-    const key = `${tx.date}_${tx.amount}_${tx.description.trim()}`;
+    const key = `${tx.date}_${tx.amount}_${sanitizeString(tx.description)}`;
 
     // 중복 체크
     if (existingKeys.has(key)) {
@@ -162,12 +186,17 @@ export async function importTransactions(
       }
     }
 
-    // 결제수단 매칭
+    // 결제수단 매칭 (본인 소유 자동수집 결제수단 우선, 그다음 공유 결제수단)
     let paymentMethodId: string | null = null;
     if (tx.paymentMethodName && options.matchPaymentMethods) {
-      const matched = paymentMethods.find(
-        (p) => p.name.toLowerCase() === tx.paymentMethodName!.toLowerCase(),
+      const lowerName = tx.paymentMethodName.toLowerCase();
+      const ownMatch = paymentMethods.find(
+        (p) => p.name.toLowerCase() === lowerName && p.owner_user_id === user.id,
       );
+      const sharedMatch = paymentMethods.find(
+        (p) => p.name.toLowerCase() === lowerName && p.owner_user_id === null,
+      );
+      const matched = ownMatch || sharedMatch;
       if (matched) {
         paymentMethodId = matched.id;
       }
@@ -178,11 +207,11 @@ export async function importTransactions(
       user_id: user.id,
       type: tx.type,
       amount: tx.amount,
-      title: tx.description.trim(),
+      title: sanitizeString(tx.description),
       date: tx.date,
       category_id: categoryId,
       payment_method_id: paymentMethodId,
-      memo: tx.memo?.trim() || null,
+      memo: tx.memo ? sanitizeString(tx.memo) || null : null,
     });
 
     existingKeys.add(key);

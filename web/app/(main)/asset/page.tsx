@@ -23,9 +23,6 @@ export default async function AssetPage() {
 
   return (
     <div className='flex flex-col gap-6'>
-      {/* Header */}
-      <h1 className='text-[22px] font-semibold text-on-surface'>자산 관리</h1>
-
       {/* Summary Cards */}
       <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
         <SummaryCard
@@ -72,7 +69,7 @@ export default async function AssetPage() {
                     {asset.title}
                   </p>
                   <p className='text-xs text-on-surface-variant'>
-                    {asset.categories?.name || '기타'}
+                    {asset.categories?.name || '미지정'}
                     {asset.maturity_date
                       ? ` / 만기 ${formatDate(asset.maturity_date)}`
                       : ''}
