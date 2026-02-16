@@ -6,6 +6,8 @@ import '../../../asset/presentation/providers/asset_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../ledger/presentation/providers/calendar_view_provider.dart';
 import '../../../widget/presentation/providers/widget_provider.dart';
+import '../../../fixed_expense/presentation/providers/fixed_expense_settings_provider.dart'
+    show fixedExpenseSettingsProvider;
 import '../../data/repositories/transaction_repository.dart';
 import '../../domain/entities/transaction.dart';
 
@@ -111,11 +113,14 @@ final monthlyTotalProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 
   final date = ref.watch(selectedDateProvider);
   final repository = ref.watch(transactionRepositoryProvider);
+  final settings = await ref.watch(fixedExpenseSettingsProvider.future);
+  final includeFixed = settings?.includeInExpense ?? false;
 
   return repository.getMonthlyTotal(
     ledgerId: ledgerId,
     year: date.year,
     month: date.month,
+    excludeFixedExpense: !includeFixed,
   );
 });
 
@@ -127,11 +132,14 @@ final dailyTotalsProvider = FutureProvider<Map<DateTime, Map<String, dynamic>>>(
 
     final date = ref.watch(selectedDateProvider);
     final repository = ref.watch(transactionRepositoryProvider);
+    final settings = await ref.watch(fixedExpenseSettingsProvider.future);
+    final includeFixed = settings?.includeInExpense ?? false;
 
     return repository.getDailyTotals(
       ledgerId: ledgerId,
       year: date.year,
       month: date.month,
+      excludeFixedExpense: !includeFixed,
     );
   },
 );

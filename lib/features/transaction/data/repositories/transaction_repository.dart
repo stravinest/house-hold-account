@@ -189,6 +189,7 @@ class TransactionRepository {
     required String ledgerId,
     required int year,
     required int month,
+    bool excludeFixedExpense = false,
   }) async {
     try {
       final startDate = DateTime(year, month, 1);
@@ -197,10 +198,11 @@ class TransactionRepository {
       final endStr = endDate.toIso8601String().split('T').first;
 
       // transactions와 profiles를 조인하여 user_id, display_name, color 조회 (필요한 컬럼만 선택하여 최적화)
+      // is_fixed_expense 포함하여 고정비 필터링 지원
       final response = await _client
           .from('transactions')
           .select(
-            'amount, type, user_id, profiles!user_id(display_name, color)',
+            'amount, type, user_id, is_fixed_expense, profiles!user_id(display_name, color)',
           )
           .eq('ledger_id', ledgerId)
           .gte('date', startStr)
@@ -215,6 +217,7 @@ class TransactionRepository {
         final userId = transaction['user_id'] as String;
         final amount = transaction['amount'] as int;
         final type = transaction['type'] as String;
+        final isFixedExpense = transaction['is_fixed_expense'] as bool? ?? false;
 
         // profile에서 display_name과 color 가져오기
         final profileData = transaction['profiles'];
@@ -238,7 +241,7 @@ class TransactionRepository {
           },
         );
 
-        // 금액 누적
+        // 금액 누적 (고정비 제외 옵션 적용)
         if (type == 'income') {
           userTotals[userId]!['income'] =
               (userTotals[userId]!['income'] as int) + amount;
@@ -247,6 +250,10 @@ class TransactionRepository {
           userTotals[userId]!['asset'] =
               (userTotals[userId]!['asset'] as int) + amount;
         } else {
+          // 고정비 제외 옵션이 켜져있고, 해당 거래가 고정비인 경우 지출에서 제외
+          if (excludeFixedExpense && isFixedExpense) {
+            continue;
+          }
           userTotals[userId]!['expense'] =
               (userTotals[userId]!['expense'] as int) + amount;
           totalExpense += amount;
@@ -270,6 +277,7 @@ class TransactionRepository {
     required String ledgerId,
     required int year,
     required int month,
+    bool excludeFixedExpense = false,
   }) async {
     try {
       final startDate = DateTime(year, month, 1);
@@ -278,10 +286,11 @@ class TransactionRepository {
       final endStr = endDate.toIso8601String().split('T').first;
 
       // transactions와 profiles를 조인하여 user_id, display_name, color 조회 (필요한 컬럼만 선택하여 최적화)
+      // is_fixed_expense 포함하여 고정비 필터링 지원
       final response = await _client
           .from('transactions')
           .select(
-            'date, amount, type, user_id, profiles!user_id(display_name, color)',
+            'date, amount, type, user_id, is_fixed_expense, profiles!user_id(display_name, color)',
           )
           .eq('ledger_id', ledgerId)
           .gte('date', startStr)
@@ -298,6 +307,7 @@ class TransactionRepository {
         final userId = transaction['user_id'] as String;
         final amount = transaction['amount'] as int;
         final type = transaction['type'] as String;
+        final isFixedExpense = transaction['is_fixed_expense'] as bool? ?? false;
 
         // profile에서 display_name과 color 가져오기
         final profileData = transaction['profiles'];
@@ -334,13 +344,16 @@ class TransactionRepository {
           },
         );
 
-        // 금액 누적
+        // 금액 누적 (고정비 제외 옵션 적용)
         if (type == 'income') {
           users[userId]!['income'] = (users[userId]!['income'] as int) + amount;
           dayData['totalIncome'] = (dayData['totalIncome'] as int) + amount;
         } else if (type == 'asset') {
           users[userId]!['asset'] = (users[userId]!['asset'] as int) + amount;
         } else {
+          if (excludeFixedExpense && isFixedExpense) {
+            continue;
+          }
           users[userId]!['expense'] =
               (users[userId]!['expense'] as int) + amount;
           dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
