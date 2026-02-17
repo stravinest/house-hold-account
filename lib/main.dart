@@ -104,7 +104,8 @@ class SharedHouseholdAccountApp extends ConsumerStatefulWidget {
 }
 
 class _SharedHouseholdAccountAppState
-    extends ConsumerState<SharedHouseholdAccountApp> {
+    extends ConsumerState<SharedHouseholdAccountApp>
+    with WidgetsBindingObserver {
   late AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
   StreamSubscription<dynamic>? _authSubscription;
@@ -112,6 +113,7 @@ class _SharedHouseholdAccountAppState
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initDeepLinks();
     _setupNotificationTapHandlers();
 
@@ -241,7 +243,19 @@ class _SharedHouseholdAccountAppState
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // 로그인 상태일 때만 업데이트 체크 (24시간 제한으로 중복 방지)
+      final session = SupabaseConfig.auth.currentSession;
+      if (session != null) {
+        _checkForAppUpdate();
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _linkSubscription?.cancel();
     _authSubscription?.cancel();
     super.dispose();
