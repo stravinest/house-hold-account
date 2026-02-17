@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
@@ -152,9 +153,13 @@ class _DailyDateHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final locale = Localizations.localeOf(context).toString();
-    final dateFormatter = DateFormat.yMMMMEEEEd(locale);
-    final dateText = dateFormatter.format(date);
+    final l10n = AppLocalizations.of(context);
+    final dateText = l10n.calendarDailyDateHeader(
+      date.year,
+      date.month,
+      date.day,
+      DateTimeUtils.weekdayLabel(l10n, date.weekday),
+    );
 
     return Container(
       width: double.infinity,

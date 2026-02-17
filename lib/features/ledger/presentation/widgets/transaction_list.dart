@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/empty_state.dart';
@@ -84,16 +85,18 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).toString();
-    final dateFormat = DateFormat.MMMEd(locale);
-
     return ListView(
       padding: const EdgeInsets.all(Spacing.md),
       children: [
         const SizedBox(height: 100),
         EmptyState(
           icon: Icons.receipt_long_outlined,
-          message: dateFormat.format(date),
+          message: l10n.calendarDailyDateHeader(
+            date.year,
+            date.month,
+            date.day,
+            DateTimeUtils.weekdayLabel(l10n, date.weekday),
+          ),
           subtitle: l10n.calendarNoRecords,
           action: FilledButton.tonal(
             onPressed: () {

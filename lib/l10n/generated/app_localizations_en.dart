@@ -2175,8 +2175,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarViewMonthly => 'Monthly';
 
   @override
-  String calendarDailyDate(int year, int month, int day) {
-    return '$month/$day/$year';
+  String calendarDailyDate(int year, int month, int day, String weekday) {
+    return '$weekday, $month/$day/$year';
   }
 
   @override
@@ -2930,8 +2930,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get calendarViewMonthShort => 'M';
 
   @override
-  String calendarDailyDateHeader(int month, int day, String weekday) {
-    return '$month/$day ($weekday)';
+  String calendarDailyDateHeader(int year, int month, int day, String weekday) {
+    return '$weekday, $month/$day/$year';
   }
 
   @override

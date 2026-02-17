@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../share/presentation/providers/share_provider.dart';
@@ -316,6 +317,7 @@ class _DailyNavigationHeaderState extends State<_DailyNavigationHeader>
               widget.date.year,
               widget.date.month,
               widget.date.day,
+              DateTimeUtils.weekdayLabel(l10n, widget.date.weekday),
             ),
             style: Theme.of(
               context,
@@ -401,16 +403,7 @@ class _DailyTransactionList extends ConsumerWidget {
           itemBuilder: (context, index) {
             // 첫 번째 아이템: 날짜 헤더 (impCdDayHeader)
             if (index == 0) {
-              final weekdays = [
-                l10n.calendarDayMon,
-                l10n.calendarDayTue,
-                l10n.calendarDayWed,
-                l10n.calendarDayThu,
-                l10n.calendarDayFri,
-                l10n.calendarDaySat,
-                l10n.calendarDaySun,
-              ];
-              final weekday = weekdays[date.weekday - 1];
+              final weekday = DateTimeUtils.weekdayLabel(l10n, date.weekday);
               return Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -421,7 +414,7 @@ class _DailyTransactionList extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      l10n.calendarDailyDateHeader(date.month, date.day, weekday),
+                      l10n.calendarDailyDateHeader(date.year, date.month, date.day, weekday),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,

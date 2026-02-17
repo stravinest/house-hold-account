@@ -1115,7 +1115,7 @@
   "calendarViewDaily": "일별",
   "calendarViewWeekly": "주별",
   "calendarViewMonthly": "월별",
-  "calendarDailyDate": "{year}년 {month}월 {day}일",
+  "calendarDailyDate": "{year}년 {month}월 {day}일 ({weekday})",
   "@calendarDailyDate": {
     "placeholders": {
       "year": {
@@ -1126,10 +1126,13 @@
       },
       "day": {
         "type": "int"
+      },
+      "weekday": {
+        "type": "String"
       }
     }
   },
-  "calendarWeeklyRange": "{startMonth}월 {startDay}일 ~ {endMonth}월 {endDay}일",
+  "calendarWeeklyRange": "{startMonth}/{startDay} ~ {endMonth}/{endDay}",
   "@calendarWeeklyRange": {
     "placeholders": {
       "startMonth": {
@@ -1457,9 +1460,10 @@
   "calendarViewDayShort": "일",
   "calendarViewWeekShort": "주",
   "calendarViewMonthShort": "월",
-  "calendarDailyDateHeader": "{month}월 {day}일 ({weekday})",
+  "calendarDailyDateHeader": "{year}년 {month}월 {day}일 ({weekday})",
   "@calendarDailyDateHeader": {
     "placeholders": {
+      "year": {"type": "int"},
       "month": {"type": "int"},
       "day": {"type": "int"},
       "weekday": {"type": "String"}

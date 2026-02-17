@@ -712,7 +712,7 @@
   "calendarViewDaily": "Daily",
   "calendarViewWeekly": "Weekly",
   "calendarViewMonthly": "Monthly",
-  "calendarDailyDate": "{month}/{day}/{year}",
+  "calendarDailyDate": "{weekday}, {month}/{day}/{year}",
   "calendarWeeklyRange": "{startMonth}/{startDay} ~ {endMonth}/{endDay}",
   "settingsWeekStartDay": "Week Start Day",
   "settingsWeekStartDayDescription": "Start day for calendar weekly view",
@@ -973,9 +973,10 @@
   "calendarViewDayShort": "D",
   "calendarViewWeekShort": "W",
   "calendarViewMonthShort": "M",
-  "calendarDailyDateHeader": "{month}/{day} ({weekday})",
+  "calendarDailyDateHeader": "{weekday}, {month}/{day}/{year}",
   "@calendarDailyDateHeader": {
     "placeholders": {
+      "year": {"type": "int"},
       "month": {"type": "int"},
       "day": {"type": "int"},
       "weekday": {"type": "String"}

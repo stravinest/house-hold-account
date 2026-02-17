@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
@@ -400,8 +401,6 @@ class _WeeklyTransactionList extends ConsumerWidget {
     final weeklyTransactionsAsync = ref.watch(weeklyTransactionsProvider);
     final locale = Localizations.localeOf(context).toString();
     final formatter = NumberFormat('#,###', locale);
-    final dateFormatter = DateFormat.MMMEd(locale);
-
     // 이전 데이터 유지하면서 새 데이터 로딩 (레이아웃 점프 방지)
     final transactions = weeklyTransactionsAsync.valueOrNull ?? [];
 
@@ -465,7 +464,7 @@ class _WeeklyTransactionList extends ConsumerWidget {
               child: Row(
                 children: [
                   Text(
-                    dateFormatter.format(date),
+                    l10n.calendarDailyDateHeader(date.year, date.month, date.day, DateTimeUtils.weekdayLabel(l10n, date.weekday)),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

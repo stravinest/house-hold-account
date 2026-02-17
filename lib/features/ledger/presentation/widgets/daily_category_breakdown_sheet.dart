@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/utils/category_l10n_helper.dart';
+import '../../../../core/utils/date_time_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../transaction/domain/entities/transaction.dart';
@@ -16,7 +17,6 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).toString();
     final transactionsAsync = ref.watch(dailyTransactionsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -42,7 +42,12 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        DateFormat.yMMMEd(locale).format(date),
+                        l10n.calendarDailyDateHeader(
+                          date.year,
+                          date.month,
+                          date.day,
+                          DateTimeUtils.weekdayLabel(l10n, date.weekday),
+                        ),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),

@@ -4037,13 +4037,13 @@ abstract class AppLocalizations {
   /// No description provided for @calendarDailyDate.
   ///
   /// In ko, this message translates to:
-  /// **'{year}년 {month}월 {day}일'**
-  String calendarDailyDate(int year, int month, int day);
+  /// **'{year}년 {month}월 {day}일 ({weekday})'**
+  String calendarDailyDate(int year, int month, int day, String weekday);
 
   /// No description provided for @calendarWeeklyRange.
   ///
   /// In ko, this message translates to:
-  /// **'{startMonth}월 {startDay}일 ~ {endMonth}월 {endDay}일'**
+  /// **'{startMonth}/{startDay} ~ {endMonth}/{endDay}'**
   String calendarWeeklyRange(
     int startMonth,
     int startDay,
@@ -5422,8 +5422,8 @@ abstract class AppLocalizations {
   /// No description provided for @calendarDailyDateHeader.
   ///
   /// In ko, this message translates to:
-  /// **'{month}월 {day}일 ({weekday})'**
-  String calendarDailyDateHeader(int month, int day, String weekday);
+  /// **'{year}년 {month}월 {day}일 ({weekday})'**
+  String calendarDailyDateHeader(int year, int month, int day, String weekday);
 
   /// No description provided for @assetGoalLabel.
   ///

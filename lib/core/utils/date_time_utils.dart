@@ -1,5 +1,7 @@
 import 'package:intl/intl.dart';
 
+import '../../l10n/generated/app_localizations.dart';
+
 /// Supabase 타임존 처리를 위한 유틸리티
 ///
 /// Supabase TIMESTAMPTZ 컬럼은 UTC로 저장되므로:
@@ -49,6 +51,20 @@ class DateTimeUtils {
       int.parse(parts[1]),
       int.parse(parts[2]),
     );
+  }
+
+  /// DateTime.weekday(1~7)에 해당하는 요일 약자를 l10n으로 반환
+  static String weekdayLabel(AppLocalizations l10n, int weekday) {
+    switch (weekday) {
+      case 1: return l10n.calendarDayMon;
+      case 2: return l10n.calendarDayTue;
+      case 3: return l10n.calendarDayWed;
+      case 4: return l10n.calendarDayThu;
+      case 5: return l10n.calendarDayFri;
+      case 6: return l10n.calendarDaySat;
+      case 7: return l10n.calendarDaySun;
+      default: return '';
+    }
   }
 
   /// DateTime에서 로컬 날짜만 추출 (Supabase DATE 컬럼 저장용)
