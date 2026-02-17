@@ -89,7 +89,14 @@ class CalendarDayCell extends StatelessWidget {
           : <String, dynamic>{};
       return (userData['asset'] as int? ?? 0) > 0;
     });
-    final hasData = income > 0 || expense > 0 || hasAsset;
+    // 사용자별 지출이 있으면 표시 (고정비 제외 시에도 dot 유지)
+    final hasUserExpense = usersForAsset.values.any((u) {
+      final userData = u is Map
+          ? Map<String, dynamic>.from(u)
+          : <String, dynamic>{};
+      return (userData['expense'] as int? ?? 0) > 0;
+    });
+    final hasData = income > 0 || expense > 0 || hasAsset || hasUserExpense;
 
     final isWeekend =
         day.weekday == DateTime.saturday || day.weekday == DateTime.sunday;

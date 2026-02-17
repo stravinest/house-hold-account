@@ -10,6 +10,7 @@ import '../../../../../shared/widgets/category_icon.dart';
 import '../../../../ledger/domain/entities/ledger.dart';
 import '../../../../share/presentation/providers/share_provider.dart';
 import '../../../data/repositories/statistics_repository.dart';
+import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
 import 'category_detail_bottom_sheet.dart';
 
@@ -555,6 +556,7 @@ class _SharedLegendList extends StatelessWidget {
 
           return GestureDetector(
             onTap: () {
+              final expenseFilter = ref.read(selectedExpenseTypeFilterProvider);
               CategoryDetailBottomSheet.show(
                 context,
                 ref,
@@ -568,6 +570,7 @@ class _SharedLegendList extends StatelessWidget {
                 categoryPercentage: percentage,
                 type: type,
                 totalAmount: item.amount,
+                isFixedExpenseFilter: expenseFilter == ExpenseTypeFilter.fixed,
               );
             },
             child: Container(

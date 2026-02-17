@@ -344,19 +344,20 @@ class TransactionRepository {
           },
         );
 
-        // 금액 누적 (고정비 제외 옵션 적용)
+        // 금액 누적 (고정비 제외 시 합계에서만 제외, 캘린더 dot 표시는 유지)
         if (type == 'income') {
           users[userId]!['income'] = (users[userId]!['income'] as int) + amount;
           dayData['totalIncome'] = (dayData['totalIncome'] as int) + amount;
         } else if (type == 'asset') {
           users[userId]!['asset'] = (users[userId]!['asset'] as int) + amount;
         } else {
-          if (excludeFixedExpense && isFixedExpense) {
-            continue;
-          }
+          // 고정비 제외 옵션이 켜져 있어도 사용자별 지출은 누적 (dot 표시용)
           users[userId]!['expense'] =
               (users[userId]!['expense'] as int) + amount;
-          dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
+          // 합계에서만 고정비 제외
+          if (!(excludeFixedExpense && isFixedExpense)) {
+            dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
+          }
         }
       }
 

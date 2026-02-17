@@ -968,6 +968,199 @@ void main() {
       expect(result.items[2].date, '2월 14일 (토)');
     });
 
+    test('변동비 필터로 미지정 카테고리 조회 시 고정비 거래가 제외되어야 한다', () async {
+      // Given: 변동비 필터 + 미지정 카테고리 조회
+      // mock은 필터를 무시하므로, 변동비만 포함된 데이터를 준비
+      const categoryId = '_uncategorized_';
+      final mockTransactions = [
+        {
+          'id': 'tx-1',
+          'title': '기타 변동비',
+          'amount': 15000,
+          'date': '2026-02-10',
+          'user_id': 'user-1',
+          'profiles': {'display_name': '홍길동', 'color': '#A8D8EA'},
+        },
+      ];
+
+      when(() => mockClient.from('transactions')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(selectData: mockTransactions),
+      );
+
+      // When: expenseTypeFilter=variable로 조회
+      final result = await repository.getCategoryTopTransactions(
+        ledgerId: ledgerId,
+        year: year,
+        month: month,
+        type: type,
+        categoryId: categoryId,
+        expenseTypeFilter: ExpenseTypeFilter.variable,
+        limit: limit,
+      );
+
+      // Then: 변동비 거래만 반환되어야 함 (고정비는 Supabase 쿼리 레벨에서 제외됨)
+      expect(result.items.length, 1);
+      expect(result.items[0].title, '기타 변동비');
+      expect(result.totalAmount, 15000);
+    });
+
+    test('고정비 필터로 미지정 카테고리 조회 시 fixed_expense_category_id가 null인 거래만 반환한다', () async {
+      // Given: 고정비 필터 + 미지정 카테고리 (isFixedExpenseFilter=true)
+      const categoryId = '_uncategorized_';
+      final mockTransactions = [
+        {
+          'id': 'tx-1',
+          'title': '미분류 고정비',
+          'amount': 30000,
+          'date': '2026-02-05',
+          'user_id': 'user-1',
+          'profiles': {'display_name': '홍길동', 'color': '#FF9800'},
+        },
+      ];
+
+      when(() => mockClient.from('transactions')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(selectData: mockTransactions),
+      );
+
+      // When: isFixedExpenseFilter=true로 조회 (fixed_expense_category_id IS NULL 쿼리 사용)
+      final result = await repository.getCategoryTopTransactions(
+        ledgerId: ledgerId,
+        year: year,
+        month: month,
+        type: type,
+        categoryId: categoryId,
+        isFixedExpenseFilter: true,
+        expenseTypeFilter: ExpenseTypeFilter.fixed,
+        limit: limit,
+      );
+
+      // Then: fixed_expense_category_id가 null인 고정비 거래만 반환
+      expect(result.items.length, 1);
+      expect(result.items[0].title, '미분류 고정비');
+      expect(result.totalAmount, 30000);
+    });
+
+    test('고정비 필터로 특정 카테고리 조회 시 fixed_expense_category_id로 매칭한다', () async {
+      // Given: 고정비 필터 + 특정 카테고리 ID (isFixedExpenseFilter=true)
+      const categoryId = 'fixed-cat-1';
+      final mockTransactions = [
+        {
+          'id': 'tx-1',
+          'title': '월세',
+          'amount': 500000,
+          'date': '2026-02-01',
+          'user_id': 'user-1',
+          'profiles': {'display_name': '홍길동', 'color': '#FF9800'},
+        },
+        {
+          'id': 'tx-2',
+          'title': '관리비',
+          'amount': 100000,
+          'date': '2026-02-01',
+          'user_id': 'user-1',
+          'profiles': {'display_name': '홍길동', 'color': '#FF9800'},
+        },
+      ];
+
+      when(() => mockClient.from('transactions')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(selectData: mockTransactions),
+      );
+
+      // When: isFixedExpenseFilter=true, 특정 카테고리 ID로 조회
+      final result = await repository.getCategoryTopTransactions(
+        ledgerId: ledgerId,
+        year: year,
+        month: month,
+        type: type,
+        categoryId: categoryId,
+        isFixedExpenseFilter: true,
+        expenseTypeFilter: ExpenseTypeFilter.fixed,
+        limit: limit,
+      );
+
+      // Then: fixed_expense_category_id가 categoryId인 거래만 반환
+      expect(result.items.length, 2);
+      expect(result.totalAmount, 600000);
+      expect(result.items[0].title, '월세');
+      expect(result.items[1].title, '관리비');
+    });
+
+    test('전체 필터(all)로 미지정 카테고리 조회 시 모든 거래가 포함된다', () async {
+      // Given: 전체 필터 + 미지정 카테고리
+      const categoryId = '_uncategorized_';
+      final mockTransactions = [
+        {
+          'id': 'tx-1',
+          'title': '미분류 변동비',
+          'amount': 10000,
+          'date': '2026-02-10',
+          'user_id': 'user-1',
+          'profiles': {'display_name': '홍길동', 'color': '#A8D8EA'},
+        },
+        {
+          'id': 'tx-2',
+          'title': '미분류 고정비',
+          'amount': 20000,
+          'date': '2026-02-12',
+          'user_id': 'user-1',
+          'profiles': {'display_name': '홍길동', 'color': '#A8D8EA'},
+        },
+      ];
+
+      when(() => mockClient.from('transactions')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(selectData: mockTransactions),
+      );
+
+      // When: expenseTypeFilter=all로 조회
+      final result = await repository.getCategoryTopTransactions(
+        ledgerId: ledgerId,
+        year: year,
+        month: month,
+        type: type,
+        categoryId: categoryId,
+        expenseTypeFilter: ExpenseTypeFilter.all,
+        limit: limit,
+      );
+
+      // Then: 고정비/변동비 관계없이 category_id가 null인 모든 거래 포함
+      expect(result.items.length, 2);
+      expect(result.totalAmount, 30000);
+    });
+
+    test('expenseTypeFilter가 null인 경우 기존 동작과 동일하게 동작한다', () async {
+      // Given: expenseTypeFilter 미지정
+      const categoryId = 'category-abc';
+      final mockTransactions = [
+        {
+          'id': 'tx-1',
+          'title': '일반 거래',
+          'amount': 25000,
+          'date': '2026-02-10',
+          'user_id': 'user-1',
+          'profiles': {'display_name': '홍길동', 'color': '#A8D8EA'},
+        },
+      ];
+
+      when(() => mockClient.from('transactions')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(selectData: mockTransactions),
+      );
+
+      // When: expenseTypeFilter를 전달하지 않음
+      final result = await repository.getCategoryTopTransactions(
+        ledgerId: ledgerId,
+        year: year,
+        month: month,
+        type: type,
+        categoryId: categoryId,
+        limit: limit,
+      );
+
+      // Then: 기존과 동일하게 category_id 기준으로 조회
+      expect(result.items.length, 1);
+      expect(result.items[0].title, '일반 거래');
+      expect(result.totalAmount, 25000);
+    });
+
     test('총액이 0인 경우에도 퍼센티지를 0으로 반환한다', () async {
       // Given: amount가 모두 0인 거래들
       const categoryId = 'category-abc';

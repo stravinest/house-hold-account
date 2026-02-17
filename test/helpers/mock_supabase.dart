@@ -157,6 +157,8 @@ class FakePostgrestFilterBuilder<T> extends Fake
   PostgrestFilterBuilder<T> inFilter(String column, List values) => this;
   @override
   PostgrestFilterBuilder<T> isFilter(String column, Object? value) => this;
+  @override
+  PostgrestFilterBuilder<T> or(String filters, {String? referencedTable}) => this;
 
   // transform 메서드들
   @override

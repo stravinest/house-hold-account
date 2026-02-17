@@ -711,6 +711,8 @@ class StatisticsRepository {
     required int month,
     required String type,
     required String categoryId,
+    bool isFixedExpenseFilter = false,
+    ExpenseTypeFilter? expenseTypeFilter,
     int limit = 5,
   }) async {
     final startDate = DateTime(year, month, 1);
@@ -726,10 +728,31 @@ class StatisticsRepository {
         .gte('date', startDate.toIso8601String().split('T').first)
         .lte('date', endDate.toIso8601String().split('T').first);
 
+    // 고정비/변동비 필터 적용 (지출 타입일 때)
+    if (type == 'expense' && expenseTypeFilter != null) {
+      switch (expenseTypeFilter) {
+        case ExpenseTypeFilter.fixed:
+          query = query.eq('is_fixed_expense', true);
+          break;
+        case ExpenseTypeFilter.variable:
+          query = query.eq('is_fixed_expense', false);
+          break;
+        case ExpenseTypeFilter.all:
+          break;
+      }
+    }
+
     if (categoryId == '_uncategorized_') {
-      query = query.isFilter('category_id', null);
+      // 고정비 필터일 때는 fixed_expense_category_id가 null인 것을 조회
+      if (isFixedExpenseFilter) {
+        query = query.isFilter('fixed_expense_category_id', null);
+      } else {
+        query = query.isFilter('category_id', null);
+      }
     } else if (categoryId == '_fixed_expense_') {
       query = query.eq('is_fixed_expense', true);
+    } else if (isFixedExpenseFilter) {
+      query = query.eq('fixed_expense_category_id', categoryId);
     } else {
       query = query.eq('category_id', categoryId);
     }

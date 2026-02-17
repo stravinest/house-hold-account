@@ -349,4 +349,287 @@ void main() {
       expect(dayData['totalExpense'], 50000);
     });
   });
+
+  group('DailyTotals 고정비 제외 로직', () {
+    // getDailyTotals의 수정된 로직을 단위 테스트
+    // 기존: excludeFixedExpense && isFixedExpense -> continue (거래 완전 건너뜀)
+    // 수정: 사용자별 expense에는 누적하되 totalExpense에서만 제외
+
+    test('고정비 제외 시 사용자별 expense에는 금액이 누적되어야 한다 (캘린더 dot 표시용)', () {
+      // Given: 고정비 거래가 포함된 데이터
+      final transactions = [
+        {
+          'date': '2026-01-15',
+          'user_id': 'user1',
+          'amount': 50000,
+          'type': 'expense',
+          'is_fixed_expense': true,
+          'profiles': {'color': '#A8D8EA'},
+        },
+      ];
+      const excludeFixedExpense = true;
+
+      // When: 수정된 로직 적용
+      final dailyTotals = <DateTime, Map<String, dynamic>>{};
+
+      for (final transaction in transactions) {
+        final dateStr = transaction['date'] as String;
+        final date = DateTime.parse(dateStr);
+        final dateKey = DateTime(date.year, date.month, date.day);
+        final userId = transaction['user_id'] as String;
+        final amount = transaction['amount'] as int;
+        final type = transaction['type'] as String;
+        final isFixedExpense = transaction['is_fixed_expense'] as bool? ?? false;
+
+        final profileData = transaction['profiles'] as Map<String, dynamic>?;
+        final userColor = (profileData != null && profileData['color'] != null)
+            ? profileData['color'] as String
+            : '#A8D8EA';
+
+        dailyTotals.putIfAbsent(
+          dateKey,
+          () => {
+            'users': <String, Map<String, dynamic>>{},
+            'totalIncome': 0,
+            'totalExpense': 0,
+          },
+        );
+
+        final dayData = dailyTotals[dateKey]!;
+        final users = dayData['users'] as Map<String, Map<String, dynamic>>;
+
+        users.putIfAbsent(
+          userId,
+          () => {'income': 0, 'expense': 0, 'color': userColor},
+        );
+
+        if (type == 'expense') {
+          // 사용자별 expense에는 항상 누적
+          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          // totalExpense에서만 고정비 제외
+          if (!(excludeFixedExpense && isFixedExpense)) {
+            dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
+          }
+        }
+      }
+
+      // Then: 사용자별 expense에 금액이 누적되어 있어야 함
+      final expectedDate = DateTime(2026, 1, 15);
+      final users = dailyTotals[expectedDate]!['users'] as Map<String, Map<String, dynamic>>;
+      expect(users['user1']!['expense'], 50000);
+    });
+
+    test('고정비 제외 시 totalExpense에서는 고정비 금액이 빠져야 한다 (상단 요약 합계)', () {
+      // Given: 고정비 + 변동비가 섞인 데이터
+      final transactions = [
+        {
+          'date': '2026-01-15',
+          'user_id': 'user1',
+          'amount': 50000,
+          'type': 'expense',
+          'is_fixed_expense': true,
+          'profiles': {'color': '#A8D8EA'},
+        },
+        {
+          'date': '2026-01-15',
+          'user_id': 'user1',
+          'amount': 30000,
+          'type': 'expense',
+          'is_fixed_expense': false,
+          'profiles': {'color': '#A8D8EA'},
+        },
+      ];
+      const excludeFixedExpense = true;
+
+      // When
+      final dailyTotals = <DateTime, Map<String, dynamic>>{};
+
+      for (final transaction in transactions) {
+        final dateStr = transaction['date'] as String;
+        final date = DateTime.parse(dateStr);
+        final dateKey = DateTime(date.year, date.month, date.day);
+        final userId = transaction['user_id'] as String;
+        final amount = transaction['amount'] as int;
+        final type = transaction['type'] as String;
+        final isFixedExpense = transaction['is_fixed_expense'] as bool? ?? false;
+
+        final profileData = transaction['profiles'] as Map<String, dynamic>?;
+        final userColor = (profileData != null && profileData['color'] != null)
+            ? profileData['color'] as String
+            : '#A8D8EA';
+
+        dailyTotals.putIfAbsent(
+          dateKey,
+          () => {
+            'users': <String, Map<String, dynamic>>{},
+            'totalIncome': 0,
+            'totalExpense': 0,
+          },
+        );
+
+        final dayData = dailyTotals[dateKey]!;
+        final users = dayData['users'] as Map<String, Map<String, dynamic>>;
+
+        users.putIfAbsent(
+          userId,
+          () => {'income': 0, 'expense': 0, 'color': userColor},
+        );
+
+        if (type == 'expense') {
+          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          if (!(excludeFixedExpense && isFixedExpense)) {
+            dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
+          }
+        }
+      }
+
+      // Then: totalExpense에는 변동비만 포함, 사용자별에는 전체 포함
+      final expectedDate = DateTime(2026, 1, 15);
+      final dayData = dailyTotals[expectedDate]!;
+      expect(dayData['totalExpense'], 30000); // 변동비 30000만 포함
+      final users = dayData['users'] as Map<String, Map<String, dynamic>>;
+      expect(users['user1']!['expense'], 80000); // 고정비 + 변동비 모두 포함
+    });
+
+    test('고정비 제외 시 해당 날짜의 사용자 데이터가 생성되어야 한다 (기존 continue 버그 수정 확인)', () {
+      // Given: 고정비만 있는 날짜의 데이터
+      final transactions = [
+        {
+          'date': '2026-01-20',
+          'user_id': 'user1',
+          'amount': 100000,
+          'type': 'expense',
+          'is_fixed_expense': true,
+          'profiles': {'color': '#FFB6A3'},
+        },
+      ];
+      const excludeFixedExpense = true;
+
+      // When
+      final dailyTotals = <DateTime, Map<String, dynamic>>{};
+
+      for (final transaction in transactions) {
+        final dateStr = transaction['date'] as String;
+        final date = DateTime.parse(dateStr);
+        final dateKey = DateTime(date.year, date.month, date.day);
+        final userId = transaction['user_id'] as String;
+        final amount = transaction['amount'] as int;
+        final type = transaction['type'] as String;
+        final isFixedExpense = transaction['is_fixed_expense'] as bool? ?? false;
+
+        final profileData = transaction['profiles'] as Map<String, dynamic>?;
+        final userColor = (profileData != null && profileData['color'] != null)
+            ? profileData['color'] as String
+            : '#A8D8EA';
+
+        dailyTotals.putIfAbsent(
+          dateKey,
+          () => {
+            'users': <String, Map<String, dynamic>>{},
+            'totalIncome': 0,
+            'totalExpense': 0,
+          },
+        );
+
+        final dayData = dailyTotals[dateKey]!;
+        final users = dayData['users'] as Map<String, Map<String, dynamic>>;
+
+        users.putIfAbsent(
+          userId,
+          () => {'income': 0, 'expense': 0, 'color': userColor},
+        );
+
+        if (type == 'expense') {
+          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          if (!(excludeFixedExpense && isFixedExpense)) {
+            dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
+          }
+        }
+      }
+
+      // Then: 기존 continue 버그와 달리, 날짜와 사용자 데이터가 존재해야 함
+      final expectedDate = DateTime(2026, 1, 20);
+      expect(dailyTotals.containsKey(expectedDate), true,
+          reason: '고정비만 있는 날짜도 dailyTotals에 포함되어야 한다');
+      final users = dailyTotals[expectedDate]!['users'] as Map<String, Map<String, dynamic>>;
+      expect(users.containsKey('user1'), true,
+          reason: '고정비 거래의 사용자 데이터가 생성되어야 한다');
+      expect(users['user1']!['expense'], 100000,
+          reason: '사용자별 expense에 고정비 금액이 누적되어야 한다');
+      expect(dailyTotals[expectedDate]!['totalExpense'], 0,
+          reason: 'totalExpense에는 고정비가 포함되지 않아야 한다');
+    });
+
+    test('고정비 제외 안 할 때 기존 동작과 동일하게 모든 지출이 totalExpense에 포함된다', () {
+      // Given: 고정비 거래가 포함된 데이터, excludeFixedExpense=false
+      final transactions = [
+        {
+          'date': '2026-01-15',
+          'user_id': 'user1',
+          'amount': 50000,
+          'type': 'expense',
+          'is_fixed_expense': true,
+          'profiles': {'color': '#A8D8EA'},
+        },
+        {
+          'date': '2026-01-15',
+          'user_id': 'user1',
+          'amount': 30000,
+          'type': 'expense',
+          'is_fixed_expense': false,
+          'profiles': {'color': '#A8D8EA'},
+        },
+      ];
+      const excludeFixedExpense = false;
+
+      // When
+      final dailyTotals = <DateTime, Map<String, dynamic>>{};
+
+      for (final transaction in transactions) {
+        final dateStr = transaction['date'] as String;
+        final date = DateTime.parse(dateStr);
+        final dateKey = DateTime(date.year, date.month, date.day);
+        final userId = transaction['user_id'] as String;
+        final amount = transaction['amount'] as int;
+        final type = transaction['type'] as String;
+        final isFixedExpense = transaction['is_fixed_expense'] as bool? ?? false;
+
+        final profileData = transaction['profiles'] as Map<String, dynamic>?;
+        final userColor = (profileData != null && profileData['color'] != null)
+            ? profileData['color'] as String
+            : '#A8D8EA';
+
+        dailyTotals.putIfAbsent(
+          dateKey,
+          () => {
+            'users': <String, Map<String, dynamic>>{},
+            'totalIncome': 0,
+            'totalExpense': 0,
+          },
+        );
+
+        final dayData = dailyTotals[dateKey]!;
+        final users = dayData['users'] as Map<String, Map<String, dynamic>>;
+
+        users.putIfAbsent(
+          userId,
+          () => {'income': 0, 'expense': 0, 'color': userColor},
+        );
+
+        if (type == 'expense') {
+          users[userId]!['expense'] = (users[userId]!['expense'] as int) + amount;
+          if (!(excludeFixedExpense && isFixedExpense)) {
+            dayData['totalExpense'] = (dayData['totalExpense'] as int) + amount;
+          }
+        }
+      }
+
+      // Then: 고정비 포함 모든 지출이 totalExpense에 포함
+      final expectedDate = DateTime(2026, 1, 15);
+      final dayData = dailyTotals[expectedDate]!;
+      expect(dayData['totalExpense'], 80000); // 고정비 + 변동비 모두 포함
+      final users = dayData['users'] as Map<String, Map<String, dynamic>>;
+      expect(users['user1']!['expense'], 80000);
+    });
+  });
 }

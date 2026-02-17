@@ -351,6 +351,7 @@ class CategoryDetailState {
   final double categoryPercentage;
   final String type; // expense, income, asset
   final int totalAmount;
+  final bool isFixedExpenseFilter; // 고정비 필터에서 진입했는지 여부
 
   const CategoryDetailState({
     this.isOpen = false,
@@ -361,6 +362,7 @@ class CategoryDetailState {
     this.categoryPercentage = 0,
     this.type = 'expense',
     this.totalAmount = 0,
+    this.isFixedExpenseFilter = false,
   });
 }
 
@@ -383,6 +385,7 @@ final categoryTopTransactionsProvider =
 
       final date = ref.watch(statisticsSelectedDateProvider);
       final repository = ref.watch(statisticsRepositoryProvider);
+      final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
 
       return repository.getCategoryTopTransactions(
         ledgerId: ledgerId,
@@ -390,6 +393,8 @@ final categoryTopTransactionsProvider =
         month: date.month,
         type: state.type,
         categoryId: state.categoryId,
+        isFixedExpenseFilter: state.isFixedExpenseFilter,
+        expenseTypeFilter: state.type == 'expense' ? expenseTypeFilter : null,
       );
     });
 

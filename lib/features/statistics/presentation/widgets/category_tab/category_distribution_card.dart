@@ -6,6 +6,7 @@ import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../../shared/widgets/category_icon.dart';
 import '../../../data/repositories/statistics_repository.dart';
+import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
 import 'category_detail_bottom_sheet.dart';
 import 'category_donut_chart.dart';
@@ -107,6 +108,7 @@ class _CategoryLegendList extends StatelessWidget {
 
           return GestureDetector(
             onTap: () {
+              final expenseFilter = ref.read(selectedExpenseTypeFilterProvider);
               CategoryDetailBottomSheet.show(
                 context,
                 ref,
@@ -120,6 +122,7 @@ class _CategoryLegendList extends StatelessWidget {
                 categoryPercentage: percentage,
                 type: type,
                 totalAmount: item.amount,
+                isFixedExpenseFilter: expenseFilter == ExpenseTypeFilter.fixed,
               );
             },
             child: Container(

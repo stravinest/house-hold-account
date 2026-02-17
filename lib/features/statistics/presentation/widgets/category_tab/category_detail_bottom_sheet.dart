@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../core/utils/color_utils.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../../../shared/themes/design_tokens.dart';
 import '../../../data/repositories/statistics_repository.dart';
 import '../../providers/statistics_provider.dart';
 
@@ -21,6 +22,7 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
     required double categoryPercentage,
     required String type,
     required int totalAmount,
+    bool isFixedExpenseFilter = false,
   }) {
     ref.read(categoryDetailStateProvider.notifier).state = CategoryDetailState(
       isOpen: true,
@@ -31,6 +33,7 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
       categoryPercentage: categoryPercentage,
       type: type,
       totalAmount: totalAmount,
+      isFixedExpenseFilter: isFixedExpenseFilter,
     );
 
     showModalBottomSheet(
@@ -172,7 +175,12 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
           // Top5 리스트
           Flexible(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                MediaQuery.of(context).viewPadding.bottom + Spacing.lg,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
