@@ -908,6 +908,21 @@ class AppLocalizationsKo extends AppLocalizations {
   String get labelAuthor => '작성자';
 
   @override
+  String get labelClassification => '분류';
+
+  @override
+  String get classificationIncome => '수입';
+
+  @override
+  String get classificationExpense => '지출';
+
+  @override
+  String get classificationAsset => '자산';
+
+  @override
+  String get classificationFixedExpense => '고정비';
+
+  @override
   String get maturityDateSelect => '만기일 선택';
 
   @override

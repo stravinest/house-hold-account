@@ -1796,6 +1796,36 @@ abstract class AppLocalizations {
   /// **'작성자'**
   String get labelAuthor;
 
+  /// No description provided for @labelClassification.
+  ///
+  /// In ko, this message translates to:
+  /// **'분류'**
+  String get labelClassification;
+
+  /// No description provided for @classificationIncome.
+  ///
+  /// In ko, this message translates to:
+  /// **'수입'**
+  String get classificationIncome;
+
+  /// No description provided for @classificationExpense.
+  ///
+  /// In ko, this message translates to:
+  /// **'지출'**
+  String get classificationExpense;
+
+  /// No description provided for @classificationAsset.
+  ///
+  /// In ko, this message translates to:
+  /// **'자산'**
+  String get classificationAsset;
+
+  /// No description provided for @classificationFixedExpense.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정비'**
+  String get classificationFixedExpense;
+
   /// No description provided for @maturityDateSelect.
   ///
   /// In ko, this message translates to:

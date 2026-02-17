@@ -97,6 +97,9 @@ class TransactionDetailSheet extends ConsumerWidget {
               padding: const EdgeInsets.all(Spacing.md),
               child: Column(
                 children: [
+                  // 분류
+                  _buildClassificationRow(context, l10n, colorScheme),
+
                   // 제목
                   _buildDetailRow(
                     context,
@@ -200,40 +203,127 @@ class TransactionDetailSheet extends ConsumerWidget {
     required String value,
     Color? valueColor,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
 
+    return _buildDetailRowBase(
+      context,
+      icon: icon,
+      label: label,
+      valueWidget: Text(
+        value,
+        textAlign: TextAlign.end,
+        maxLines: label == l10n.labelMemo
+            ? null
+            : (label == l10n.labelTitle ? 2 : 1),
+        overflow: label == l10n.labelMemo
+            ? TextOverflow.clip
+            : TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          color: valueColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRowBase(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Widget valueWidget,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: Spacing.sm),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 20, color: colorScheme.onSurfaceVariant),
-          const SizedBox(width: 12),
+          const SizedBox(width: BorderRadiusToken.md),
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              value,
-              textAlign: TextAlign.end,
-              maxLines: label == l10n.labelMemo
-                  ? null
-                  : (label == l10n.labelTitle ? 2 : 1),
-              overflow: label == l10n.labelMemo
-                  ? TextOverflow.clip
-                  : TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: valueColor,
-              ),
-            ),
-          ),
+          const SizedBox(width: Spacing.md),
+          Expanded(child: valueWidget),
         ],
+      ),
+    );
+  }
+
+  Widget _buildClassificationBadge(
+    String text, {
+    required Color backgroundColor,
+    required Color textColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: BorderRadiusToken.md,
+        vertical: Spacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(BorderRadiusToken.md),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClassificationRow(
+    BuildContext context,
+    AppLocalizations l10n,
+    ColorScheme colorScheme,
+  ) {
+    final badges = <Widget>[];
+
+    if (transaction.isIncome) {
+      badges.add(_buildClassificationBadge(
+        l10n.classificationIncome,
+        backgroundColor: colorScheme.primaryContainer,
+        textColor: colorScheme.primary,
+      ));
+    } else if (transaction.isAssetType) {
+      badges.add(_buildClassificationBadge(
+        l10n.classificationAsset,
+        backgroundColor: colorScheme.tertiaryContainer,
+        textColor: colorScheme.tertiary,
+      ));
+    } else {
+      badges.add(_buildClassificationBadge(
+        l10n.classificationExpense,
+        backgroundColor: colorScheme.errorContainer,
+        textColor: colorScheme.error,
+      ));
+      if (transaction.isFixedExpense) {
+        badges.add(const SizedBox(width: Spacing.sm));
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        badges.add(_buildClassificationBadge(
+          l10n.classificationFixedExpense,
+          backgroundColor:
+              isDark ? const Color(0xFF4E2C00) : const Color(0xFFFFE0B2),
+          textColor:
+              isDark ? const Color(0xFFFFCC80) : const Color(0xFFE65100),
+        ));
+      }
+    }
+
+    return _buildDetailRowBase(
+      context,
+      icon: Icons.layers,
+      label: l10n.labelClassification,
+      valueWidget: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: badges,
       ),
     );
   }

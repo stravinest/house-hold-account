@@ -927,6 +927,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelAuthor => 'Author';
 
   @override
+  String get labelClassification => 'Type';
+
+  @override
+  String get classificationIncome => 'Income';
+
+  @override
+  String get classificationExpense => 'Expense';
+
+  @override
+  String get classificationAsset => 'Asset';
+
+  @override
+  String get classificationFixedExpense => 'Fixed';
+
+  @override
   String get maturityDateSelect => 'Select Maturity Date';
 
   @override
