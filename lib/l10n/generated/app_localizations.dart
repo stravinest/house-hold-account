@@ -5460,6 +5460,30 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'뒤로 버튼을 한 번 더 누르면 종료됩니다'**
   String get commonBackPressToExit;
+
+  /// No description provided for @settingsNewVersionAvailable.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 버전 {version} 사용 가능'**
+  String settingsNewVersionAvailable(String version);
+
+  /// No description provided for @settingsUpToDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'최신 버전입니다'**
+  String get settingsUpToDate;
+
+  /// No description provided for @settingsCheckUpdate.
+  ///
+  /// In ko, this message translates to:
+  /// **'업데이트 확인'**
+  String get settingsCheckUpdate;
+
+  /// No description provided for @settingsUpdate.
+  ///
+  /// In ko, this message translates to:
+  /// **'업데이트'**
+  String get settingsUpdate;
 }
 
 class _AppLocalizationsDelegate

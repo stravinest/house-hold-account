@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../config/router.dart';
 import '../../../../core/utils/snackbar_utils.dart';
@@ -18,6 +19,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ledger/presentation/providers/calendar_view_provider.dart';
 import '../../../notification/presentation/pages/notification_settings_page.dart';
 import '../../../payment_method/presentation/widgets/permission_request_dialog.dart';
+import '../../data/services/app_update_service.dart';
+import '../providers/app_update_provider.dart';
 import '../widgets/data_export_bottom_sheet.dart';
 
 // 알림 설정 프로바이더
@@ -221,12 +224,7 @@ class SettingsPage extends ConsumerWidget {
 
             // 정보 섹션
             SectionHeader(title: l10n.settingsInfo),
-            ListTile(
-              leading: const Icon(Icons.info_outline),
-              title: Text(l10n.settingsAppInfo),
-              subtitle: Text(l10n.settingsVersion('1.0.0')),
-              onTap: () => _showAboutDialog(context, l10n),
-            ),
+            _AppInfoTile(l10n: l10n),
             ListTile(
               leading: const Icon(Icons.menu_book_outlined),
               title: Text(l10n.settingsGuide),
@@ -540,40 +538,6 @@ class SettingsPage extends ConsumerWidget {
     );
   }
 
-  void _showAboutDialog(BuildContext context, AppLocalizations l10n) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.account_balance_wallet, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              l10n.settingsAboutAppName,
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.settingsVersion('1.0.0'),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 16),
-            Text(l10n.settingsAboutAppDescription),
-            const SizedBox(height: 8),
-            Text(l10n.settingsAboutAppSubDescription),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.commonClose),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _logout(
     BuildContext context,
     WidgetRef ref,
@@ -643,6 +607,109 @@ class SettingsPage extends ConsumerWidget {
         }
       }
     }
+  }
+}
+
+// 앱 정보 타일 (업데이트 정보 포함)
+class _AppInfoTile extends ConsumerWidget {
+  final AppLocalizations l10n;
+
+  const _AppInfoTile({required this.l10n});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final updateInfo = ref.watch(appUpdateProvider).valueOrNull;
+    final currentVersion =
+        ref.watch(packageInfoProvider).valueOrNull?.version ?? '';
+
+    final subtitle = updateInfo != null
+        ? l10n.settingsNewVersionAvailable(updateInfo.version)
+        : currentVersion.isNotEmpty
+            ? l10n.settingsVersion(currentVersion)
+            : '';
+
+    return ListTile(
+      leading: const Icon(Icons.info_outline),
+      title: Text(l10n.settingsAppInfo),
+      subtitle: Text(subtitle),
+      trailing: updateInfo != null
+          ? Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.error,
+                shape: BoxShape.circle,
+              ),
+            )
+          : null,
+      onTap: () =>
+          _showAboutDialog(context, l10n, currentVersion, updateInfo),
+    );
+  }
+
+  void _showAboutDialog(
+    BuildContext context,
+    AppLocalizations l10n,
+    String currentVersion,
+    AppVersionInfo? updateInfo,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                'assets/images/app_icon.png',
+                width: 64,
+                height: 64,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              l10n.settingsAboutAppName,
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.settingsVersion(
+                  currentVersion.isNotEmpty ? currentVersion : '...'),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            if (updateInfo != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                l10n.settingsNewVersionAvailable(updateInfo.version),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Text(l10n.settingsAboutAppDescription),
+            const SizedBox(height: 8),
+            Text(l10n.settingsAboutAppSubDescription),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.commonClose),
+          ),
+          if (updateInfo?.storeUrl != null)
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context);
+                final url = Uri.tryParse(updateInfo!.storeUrl!);
+                if (url != null) launchUrl(url);
+              },
+              child: Text(l10n.settingsUpdate),
+            ),
+        ],
+      ),
+    );
   }
 }
 

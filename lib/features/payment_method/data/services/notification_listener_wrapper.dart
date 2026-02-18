@@ -707,6 +707,7 @@ class NotificationListenerWrapper {
     '잔액',
     '체크카드',
     '신용카드',
+    '사용',
   ];
 
   // 금액 패턴 정규식

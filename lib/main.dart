@@ -23,7 +23,7 @@ import 'features/notification/presentation/providers/notification_provider.dart'
 import 'features/notification/services/firebase_messaging_service.dart';
 import 'features/notification/services/local_notification_service.dart';
 import 'features/payment_method/presentation/widgets/permission_request_dialog.dart';
-import 'features/settings/data/services/app_update_service.dart';
+import 'features/settings/presentation/providers/app_update_provider.dart';
 import 'features/settings/presentation/widgets/app_update_dialog.dart';
 import 'features/settings/presentation/widgets/guide_dialog.dart';
 import 'features/widget/data/services/widget_data_service.dart';
@@ -177,8 +177,7 @@ class _SharedHouseholdAccountAppState
     final navigatorContext = rootNavigatorKey.currentContext;
     if (navigatorContext == null || !navigatorContext.mounted) return;
 
-    final prefs = ref.read(sharedPreferencesProvider);
-    final versionInfo = await AppUpdateService.checkForUpdate(prefs: prefs);
+    final versionInfo = await ref.read(appUpdateProvider.future);
 
     if (versionInfo != null) {
       final ctx = rootNavigatorKey.currentContext;
@@ -245,9 +244,11 @@ class _SharedHouseholdAccountAppState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // 로그인 상태일 때만 업데이트 체크 (24시간 제한으로 중복 방지)
+      // 로그인 상태일 때만 업데이트 체크
       final session = SupabaseConfig.auth.currentSession;
       if (session != null) {
+        // Provider 캐시 초기화 후 재체크 (24시간 캐시로 중복 API 호출 방지)
+        ref.invalidate(appUpdateProvider);
         _checkForAppUpdate();
       }
     }

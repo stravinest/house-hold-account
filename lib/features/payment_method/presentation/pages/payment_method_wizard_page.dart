@@ -1843,7 +1843,8 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
       title: Text(l10n.paymentMethodWizardEditKeywordsTitle),
       content: SizedBox(
         width: double.maxFinite,
-        child: Column(
+        child: SingleChildScrollView(
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1902,6 +1903,7 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
               ],
             ),
           ],
+        ),
         ),
       ),
       actions: [

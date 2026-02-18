@@ -1486,5 +1486,16 @@
   "@assetGoalRemainingWithUnit": {
     "placeholders": { "amount": {"type": "String"} }
   },
-  "commonBackPressToExit": "뒤로 버튼을 한 번 더 누르면 종료됩니다"
+  "commonBackPressToExit": "뒤로 버튼을 한 번 더 누르면 종료됩니다",
+  "settingsNewVersionAvailable": "새 버전 {version} 사용 가능",
+  "@settingsNewVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsUpToDate": "최신 버전입니다",
+  "settingsCheckUpdate": "업데이트 확인",
+  "settingsUpdate": "업데이트"
 }

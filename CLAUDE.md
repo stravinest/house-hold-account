@@ -90,6 +90,30 @@ flutter run
 # 로그에 'packageName: com.kbcard.cxh.appcard' 출력됨
 ```
 
+### 앱 버전 배포
+
+```bash
+# pubspec.yaml 버전을 Supabase에 등록 (배포 후 실행)
+./scripts/publish_version.sh
+
+# 스토어 URL 포함
+./scripts/publish_version.sh --store-url "https://play.google.com/store/apps/..."
+
+# 강제 업데이트 + 릴리즈 노트
+./scripts/publish_version.sh --force --notes "보안 패치"
+
+# Android + iOS 동시 등록
+./scripts/publish_version.sh --both
+```
+
+**배포 흐름:**
+1. `pubspec.yaml`에서 `version: x.y.z+buildNumber` 업데이트
+2. `./scripts/deploy.sh` 실행 → 앱번들 빌드
+3. Google Play Console에 `.aab` 업로드 후 출시
+4. **스토어 반영 확인 후** `./scripts/publish_version.sh` 실행 → 업데이트 알림 활성화
+
+**주의**: 스토어 업로드~반영에 15~20분 소요되므로, 반드시 스토어에서 다운로드 가능한 것을 확인한 후 `publish_version.sh`를 실행해야 합니다. 순서가 뒤바뀌면 사용자가 "업데이트 있음"을 보고 스토어에 갔는데 아직 없는 상황이 됩니다.
+
 ### Maestro 테스트 도구
 
 ```bash
@@ -225,6 +249,8 @@ lib/
 
 Supabase PostgreSQL 사용. 마이그레이션 파일 위치: `supabase/migrations/`
 
+**중요: 스키마는 `house`를 사용합니다** (`lib/config/supabase_config.dart`에서 설정). 마이그레이션 작성 시 `CREATE TABLE` 등은 반드시 `house` 스키마에 생성해야 PostgREST에서 접근 가능합니다. `public` 스키마에 생성하면 앱에서 테이블을 찾을 수 없습니다.
+
 ### 주요 테이블
 
 **핵심 테이블:**
@@ -275,6 +301,17 @@ Supabase PostgreSQL 사용. 마이그레이션 파일 위치: `supabase/migratio
   - 기존 `UNIQUE(ledger_id, name)` 제거
   - 공유 결제수단: `UNIQUE(ledger_id, name) WHERE can_auto_save=false`
   - 자동수집 결제수단: `UNIQUE(ledger_id, owner_user_id, name) WHERE can_auto_save=true`
+- `044_add_app_versions_table.sql`: 앱 버전 관리 테이블 (업데이트 알림용)
+- `044_allow_viewing_past_member_profiles.sql`: 과거 멤버 프로필 조회 허용
+- `045_add_notification_segmentation.sql`: 알림 세분화 기능 추가
+- `046_add_missing_fk_indexes.sql`: 누락된 외래키 인덱스 추가
+- `047_fix_push_notifications_policies.sql`: 푸시 알림 RLS 정책 수정
+- `048_add_increment_push_format_match_count.sql`: 푸시 포맷 매칭 카운트 RPC 함수
+- `049_record_manual_schema_changes.sql`: 수동 스키마 변경 기록
+- `050_relax_fixed_expense_categories_rls.sql`: 고정비 카테고리 RLS 완화
+- `051_add_emoji_icons_to_defaults.sql`: 기본 카테고리에 이모지 아이콘 추가
+- `052_convert_emoji_to_icon_names.sql`: 이모지를 아이콘 이름으로 변환
+- `053_update_auto_collect_payment_method_colors.sql`: 자동수집 결제수단 색상 업데이트
 
 RLS (Row Level Security) 정책이 모든 테이블에 적용되어 있음.
 

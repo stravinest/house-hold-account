@@ -82,7 +82,7 @@ object NotificationFilterHelper {
     val ALIMTALK_TRANSACTION_KEYWORDS: List<String> = listOf(
         "승인", "결제", "출금", "입금", "이체", "충전",
         "취소", "환불", "일시불", "할부", "사용금액",
-        "잔액", "체크카드", "신용카드",
+        "잔액", "체크카드", "신용카드", "사용",
     )
 
     // 금액 패턴 정규식

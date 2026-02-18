@@ -999,5 +999,16 @@
   "@assetGoalRemainingWithUnit": {
     "placeholders": { "amount": {"type": "String"} }
   },
-  "commonBackPressToExit": "Press back again to exit"
+  "commonBackPressToExit": "Press back again to exit",
+  "settingsNewVersionAvailable": "New version {version} available",
+  "@settingsNewVersionAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsUpToDate": "Up to date",
+  "settingsCheckUpdate": "Check for updates",
+  "settingsUpdate": "Update"
 }

@@ -2878,4 +2878,18 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get commonBackPressToExit => '뒤로 버튼을 한 번 더 누르면 종료됩니다';
+
+  @override
+  String settingsNewVersionAvailable(String version) {
+    return '새 버전 $version 사용 가능';
+  }
+
+  @override
+  String get settingsUpToDate => '최신 버전입니다';
+
+  @override
+  String get settingsCheckUpdate => '업데이트 확인';
+
+  @override
+  String get settingsUpdate => '업데이트';
 }

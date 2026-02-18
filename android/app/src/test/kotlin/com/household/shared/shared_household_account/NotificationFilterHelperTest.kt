@@ -238,6 +238,28 @@ class NotificationFilterHelperTest {
     }
 
     @Test
+    fun `isFinancialAlimtalk - KB 체크카드 사용 알림을 통과시킨다`() {
+        // 실제 디바이스 로그에서 확인된 KB 체크카드 알림톡 형식
+        // KB 체크카드는 "승인" 대신 "사용" 키워드를 사용함
+        assertTrue(
+            NotificationFilterHelper.isFinancialAlimtalk(
+                title = "카카오톡 카드영수증",
+                content = "KB국민체크(2165) 전*규님 02/18 10:37 600원 설아 아이스크림 사용"
+            )
+        )
+    }
+
+    @Test
+    fun `isFinancialAlimtalk - KB 체크카드 대금액 사용 알림을 통과시킨다`() {
+        assertTrue(
+            NotificationFilterHelper.isFinancialAlimtalk(
+                title = "카카오톡 카드영수증",
+                content = "KB국민체크(2165) 전*규님 02/18 14:22 50,000원 이마트 사용"
+            )
+        )
+    }
+
+    @Test
     fun `isFinancialAlimtalk - 금융채널이지만 거래키워드 없으면 차단한다`() {
         assertFalse(
             NotificationFilterHelper.isFinancialAlimtalk(

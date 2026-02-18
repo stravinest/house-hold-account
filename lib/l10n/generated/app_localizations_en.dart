@@ -2959,4 +2959,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get commonBackPressToExit => 'Press back again to exit';
+
+  @override
+  String settingsNewVersionAvailable(String version) {
+    return 'New version $version available';
+  }
+
+  @override
+  String get settingsUpToDate => 'Up to date';
+
+  @override
+  String get settingsCheckUpdate => 'Check for updates';
+
+  @override
+  String get settingsUpdate => 'Update';
 }
