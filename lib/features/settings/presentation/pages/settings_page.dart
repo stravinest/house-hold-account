@@ -622,29 +622,116 @@ class _AppInfoTile extends ConsumerWidget {
     final currentVersion =
         ref.watch(packageInfoProvider).valueOrNull?.version ?? '';
 
-    final subtitle = updateInfo != null
-        ? l10n.settingsNewVersionAvailable(updateInfo.version)
-        : currentVersion.isNotEmpty
-            ? l10n.settingsVersion(currentVersion)
-            : '';
+    if (updateInfo != null) {
+      return _buildUpdateAvailableTile(
+        context, ref, currentVersion, updateInfo,
+      );
+    }
 
     return ListTile(
       leading: const Icon(Icons.info_outline),
       title: Text(l10n.settingsAppInfo),
-      subtitle: Text(subtitle),
-      trailing: updateInfo != null
-          ? Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.error,
-                shape: BoxShape.circle,
-              ),
-            )
+      subtitle: currentVersion.isNotEmpty
+          ? Text(l10n.settingsVersion(currentVersion))
           : null,
-      onTap: () =>
-          _showAboutDialog(context, l10n, currentVersion, updateInfo),
+      onTap: () => _onTap(context, ref, currentVersion, updateInfo),
     );
+  }
+
+  Widget _buildUpdateAvailableTile(
+    BuildContext context,
+    WidgetRef ref,
+    String currentVersion,
+    AppVersionInfo updateInfo,
+  ) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
+    // ListTile leading 아이콘과 정렬 맞춤:
+    // ListTile 기본 contentPadding horizontal=16, leading 24px 아이콘
+    // 아이콘 중심: 16 + 12 = 28px (leading 영역 중심)
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Material(
+        color: primaryColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => _onTap(context, ref, currentVersion, updateInfo),
+          child: Padding(
+            padding: const EdgeInsets.only(
+              left: 14, right: 14, top: 12, bottom: 12,
+            ),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  child: Icon(
+                    Icons.system_update,
+                    color: primaryColor,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.settingsAppInfo,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'v${updateInfo.version} ${l10n.settingsUpdate}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: primaryColor,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Text(
+                    'NEW',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.onPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onTap(
+    BuildContext context,
+    WidgetRef ref,
+    String currentVersion,
+    AppVersionInfo? cachedUpdateInfo,
+  ) async {
+    // 캐시된 업데이트 정보가 없으면 강제 체크
+    final updateInfo = cachedUpdateInfo ??
+        await ref.read(appUpdateProvider.notifier).forceCheck();
+
+    if (!context.mounted) return;
+    _showAboutDialog(context, l10n, currentVersion, updateInfo);
   }
 
   void _showAboutDialog(
@@ -653,6 +740,12 @@ class _AppInfoTile extends ConsumerWidget {
     String currentVersion,
     AppVersionInfo? updateInfo,
   ) {
+    // storeUrl이 없으면 기본 Play Store URL 사용
+    final storeUrl = updateInfo?.storeUrl ??
+        (updateInfo != null
+            ? 'https://play.google.com/store/apps/details?id=com.household.shared.shared_household_account'
+            : null);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -698,11 +791,11 @@ class _AppInfoTile extends ConsumerWidget {
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.commonClose),
           ),
-          if (updateInfo?.storeUrl != null)
+          if (updateInfo != null && storeUrl != null)
             FilledButton(
               onPressed: () {
                 Navigator.pop(context);
-                final url = Uri.tryParse(updateInfo!.storeUrl!);
+                final url = Uri.tryParse(storeUrl);
                 if (url != null) launchUrl(url);
               },
               child: Text(l10n.settingsUpdate),
