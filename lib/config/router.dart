@@ -18,6 +18,7 @@ import '../features/payment_method/presentation/pages/debug_test_page.dart';
 import '../features/payment_method/presentation/pages/payment_method_management_page.dart';
 import '../features/payment_method/presentation/pages/pending_transactions_page.dart';
 import '../features/search/presentation/pages/search_page.dart';
+import '../features/transaction/presentation/pages/recurring_template_management_page.dart';
 import '../features/settings/presentation/pages/auto_collect_guide_page.dart';
 import '../features/settings/presentation/pages/guide_page.dart';
 import '../features/settings/presentation/pages/privacy_policy_page.dart';
@@ -60,6 +61,7 @@ class Routes {
   static const String privacyPolicy = '/privacy-policy';
   static const String resetPassword = '/reset-password';
   static const String guide = '/guide';
+  static const String recurringTemplates = '/recurring-templates';
   static const String autoCollectGuide = '/guide/auto-collect';
   static const String debugTest = '/debug-test';
 }
@@ -272,6 +274,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => slideTransition(
           key: state.pageKey,
           child: const FixedExpenseManagementPage(),
+        ),
+      ),
+
+      // 반복 거래 관리 - 슬라이드 전환
+      GoRoute(
+        path: Routes.recurringTemplates,
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const RecurringTemplateManagementPage(),
         ),
       ),
 

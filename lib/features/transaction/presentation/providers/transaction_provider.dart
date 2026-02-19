@@ -10,6 +10,7 @@ import '../../../fixed_expense/presentation/providers/fixed_expense_settings_pro
     show fixedExpenseSettingsProvider;
 import '../../data/repositories/transaction_repository.dart';
 import '../../domain/entities/transaction.dart';
+import 'recurring_template_provider.dart';
 
 // Repository 프로바이더
 final transactionRepositoryProvider = Provider<TransactionRepository>((ref) {
@@ -305,6 +306,7 @@ class TransactionNotifier extends SafeNotifier<List<Transaction>> {
       monthlyTransactionsProvider,
       monthlyTotalProvider,
       dailyTotalsProvider,
+      recurringTemplatesProvider,
     ]);
 
     // 자산 거래인 경우 자산 통계도 갱신
@@ -371,6 +373,7 @@ class TransactionNotifier extends SafeNotifier<List<Transaction>> {
       monthlyTransactionsProvider,
       monthlyTotalProvider,
       dailyTotalsProvider,
+      recurringTemplatesProvider,
     ]);
 
     // 자산 거래인 경우 자산 통계도 갱신
@@ -399,6 +402,7 @@ class TransactionNotifier extends SafeNotifier<List<Transaction>> {
       monthlyTransactionsProvider,
       monthlyTotalProvider,
       dailyTotalsProvider,
+      recurringTemplatesProvider,
     ]);
 
     // 자산 통계도 갱신 (자산 거래가 아닐 경우 무시됨)
@@ -411,6 +415,38 @@ class TransactionNotifier extends SafeNotifier<List<Transaction>> {
     );
 
     // 트랜잭션 업데이트 트리거 발생
+    if (mounted) {
+      ref.read(transactionUpdateTriggerProvider.notifier).state++;
+    }
+  }
+
+  // 반복 거래 삭제 + 템플릿 비활성화 (이후 모든 반복 중단)
+  Future<void> deleteTransactionAndStopRecurring(
+    String transactionId,
+    String templateId,
+  ) async {
+    await safeAsync(
+      () => _repository.deleteTransactionAndDeactivateTemplate(
+        transactionId,
+        templateId,
+      ),
+    );
+
+    safeInvalidateAll([
+      dailyTransactionsProvider,
+      monthlyTransactionsProvider,
+      monthlyTotalProvider,
+      dailyTotalsProvider,
+      recurringTemplatesProvider,
+    ]);
+
+    safeInvalidate(assetStatisticsProvider);
+
+    await safeAsync(() => ref.read(monthlyTotalProvider.future));
+    await safeAsync(
+      () => ref.read(widgetNotifierProvider.notifier).updateWidgetData(),
+    );
+
     if (mounted) {
       ref.read(transactionUpdateTriggerProvider.notifier).state++;
     }
@@ -457,6 +493,7 @@ class TransactionNotifier extends SafeNotifier<List<Transaction>> {
       monthlyTransactionsProvider,
       monthlyTotalProvider,
       dailyTotalsProvider,
+      recurringTemplatesProvider,
     ]);
 
     // 데이터 재계산 완료를 기다린 후 위젯 업데이트

@@ -439,10 +439,15 @@ class _DailyTransactionList extends ConsumerWidget {
             final tx = sortedTransactions[index - 1];
             final userName = tx.userName ?? l10n.user;
             final userColor = _parseColor(tx.userColor);
-            final categoryDisplay =
-                tx.categoryName ?? l10n.categoryUncategorized;
+            final categoryDisplay = (tx.isFixedExpense
+                    ? tx.fixedExpenseCategoryName
+                    : tx.categoryName) ??
+                l10n.categoryUncategorized;
+            final installmentSuffix = tx.isInstallment && tx.installmentTotalMonths > 0
+                ? ' ${l10n.installmentProgress(tx.installmentCurrentMonth, tx.installmentTotalMonths)}'
+                : '';
             final String description = tx.title != null && tx.title!.isNotEmpty
-                ? '$userName $categoryDisplay - ${tx.title}'
+                ? '$userName $categoryDisplay - ${tx.title}$installmentSuffix'
                 : '$userName $categoryDisplay';
 
             final isIncome = tx.type == 'income';

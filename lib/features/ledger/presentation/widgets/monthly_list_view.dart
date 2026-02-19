@@ -199,12 +199,18 @@ class _TransactionItem extends StatelessWidget {
     final userName = tx.userName ?? l10n.user;
     final colorHex = tx.userColor ?? '#A8D8EA';
     final userColor = _parseColor(colorHex);
-    final categoryDisplay = tx.categoryName ?? l10n.categoryUncategorized;
+    final categoryDisplay = (tx.isFixedExpense
+            ? tx.fixedExpenseCategoryName
+            : tx.categoryName) ??
+        l10n.categoryUncategorized;
 
     // 카테고리 · 제목 표시
     final String description;
+    final installmentSuffix = tx.isInstallment && tx.installmentTotalMonths > 0
+        ? ' ${l10n.installmentProgress(tx.installmentCurrentMonth, tx.installmentTotalMonths)}'
+        : '';
     if (tx.title != null && tx.title!.isNotEmpty) {
-      description = '$categoryDisplay · ${tx.title}';
+      description = '$categoryDisplay · ${tx.title}$installmentSuffix';
     } else {
       description = categoryDisplay;
     }

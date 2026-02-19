@@ -106,7 +106,9 @@ class TransactionDetailSheet extends ConsumerWidget {
                     icon: Icons.title,
                     label: l10n.labelTitle,
                     value: transaction.title?.isNotEmpty == true
-                        ? transaction.title!
+                        ? (transaction.isInstallment && transaction.installmentTotalMonths > 0
+                            ? '${transaction.title!} ${l10n.installmentProgress(transaction.installmentCurrentMonth, transaction.installmentTotalMonths)}'
+                            : transaction.title!)
                         : l10n.transactionNoTitle,
                     valueColor: transaction.title?.isNotEmpty == true
                         ? null
@@ -156,7 +158,15 @@ class TransactionDetailSheet extends ConsumerWidget {
                   ),
 
                   // 카테고리
-                  if (transaction.categoryName != null)
+                  if (transaction.isFixedExpense &&
+                      transaction.fixedExpenseCategoryName != null)
+                    _buildDetailRow(
+                      context,
+                      icon: Icons.category,
+                      label: l10n.labelCategory,
+                      value: transaction.fixedExpenseCategoryName!,
+                    )
+                  else if (transaction.categoryName != null)
                     _buildDetailRow(
                       context,
                       icon: Icons.category,
@@ -309,10 +319,12 @@ class TransactionDetailSheet extends ConsumerWidget {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         badges.add(_buildClassificationBadge(
           l10n.classificationFixedExpense,
-          backgroundColor:
-              isDark ? const Color(0xFF4E2C00) : const Color(0xFFFFE0B2),
-          textColor:
-              isDark ? const Color(0xFFFFCC80) : const Color(0xFFE65100),
+          backgroundColor: isDark
+              ? FixedExpenseColors.darkBackground
+              : FixedExpenseColors.lightBackground,
+          textColor: isDark
+              ? FixedExpenseColors.darkForeground
+              : FixedExpenseColors.lightForeground,
         ));
       }
     }
@@ -343,6 +355,13 @@ class TransactionDetailSheet extends ConsumerWidget {
     WidgetRef ref,
   ) async {
     final l10n = AppLocalizations.of(context);
+
+    // 반복 거래이고 템플릿 ID가 있는 경우 옵션 제공
+    if (transaction.isRecurring && transaction.recurringTemplateId != null) {
+      await _showRecurringDeleteOptions(context, ref, l10n);
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -370,7 +389,7 @@ class TransactionDetailSheet extends ConsumerWidget {
             .read(transactionNotifierProvider.notifier)
             .deleteTransaction(transaction.id);
         if (context.mounted) {
-          Navigator.pop(context); // 상세 시트 닫기
+          Navigator.pop(context);
           SnackBarUtils.showSuccess(context, l10n.transactionDeleted);
         }
       } catch (e) {
@@ -380,6 +399,63 @@ class TransactionDetailSheet extends ConsumerWidget {
             l10n.transactionDeleteFailed(e.toString()),
           );
         }
+      }
+    }
+  }
+
+  Future<void> _showRecurringDeleteOptions(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) async {
+    // 'this_only' = 이 거래만 삭제, 'all_future' = 이후 모든 반복 중단
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.recurringDeleteTitle),
+        content: Text(l10n.recurringDeleteMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonCancel),
+          ),
+          OutlinedButton(
+            onPressed: () => Navigator.pop(dialogContext, 'this_only'),
+            child: Text(l10n.recurringDeleteThisOnly),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, 'all_future'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            child: Text(l10n.recurringDeleteAllFuture),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null || !context.mounted) return;
+
+    try {
+      final notifier = ref.read(transactionNotifierProvider.notifier);
+      if (result == 'this_only') {
+        await notifier.deleteTransaction(transaction.id);
+      } else {
+        await notifier.deleteTransactionAndStopRecurring(
+          transaction.id,
+          transaction.recurringTemplateId!,
+        );
+      }
+      if (context.mounted) {
+        Navigator.pop(context);
+        SnackBarUtils.showSuccess(context, l10n.transactionDeleted);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        SnackBarUtils.showError(
+          context,
+          l10n.transactionDeleteFailed(e.toString()),
+        );
       }
     }
   }

@@ -498,11 +498,16 @@ class _WeeklyTransactionList extends ConsumerWidget {
             ...dayTransactions.map((tx) {
               final userName = tx.userName ?? l10n.user;
               final userColor = _parseColor(tx.userColor);
-              final categoryDisplay =
-                  tx.categoryName ?? l10n.categoryUncategorized;
+              final categoryDisplay = (tx.isFixedExpense
+                      ? tx.fixedExpenseCategoryName
+                      : tx.categoryName) ??
+                  l10n.categoryUncategorized;
+              final installmentSuffix = tx.isInstallment && tx.installmentTotalMonths > 0
+                  ? ' ${l10n.installmentProgress(tx.installmentCurrentMonth, tx.installmentTotalMonths)}'
+                  : '';
               final String description =
                   tx.title != null && tx.title!.isNotEmpty
-                  ? '$categoryDisplay - ${tx.title}'
+                  ? '$categoryDisplay - ${tx.title}$installmentSuffix'
                   : categoryDisplay;
 
               final isIncome = tx.type == 'income';

@@ -288,8 +288,11 @@ class DailyCategoryBreakdownSheet extends ConsumerWidget {
     final Map<String, List<Transaction>> groups = {};
 
     for (final transaction in transactions) {
-      // '미분류' 키는 CategoryL10nHelper에서 번역됨
-      final categoryName = transaction.categoryName ?? '미분류';
+      // 고정비는 고정비 카테고리명 사용, '미분류' 키는 CategoryL10nHelper에서 번역됨
+      final categoryName = (transaction.isFixedExpense
+              ? transaction.fixedExpenseCategoryName
+              : transaction.categoryName) ??
+          '미분류';
       if (!groups.containsKey(categoryName)) {
         groups[categoryName] = [];
       }

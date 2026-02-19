@@ -122,7 +122,8 @@ class _CategoryLegendList extends StatelessWidget {
                 categoryPercentage: percentage,
                 type: type,
                 totalAmount: item.amount,
-                isFixedExpenseFilter: expenseFilter == ExpenseTypeFilter.fixed,
+                isFixedExpenseFilter: expenseFilter == ExpenseTypeFilter.fixed ||
+                    item.categoryId.startsWith('fixed_'),
               );
             },
             child: Container(

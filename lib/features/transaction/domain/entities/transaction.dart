@@ -19,6 +19,7 @@ class Transaction extends Equatable {
   final String? fixedExpenseCategoryId;
   final bool isAsset;
   final DateTime? maturityDate;
+  final String? recurringTemplateId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -30,7 +31,9 @@ class Transaction extends Equatable {
   final String? userColor;
   final String? paymentMethodName;
   final String? fixedExpenseCategoryName;
+  final String? fixedExpenseCategoryIcon;
   final String? fixedExpenseCategoryColor;
+  final DateTime? recurringTemplateStartDate;
 
   const Transaction({
     required this.id,
@@ -51,6 +54,7 @@ class Transaction extends Equatable {
     this.fixedExpenseCategoryId,
     this.isAsset = false,
     this.maturityDate,
+    this.recurringTemplateId,
     required this.createdAt,
     required this.updatedAt,
     this.categoryName,
@@ -60,7 +64,9 @@ class Transaction extends Equatable {
     this.userColor,
     this.paymentMethodName,
     this.fixedExpenseCategoryName,
+    this.fixedExpenseCategoryIcon,
     this.fixedExpenseCategoryColor,
+    this.recurringTemplateStartDate,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
@@ -68,6 +74,8 @@ class Transaction extends Equatable {
     final paymentMethod = json['payment_methods'] as Map<String, dynamic>?;
     final fixedExpenseCategory =
         json['fixed_expense_categories'] as Map<String, dynamic>?;
+    final recurringTemplate =
+        json['recurring_templates'] as Map<String, dynamic>?;
 
     return Transaction(
       id: json['id'] as String,
@@ -92,6 +100,7 @@ class Transaction extends Equatable {
       maturityDate: json['maturity_date'] != null
           ? DateTime.parse(json['maturity_date'] as String)
           : null,
+      recurringTemplateId: json['recurring_template_id'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       categoryName: category?['name'] as String?,
@@ -99,7 +108,11 @@ class Transaction extends Equatable {
       categoryColor: category?['color'] as String?,
       paymentMethodName: paymentMethod?['name'] as String?,
       fixedExpenseCategoryName: fixedExpenseCategory?['name'] as String?,
+      fixedExpenseCategoryIcon: fixedExpenseCategory?['icon'] as String?,
       fixedExpenseCategoryColor: fixedExpenseCategory?['color'] as String?,
+      recurringTemplateStartDate: recurringTemplate?['start_date'] != null
+          ? DateTime.parse(recurringTemplate!['start_date'] as String)
+          : null,
     );
   }
 
@@ -107,6 +120,39 @@ class Transaction extends Equatable {
   bool get isExpense => type == 'expense';
   bool get isAssetType => type == 'asset';
   bool get isAssetTransaction => type == 'asset' && isAsset == true;
+
+  // 할부 거래 여부 (title에 "할부" 포함 + 반복거래 + 종료일 있음)
+  bool get isInstallment =>
+      isRecurring &&
+      recurringEndDate != null &&
+      title != null &&
+      title!.contains('할부');
+
+  // 할부 시작일 (recurringTemplateStartDate 우선, 없으면 createdAt 기반 추정)
+  DateTime? get _installmentStartDate {
+    if (recurringTemplateStartDate != null) return recurringTemplateStartDate;
+    // recurring_template_id가 없는 기존 거래: createdAt의 월 첫날을 시작으로 추정
+    return DateTime(createdAt.year, createdAt.month, 1);
+  }
+
+  // 할부 총 개월수
+  int get installmentTotalMonths {
+    if (!isInstallment) return 0;
+    final start = _installmentStartDate;
+    if (start == null) return 0;
+    final end = recurringEndDate!;
+    final months = (end.year - start.year) * 12 + end.month - start.month + 1;
+    return months > 0 ? months : 0;
+  }
+
+  // 현재 할부 회차 (1부터 시작)
+  int get installmentCurrentMonth {
+    if (!isInstallment) return 0;
+    final start = _installmentStartDate;
+    if (start == null) return 0;
+    final month = (date.year - start.year) * 12 + date.month - start.month + 1;
+    return month > 0 ? month : 1;
+  }
 
   // 주의: 현재 copyWith에서는 categoryId나 paymentMethodId를 null로 설정할 수 없습니다.
   // null을 전달해도 기존 값이 유지됩니다.
@@ -133,6 +179,7 @@ class Transaction extends Equatable {
     String? fixedExpenseCategoryId,
     bool? isAsset,
     DateTime? maturityDate,
+    String? recurringTemplateId,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? categoryName,
@@ -142,7 +189,9 @@ class Transaction extends Equatable {
     String? userColor,
     String? paymentMethodName,
     String? fixedExpenseCategoryName,
+    String? fixedExpenseCategoryIcon,
     String? fixedExpenseCategoryColor,
+    DateTime? recurringTemplateStartDate,
   }) {
     return Transaction(
       id: id ?? this.id,
@@ -164,6 +213,7 @@ class Transaction extends Equatable {
           fixedExpenseCategoryId ?? this.fixedExpenseCategoryId,
       isAsset: isAsset ?? this.isAsset,
       maturityDate: maturityDate ?? this.maturityDate,
+      recurringTemplateId: recurringTemplateId ?? this.recurringTemplateId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       categoryName: categoryName ?? this.categoryName,
@@ -174,8 +224,12 @@ class Transaction extends Equatable {
       paymentMethodName: paymentMethodName ?? this.paymentMethodName,
       fixedExpenseCategoryName:
           fixedExpenseCategoryName ?? this.fixedExpenseCategoryName,
+      fixedExpenseCategoryIcon:
+          fixedExpenseCategoryIcon ?? this.fixedExpenseCategoryIcon,
       fixedExpenseCategoryColor:
           fixedExpenseCategoryColor ?? this.fixedExpenseCategoryColor,
+      recurringTemplateStartDate:
+          recurringTemplateStartDate ?? this.recurringTemplateStartDate,
     );
   }
 
@@ -199,6 +253,7 @@ class Transaction extends Equatable {
     fixedExpenseCategoryId,
     isAsset,
     maturityDate,
+    recurringTemplateId,
     createdAt,
     updatedAt,
   ];

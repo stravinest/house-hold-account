@@ -413,5 +413,119 @@ void main() {
         expect(yearly.recurringType, 'yearly');
       });
     });
+
+    group('recurringTemplateId 필드', () {
+      test('recurringTemplateId가 올바르게 초기화된다', () {
+        final tx = Transaction(
+          id: 'test-id',
+          ledgerId: 'ledger-id',
+          userId: 'user-id',
+          amount: 10000,
+          type: 'expense',
+          date: DateTime(2026, 2, 12),
+          isRecurring: true,
+          recurringType: 'monthly',
+          recurringTemplateId: 'template-123',
+          createdAt: DateTime(2026, 2, 12),
+          updatedAt: DateTime(2026, 2, 12),
+        );
+        expect(tx.recurringTemplateId, 'template-123');
+        expect(tx.isRecurring, true);
+      });
+
+      test('recurringTemplateId가 null일 수 있다', () {
+        final tx = Transaction(
+          id: 'test-id',
+          ledgerId: 'ledger-id',
+          userId: 'user-id',
+          amount: 10000,
+          type: 'expense',
+          date: DateTime(2026, 2, 12),
+          isRecurring: false,
+          createdAt: DateTime(2026, 2, 12),
+          updatedAt: DateTime(2026, 2, 12),
+        );
+        expect(tx.recurringTemplateId, isNull);
+      });
+
+      test('copyWith로 recurringTemplateId를 변경할 수 있다', () {
+        final original = Transaction(
+          id: 'test-id',
+          ledgerId: 'ledger-id',
+          userId: 'user-id',
+          amount: 10000,
+          type: 'expense',
+          date: DateTime(2026, 2, 12),
+          isRecurring: false,
+          createdAt: DateTime(2026, 2, 12),
+          updatedAt: DateTime(2026, 2, 12),
+        );
+        final updated = original.copyWith(recurringTemplateId: 'new-template');
+        expect(updated.recurringTemplateId, 'new-template');
+        expect(original.recurringTemplateId, isNull);
+      });
+
+      test('fromJson에서 recurring_template_id를 역직렬화한다', () {
+        final json = {
+          'id': 'test-id',
+          'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
+          'amount': 10000,
+          'type': 'expense',
+          'date': '2026-02-12',
+          'is_recurring': true,
+          'recurring_type': 'monthly',
+          'recurring_template_id': 'template-abc',
+          'created_at': '2026-02-12T10:00:00.000',
+          'updated_at': '2026-02-12T11:00:00.000',
+        };
+        final tx = Transaction.fromJson(json);
+        expect(tx.recurringTemplateId, 'template-abc');
+      });
+
+      test('fromJson에서 recurring_template_id가 null이면 null을 반환한다', () {
+        final json = {
+          'id': 'test-id',
+          'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
+          'amount': 10000,
+          'type': 'expense',
+          'date': '2026-02-12',
+          'is_recurring': false,
+          'created_at': '2026-02-12T10:00:00.000',
+          'updated_at': '2026-02-12T11:00:00.000',
+        };
+        final tx = Transaction.fromJson(json);
+        expect(tx.recurringTemplateId, isNull);
+      });
+
+      test('recurringTemplateId가 props에 포함되어 Equatable 비교에 사용된다', () {
+        final tx1 = Transaction(
+          id: 'test-id',
+          ledgerId: 'ledger-id',
+          userId: 'user-id',
+          amount: 10000,
+          type: 'expense',
+          date: DateTime(2026, 2, 12),
+          isRecurring: true,
+          recurringTemplateId: 'template-1',
+          createdAt: DateTime(2026, 2, 12),
+          updatedAt: DateTime(2026, 2, 12),
+        );
+        final tx2 = Transaction(
+          id: 'test-id',
+          ledgerId: 'ledger-id',
+          userId: 'user-id',
+          amount: 10000,
+          type: 'expense',
+          date: DateTime(2026, 2, 12),
+          isRecurring: true,
+          recurringTemplateId: 'template-2',
+          createdAt: DateTime(2026, 2, 12),
+          updatedAt: DateTime(2026, 2, 12),
+        );
+        expect(tx1, isNot(equals(tx2)));
+      });
+    });
   });
 }

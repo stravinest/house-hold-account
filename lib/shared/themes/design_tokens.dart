@@ -4,6 +4,8 @@
 /// 하드코딩된 값을 사용하지 말고 이 토큰을 참조하세요.
 library;
 
+import 'dart:ui';
+
 /// 간격(Spacing) 토큰
 ///
 /// 모든 padding, margin, gap에 이 값들을 사용하세요.
@@ -225,3 +227,13 @@ class CategoryColorPalette {
 ///   ),
 /// )
 /// ```
+
+/// 고정비 배지 색상
+class FixedExpenseColors {
+  FixedExpenseColors._();
+
+  static const Color lightBackground = Color(0xFFFFE0B2);
+  static const Color lightForeground = Color(0xFFE65100);
+  static const Color darkBackground = Color(0xFF4E2C00);
+  static const Color darkForeground = Color(0xFFFFCC80);
+}

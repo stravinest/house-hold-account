@@ -505,5 +505,85 @@ void main() {
         expect(asset['type'], 'asset');
       });
     });
+
+    group('recurringTemplateId 필드', () {
+      test('fromJson에서 recurring_template_id를 역직렬화한다', () {
+        final json = {
+          'id': 'test-id',
+          'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
+          'amount': 30000,
+          'type': 'expense',
+          'date': '2026-02-12',
+          'is_recurring': true,
+          'recurring_type': 'monthly',
+          'recurring_template_id': 'tmpl-uuid-123',
+          'created_at': '2026-02-12T10:00:00.000',
+          'updated_at': '2026-02-12T11:00:00.000',
+        };
+
+        final result = TransactionModel.fromJson(json);
+        expect(result.recurringTemplateId, 'tmpl-uuid-123');
+      });
+
+      test('toJson에서 recurring_template_id를 직렬화한다', () {
+        final model = TransactionModel(
+          id: 'test-id',
+          ledgerId: 'ledger-id',
+          userId: 'user-id',
+          amount: 30000,
+          type: 'expense',
+          date: DateTime(2026, 2, 12),
+          isRecurring: true,
+          recurringType: 'monthly',
+          recurringTemplateId: 'tmpl-uuid-456',
+          createdAt: DateTime(2026, 2, 12, 10, 0),
+          updatedAt: DateTime(2026, 2, 12, 11, 0),
+        );
+
+        final json = model.toJson();
+        expect(json['recurring_template_id'], 'tmpl-uuid-456');
+      });
+
+      test('recurringTemplateId가 null일 때 toJson에서 null을 출력한다', () {
+        final model = TransactionModel(
+          id: 'test-id',
+          ledgerId: 'ledger-id',
+          userId: 'user-id',
+          amount: 5000,
+          type: 'expense',
+          date: DateTime(2026, 2, 12),
+          isRecurring: false,
+          createdAt: DateTime(2026, 2, 12, 10, 0),
+          updatedAt: DateTime(2026, 2, 12, 11, 0),
+        );
+
+        final json = model.toJson();
+        expect(json['recurring_template_id'], isNull);
+      });
+
+      test('fromJson -> toJson 왕복 변환 시 recurring_template_id가 보존된다', () {
+        final originalJson = {
+          'id': 'test-id',
+          'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
+          'amount': 10000,
+          'type': 'expense',
+          'date': '2026-02-12',
+          'is_recurring': true,
+          'recurring_type': 'monthly',
+          'recurring_template_id': 'tmpl-roundtrip',
+          'is_fixed_expense': false,
+          'is_asset': false,
+          'created_at': '2026-02-12T10:00:00.000Z',
+          'updated_at': '2026-02-12T11:00:00.000Z',
+        };
+
+        final model = TransactionModel.fromJson(originalJson);
+        final convertedJson = model.toJson();
+
+        expect(convertedJson['recurring_template_id'], 'tmpl-roundtrip');
+      });
+    });
   });
 }

@@ -1066,6 +1066,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get installmentAmountError => '금액이 개월 수보다 커야 합니다';
 
   @override
+  String installmentProgress(int current, int total) {
+    return '$current/$total개월';
+  }
+
+  @override
   String categoryAddType(String type) {
     return '$type 카테고리 추가';
   }
@@ -2892,4 +2897,103 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get settingsUpdate => '업데이트';
+
+  @override
+  String get recurringTemplateManagement => '반복 거래 관리';
+
+  @override
+  String get recurringTemplateEmpty => '등록된 반복 거래가 없습니다';
+
+  @override
+  String get recurringTemplateActive => '자동저장';
+
+  @override
+  String get recurringTemplatePaused => '중지';
+
+  @override
+  String get recurringTemplateResume => '재개';
+
+  @override
+  String get recurringTemplatePause => '중지';
+
+  @override
+  String get recurringTemplateDelete => '삭제';
+
+  @override
+  String get recurringTemplateEdit => '수정';
+
+  @override
+  String get recurringTemplateDeleteConfirm => '이 반복 거래를 삭제하시겠습니까?';
+
+  @override
+  String get recurringTemplateDeleteDescription => '삭제하면 이후 거래가 자동 생성되지 않습니다.';
+
+  @override
+  String get recurringTemplateResumed => '반복 거래가 재개되었습니다';
+
+  @override
+  String get recurringTemplatePausedMessage => '반복 거래가 중지되었습니다';
+
+  @override
+  String get recurringTemplateDeleted => '반복 거래가 삭제되었습니다';
+
+  @override
+  String get recurringTemplateUpdated => '반복 거래가 수정되었습니다';
+
+  @override
+  String get recurringDeleteTitle => '반복 거래 삭제';
+
+  @override
+  String get recurringDeleteMessage => '이 거래는 반복 거래입니다. 어떻게 삭제하시겠습니까?';
+
+  @override
+  String get recurringDeleteThisOnly => '이 거래만 삭제';
+
+  @override
+  String get recurringDeleteAllFuture => '이후 반복 중단';
+
+  @override
+  String get recurringTypeDaily => '매일';
+
+  @override
+  String get recurringTypeMonthly => '매월';
+
+  @override
+  String get recurringTypeYearly => '매년';
+
+  @override
+  String get recurringNoEndDate => '종료일 없음';
+
+  @override
+  String get recurringDaySuffix => '일';
+
+  @override
+  String get recurringMonthSuffix => '월';
+
+  @override
+  String get recurringTemplateEditTitle => '반복 거래 수정';
+
+  @override
+  String get recurringTemplateEditAmount => '금액';
+
+  @override
+  String get recurringTemplateEditMemo => '메모';
+
+  @override
+  String get recurringTemplateEditCategory => '카테고리';
+
+  @override
+  String get recurringTemplateEditPaymentMethod => '결제수단';
+
+  @override
+  String get recurringTemplateEditRecurringType => '반복 주기';
+
+  @override
+  String get recurringTemplateEditEndDate => '종료일';
+
+  @override
+  String get recurringTemplateEditNoEndDate => '종료일 없음';
+
+  @override
+  String get recurringTemplateEditSetEndDate => '종료일 설정';
 }

@@ -188,18 +188,34 @@ class _SearchResultItem extends StatelessWidget {
         onDetailClosed?.call();
       },
       leading: CategoryIcon(
-        icon: transaction.categoryIcon ?? '',
-        name: transaction.categoryName ?? '',
-        color: transaction.categoryColor ?? '#9E9E9E',
+        icon: (transaction.isFixedExpense
+                ? transaction.fixedExpenseCategoryIcon
+                : transaction.categoryIcon) ??
+            '',
+        name: (transaction.isFixedExpense
+                ? transaction.fixedExpenseCategoryName
+                : transaction.categoryName) ??
+            '',
+        color: (transaction.isFixedExpense
+                ? transaction.fixedExpenseCategoryColor
+                : transaction.categoryColor) ??
+            '#9E9E9E',
         size: CategoryIconSize.medium,
       ),
-      title: Text(transaction.categoryName ?? l10n.searchUncategorized),
+      title: Text(
+        (transaction.isFixedExpense
+                ? transaction.fixedExpenseCategoryName
+                : transaction.categoryName) ??
+            l10n.searchUncategorized,
+      ),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (transaction.title != null && transaction.title!.isNotEmpty)
             Text(
-              transaction.title!,
+              transaction.isInstallment && transaction.installmentTotalMonths > 0
+                  ? '${transaction.title!} ${AppLocalizations.of(context).installmentProgress(transaction.installmentCurrentMonth, transaction.installmentTotalMonths)}'
+                  : transaction.title!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),

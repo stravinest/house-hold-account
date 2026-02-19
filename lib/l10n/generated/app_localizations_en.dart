@@ -1088,6 +1088,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get installmentAmountError => 'Amount must be greater than months';
 
   @override
+  String installmentProgress(int current, int total) {
+    return '$current/$total months';
+  }
+
+  @override
   String categoryAddType(String type) {
     return 'Add $type category';
   }
@@ -2973,4 +2978,106 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsUpdate => 'Update';
+
+  @override
+  String get recurringTemplateManagement => 'Recurring Transactions';
+
+  @override
+  String get recurringTemplateEmpty => 'No recurring transactions';
+
+  @override
+  String get recurringTemplateActive => 'Active';
+
+  @override
+  String get recurringTemplatePaused => 'Paused';
+
+  @override
+  String get recurringTemplateResume => 'Resume';
+
+  @override
+  String get recurringTemplatePause => 'Pause';
+
+  @override
+  String get recurringTemplateDelete => 'Delete';
+
+  @override
+  String get recurringTemplateEdit => 'Edit';
+
+  @override
+  String get recurringTemplateDeleteConfirm =>
+      'Delete this recurring transaction?';
+
+  @override
+  String get recurringTemplateDeleteDescription =>
+      'Future transactions will not be generated.';
+
+  @override
+  String get recurringTemplateResumed => 'Recurring transaction resumed';
+
+  @override
+  String get recurringTemplatePausedMessage => 'Recurring transaction paused';
+
+  @override
+  String get recurringTemplateDeleted => 'Recurring transaction deleted';
+
+  @override
+  String get recurringTemplateUpdated => 'Recurring transaction updated';
+
+  @override
+  String get recurringDeleteTitle => 'Delete Recurring Transaction';
+
+  @override
+  String get recurringDeleteMessage =>
+      'This is a recurring transaction. How would you like to delete it?';
+
+  @override
+  String get recurringDeleteThisOnly => 'Delete this only';
+
+  @override
+  String get recurringDeleteAllFuture => 'Stop all future';
+
+  @override
+  String get recurringTypeDaily => 'Daily';
+
+  @override
+  String get recurringTypeMonthly => 'Monthly';
+
+  @override
+  String get recurringTypeYearly => 'Yearly';
+
+  @override
+  String get recurringNoEndDate => 'No end date';
+
+  @override
+  String get recurringDaySuffix => '';
+
+  @override
+  String get recurringMonthSuffix => '/';
+
+  @override
+  String get recurringTemplateEditTitle => 'Edit Recurring Transaction';
+
+  @override
+  String get recurringTemplateEditAmount => 'Amount';
+
+  @override
+  String get recurringTemplateEditMemo => 'Memo';
+
+  @override
+  String get recurringTemplateEditCategory => 'Category';
+
+  @override
+  String get recurringTemplateEditPaymentMethod => 'Payment Method';
+
+  @override
+  String get recurringTemplateEditRecurringType => 'Recurring Type';
+
+  @override
+  String get recurringTemplateEditEndDate => 'End Date';
+
+  @override
+  String get recurringTemplateEditNoEndDate => 'No end date';
+
+  @override
+  String get recurringTemplateEditSetEndDate => 'Set end date';
 }

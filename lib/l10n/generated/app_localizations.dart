@@ -2084,6 +2084,12 @@ abstract class AppLocalizations {
   /// **'금액이 개월 수보다 커야 합니다'**
   String get installmentAmountError;
 
+  /// No description provided for @installmentProgress.
+  ///
+  /// In ko, this message translates to:
+  /// **'{current}/{total}개월'**
+  String installmentProgress(int current, int total);
+
   /// No description provided for @categoryAddType.
   ///
   /// In ko, this message translates to:
@@ -5484,6 +5490,204 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'업데이트'**
   String get settingsUpdate;
+
+  /// No description provided for @recurringTemplateManagement.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 거래 관리'**
+  String get recurringTemplateManagement;
+
+  /// No description provided for @recurringTemplateEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 반복 거래가 없습니다'**
+  String get recurringTemplateEmpty;
+
+  /// No description provided for @recurringTemplateActive.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동저장'**
+  String get recurringTemplateActive;
+
+  /// No description provided for @recurringTemplatePaused.
+  ///
+  /// In ko, this message translates to:
+  /// **'중지'**
+  String get recurringTemplatePaused;
+
+  /// No description provided for @recurringTemplateResume.
+  ///
+  /// In ko, this message translates to:
+  /// **'재개'**
+  String get recurringTemplateResume;
+
+  /// No description provided for @recurringTemplatePause.
+  ///
+  /// In ko, this message translates to:
+  /// **'중지'**
+  String get recurringTemplatePause;
+
+  /// No description provided for @recurringTemplateDelete.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제'**
+  String get recurringTemplateDelete;
+
+  /// No description provided for @recurringTemplateEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'수정'**
+  String get recurringTemplateEdit;
+
+  /// No description provided for @recurringTemplateDeleteConfirm.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 반복 거래를 삭제하시겠습니까?'**
+  String get recurringTemplateDeleteConfirm;
+
+  /// No description provided for @recurringTemplateDeleteDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'삭제하면 이후 거래가 자동 생성되지 않습니다.'**
+  String get recurringTemplateDeleteDescription;
+
+  /// No description provided for @recurringTemplateResumed.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 거래가 재개되었습니다'**
+  String get recurringTemplateResumed;
+
+  /// No description provided for @recurringTemplatePausedMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 거래가 중지되었습니다'**
+  String get recurringTemplatePausedMessage;
+
+  /// No description provided for @recurringTemplateDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 거래가 삭제되었습니다'**
+  String get recurringTemplateDeleted;
+
+  /// No description provided for @recurringTemplateUpdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 거래가 수정되었습니다'**
+  String get recurringTemplateUpdated;
+
+  /// No description provided for @recurringDeleteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 거래 삭제'**
+  String get recurringDeleteTitle;
+
+  /// No description provided for @recurringDeleteMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 거래는 반복 거래입니다. 어떻게 삭제하시겠습니까?'**
+  String get recurringDeleteMessage;
+
+  /// No description provided for @recurringDeleteThisOnly.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 거래만 삭제'**
+  String get recurringDeleteThisOnly;
+
+  /// No description provided for @recurringDeleteAllFuture.
+  ///
+  /// In ko, this message translates to:
+  /// **'이후 반복 중단'**
+  String get recurringDeleteAllFuture;
+
+  /// No description provided for @recurringTypeDaily.
+  ///
+  /// In ko, this message translates to:
+  /// **'매일'**
+  String get recurringTypeDaily;
+
+  /// No description provided for @recurringTypeMonthly.
+  ///
+  /// In ko, this message translates to:
+  /// **'매월'**
+  String get recurringTypeMonthly;
+
+  /// No description provided for @recurringTypeYearly.
+  ///
+  /// In ko, this message translates to:
+  /// **'매년'**
+  String get recurringTypeYearly;
+
+  /// No description provided for @recurringNoEndDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'종료일 없음'**
+  String get recurringNoEndDate;
+
+  /// No description provided for @recurringDaySuffix.
+  ///
+  /// In ko, this message translates to:
+  /// **'일'**
+  String get recurringDaySuffix;
+
+  /// No description provided for @recurringMonthSuffix.
+  ///
+  /// In ko, this message translates to:
+  /// **'월'**
+  String get recurringMonthSuffix;
+
+  /// No description provided for @recurringTemplateEditTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 거래 수정'**
+  String get recurringTemplateEditTitle;
+
+  /// No description provided for @recurringTemplateEditAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액'**
+  String get recurringTemplateEditAmount;
+
+  /// No description provided for @recurringTemplateEditMemo.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모'**
+  String get recurringTemplateEditMemo;
+
+  /// No description provided for @recurringTemplateEditCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리'**
+  String get recurringTemplateEditCategory;
+
+  /// No description provided for @recurringTemplateEditPaymentMethod.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단'**
+  String get recurringTemplateEditPaymentMethod;
+
+  /// No description provided for @recurringTemplateEditRecurringType.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복 주기'**
+  String get recurringTemplateEditRecurringType;
+
+  /// No description provided for @recurringTemplateEditEndDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'종료일'**
+  String get recurringTemplateEditEndDate;
+
+  /// No description provided for @recurringTemplateEditNoEndDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'종료일 없음'**
+  String get recurringTemplateEditNoEndDate;
+
+  /// No description provided for @recurringTemplateEditSetEndDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'종료일 설정'**
+  String get recurringTemplateEditSetEndDate;
 }
 
 class _AppLocalizationsDelegate

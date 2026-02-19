@@ -38,7 +38,7 @@ class StatisticsRepository {
         .select(
           useFixedExpenseCategory
               ? 'amount, fixed_expense_category_id, is_fixed_expense, fixed_expense_categories(name, icon, color)'
-              : 'amount, category_id, is_fixed_expense, categories(name, icon, color)',
+              : 'amount, category_id, is_fixed_expense, fixed_expense_category_id, categories(name, icon, color), fixed_expense_categories(name, icon, color)',
         )
         .eq('ledger_id', ledgerId)
         .eq('type', type)
@@ -100,8 +100,37 @@ class StatisticsRepository {
         categoryIcon = _fixedExpenseIcon;
         categoryColor = _fixedExpenseColor;
       } else {
-        // 기존 로직: 원래 카테고리대로 그룹화
-        if (categoryId == null) {
+        // 고정비 거래는 fixed_expense_categories에서 카테고리 정보를 가져옴
+        if (isFixedExpense && !useFixedExpenseCategory) {
+          final fixedCategory =
+              rowMap['fixed_expense_categories'] as Map<String, dynamic>?;
+          final fixedCategoryId =
+              rowMap['fixed_expense_category_id']?.toString();
+          if (fixedCategoryId != null) {
+            groupKey = 'fixed_$fixedCategoryId';
+            if (fixedCategory != null) {
+              categoryName = fixedCategory['name'].toString();
+              categoryIcon = fixedCategory['icon'].toString();
+              categoryColor = fixedCategory['color'].toString();
+            } else {
+              // 조인 실패 시 기본값 사용
+              categoryName = _uncategorizedName;
+              categoryIcon = _uncategorizedIcon;
+              categoryColor = _uncategorizedColor;
+            }
+          } else if (categoryId != null && category != null) {
+            // 고정비 카테고리가 없으면 일반 카테고리로 폴백
+            groupKey = categoryId;
+            categoryName = category['name'].toString();
+            categoryIcon = category['icon'].toString();
+            categoryColor = category['color'].toString();
+          } else {
+            groupKey = '_uncategorized_';
+            categoryName = _uncategorizedName;
+            categoryIcon = _uncategorizedIcon;
+            categoryColor = _uncategorizedColor;
+          }
+        } else if (categoryId == null) {
           groupKey = '_uncategorized_';
           categoryName = _uncategorizedName;
           categoryIcon = _uncategorizedIcon;
@@ -157,7 +186,7 @@ class StatisticsRepository {
     var query = _client
         .from('transactions')
         .select(
-          'amount, category_id, user_id, is_fixed_expense, categories(name, icon, color), profiles!user_id(display_name, email, color)',
+          'amount, category_id, user_id, is_fixed_expense, fixed_expense_category_id, categories(name, icon, color), fixed_expense_categories(name, icon, color), profiles!user_id(display_name, email, color)',
         )
         .eq('ledger_id', ledgerId)
         .eq('type', type)
@@ -189,7 +218,7 @@ class StatisticsRepository {
       if (userId == null) continue;
 
       final amount = (rowMap['amount'] as num?)?.toInt() ?? 0;
-      final categoryId = rowMap['category_id']?.toString() ?? '_uncategorized_';
+      final isFixedExpense = rowMap['is_fixed_expense'] == true;
       final category = rowMap['categories'] as Map<String, dynamic>?;
       final profile = rowMap['profiles'] as Map<String, dynamic>?;
 
@@ -199,11 +228,35 @@ class StatisticsRepository {
       final userColor = profile?['color'] as String? ?? '#4CAF50';
       final userName = displayName ?? email?.split('@').first ?? 'Unknown';
 
-      // 카테고리 정보 추출
-      final categoryName = category?['name']?.toString() ?? _uncategorizedName;
-      final categoryIcon = category?['icon']?.toString() ?? _uncategorizedIcon;
-      final categoryColor =
-          category?['color']?.toString() ?? _uncategorizedColor;
+      // 카테고리 정보 추출 (고정비 거래는 고정비 카테고리 사용)
+      final String categoryId;
+      final String categoryName;
+      final String categoryIcon;
+      final String categoryColor;
+
+      if (isFixedExpense) {
+        final fixedCategory =
+            rowMap['fixed_expense_categories'] as Map<String, dynamic>?;
+        final fixedCategoryId =
+            rowMap['fixed_expense_category_id']?.toString();
+        if (fixedCategoryId != null && fixedCategory != null) {
+          categoryId = 'fixed_$fixedCategoryId';
+          categoryName = fixedCategory['name'].toString();
+          categoryIcon = fixedCategory['icon'].toString();
+          categoryColor = fixedCategory['color'].toString();
+        } else {
+          categoryId = '_uncategorized_';
+          categoryName = _uncategorizedName;
+          categoryIcon = _uncategorizedIcon;
+          categoryColor = _uncategorizedColor;
+        }
+      } else {
+        categoryId = rowMap['category_id']?.toString() ?? '_uncategorized_';
+        categoryName = category?['name']?.toString() ?? _uncategorizedName;
+        categoryIcon = category?['icon']?.toString() ?? _uncategorizedIcon;
+        categoryColor =
+            category?['color']?.toString() ?? _uncategorizedColor;
+      }
 
       // 사용자 통계 초기화
       if (!userStats.containsKey(userId)) {
@@ -748,9 +801,14 @@ class StatisticsRepository {
         query = query.isFilter('fixed_expense_category_id', null);
       } else {
         query = query.isFilter('category_id', null);
+        // 고정비 카테고리가 설정된 거래는 미지정에서 제외
+        query = query.or('is_fixed_expense.eq.false,fixed_expense_category_id.is.null');
       }
     } else if (categoryId == '_fixed_expense_') {
       query = query.eq('is_fixed_expense', true);
+    } else if (categoryId.startsWith('fixed_')) {
+      final actualId = categoryId.substring(6);
+      query = query.eq('fixed_expense_category_id', actualId);
     } else if (isFixedExpenseFilter) {
       query = query.eq('fixed_expense_category_id', categoryId);
     } else {

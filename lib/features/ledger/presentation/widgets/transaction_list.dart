@@ -204,14 +204,20 @@ class _TransactionCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color:
-                        _parseColor(transaction.categoryColor) ??
+                    color: _parseColor(
+                          transaction.isFixedExpense
+                              ? transaction.fixedExpenseCategoryColor
+                              : transaction.categoryColor,
+                        ) ??
                         colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(BorderRadiusToken.md),
                   ),
                   child: Center(
                     child: Text(
-                      transaction.categoryIcon ?? '📦',
+                      (transaction.isFixedExpense
+                              ? transaction.fixedExpenseCategoryIcon
+                              : transaction.categoryIcon) ??
+                          '📦',
                       style: const TextStyle(fontSize: 24),
                     ),
                   ),
@@ -225,12 +231,33 @@ class _TransactionCard extends StatelessWidget {
                     children: [
                       if (transaction.title != null &&
                           transaction.title!.isNotEmpty) ...[
-                        Text(
-                          transaction.title!,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w600),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                transaction.title!,
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.w600),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (transaction.isInstallment &&
+                                transaction.installmentTotalMonths > 0) ...[
+                              const SizedBox(width: 4),
+                              Text(
+                                l10n.installmentProgress(
+                                  transaction.installmentCurrentMonth,
+                                  transaction.installmentTotalMonths,
+                                ),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                              ),
+                            ],
+                          ],
                         ),
                       ] else ...[
                         Text(

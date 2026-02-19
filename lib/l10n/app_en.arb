@@ -344,6 +344,17 @@
   "installmentPreview": "Installment Preview",
   "installmentApply": "Apply Installment",
   "installmentAmountError": "Amount must be greater than months",
+  "installmentProgress": "{current}/{total} months",
+  "@installmentProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "categoryAddType": "Add {type} category",
   "categoryNameHintExample": "e.g., Food, Transport",
   "categoryDeleteConfirm": "Delete '{name}' category?",
@@ -1010,5 +1021,39 @@
   },
   "settingsUpToDate": "Up to date",
   "settingsCheckUpdate": "Check for updates",
-  "settingsUpdate": "Update"
+  "settingsUpdate": "Update",
+
+  "recurringTemplateManagement": "Recurring Transactions",
+  "recurringTemplateEmpty": "No recurring transactions",
+  "recurringTemplateActive": "Active",
+  "recurringTemplatePaused": "Paused",
+  "recurringTemplateResume": "Resume",
+  "recurringTemplatePause": "Pause",
+  "recurringTemplateDelete": "Delete",
+  "recurringTemplateEdit": "Edit",
+  "recurringTemplateDeleteConfirm": "Delete this recurring transaction?",
+  "recurringTemplateDeleteDescription": "Future transactions will not be generated.",
+  "recurringTemplateResumed": "Recurring transaction resumed",
+  "recurringTemplatePausedMessage": "Recurring transaction paused",
+  "recurringTemplateDeleted": "Recurring transaction deleted",
+  "recurringTemplateUpdated": "Recurring transaction updated",
+  "recurringDeleteTitle": "Delete Recurring Transaction",
+  "recurringDeleteMessage": "This is a recurring transaction. How would you like to delete it?",
+  "recurringDeleteThisOnly": "Delete this only",
+  "recurringDeleteAllFuture": "Stop all future",
+  "recurringTypeDaily": "Daily",
+  "recurringTypeMonthly": "Monthly",
+  "recurringTypeYearly": "Yearly",
+  "recurringNoEndDate": "No end date",
+  "recurringDaySuffix": "",
+  "recurringMonthSuffix": "/",
+  "recurringTemplateEditTitle": "Edit Recurring Transaction",
+  "recurringTemplateEditAmount": "Amount",
+  "recurringTemplateEditMemo": "Memo",
+  "recurringTemplateEditCategory": "Category",
+  "recurringTemplateEditPaymentMethod": "Payment Method",
+  "recurringTemplateEditRecurringType": "Recurring Type",
+  "recurringTemplateEditEndDate": "End Date",
+  "recurringTemplateEditNoEndDate": "No end date",
+  "recurringTemplateEditSetEndDate": "Set end date"
 }

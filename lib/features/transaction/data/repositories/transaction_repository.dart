@@ -21,7 +21,7 @@ class TransactionRepository {
     final response = await _client
         .from('transactions')
         .select(
-          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, color)',
+          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, icon, color), recurring_templates(start_date)',
         )
         .eq('ledger_id', ledgerId)
         .eq('date', dateStr)
@@ -44,7 +44,7 @@ class TransactionRepository {
     final response = await _client
         .from('transactions')
         .select(
-          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, color)',
+          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, icon, color), recurring_templates(start_date)',
         )
         .eq('ledger_id', ledgerId)
         .gte('date', startStr)
@@ -121,7 +121,7 @@ class TransactionRepository {
         .from('transactions')
         .insert(data)
         .select(
-          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, color)',
+          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, icon, color), recurring_templates(start_date)',
         )
         .single();
 
@@ -172,7 +172,7 @@ class TransactionRepository {
         .update(updates)
         .eq('id', id)
         .select(
-          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, color)',
+          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, icon, color), recurring_templates(start_date)',
         )
         .single();
 
@@ -462,7 +462,7 @@ class TransactionRepository {
     final response = await _client
         .from('recurring_templates')
         .select(
-          '*, categories(name, icon, color), payment_methods(name), fixed_expense_categories(name, color)',
+          '*, categories(name, icon, color), payment_methods(name), fixed_expense_categories(name, icon, color)',
         )
         .eq('ledger_id', ledgerId)
         .eq('is_active', true)
@@ -471,11 +471,92 @@ class TransactionRepository {
     return List<Map<String, dynamic>>.from(response);
   }
 
-  // 반복 거래 템플릿 삭제 (비활성화)
+  // 반복 거래 템플릿 삭제
   Future<void> deleteRecurringTemplate(String templateId) async {
     await _client
         .from('recurring_templates')
-        .update({'is_active': false, 'updated_at': DateTimeUtils.nowUtcIso()})
+        .delete()
         .eq('id', templateId);
+  }
+
+  // 반복 거래 템플릿 활성화/비활성화 토글
+  Future<void> toggleRecurringTemplate(String templateId, bool isActive) async {
+    await _client
+        .from('recurring_templates')
+        .update({
+          'is_active': isActive,
+          'updated_at': DateTimeUtils.nowUtcIso(),
+        })
+        .eq('id', templateId);
+  }
+
+  // 반복 거래 템플릿 수정
+  Future<void> updateRecurringTemplate(
+    String templateId, {
+    int? amount,
+    String? title,
+    String? memo,
+    String? recurringType,
+    DateTime? endDate,
+    bool clearEndDate = false,
+    String? categoryId,
+    String? paymentMethodId,
+    String? fixedExpenseCategoryId,
+  }) async {
+    final updates = <String, dynamic>{
+      'updated_at': DateTimeUtils.nowUtcIso(),
+    };
+    if (amount != null) updates['amount'] = amount;
+    if (title != null) updates['title'] = title;
+    if (memo != null) updates['memo'] = memo;
+    if (recurringType != null) updates['recurring_type'] = recurringType;
+    if (endDate != null) {
+      updates['end_date'] = endDate.toIso8601String().split('T').first;
+    } else if (clearEndDate) {
+      updates['end_date'] = null;
+    }
+    if (categoryId != null) updates['category_id'] = categoryId;
+    if (paymentMethodId != null) {
+      updates['payment_method_id'] = paymentMethodId;
+    }
+    if (fixedExpenseCategoryId != null) {
+      updates['fixed_expense_category_id'] = fixedExpenseCategoryId;
+    }
+
+    await _client
+        .from('recurring_templates')
+        .update(updates)
+        .eq('id', templateId);
+  }
+
+  // 반복 거래 템플릿 목록 조회 (활성 + 비활성 모두)
+  Future<List<Map<String, dynamic>>> getAllRecurringTemplates({
+    required String ledgerId,
+  }) async {
+    final response = await _client
+        .from('recurring_templates')
+        .select(
+          '*, categories(name, icon, color), payment_methods(name), fixed_expense_categories(name, icon, color)',
+        )
+        .eq('ledger_id', ledgerId)
+        .order('created_at', ascending: false);
+
+    return List<Map<String, dynamic>>.from(response);
+  }
+
+  // 거래 삭제 + 템플릿 비활성화 (이후 모든 반복 중단)
+  // 템플릿 비활성화를 먼저 실행하여, 거래 삭제 실패 시에도 재생성 방지
+  Future<void> deleteTransactionAndDeactivateTemplate(
+    String transactionId,
+    String templateId,
+  ) async {
+    await _client
+        .from('recurring_templates')
+        .update({
+          'is_active': false,
+          'updated_at': DateTimeUtils.nowUtcIso(),
+        })
+        .eq('id', templateId);
+    await _client.from('transactions').delete().eq('id', transactionId);
   }
 }

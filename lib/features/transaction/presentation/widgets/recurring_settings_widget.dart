@@ -81,13 +81,21 @@ class _RecurringSettingsWidgetState
   @override
   void initState() {
     super.initState();
-    _selectedType = widget.initialSettings?.type ?? RecurringType.monthly;
+    _selectedType = widget.initialSettings?.type ?? RecurringType.none;
     _endDate = widget.initialSettings?.endDate;
   }
 
   @override
   void didUpdateWidget(covariant RecurringSettingsWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // 외부에서 반복주기 타입이 변경된 경우 반영 (고정비 토글 등)
+    final newType = widget.initialSettings?.type;
+    if (newType != null && newType != _selectedType) {
+      setState(() {
+        _selectedType = newType;
+        _endDate = null;
+      });
+    }
     // 시작 날짜가 변경되면 종료 날짜도 업데이트
     if (oldWidget.startDate != widget.startDate && _endDate != null) {
       if (_endDate!.isBefore(widget.startDate)) {
@@ -290,6 +298,10 @@ class _RecurringSettingsWidgetState
         // 반복 주기 타입 선택
         SegmentedButton<RecurringType>(
           segments: [
+            ButtonSegment(
+              value: RecurringType.none,
+              label: Text(l10n.recurringNone),
+            ),
             ButtonSegment(
               value: RecurringType.daily,
               label: Text(l10n.recurringDaily),

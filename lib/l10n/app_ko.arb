@@ -514,6 +514,17 @@
   "installmentPreview": "할부 계산 미리보기",
   "installmentApply": "할부 적용",
   "installmentAmountError": "금액이 개월 수보다 커야 합니다",
+  "installmentProgress": "{current}/{total}개월",
+  "@installmentProgress": {
+    "placeholders": {
+      "current": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "categoryAddType": "{type} 카테고리 추가",
   "@categoryAddType": {
     "placeholders": {
@@ -1497,5 +1508,39 @@
   },
   "settingsUpToDate": "최신 버전입니다",
   "settingsCheckUpdate": "업데이트 확인",
-  "settingsUpdate": "업데이트"
+  "settingsUpdate": "업데이트",
+
+  "recurringTemplateManagement": "반복 거래 관리",
+  "recurringTemplateEmpty": "등록된 반복 거래가 없습니다",
+  "recurringTemplateActive": "자동저장",
+  "recurringTemplatePaused": "중지",
+  "recurringTemplateResume": "재개",
+  "recurringTemplatePause": "중지",
+  "recurringTemplateDelete": "삭제",
+  "recurringTemplateEdit": "수정",
+  "recurringTemplateDeleteConfirm": "이 반복 거래를 삭제하시겠습니까?",
+  "recurringTemplateDeleteDescription": "삭제하면 이후 거래가 자동 생성되지 않습니다.",
+  "recurringTemplateResumed": "반복 거래가 재개되었습니다",
+  "recurringTemplatePausedMessage": "반복 거래가 중지되었습니다",
+  "recurringTemplateDeleted": "반복 거래가 삭제되었습니다",
+  "recurringTemplateUpdated": "반복 거래가 수정되었습니다",
+  "recurringDeleteTitle": "반복 거래 삭제",
+  "recurringDeleteMessage": "이 거래는 반복 거래입니다. 어떻게 삭제하시겠습니까?",
+  "recurringDeleteThisOnly": "이 거래만 삭제",
+  "recurringDeleteAllFuture": "이후 반복 중단",
+  "recurringTypeDaily": "매일",
+  "recurringTypeMonthly": "매월",
+  "recurringTypeYearly": "매년",
+  "recurringNoEndDate": "종료일 없음",
+  "recurringDaySuffix": "일",
+  "recurringMonthSuffix": "월",
+  "recurringTemplateEditTitle": "반복 거래 수정",
+  "recurringTemplateEditAmount": "금액",
+  "recurringTemplateEditMemo": "메모",
+  "recurringTemplateEditCategory": "카테고리",
+  "recurringTemplateEditPaymentMethod": "결제수단",
+  "recurringTemplateEditRecurringType": "반복 주기",
+  "recurringTemplateEditEndDate": "종료일",
+  "recurringTemplateEditNoEndDate": "종료일 없음",
+  "recurringTemplateEditSetEndDate": "종료일 설정"
 }

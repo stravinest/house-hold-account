@@ -254,6 +254,12 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
                 _isInstallmentMode = false;
                 _installmentResult = null;
                 _selectedPaymentMethod = null;
+                if (_recurringSettings.isFixedExpense) {
+                  _recurringSettings = _recurringSettings.copyWith(
+                    isFixedExpense: false,
+                  );
+                  _selectedFixedExpenseCategory = null;
+                }
               }
             }),
           ),
@@ -288,7 +294,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             ),
             const Divider(),
           ],
-          if (!_isInstallmentMode && _recurringSettings.isFixedExpense) ...[
+          if (!_isInstallmentMode) ...[
             _buildRecurring(),
             const Divider(),
           ],

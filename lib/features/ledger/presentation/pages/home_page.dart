@@ -1080,6 +1080,14 @@ class MoreTabView extends ConsumerWidget {
             context.push(Routes.fixedExpense);
           },
         ),
+        ListTile(
+          leading: const Icon(Icons.event_repeat),
+          title: Text(l10n.recurringTemplateManagement),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () {
+            context.push(Routes.recurringTemplates);
+          },
+        ),
         const Divider(),
         ListTile(
           leading: const Icon(Icons.settings_outlined),
@@ -1168,11 +1176,16 @@ class _DailyUserSummary extends ConsumerWidget {
             final userName = tx.userName ?? l10n.user;
             final colorHex = tx.userColor ?? '#A8D8EA';
             final userColor = _parseColor(colorHex);
-            final categoryDisplay =
-                tx.categoryName ?? l10n.categoryUncategorized;
+            final categoryDisplay = (tx.isFixedExpense
+                    ? tx.fixedExpenseCategoryName
+                    : tx.categoryName) ??
+                l10n.categoryUncategorized;
+            final installmentSuffix = tx.isInstallment && tx.installmentTotalMonths > 0
+                ? ' ${l10n.installmentProgress(tx.installmentCurrentMonth, tx.installmentTotalMonths)}'
+                : '';
             final String description;
             if (tx.title != null && tx.title!.isNotEmpty) {
-              description = '$categoryDisplay · ${tx.title}';
+              description = '$categoryDisplay · ${tx.title}$installmentSuffix';
             } else {
               description = categoryDisplay;
             }

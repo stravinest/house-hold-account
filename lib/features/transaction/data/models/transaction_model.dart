@@ -21,6 +21,7 @@ class TransactionModel extends Transaction {
     super.fixedExpenseCategoryId,
     super.isAsset = false,
     super.maturityDate,
+    super.recurringTemplateId,
     required super.createdAt,
     required super.updatedAt,
     super.categoryName,
@@ -30,7 +31,9 @@ class TransactionModel extends Transaction {
     super.userColor,
     super.paymentMethodName,
     super.fixedExpenseCategoryName,
+    super.fixedExpenseCategoryIcon,
     super.fixedExpenseCategoryColor,
+    super.recurringTemplateStartDate,
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
@@ -39,6 +42,8 @@ class TransactionModel extends Transaction {
     final paymentMethod = json['payment_methods'] as Map<String, dynamic>?;
     final fixedExpenseCategory =
         json['fixed_expense_categories'] as Map<String, dynamic>?;
+    final recurringTemplate =
+        json['recurring_templates'] as Map<String, dynamic>?;
 
     return TransactionModel(
       id: json['id'] as String,
@@ -65,6 +70,7 @@ class TransactionModel extends Transaction {
       maturityDate: json['maturity_date'] != null
           ? DateTimeUtils.parseLocalDate(json['maturity_date'] as String)
           : null,
+      recurringTemplateId: json['recurring_template_id'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       categoryName: category?['name'] as String?,
@@ -76,7 +82,12 @@ class TransactionModel extends Transaction {
       userColor: profile?['color'] as String?,
       paymentMethodName: paymentMethod?['name'] as String?,
       fixedExpenseCategoryName: fixedExpenseCategory?['name'] as String?,
+      fixedExpenseCategoryIcon: fixedExpenseCategory?['icon'] as String?,
       fixedExpenseCategoryColor: fixedExpenseCategory?['color'] as String?,
+      recurringTemplateStartDate: recurringTemplate?['start_date'] != null
+          ? DateTimeUtils.parseLocalDate(
+              recurringTemplate!['start_date'] as String)
+          : null,
     );
   }
 
@@ -104,6 +115,7 @@ class TransactionModel extends Transaction {
       'maturity_date': maturityDate != null
           ? DateTimeUtils.toLocalDateOnly(maturityDate!)
           : null,
+      'recurring_template_id': recurringTemplateId,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
