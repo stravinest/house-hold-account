@@ -296,7 +296,10 @@ class _RecurringSettingsWidgetState
         ),
 
         // 반복 주기 타입 선택
-        SegmentedButton<RecurringType>(
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<RecurringType>(
+            expandedInsets: EdgeInsets.zero,
           segments: [
             ButtonSegment(
               value: RecurringType.none,
@@ -325,7 +328,7 @@ class _RecurringSettingsWidgetState
                   _notifyChange();
                 }
               : null,
-        ),
+        )),
 
         // 종료 기간 선택 (반복 주기가 선택된 경우)
         if (_selectedType != RecurringType.none) ...[
