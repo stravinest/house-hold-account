@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 
 class Transaction extends Equatable {
   final String id;
@@ -122,17 +123,18 @@ class Transaction extends Equatable {
   bool get isAssetTransaction => type == 'asset' && isAsset == true;
 
   // 할부 거래 여부 (title에 "할부" 포함 + 반복거래 + 종료일 있음)
+  // 할부 거래 여부 (반복 + 종료일 + 제목에 '할부' 포함)
   bool get isInstallment =>
       isRecurring &&
       recurringEndDate != null &&
       title != null &&
-      title!.contains('할부');
+      (title!.contains('할부') || title!.toLowerCase().contains('installment'));
 
-  // 할부 시작일 (recurringTemplateStartDate 우선, 없으면 createdAt 기반 추정)
+  // 할부 시작일 (recurringTemplateStartDate 우선, 없으면 date 기반 추정)
   DateTime? get _installmentStartDate {
     if (recurringTemplateStartDate != null) return recurringTemplateStartDate;
-    // recurring_template_id가 없는 기존 거래: createdAt의 월 첫날을 시작으로 추정
-    return DateTime(createdAt.year, createdAt.month, 1);
+    // 템플릿 정보 없는 레거시 거래: 거래 날짜의 월 첫날로 추정
+    return DateTime(date.year, date.month, 1);
   }
 
   // 할부 총 개월수
@@ -142,7 +144,11 @@ class Transaction extends Equatable {
     if (start == null) return 0;
     final end = recurringEndDate!;
     final months = (end.year - start.year) * 12 + end.month - start.month + 1;
-    return months > 0 ? months : 0;
+    if (months <= 0) {
+      debugPrint('Warning: Invalid installment period - start: $start, end: $end');
+      return 0;
+    }
+    return months;
   }
 
   // 현재 할부 회차 (1부터 시작)
@@ -151,7 +157,8 @@ class Transaction extends Equatable {
     final start = _installmentStartDate;
     if (start == null) return 0;
     final month = (date.year - start.year) * 12 + date.month - start.month + 1;
-    return month > 0 ? month : 1;
+    if (month <= 0) return 0;
+    return month;
   }
 
   // 주의: 현재 copyWith에서는 categoryId나 paymentMethodId를 null로 설정할 수 없습니다.

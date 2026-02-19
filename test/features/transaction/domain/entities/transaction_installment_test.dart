@@ -118,11 +118,12 @@ void main() {
         expect(transaction.installmentTotalMonths, 4);
       });
 
-      test('recurringTemplateStartDate가 null이면 createdAt 기반으로 추정한다', () {
-        // Given: 템플릿 시작일 없음, createdAt=2026-01-15 -> 추정 시작일=2026-01-01
+      test('recurringTemplateStartDate가 null이면 date 기반으로 추정한다', () {
+        // Given: 템플릿 시작일 없음, date=2026-01-15 -> 추정 시작일=2026-01-01
         final transaction = baseTransaction.copyWith(
           title: '카드 할부',
           isRecurring: true,
+          date: DateTime(2026, 1, 15),
           recurringEndDate: DateTime(2026, 6, 15),
           recurringTemplateStartDate: null,
         );
@@ -202,8 +203,9 @@ void main() {
         expect(transaction.installmentCurrentMonth, 3);
       });
 
-      test('recurringTemplateStartDate가 null이면 createdAt 기반으로 회차를 추정한다', () {
-        // Given: 템플릿 시작일 없음, createdAt=2026-01-15 -> 추정 시작일=2026-01-01
+      test('recurringTemplateStartDate가 null이면 date 기반으로 회차를 추정한다', () {
+        // Given: 템플릿 시작일 없음, date=2026-03-15 -> 추정 시작일=2026-03-01
+        // 시작월과 현재 거래가 같은 달이면 1회차
         final transaction = baseTransaction.copyWith(
           title: '카드 할부',
           isRecurring: true,
@@ -212,8 +214,8 @@ void main() {
           recurringTemplateStartDate: null,
         );
 
-        // When & Then: 2026-01 ~ 2026-03 = 3회차
-        expect(transaction.installmentCurrentMonth, 3);
+        // When & Then: 추정 시작 2026-03, 거래일 2026-03 = 1회차
+        expect(transaction.installmentCurrentMonth, 1);
       });
 
       test('isInstallment가 false면 0을 반환한다', () {
@@ -227,6 +229,43 @@ void main() {
         );
 
         // When & Then
+        expect(transaction.installmentCurrentMonth, 0);
+      });
+    });
+
+    group('엣지케이스 테스트', () {
+      test('종료일이 시작일보다 빠르면 totalMonths는 0을 반환한다', () {
+        final transaction = baseTransaction.copyWith(
+          title: '카드 할부',
+          isRecurring: true,
+          recurringEndDate: DateTime(2026, 1, 1),
+          recurringTemplateStartDate: DateTime(2026, 12, 31),
+        );
+
+        expect(transaction.installmentTotalMonths, 0);
+      });
+
+      test('영어 installment 제목도 할부로 인식한다', () {
+        final transaction = baseTransaction.copyWith(
+          title: 'Card Installment',
+          isRecurring: true,
+          recurringEndDate: DateTime(2026, 6, 15),
+          recurringTemplateStartDate: DateTime(2026, 1, 15),
+        );
+
+        expect(transaction.isInstallment, true);
+        expect(transaction.installmentTotalMonths, 6);
+      });
+
+      test('거래일이 시작일보다 이전이면 currentMonth는 0을 반환한다', () {
+        final transaction = baseTransaction.copyWith(
+          title: '카드 할부',
+          isRecurring: true,
+          date: DateTime(2025, 12, 15),
+          recurringEndDate: DateTime(2026, 6, 15),
+          recurringTemplateStartDate: DateTime(2026, 1, 15),
+        );
+
         expect(transaction.installmentCurrentMonth, 0);
       });
     });

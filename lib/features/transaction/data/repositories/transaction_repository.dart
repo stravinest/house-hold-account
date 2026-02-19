@@ -8,6 +8,14 @@ import '../models/transaction_model.dart';
 class TransactionRepository {
   final SupabaseClient _client;
 
+  // 거래 조회 시 사용하는 조인 select 문자열
+  static const _selectWithJoins =
+      '*, categories(name, icon, color), '
+      'profiles(display_name, email, color), '
+      'payment_methods(name), '
+      'fixed_expense_categories(name, icon, color), '
+      'recurring_templates(start_date)';
+
   TransactionRepository({SupabaseClient? client})
       : _client = client ?? SupabaseConfig.client;
 
@@ -21,7 +29,7 @@ class TransactionRepository {
     final response = await _client
         .from('transactions')
         .select(
-          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, icon, color), recurring_templates(start_date)',
+          _selectWithJoins,
         )
         .eq('ledger_id', ledgerId)
         .eq('date', dateStr)
@@ -44,7 +52,7 @@ class TransactionRepository {
     final response = await _client
         .from('transactions')
         .select(
-          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, icon, color), recurring_templates(start_date)',
+          _selectWithJoins,
         )
         .eq('ledger_id', ledgerId)
         .gte('date', startStr)
@@ -121,7 +129,7 @@ class TransactionRepository {
         .from('transactions')
         .insert(data)
         .select(
-          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, icon, color), recurring_templates(start_date)',
+          _selectWithJoins,
         )
         .single();
 
@@ -172,7 +180,7 @@ class TransactionRepository {
         .update(updates)
         .eq('id', id)
         .select(
-          '*, categories(name, icon, color), profiles(display_name, email, color), payment_methods(name), fixed_expense_categories(name, icon, color), recurring_templates(start_date)',
+          _selectWithJoins,
         )
         .single();
 
@@ -545,18 +553,14 @@ class TransactionRepository {
   }
 
   // 거래 삭제 + 템플릿 비활성화 (이후 모든 반복 중단)
-  // 템플릿 비활성화를 먼저 실행하여, 거래 삭제 실패 시에도 재생성 방지
+  // RPC 함수로 단일 트랜잭션 처리 (Race condition 방지)
   Future<void> deleteTransactionAndDeactivateTemplate(
     String transactionId,
     String templateId,
   ) async {
-    await _client
-        .from('recurring_templates')
-        .update({
-          'is_active': false,
-          'updated_at': DateTimeUtils.nowUtcIso(),
-        })
-        .eq('id', templateId);
-    await _client.from('transactions').delete().eq('id', transactionId);
+    await _client.rpc('delete_transaction_and_stop_recurring', params: {
+      'p_transaction_id': transactionId,
+      'p_template_id': templateId,
+    });
   }
 }
