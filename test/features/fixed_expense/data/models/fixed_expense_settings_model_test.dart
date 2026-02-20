@@ -10,6 +10,7 @@ void main() {
     final fixedExpenseSettingsModel = FixedExpenseSettingsModel(
       id: 'test-id',
       ledgerId: 'ledger-id',
+      userId: 'user-id',
       includeInExpense: true,
       createdAt: testCreatedAt,
       updatedAt: testUpdatedAt,
@@ -24,6 +25,7 @@ void main() {
         final json = {
           'id': 'json-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': true,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',
@@ -42,6 +44,7 @@ void main() {
         final json = {
           'id': 'test-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': false,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',
@@ -56,6 +59,7 @@ void main() {
         final json = {
           'id': 'test-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': null,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',
@@ -70,6 +74,7 @@ void main() {
         final json1 = {
           'id': 'test-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': true,
           'created_at': '2026-02-12T10:00:00.000Z',
           'updated_at': '2026-02-12T11:00:00.000Z',
@@ -78,6 +83,7 @@ void main() {
         final json2 = {
           'id': 'test-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': true,
           'created_at': '2026-02-12T10:00:00',
           'updated_at': '2026-02-12T11:00:00',
@@ -121,6 +127,7 @@ void main() {
         final model = FixedExpenseSettingsModel(
           id: 'test-id',
           ledgerId: 'ledger-id',
+          userId: 'user-id',
           includeInExpense: false,
           createdAt: testCreatedAt,
           updatedAt: testUpdatedAt,
@@ -235,6 +242,7 @@ void main() {
         final originalJson = {
           'id': 'test-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': true,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',
@@ -252,6 +260,7 @@ void main() {
         final originalJson = {
           'id': 'test-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': false,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',
@@ -269,6 +278,7 @@ void main() {
         final json = {
           'id': '',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': true,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',
@@ -284,6 +294,7 @@ void main() {
         final json = {
           'id': longId,
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': true,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',
@@ -298,6 +309,7 @@ void main() {
         final json = {
           'id': 'test-id',
           'ledger_id': '',
+          'user_id': 'user-id',
           'include_in_expense': true,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',
@@ -313,6 +325,7 @@ void main() {
         final json = {
           'id': 'test-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': true,
           'created_at': sameTime,
           'updated_at': sameTime,
@@ -327,6 +340,7 @@ void main() {
         final trueJson = {
           'id': 'test-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': true,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',
@@ -335,6 +349,7 @@ void main() {
         final falseJson = {
           'id': 'test-id',
           'ledger_id': 'ledger-id',
+          'user_id': 'user-id',
           'include_in_expense': false,
           'created_at': '2026-02-12T10:00:00.000',
           'updated_at': '2026-02-12T11:00:00.000',

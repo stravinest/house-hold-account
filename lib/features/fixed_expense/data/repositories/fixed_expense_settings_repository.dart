@@ -10,13 +10,17 @@ class FixedExpenseSettingsRepository {
   FixedExpenseSettingsRepository({SupabaseClient? client})
       : _client = client ?? SupabaseConfig.client;
 
-  // 가계부의 고정비 설정 조회
-  Future<FixedExpenseSettingsModel?> getSettings(String ledgerId) async {
+  // 가계부의 유저별 고정비 설정 조회
+  Future<FixedExpenseSettingsModel?> getSettings(
+    String ledgerId,
+    String userId,
+  ) async {
     try {
       final response = await _client
           .from('fixed_expense_settings')
           .select()
           .eq('ledger_id', ledgerId)
+          .eq('user_id', userId)
           .maybeSingle();
 
       if (response == null) return null;
@@ -28,6 +32,7 @@ class FixedExpenseSettingsRepository {
 
   Future<FixedExpenseSettingsModel> updateSettings({
     required String ledgerId,
+    required String userId,
     required bool includeInExpense,
   }) async {
     try {
@@ -35,8 +40,9 @@ class FixedExpenseSettingsRepository {
           .from('fixed_expense_settings')
           .upsert({
             'ledger_id': ledgerId,
+            'user_id': userId,
             'include_in_expense': includeInExpense,
-          }, onConflict: 'ledger_id')
+          }, onConflict: 'ledger_id,user_id')
           .select()
           .single();
 
@@ -49,18 +55,19 @@ class FixedExpenseSettingsRepository {
   // 실시간 구독
   RealtimeChannel subscribeSettings({
     required String ledgerId,
+    required String userId,
     required void Function() onSettingsChanged,
   }) {
     return _client
-        .channel('fixed_expense_settings_changes_$ledgerId')
+        .channel('fixed_expense_settings_changes_${ledgerId}_$userId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'house',
           table: 'fixed_expense_settings',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'ledger_id',
-            value: ledgerId,
+            column: 'user_id',
+            value: userId,
           ),
           callback: (payload) {
             onSettingsChanged();

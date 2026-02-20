@@ -1728,10 +1728,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get fixedExpenseIncludeInExpense => '고정비를 지출에 편입';
 
   @override
-  String get fixedExpenseIncludeInExpenseOn => '고정비가 달력과 통계의 지출에 포함됩니다';
+  String get fixedExpenseIncludeInExpenseOn => '내 캘린더 화면의 지출 합계에 고정비가 포함됩니다';
 
   @override
-  String get fixedExpenseIncludeInExpenseOff => '고정비가 달력과 통계의 지출에서 제외됩니다';
+  String get fixedExpenseIncludeInExpenseOff => '내 캘린더 화면의 지출 합계에서 고정비가 제외됩니다';
 
   @override
   String get fixedExpenseIncludedSnackbar => '고정비가 지출에 포함됩니다';

@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/providers/safe_notifier.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../data/repositories/fixed_expense_settings_repository.dart';
 import '../../domain/entities/fixed_expense_settings.dart';
@@ -12,15 +14,18 @@ final fixedExpenseSettingsRepositoryProvider =
       return FixedExpenseSettingsRepository();
     });
 
-// 현재 가계부의 고정비 설정
+// 현재 가계부의 현재 유저 고정비 설정
 final fixedExpenseSettingsProvider = FutureProvider<FixedExpenseSettings?>((
   ref,
 ) async {
   final ledgerId = ref.watch(selectedLedgerIdProvider);
   if (ledgerId == null) return null;
 
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return null;
+
   final repository = ref.watch(fixedExpenseSettingsRepositoryProvider);
-  return repository.getSettings(ledgerId);
+  return repository.getSettings(ledgerId, user.id);
 });
 
 // 고정비를 지출에 편입하는지 여부 (간편 접근용)
@@ -31,28 +36,33 @@ final includeFixedExpenseInExpenseProvider = FutureProvider<bool>((ref) async {
 
 // 고정비 설정 관리 노티파이어
 class FixedExpenseSettingsNotifier
-    extends StateNotifier<AsyncValue<FixedExpenseSettings?>> {
+    extends SafeNotifier<FixedExpenseSettings?> {
   final FixedExpenseSettingsRepository _repository;
   final String? _ledgerId;
-  final Ref _ref;
+  final String? _userId;
   RealtimeChannel? _settingsChannel;
 
-  FixedExpenseSettingsNotifier(this._repository, this._ledgerId, this._ref)
-    : super(const AsyncValue.loading()) {
-    if (_ledgerId != null) {
+  FixedExpenseSettingsNotifier(
+    this._repository,
+    this._ledgerId,
+    this._userId,
+    Ref ref,
+  ) : super(ref, const AsyncValue.loading()) {
+    if (_ledgerId != null && _userId != null) {
       loadSettings();
       _subscribeToChanges();
     } else {
-      state = const AsyncValue.data(null);
+      safeUpdateState(const AsyncValue.data(null));
     }
   }
 
   void _subscribeToChanges() {
-    if (_ledgerId == null) return;
+    if (_ledgerId == null || _userId == null) return;
 
     try {
       _settingsChannel = _repository.subscribeSettings(
         ledgerId: _ledgerId,
+        userId: _userId,
         onSettingsChanged: () {
           _refreshSettingsQuietly();
         },
@@ -63,14 +73,15 @@ class FixedExpenseSettingsNotifier
   }
 
   Future<void> _refreshSettingsQuietly() async {
-    if (_ledgerId == null) return;
+    if (_ledgerId == null || _userId == null) return;
 
     try {
-      final settings = await _repository.getSettings(_ledgerId);
-      if (mounted) {
-        state = AsyncValue.data(settings);
-        _ref.invalidate(fixedExpenseSettingsProvider);
-      }
+      final settings = await safeAsync(
+        () => _repository.getSettings(_ledgerId, _userId),
+      );
+      if (settings == null && !mounted) return;
+      safeUpdateState(AsyncValue.data(settings));
+      safeInvalidate(fixedExpenseSettingsProvider);
     } catch (e) {
       debugPrint('FixedExpenseSettings refresh fail: $e');
     }
@@ -83,42 +94,41 @@ class FixedExpenseSettingsNotifier
   }
 
   Future<void> loadSettings() async {
-    if (_ledgerId == null) {
-      state = const AsyncValue.data(null);
+    if (_ledgerId == null || _userId == null) {
+      safeUpdateState(const AsyncValue.data(null));
       return;
     }
 
-    state = const AsyncValue.loading();
+    safeUpdateState(const AsyncValue.loading());
     try {
-      final settings = await _repository.getSettings(_ledgerId);
-      if (mounted) {
-        state = AsyncValue.data(settings);
-      }
+      final settings = await safeAsync(
+        () => _repository.getSettings(_ledgerId, _userId),
+      );
+      if (!mounted) return;
+      safeUpdateState(AsyncValue.data(settings));
     } catch (e, st) {
-      if (mounted) {
-        state = AsyncValue.error(e, st);
-      }
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
 
   Future<void> updateIncludeInExpense(bool includeInExpense) async {
     if (_ledgerId == null) throw Exception('가계부를 선택해주세요');
+    if (_userId == null) throw Exception('로그인이 필요합니다');
 
     try {
-      final settings = await _repository.updateSettings(
-        ledgerId: _ledgerId,
-        includeInExpense: includeInExpense,
+      final settings = await safeAsync(
+        () => _repository.updateSettings(
+          ledgerId: _ledgerId,
+          userId: _userId,
+          includeInExpense: includeInExpense,
+        ),
       );
-
-      if (mounted) {
-        state = AsyncValue.data(settings);
-        _ref.invalidate(fixedExpenseSettingsProvider);
-      }
+      if (!mounted) return;
+      safeUpdateState(AsyncValue.data(settings));
+      safeInvalidate(fixedExpenseSettingsProvider);
     } catch (e, st) {
-      if (mounted) {
-        state = AsyncValue.error(e, st);
-      }
+      safeUpdateState(AsyncValue.error(e, st));
       rethrow;
     }
   }
@@ -131,5 +141,11 @@ final fixedExpenseSettingsNotifierProvider =
     >((ref) {
       final repository = ref.watch(fixedExpenseSettingsRepositoryProvider);
       final ledgerId = ref.watch(selectedLedgerIdProvider);
-      return FixedExpenseSettingsNotifier(repository, ledgerId, ref);
+      final user = ref.watch(currentUserProvider);
+      return FixedExpenseSettingsNotifier(
+        repository,
+        ledgerId,
+        user?.id,
+        ref,
+      );
     });

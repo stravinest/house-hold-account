@@ -3329,13 +3329,13 @@ abstract class AppLocalizations {
   /// No description provided for @fixedExpenseIncludeInExpenseOn.
   ///
   /// In ko, this message translates to:
-  /// **'고정비가 달력과 통계의 지출에 포함됩니다'**
+  /// **'내 캘린더 화면의 지출 합계에 고정비가 포함됩니다'**
   String get fixedExpenseIncludeInExpenseOn;
 
   /// No description provided for @fixedExpenseIncludeInExpenseOff.
   ///
   /// In ko, this message translates to:
-  /// **'고정비가 달력과 통계의 지출에서 제외됩니다'**
+  /// **'내 캘린더 화면의 지출 합계에서 고정비가 제외됩니다'**
   String get fixedExpenseIncludeInExpenseOff;
 
   /// No description provided for @fixedExpenseIncludedSnackbar.

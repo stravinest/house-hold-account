@@ -6,6 +6,7 @@ class FixedExpenseSettingsModel extends FixedExpenseSettings {
   const FixedExpenseSettingsModel({
     required super.id,
     required super.ledgerId,
+    required super.userId,
     required super.includeInExpense,
     required super.createdAt,
     required super.updatedAt,
@@ -15,6 +16,7 @@ class FixedExpenseSettingsModel extends FixedExpenseSettings {
     return FixedExpenseSettingsModel(
       id: json['id'] as String,
       ledgerId: json['ledger_id'] as String,
+      userId: json['user_id'] as String,
       includeInExpense: json['include_in_expense'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -25,6 +27,7 @@ class FixedExpenseSettingsModel extends FixedExpenseSettings {
     return {
       'id': id,
       'ledger_id': ledgerId,
+      'user_id': userId,
       'include_in_expense': includeInExpense,
     };
   }
@@ -39,6 +42,7 @@ class FixedExpenseSettingsModel extends FixedExpenseSettings {
   FixedExpenseSettingsModel copyWith({
     String? id,
     String? ledgerId,
+    String? userId,
     bool? includeInExpense,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -46,6 +50,7 @@ class FixedExpenseSettingsModel extends FixedExpenseSettings {
     return FixedExpenseSettingsModel(
       id: id ?? this.id,
       ledgerId: ledgerId ?? this.ledgerId,
+      userId: userId ?? this.userId,
       includeInExpense: includeInExpense ?? this.includeInExpense,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

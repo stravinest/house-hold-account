@@ -1774,11 +1774,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fixedExpenseIncludeInExpenseOn =>
-      'Fixed expenses are included in calendar and statistics';
+      'Fixed expenses are included in your calendar expense totals';
 
   @override
   String get fixedExpenseIncludeInExpenseOff =>
-      'Fixed expenses are excluded from calendar and statistics';
+      'Fixed expenses are excluded from your calendar expense totals';
 
   @override
   String get fixedExpenseIncludedSnackbar => 'Fixed expenses included';

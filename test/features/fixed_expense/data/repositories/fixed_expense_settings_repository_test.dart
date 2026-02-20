@@ -20,6 +20,7 @@ void main() {
       final mockData = {
         'id': 'settings-1',
         'ledger_id': 'ledger-1',
+        'user_id': 'user-1',
         'include_in_expense': true,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
@@ -32,7 +33,7 @@ void main() {
         ),
       );
 
-      final result = await repository.getSettings('ledger-1');
+      final result = await repository.getSettings('ledger-1', 'user-1');
 
       expect(result, isA<FixedExpenseSettingsModel>());
       expect(result!.ledgerId, 'ledger-1');
@@ -47,7 +48,7 @@ void main() {
         ),
       );
 
-      final result = await repository.getSettings('ledger-1');
+      final result = await repository.getSettings('ledger-1', 'user-1');
 
       expect(result, isNull);
     });
@@ -58,6 +59,7 @@ void main() {
       final mockResponse = {
         'id': 'settings-1',
         'ledger_id': 'ledger-1',
+        'user_id': 'user-1',
         'include_in_expense': false,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
@@ -69,6 +71,7 @@ void main() {
 
       final result = await repository.updateSettings(
         ledgerId: 'ledger-1',
+        userId: 'user-1',
         includeInExpense: false,
       );
 
@@ -80,6 +83,7 @@ void main() {
       final mockResponse = {
         'id': 'settings-new',
         'ledger_id': 'ledger-2',
+        'user_id': 'user-1',
         'include_in_expense': true,
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
@@ -91,6 +95,7 @@ void main() {
 
       final result = await repository.updateSettings(
         ledgerId: 'ledger-2',
+        userId: 'user-1',
         includeInExpense: true,
       );
 
@@ -106,6 +111,7 @@ void main() {
       expect(
         () => repository.updateSettings(
           ledgerId: 'ledger-1',
+          userId: 'user-1',
           includeInExpense: true,
         ),
         throwsException,
@@ -117,7 +123,7 @@ void main() {
     test('실시간 구독 채널이 생성된다', () {
       final mockChannel = MockRealtimeChannel();
 
-      when(() => mockClient.channel('fixed_expense_settings_changes_ledger-1'))
+      when(() => mockClient.channel('fixed_expense_settings_changes_ledger-1_user-1'))
           .thenReturn(mockChannel);
 
       when(() => mockChannel.onPostgresChanges(
@@ -132,6 +138,7 @@ void main() {
 
       final channel = repository.subscribeSettings(
         ledgerId: 'ledger-1',
+        userId: 'user-1',
         onSettingsChanged: () {},
       );
 
@@ -142,7 +149,7 @@ void main() {
       var callbackInvoked = false;
       final mockChannel = MockRealtimeChannel();
 
-      when(() => mockClient.channel('fixed_expense_settings_changes_ledger-1'))
+      when(() => mockClient.channel('fixed_expense_settings_changes_ledger-1_user-1'))
           .thenReturn(mockChannel);
 
       when(() => mockChannel.onPostgresChanges(
@@ -157,6 +164,7 @@ void main() {
 
       repository.subscribeSettings(
         ledgerId: 'ledger-1',
+        userId: 'user-1',
         onSettingsChanged: () {
           callbackInvoked = true;
         },
