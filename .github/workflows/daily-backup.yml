@@ -1,0 +1,103 @@
+name: Daily Supabase Backup
+
+on:
+  schedule:
+    # 매일 한국시간 새벽 3시 (UTC 18:00)
+    - cron: '0 18 * * *'
+  workflow_dispatch: # 수동 실행 가능
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: pg_dump 실행
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          PGPASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          DATE=$(date +%Y%m%d)
+          pg_dump \
+            -h "$DB_HOST" \
+            -p 5432 \
+            -U postgres \
+            -d postgres \
+            -n house \
+            --no-owner \
+            --no-privileges \
+            -F c \
+            -f "house_${DATE}.dump"
+          ls -lh "house_${DATE}.dump"
+          echo "BACKUP_FILE=house_${DATE}.dump" >> "$GITHUB_ENV"
+          echo "DATE=$DATE" >> "$GITHUB_ENV"
+
+      - name: Supabase Storage 업로드
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          HTTP_STATUS=$(curl -s -o /tmp/upload_response.txt -w "%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/octet-stream" \
+            -H "x-upsert: true" \
+            --data-binary @"$BACKUP_FILE" \
+            "${SUPABASE_URL}/storage/v1/object/db-backups/${BACKUP_FILE}")
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "Upload OK: db-backups/${BACKUP_FILE}"
+          else
+            echo "Upload FAILED (HTTP $HTTP_STATUS)"
+            cat /tmp/upload_response.txt
+            exit 1
+          fi
+
+      - name: 30일 이전 백업 삭제
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          CUTOFF=$(date -d '30 days ago' +%Y%m%d)
+
+          # 파일 목록 조회
+          curl -s \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"prefix":"house_","limit":100}' \
+            "${SUPABASE_URL}/storage/v1/object/list/db-backups" \
+          | python3 -c "
+          import sys, json
+          files = json.load(sys.stdin)
+          old = []
+          for f in files:
+              name = f.get('name', '')
+              if name.startswith('house_') and name.endswith('.dump'):
+                  d = name[6:14]
+                  if d < '$CUTOFF':
+                      old.append(name)
+          if old:
+              print(json.dumps(old))
+          else:
+              print('[]')
+          " > /tmp/old_files.json
+
+          OLD_FILES=$(cat /tmp/old_files.json)
+          if [ "$OLD_FILES" != "[]" ]; then
+            # 배치 삭제
+            PREFIXED=$(echo "$OLD_FILES" | python3 -c "
+          import sys, json
+          files = json.load(sys.stdin)
+          print(json.dumps([{'prefix': f} for f in files]))
+          ")
+            curl -s -o /dev/null \
+              -X DELETE \
+              -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+              -H "Content-Type: application/json" \
+              -d "{\"prefixes\": $PREFIXED}" \
+              "${SUPABASE_URL}/storage/v1/object/db-backups"
+            echo "Deleted old backups: $OLD_FILES"
+          else
+            echo "No old backups to delete"
+          fi
