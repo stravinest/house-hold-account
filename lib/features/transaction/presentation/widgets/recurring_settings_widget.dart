@@ -379,7 +379,11 @@ class _RecurringSettingsWidgetState
                   child: Text(
                     _endDate != null
                         ? l10n.recurringTransactionCount(transactionCount)
-                        : l10n.recurringDailyAutoCreate,
+                        : switch (_selectedType) {
+                            RecurringType.monthly => l10n.recurringMonthlyAutoCreate,
+                            RecurringType.yearly => l10n.recurringYearlyAutoCreate,
+                            _ => l10n.recurringDailyAutoCreate,
+                          },
                     style: TextStyle(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.w500,

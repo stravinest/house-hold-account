@@ -1014,6 +1014,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Continue repeating (auto-create daily)';
 
   @override
+  String get recurringMonthlyAutoCreate =>
+      'Continue repeating (auto-create monthly)';
+
+  @override
+  String get recurringYearlyAutoCreate =>
+      'Continue repeating (auto-create yearly)';
+
+  @override
   String get fixedExpenseRegister => 'Register as Fixed Expense';
 
   @override

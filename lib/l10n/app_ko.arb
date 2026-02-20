@@ -471,6 +471,8 @@
     }
   },
   "recurringDailyAutoCreate": "계속 반복 (매일 자동 생성)",
+  "recurringMonthlyAutoCreate": "계속 반복 (매월 자동 생성)",
+  "recurringYearlyAutoCreate": "계속 반복 (매년 자동 생성)",
   "fixedExpenseRegister": "고정비로 등록",
   "fixedExpenseDescription": "월세, 보험료 등 정기적으로 지출되는 금액 (반복주기 필수)",
   "yearLabel": "년도",

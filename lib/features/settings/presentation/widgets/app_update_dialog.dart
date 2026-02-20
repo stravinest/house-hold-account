@@ -56,9 +56,13 @@ class AppUpdateDialog extends StatelessWidget {
     );
   }
 
+  static const _defaultStoreUrl =
+      'https://play.google.com/store/apps/details?id=com.household.shared.shared_household_account';
+
   Future<void> _openStore(BuildContext context) async {
-    final url = versionInfo.storeUrl;
-    if (url == null || url.isEmpty) return;
+    final url = (versionInfo.storeUrl != null && versionInfo.storeUrl!.isNotEmpty)
+        ? versionInfo.storeUrl!
+        : _defaultStoreUrl;
 
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {

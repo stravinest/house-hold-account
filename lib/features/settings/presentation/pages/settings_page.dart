@@ -796,7 +796,7 @@ class _AppInfoTile extends ConsumerWidget {
               onPressed: () {
                 Navigator.pop(context);
                 final url = Uri.tryParse(storeUrl);
-                if (url != null) launchUrl(url);
+                if (url != null) launchUrl(url, mode: LaunchMode.externalApplication);
               },
               child: Text(l10n.settingsUpdate),
             ),

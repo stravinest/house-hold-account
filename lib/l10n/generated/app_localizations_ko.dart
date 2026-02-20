@@ -994,6 +994,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recurringDailyAutoCreate => '계속 반복 (매일 자동 생성)';
 
   @override
+  String get recurringMonthlyAutoCreate => '계속 반복 (매월 자동 생성)';
+
+  @override
+  String get recurringYearlyAutoCreate => '계속 반복 (매년 자동 생성)';
+
+  @override
   String get fixedExpenseRegister => '고정비로 등록';
 
   @override

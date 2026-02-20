@@ -322,6 +322,8 @@
   "recurringClearEndDate": "Clear end date",
   "recurringTransactionCount": "{count} transactions will be created",
   "recurringDailyAutoCreate": "Continue repeating (auto-create daily)",
+  "recurringMonthlyAutoCreate": "Continue repeating (auto-create monthly)",
+  "recurringYearlyAutoCreate": "Continue repeating (auto-create yearly)",
   "fixedExpenseRegister": "Register as Fixed Expense",
   "fixedExpenseDescription": "Regular expenses like rent, insurance, etc. (recurring period required)",
   "yearLabel": "Year",

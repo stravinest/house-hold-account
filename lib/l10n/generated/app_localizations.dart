@@ -1952,6 +1952,18 @@ abstract class AppLocalizations {
   /// **'계속 반복 (매일 자동 생성)'**
   String get recurringDailyAutoCreate;
 
+  /// No description provided for @recurringMonthlyAutoCreate.
+  ///
+  /// In ko, this message translates to:
+  /// **'계속 반복 (매월 자동 생성)'**
+  String get recurringMonthlyAutoCreate;
+
+  /// No description provided for @recurringYearlyAutoCreate.
+  ///
+  /// In ko, this message translates to:
+  /// **'계속 반복 (매년 자동 생성)'**
+  String get recurringYearlyAutoCreate;
+
   /// No description provided for @fixedExpenseRegister.
   ///
   /// In ko, this message translates to:
