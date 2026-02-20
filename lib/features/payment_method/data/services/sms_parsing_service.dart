@@ -93,19 +93,28 @@ class FinancialSmsSenders {
     '토스뱅크': ['토스', '토스뱅크', 'toss'],
     '케이뱅크': ['케이뱅크', 'K뱅크', '15221700'],
 
-    // 지역화폐 (경기도 개별 시/군)
-    '수원페이': ['수원페이', '경기지역화폐', '수원시'],
-    '용인와이페이': ['용인와이페이', '용인페이', '경기지역화폐', '용인시'],
-    '행복화성지역화폐': ['행복화성', '화성페이', '경기지역화폐', '화성시'],
-    '고양페이': ['고양페이', '경기지역화폐', '고양시'],
-    '부천페이': ['부천페이', '경기지역화폐', '부천시'],
+    // 지역화폐 (경기도 개별 시/군) - 고유 키워드를 앞에 배치
+    '수원페이': ['수원페이', '수원시', '경기지역화폐'],
+    '용인와이페이': ['용인와이페이', '용인페이', '용인시', '경기지역화폐'],
+    '행복화성지역화폐': ['행복화성', '화성페이', '화성시', '경기지역화폐'],
+    '고양페이': ['고양페이', '고양시', '경기지역화폐'],
+    '부천페이': ['부천페이', '부천시', '경기지역화폐'],
     '서울사랑상품권': ['서울사랑', '서울상품권', '서울페이'],
     '인천이음페이': ['인천이음', '이음페이'],
+  };
+
+  /// 여러 금융사에 공통으로 사용되는 패턴 (경기지역화폐 등)
+  /// 이 패턴으로만 매칭되면 후순위로 처리하고, 고유 패턴을 우선 매칭한다.
+  static const Set<String> _sharedPatterns = {
+    '경기지역화폐',
   };
 
   /// 발신자 또는 본문에서 금융사 식별
   /// [sender]: 발신자 (번호 또는 이름)
   /// [content]: 문자 본문 (선택, 제공 시 본문에서도 금융사 패턴 검색)
+  ///
+  /// 고유 패턴(각 금융사 전용)을 우선 매칭하고,
+  /// 공통 패턴(경기지역화폐 등)으로만 매칭되는 경우는 후순위로 처리한다.
   static String? identifyFinancialInstitution(
     String sender, [
     String? content,
@@ -113,20 +122,33 @@ class FinancialSmsSenders {
     final lowerSender = sender.toLowerCase();
     final lowerContent = content?.toLowerCase();
 
+    String? fallbackMatch;
+
     for (final entry in senderPatterns.entries) {
       for (final pattern in entry.value) {
         final lowerPattern = pattern.toLowerCase();
-        // 발신자에서 매칭
+        final isShared = _sharedPatterns.contains(pattern);
+
+        bool matched = false;
         if (lowerSender.contains(lowerPattern)) {
-          return entry.key;
+          matched = true;
+        } else if (lowerContent != null &&
+            lowerContent.contains(lowerPattern)) {
+          matched = true;
         }
-        // 본문에서도 매칭 (content가 제공된 경우)
-        if (lowerContent != null && lowerContent.contains(lowerPattern)) {
-          return entry.key;
+
+        if (matched) {
+          if (!isShared) {
+            // 고유 패턴 매칭 시 즉시 반환
+            return entry.key;
+          } else if (fallbackMatch == null) {
+            // 공통 패턴으로만 매칭된 첫 번째 결과를 fallback으로 저장
+            fallbackMatch = entry.key;
+          }
         }
       }
     }
-    return null;
+    return fallbackMatch;
   }
 
   /// 발신자 또는 본문이 금융 관련인지 확인

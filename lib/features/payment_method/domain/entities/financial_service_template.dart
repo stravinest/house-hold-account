@@ -162,7 +162,7 @@ class FinancialServiceTemplate extends Equatable {
       logoIcon: 'assets/logos/yongin_pay.png',
       color: '#4CAF50',
       category: FinancialServiceCategory.localCurrency,
-      defaultSampleSms: '[경기지역화폐] 15,000원 결제\n(스타벅스 용인점)\n잔액: 35,000원',
+      defaultSampleSms: '[용인와이페이] 15,000원 결제\n(스타벅스 용인점)\n잔액: 35,000원',
       defaultSamplePush:
           '경기지역화폐 결제알림\n15,000원 결제 완료\n가맹점: 스타벅스 용인점\n잔액: 35,000원',
       defaultKeywords: ['용인와이페이', '용인페이', '경기지역화폐', '용인시'],
@@ -173,7 +173,7 @@ class FinancialServiceTemplate extends Equatable {
       logoIcon: 'assets/logos/hwaseong_pay.png',
       color: '#388E3C',
       category: FinancialServiceCategory.localCurrency,
-      defaultSampleSms: '[경기지역화폐] 15,000원 결제\n(스타벅스 화성점)\n잔액: 35,000원',
+      defaultSampleSms: '[행복화성지역화폐] 15,000원 결제\n(스타벅스 화성점)\n잔액: 35,000원',
       defaultSamplePush:
           '경기지역화폐 결제알림\n15,000원 결제 완료\n가맹점: 스타벅스 화성점\n잔액: 35,000원',
       defaultKeywords: ['행복화성', '화성페이', '경기지역화폐', '화성시'],
@@ -184,7 +184,7 @@ class FinancialServiceTemplate extends Equatable {
       logoIcon: 'assets/logos/goyang_pay.png',
       color: '#2E7D32',
       category: FinancialServiceCategory.localCurrency,
-      defaultSampleSms: '[경기지역화폐] 15,000원 결제\n(스타벅스 고양점)\n잔액: 35,000원',
+      defaultSampleSms: '[고양페이] 15,000원 결제\n(스타벅스 고양점)\n잔액: 35,000원',
       defaultSamplePush:
           '경기지역화폐 결제알림\n15,000원 결제 완료\n가맹점: 스타벅스 고양점\n잔액: 35,000원',
       defaultKeywords: ['고양페이', '경기지역화폐', '고양시'],
@@ -195,7 +195,7 @@ class FinancialServiceTemplate extends Equatable {
       logoIcon: 'assets/logos/bucheon_pay.png',
       color: '#43A047',
       category: FinancialServiceCategory.localCurrency,
-      defaultSampleSms: '[경기지역화폐] 15,000원 결제\n(스타벅스 부천점)\n잔액: 35,000원',
+      defaultSampleSms: '[부천페이] 15,000원 결제\n(스타벅스 부천점)\n잔액: 35,000원',
       defaultSamplePush:
           '경기지역화폐 결제알림\n15,000원 결제 완료\n가맹점: 스타벅스 부천점\n잔액: 35,000원',
       defaultKeywords: ['부천페이', '경기지역화폐', '부천시'],

@@ -319,6 +319,172 @@ void main() {
       expect(FinancialSmsSenders.isFinancialSender('토스'), isTrue);
       expect(FinancialSmsSenders.isFinancialSender('일반문자'), isFalse);
     });
+
+    group('경기도 지역화폐 고유 키워드 우선 매칭 테스트', () {
+      test('용인와이페이 고유 키워드가 포함된 경우 수원페이가 아닌 용인와이페이로 식별해야 한다', () {
+        // 발신자에 고유 키워드 '용인와이페이'가 포함된 경우
+        expect(
+          FinancialSmsSenders.identifyFinancialInstitution('용인와이페이'),
+          equals('용인와이페이'),
+        );
+        // 본문에 고유 키워드 '용인페이'가 포함된 경우
+        expect(
+          FinancialSmsSenders.identifyFinancialInstitution(
+            '알수없는발신자',
+            '[용인와이페이] 15,000원 결제 스타벅스',
+          ),
+          equals('용인와이페이'),
+        );
+      });
+
+      test('행복화성지역화폐 고유 키워드가 포함된 경우 수원페이가 아닌 행복화성지역화폐로 식별해야 한다', () {
+        expect(
+          FinancialSmsSenders.identifyFinancialInstitution('행복화성'),
+          equals('행복화성지역화폐'),
+        );
+        expect(
+          FinancialSmsSenders.identifyFinancialInstitution(
+            '알수없는발신자',
+            '[행복화성지역화폐] 15,000원 결제 스타벅스',
+          ),
+          equals('행복화성지역화폐'),
+        );
+      });
+
+      test('고양페이 고유 키워드가 포함된 경우 수원페이가 아닌 고양페이로 식별해야 한다', () {
+        expect(
+          FinancialSmsSenders.identifyFinancialInstitution('고양페이'),
+          equals('고양페이'),
+        );
+        expect(
+          FinancialSmsSenders.identifyFinancialInstitution(
+            '알수없는발신자',
+            '[고양페이] 15,000원 결제 스타벅스',
+          ),
+          equals('고양페이'),
+        );
+      });
+
+      test('부천페이 고유 키워드가 포함된 경우 수원페이가 아닌 부천페이로 식별해야 한다', () {
+        expect(
+          FinancialSmsSenders.identifyFinancialInstitution('부천페이'),
+          equals('부천페이'),
+        );
+        expect(
+          FinancialSmsSenders.identifyFinancialInstitution(
+            '알수없는발신자',
+            '[부천페이] 15,000원 결제 스타벅스',
+          ),
+          equals('부천페이'),
+        );
+      });
+
+      test('경기지역화폐만 있고 고유 키워드가 없는 경우 fallback으로 수원페이가 반환되어야 한다', () {
+        // 고유 키워드 없이 공통 패턴만 있는 경우
+        expect(
+          FinancialSmsSenders.identifyFinancialInstitution('경기지역화폐'),
+          equals('수원페이'),
+        );
+      });
+    });
+
+    group('generateFormatFromSample - 지역화폐별 고유 키워드 생성 테스트', () {
+      test('용인와이페이 샘플 SMS로 포맷 생성 시 수원페이 키워드가 포함되지 않아야 한다', () {
+        final format = SmsParsingService.generateFormatFromSample(
+          sample: '[용인와이페이] 15,000원 결제\n(스타벅스 용인점)\n잔액: 35,000원',
+          paymentMethodId: 'test_yongin',
+        );
+
+        // 용인와이페이 관련 키워드가 포함되어야 함
+        expect(
+          format.senderKeywords.any((k) => k.contains('용인')),
+          isTrue,
+          reason: '용인 관련 키워드가 포함되어야 한다',
+        );
+        // 수원페이 키워드가 포함되면 안 됨
+        expect(
+          format.senderKeywords.contains('수원페이'),
+          isFalse,
+          reason: '수원페이 키워드가 포함되면 안 된다',
+        );
+        expect(
+          format.senderKeywords.contains('수원시'),
+          isFalse,
+          reason: '수원시 키워드가 포함되면 안 된다',
+        );
+      });
+
+      test('부천페이 샘플 SMS로 포맷 생성 시 수원페이 키워드가 포함되지 않아야 한다', () {
+        final format = SmsParsingService.generateFormatFromSample(
+          sample: '[부천페이] 15,000원 결제\n(스타벅스 부천점)\n잔액: 35,000원',
+          paymentMethodId: 'test_bucheon',
+        );
+
+        expect(
+          format.senderKeywords.any((k) => k.contains('부천')),
+          isTrue,
+          reason: '부천 관련 키워드가 포함되어야 한다',
+        );
+        expect(
+          format.senderKeywords.contains('수원페이'),
+          isFalse,
+          reason: '수원페이 키워드가 포함되면 안 된다',
+        );
+      });
+
+      test('고양페이 샘플 SMS로 포맷 생성 시 수원페이 키워드가 포함되지 않아야 한다', () {
+        final format = SmsParsingService.generateFormatFromSample(
+          sample: '[고양페이] 15,000원 결제\n(스타벅스 고양점)\n잔액: 35,000원',
+          paymentMethodId: 'test_goyang',
+        );
+
+        expect(
+          format.senderKeywords.any((k) => k.contains('고양')),
+          isTrue,
+          reason: '고양 관련 키워드가 포함되어야 한다',
+        );
+        expect(
+          format.senderKeywords.contains('수원페이'),
+          isFalse,
+          reason: '수원페이 키워드가 포함되면 안 된다',
+        );
+      });
+
+      test('행복화성지역화폐 샘플 SMS로 포맷 생성 시 수원페이 키워드가 포함되지 않아야 한다', () {
+        final format = SmsParsingService.generateFormatFromSample(
+          sample: '[행복화성지역화폐] 15,000원 결제\n(스타벅스 화성점)\n잔액: 35,000원',
+          paymentMethodId: 'test_hwaseong',
+        );
+
+        expect(
+          format.senderKeywords.any(
+            (k) => k.contains('화성') || k.contains('행복화성'),
+          ),
+          isTrue,
+          reason: '화성 관련 키워드가 포함되어야 한다',
+        );
+        expect(
+          format.senderKeywords.contains('수원페이'),
+          isFalse,
+          reason: '수원페이 키워드가 포함되면 안 된다',
+        );
+      });
+
+      test('수원페이 샘플 SMS로 포맷 생성 시 수원페이 키워드가 정상 포함되어야 한다', () {
+        final format = SmsParsingService.generateFormatFromSample(
+          sample: '[경기지역화폐] 15,000원 결제\n(스타벅스 수원점)\n잔액: 35,000원',
+          paymentMethodId: 'test_suwon',
+        );
+
+        expect(
+          format.senderKeywords.any(
+            (k) => k.contains('수원') || k.contains('경기지역화폐'),
+          ),
+          isTrue,
+          reason: '수원페이 또는 경기지역화폐 키워드가 포함되어야 한다',
+        );
+      });
+    });
   });
 
   group('KoreanFinancialSmsPatterns', () {

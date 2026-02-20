@@ -367,7 +367,7 @@ class KoreanFinancialPatterns {
     },
     merchantRegex: r'결제\s+(.+?)(?:\s*\d|$)',
     dateRegex: r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})',
-    sampleSms: '[경기지역화폐] 15,000원 결제 (스타벅스 용인점) 잔액: 35,000원',
+    sampleSms: '[용인와이페이] 15,000원 결제 (스타벅스 용인점) 잔액: 35,000원',
   );
 
   /// 행복화성지역화폐 (화성시)
@@ -382,7 +382,7 @@ class KoreanFinancialPatterns {
     },
     merchantRegex: r'결제\s+(.+?)(?:\s*\d|$)',
     dateRegex: r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})',
-    sampleSms: '[경기지역화폐] 15,000원 결제 (스타벅스 화성점) 잔액: 35,000원',
+    sampleSms: '[행복화성지역화폐] 15,000원 결제 (스타벅스 화성점) 잔액: 35,000원',
   );
 
   /// 고양페이 (고양시)
@@ -397,7 +397,7 @@ class KoreanFinancialPatterns {
     },
     merchantRegex: r'결제\s+(.+?)(?:\s*\d|$)',
     dateRegex: r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})',
-    sampleSms: '[경기지역화폐] 15,000원 결제 (스타벅스 고양점) 잔액: 35,000원',
+    sampleSms: '[고양페이] 15,000원 결제 (스타벅스 고양점) 잔액: 35,000원',
   );
 
   /// 부천페이 (부천시)
@@ -412,7 +412,7 @@ class KoreanFinancialPatterns {
     },
     merchantRegex: r'결제\s+(.+?)(?:\s*\d|$)',
     dateRegex: r'(\d{1,2})/(\d{1,2})\s+(\d{1,2}):(\d{2})',
-    sampleSms: '[경기지역화폐] 15,000원 결제 (스타벅스 부천점) 잔액: 35,000원',
+    sampleSms: '[부천페이] 15,000원 결제 (스타벅스 부천점) 잔액: 35,000원',
   );
 
   /// 서울사랑상품권
