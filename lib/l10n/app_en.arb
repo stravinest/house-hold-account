@@ -1049,6 +1049,13 @@
   "recurringNoEndDate": "No end date",
   "recurringDaySuffix": "",
   "recurringMonthSuffix": "/",
+  "recurringInstallmentInfo": "{current}/{total} installments",
+  "@recurringInstallmentInfo": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "recurringTemplateEditTitle": "Edit Recurring Transaction",
   "recurringTemplateEditAmount": "Amount",
   "recurringTemplateEditMemo": "Memo",

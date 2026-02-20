@@ -3063,6 +3063,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recurringMonthSuffix => '/';
 
   @override
+  String recurringInstallmentInfo(int current, int total) {
+    return '$current/$total installments';
+  }
+
+  @override
   String get recurringTemplateEditTitle => 'Edit Recurring Transaction';
 
   @override

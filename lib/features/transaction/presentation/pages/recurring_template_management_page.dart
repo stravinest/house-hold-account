@@ -34,6 +34,11 @@ class _TemplateData {
   final String? userDisplayName;
   final String? userColor;
 
+  // 할부 정보 (생성 시 한번만 계산)
+  final bool isInstallment;
+  final int installmentTotalMonths;
+  final int installmentCurrentMonth;
+
   _TemplateData._({
     required this.id,
     required this.type,
@@ -53,6 +58,9 @@ class _TemplateData {
     this.userId,
     this.userDisplayName,
     this.userColor,
+    required this.isInstallment,
+    required this.installmentTotalMonths,
+    required this.installmentCurrentMonth,
   });
 
   factory _TemplateData.fromMap(Map<String, dynamic> map) {
@@ -60,17 +68,45 @@ class _TemplateData {
     final fixedCategory =
         map['fixed_expense_categories'] as Map<String, dynamic>?;
     final profile = map['profiles'] as Map<String, dynamic>?;
+
+    final title = map['title'] as String?;
+    final startDateStr = map['start_date']?.toString();
+    final endDateStr = map['end_date']?.toString();
+
+    // 할부 정보 계산 (생성 시 한번만)
+    final isInstallment = endDateStr != null &&
+        title != null &&
+        (title.contains('할부') || title.toLowerCase().contains('installment'));
+
+    int totalMonths = 0;
+    int currentMonth = 0;
+    if (isInstallment) {
+      final start = DateTime.tryParse(startDateStr ?? '');
+      final end = DateTime.tryParse(endDateStr);
+      if (start != null && end != null) {
+        final months =
+            (end.year - start.year) * 12 + end.month - start.month + 1;
+        totalMonths = months > 0 ? months : 0;
+
+        // 현재 할부 회차 (1부터 시작)
+        final now = DateTime.now();
+        final cur =
+            (now.year - start.year) * 12 + now.month - start.month + 1;
+        currentMonth = cur.clamp(1, totalMonths);
+      }
+    }
+
     return _TemplateData._(
       id: map['id'] as String,
       type: map['type'] as String? ?? 'expense',
       amount: map['amount'] as int? ?? 0,
-      title: map['title'] as String?,
+      title: title,
       memo: map['memo'] as String?,
       isActive: map['is_active'] as bool? ?? false,
       isFixedExpense: map['is_fixed_expense'] as bool? ?? false,
       recurringType: map['recurring_type'] as String? ?? 'monthly',
-      startDate: map['start_date']?.toString(),
-      endDate: map['end_date']?.toString(),
+      startDate: startDateStr,
+      endDate: endDateStr,
       categoryId: map['category_id'] as String?,
       categoryName: category?['name'] as String?,
       fixedExpenseCategoryId:
@@ -80,6 +116,9 @@ class _TemplateData {
       userId: map['user_id'] as String?,
       userDisplayName: profile?['display_name'] as String?,
       userColor: profile?['color'] as String?,
+      isInstallment: isInstallment,
+      installmentTotalMonths: totalMonths,
+      installmentCurrentMonth: currentMonth,
     );
   }
 
@@ -442,6 +481,28 @@ class _TemplateCard extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 3),
+
+                    // 할부 정보
+                    if (data.isInstallment && data.installmentTotalMonths > 0)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.credit_card,
+                              size: 13,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              l10n.recurringInstallmentInfo(data.installmentCurrentMonth, data.installmentTotalMonths),
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
                     // 셋째 줄: 카테고리
                     if (data.displayCategoryName != null)

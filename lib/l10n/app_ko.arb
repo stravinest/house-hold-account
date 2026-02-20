@@ -1536,6 +1536,13 @@
   "recurringNoEndDate": "종료일 없음",
   "recurringDaySuffix": "일",
   "recurringMonthSuffix": "월",
+  "recurringInstallmentInfo": "{current}/{total}회차",
+  "@recurringInstallmentInfo": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
   "recurringTemplateEditTitle": "반복 거래 수정",
   "recurringTemplateEditAmount": "금액",
   "recurringTemplateEditMemo": "메모",

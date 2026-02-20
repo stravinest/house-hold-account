@@ -5647,6 +5647,12 @@ abstract class AppLocalizations {
   /// **'월'**
   String get recurringMonthSuffix;
 
+  /// No description provided for @recurringInstallmentInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'{current}/{total}회차'**
+  String recurringInstallmentInfo(int current, int total);
+
   /// No description provided for @recurringTemplateEditTitle.
   ///
   /// In ko, this message translates to:

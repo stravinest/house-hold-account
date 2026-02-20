@@ -2977,6 +2977,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recurringMonthSuffix => '월';
 
   @override
+  String recurringInstallmentInfo(int current, int total) {
+    return '$current/$total회차';
+  }
+
+  @override
   String get recurringTemplateEditTitle => '반복 거래 수정';
 
   @override
