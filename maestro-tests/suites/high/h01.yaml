@@ -1,0 +1,53 @@
+appId: com.household.shared.shared_household_account
+---
+# H01: 거래 수정 (user1)
+# 거래를 추가한 후 해당 거래를 탭하여 금액을 수정하고 성공 메시지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 먼저 거래 추가
+- tapOn:
+    id: 'add_transaction_fab'
+    optional: true
+- extendedWaitUntil:
+    visible: '지출'
+    timeout: 5000
+
+- tapOn: '지출'
+- tapOn: '금액'
+- inputText: '5000'
+- tapOn: '제목'
+- inputText: '수정테스트'
+- tapOn: '저장'
+
+- extendedWaitUntil:
+    visible: '거래가 추가되었습니다'
+    timeout: 10000
+
+# 추가된 거래 탭하여 상세 열기
+- tapOn: '수정테스트'
+- extendedWaitUntil:
+    visible: '수정'
+    timeout: 5000
+
+# 수정 버튼 탭
+- tapOn: '수정'
+
+# 금액 수정 - 기존 금액 지우고 새 금액 입력
+- tapOn: '금액'
+- eraseText: 4
+- inputText: '8000'
+
+# 저장
+- tapOn: '저장'
+
+# 수정 성공 메시지 확인
+- extendedWaitUntil:
+    visible: '거래가 수정되었습니다'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/h01'

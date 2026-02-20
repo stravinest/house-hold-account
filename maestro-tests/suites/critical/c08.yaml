@@ -1,0 +1,38 @@
+appId: com.household.shared.shared_household_account
+---
+# C08: 공유 초대 수락 + 동기화 (user2)
+# user2가 받은 초대를 수락하고 공유 가계부에 접근 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user2@test.com'
+      PASSWORD: 'testpass123'
+
+# 더보기 탭 이동
+- tapOn: '더보기'
+- extendedWaitUntil:
+    visible: '더보기'
+    timeout: 5000
+
+# 공유 관리 진입
+- tapOn: '가계부 관리'
+- extendedWaitUntil:
+    visible: '받은 초대'
+    timeout: 5000
+
+# 받은 초대 탭
+- tapOn: '받은 초대'
+- extendedWaitUntil:
+    visible: '수락'
+    timeout: 5000
+
+# 초대 수락
+- tapOn: '수락'
+
+# 수락 완료 확인
+- extendedWaitUntil:
+    visible: '지출'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/c08'

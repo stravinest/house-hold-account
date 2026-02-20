@@ -1,0 +1,44 @@
+appId: com.household.shared.shared_household_account
+---
+# H07: 자산 추가 (user1)
+# 자산 탭에서 정기예금 자산을 추가
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 자산 탭 이동
+- tapOn: '자산'
+- extendedWaitUntil:
+    visible: '자산'
+    timeout: 5000
+
+# 자산 추가 버튼 탭
+- tapOn:
+    id: 'add_asset_button'
+    optional: true
+
+# 자산 정보 입력 (정기예금)
+- extendedWaitUntil:
+    visible: '저장'
+    timeout: 5000
+
+# 금액 입력
+- tapOn: '금액'
+- inputText: '1000000'
+
+# 제목 입력
+- tapOn: '제목'
+- inputText: 'E2E테스트예금'
+
+# 저장
+- tapOn: '저장'
+
+# 저장 완료 확인
+- extendedWaitUntil:
+    visible: 'E2E테스트예금'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/h07'

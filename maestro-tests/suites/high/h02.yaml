@@ -1,0 +1,48 @@
+appId: com.household.shared.shared_household_account
+---
+# H02: 거래 삭제 (user2)
+# 거래를 추가한 후 해당 거래를 삭제하고 성공 메시지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user2@test.com'
+      PASSWORD: 'testpass123'
+
+# 먼저 거래 추가
+- tapOn:
+    id: 'add_transaction_fab'
+    optional: true
+- extendedWaitUntil:
+    visible: '지출'
+    timeout: 5000
+
+- tapOn: '지출'
+- tapOn: '금액'
+- inputText: '3000'
+- tapOn: '제목'
+- inputText: '삭제테스트'
+- tapOn: '저장'
+
+- extendedWaitUntil:
+    visible: '거래가 추가되었습니다'
+    timeout: 10000
+
+# 추가된 거래 탭하여 상세 열기
+- tapOn: '삭제테스트'
+- extendedWaitUntil:
+    visible: '삭제'
+    timeout: 5000
+
+# 삭제 버튼 탭
+- tapOn: '삭제'
+
+# 삭제 확인 다이얼로그에서 확인
+- tapOn: '확인'
+
+# 삭제 성공 메시지 확인
+- extendedWaitUntil:
+    visible: '거래가 삭제되었습니다'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/h02'

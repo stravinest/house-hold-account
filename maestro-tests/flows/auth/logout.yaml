@@ -1,0 +1,17 @@
+appId: com.household.shared.shared_household_account
+---
+# 공통 로그아웃 플로우
+
+- tapOn: '더보기'
+
+- extendedWaitUntil:
+    visible: '설정'
+    timeout: 5000
+
+- tapOn: '로그아웃'
+
+- tapOn: '확인'
+
+- extendedWaitUntil:
+    visible: '로그인'
+    timeout: 5000

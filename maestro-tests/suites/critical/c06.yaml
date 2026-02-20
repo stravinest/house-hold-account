@@ -1,0 +1,23 @@
+appId: com.household.shared.shared_household_account
+---
+# C06: 월간 목록 뷰 확인 (user2)
+# 로그인 후 캘린더 뷰 모드를 월간목록으로 변경하고 목록 표시 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user2@test.com'
+      PASSWORD: 'testpass123'
+
+# 캘린더 화면 확인
+- assertVisible: '지출'
+
+# 뷰 모드 변경 버튼 탭
+- tapOn: '월간목록'
+
+# 월간 목록 뷰가 표시되는지 확인
+- extendedWaitUntil:
+    visible: '월간목록'
+    timeout: 5000
+
+- takeScreenshot: 'screenshots/c06'

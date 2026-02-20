@@ -1,0 +1,50 @@
+appId: com.household.shared.shared_household_account
+---
+# H08: 고정비 설정 (user2)
+# 더보기 > 고정비에서 고정비 항목을 추가
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user2@test.com'
+      PASSWORD: 'testpass123'
+
+# 더보기 탭 이동
+- tapOn: '더보기'
+- extendedWaitUntil:
+    visible: '더보기'
+    timeout: 5000
+
+# 고정비 관리 진입
+- tapOn: '고정비'
+- extendedWaitUntil:
+    visible: '고정비'
+    timeout: 5000
+
+# 고정비 추가 버튼 탭
+- tapOn:
+    id: 'add_fixed_expense_button'
+    optional: true
+
+# 고정비 정보 입력
+- extendedWaitUntil:
+    visible: '저장'
+    timeout: 5000
+
+# 금액 입력
+- tapOn: '금액'
+- inputText: '50000'
+
+# 제목 입력
+- tapOn: '제목'
+- inputText: 'E2E테스트고정비'
+
+# 저장
+- tapOn: '저장'
+
+# 저장 완료 확인
+- extendedWaitUntil:
+    visible: 'E2E테스트고정비'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/h08'

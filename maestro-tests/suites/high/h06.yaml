@@ -1,0 +1,44 @@
+appId: com.household.shared.shared_household_account
+---
+# H06: 검색 (user2)
+# 거래를 추가한 후 검색 기능으로 해당 거래를 찾기
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user2@test.com'
+      PASSWORD: 'testpass123'
+
+# 먼저 검색용 거래 추가
+- tapOn:
+    id: 'add_transaction_fab'
+    optional: true
+- extendedWaitUntil:
+    visible: '지출'
+    timeout: 5000
+
+- tapOn: '지출'
+- tapOn: '금액'
+- inputText: '7777'
+- tapOn: '제목'
+- inputText: '검색테스트'
+- tapOn: '저장'
+
+- extendedWaitUntil:
+    visible: '거래가 추가되었습니다'
+    timeout: 10000
+
+# 검색 아이콘 탭
+- tapOn:
+    id: 'search_icon'
+    optional: true
+
+# 검색어 입력
+- inputText: '검색테스트'
+
+# 검색 결과에서 해당 거래 확인
+- extendedWaitUntil:
+    visible: '검색테스트'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/h06'

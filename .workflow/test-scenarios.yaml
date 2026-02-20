@@ -1,0 +1,1148 @@
+# 에뮬레이터 테스트 시나리오 - 엣지 케이스 중심
+# 두 에뮬레이터에서 병렬 실행하여 공유 기능까지 검증
+
+metadata:
+  app_package: com.household.shared.shared_household_account
+  generated_at: 2026-02-12
+  note: |
+    emulator-5554에서 회원가입으로 계정을 생성하고,
+    emulator-5556에서도 회원가입으로 별도 계정을 생성한 후,
+    서로 공유 초대/수락/탈퇴/방출을 테스트합니다.
+  test_accounts:
+    device_5554:
+      email: testuser5554@test.com
+      password: Test1234!
+      name: 테스터A
+    device_5556:
+      email: testuser5556@test.com
+      password: Test1234!
+      name: 테스터B
+
+scenarios:
+  # ========================================
+  # Group A: emulator-5554
+  # Phase 1: 인증 엣지케이스 + 회원가입
+  # Phase 2: 거래 엣지케이스
+  # Phase 3: 공유 초대 (5556 사용자 초대)
+  # ========================================
+  group_a:
+    # --- Phase 1: 인증 엣지케이스 ---
+
+    - id: A001
+      name: '로그인 - 빈 이메일로 시도'
+      category: auth_edge
+      priority: high
+      steps:
+        - action: launch_app
+          package: com.household.shared.shared_household_account
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '로그인 화면 초기 상태'
+        - action: tap
+          target: '로그인'
+          description: '빈 상태로 로그인 버튼 탭'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '이메일 빈 값 validation 에러 확인'
+      expected: '"이메일을 입력해주세요" 에러 메시지 표시'
+
+    - id: A002
+      name: '로그인 - 잘못된 이메일 형식'
+      category: auth_edge
+      priority: high
+      steps:
+        - action: tap
+          target: '이메일'
+        - action: type_text
+          text: 'notanemail'
+        - action: tap
+          target: '비밀번호'
+        - action: type_text
+          text: 'somepass'
+        - action: tap
+          target: '로그인'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '이메일 형식 오류 확인'
+      expected: '"올바른 이메일 형식이 아닙니다" 에러 표시'
+
+    - id: A003
+      name: '로그인 - 틀린 비밀번호'
+      category: auth_edge
+      priority: high
+      steps:
+        - action: tap
+          target: '이메일'
+        - action: clear_text
+        - action: type_text
+          text: 'user1@test.com'
+        - action: tap
+          target: '비밀번호'
+        - action: clear_text
+        - action: type_text
+          text: 'wrongpassword123'
+        - action: tap
+          target: '로그인'
+        - action: wait
+          duration: 5000
+        - action: screenshot
+          description: '틀린 비밀번호 에러 확인'
+      expected: '"이메일 또는 비밀번호가 틀렸습니다" SnackBar 표시'
+
+    - id: A004
+      name: '로그인 - 짧은 비밀번호 (6자 미만)'
+      category: auth_edge
+      priority: medium
+      steps:
+        - action: tap
+          target: '비밀번호'
+        - action: clear_text
+        - action: type_text
+          text: '12345'
+        - action: tap
+          target: '로그인'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '비밀번호 길이 validation 에러'
+      expected: '"비밀번호는 최소 6자 이상이어야 합니다" 에러 표시'
+
+    - id: A005
+      name: '회원가입 - validation 엣지케이스 후 실제 가입'
+      category: auth_edge
+      priority: critical
+      steps:
+        - action: tap
+          target: '회원가입'
+          description: '회원가입 화면으로 이동'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '회원가입 화면'
+        # 빈 상태로 가입 시도
+        - action: tap
+          target: '회원가입'
+          description: '빈 상태로 가입 버튼 탭'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '모든 필드 validation 에러 확인'
+        # 이름 1자 입력 (최소 2자 필요)
+        - action: tap
+          target: '이름'
+        - action: type_text
+          text: 'A'
+        - action: tap
+          target: '회원가입'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '이름 최소 2자 에러 확인'
+        # 비밀번호 불일치
+        - action: tap
+          target: '이름'
+        - action: clear_text
+        - action: type_text
+          text: '테스터A'
+        - action: tap
+          target: '이메일'
+        - action: type_text
+          text: 'testuser5554@test.com'
+        - action: tap
+          target: '비밀번호'
+        - action: type_text
+          text: 'Test1234!'
+        - action: tap
+          target: '비밀번호 확인'
+        - action: type_text
+          text: 'Different1!'
+        - action: tap
+          target: '회원가입'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '비밀번호 불일치 에러 확인'
+        # 올바른 정보로 가입
+        - action: tap
+          target: '비밀번호 확인'
+        - action: clear_text
+        - action: type_text
+          text: 'Test1234!'
+        - action: tap
+          target: '회원가입'
+        - action: wait
+          duration: 5000
+        - action: screenshot
+          description: '회원가입 결과 확인'
+      expected: '회원가입 성공 후 홈 화면 또는 이메일 인증 화면 이동'
+
+    - id: A006
+      name: '비밀번호 찾기 - 이메일 형식 검증'
+      category: auth_edge
+      priority: medium
+      steps:
+        # 로그아웃 필요 시 설정에서 로그아웃
+        - action: press_button
+          button: back
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '비밀번호를 잊으셨나요?'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '비밀번호 재설정 화면'
+        # 빈 이메일로 시도
+        - action: tap
+          target: '재설정 링크 보내기'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '빈 이메일 validation 에러'
+        # 잘못된 형식
+        - action: tap
+          target: '이메일'
+        - action: type_text
+          text: 'invalid-email'
+        - action: tap
+          target: '재설정 링크 보내기'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '이메일 형식 오류'
+        - action: press_button
+          button: back
+      expected: '빈 이메일, 잘못된 형식 모두 validation 에러 표시'
+
+    # --- Phase 2: 거래 엣지케이스 ---
+
+    - id: A007
+      name: '로그인 후 홈화면 진입'
+      category: auth
+      priority: critical
+      steps:
+        - action: launch_app
+          package: com.household.shared.shared_household_account
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '현재 화면 상태 확인'
+        # 로그인 화면이면 로그인
+        - action: tap
+          target: '이메일'
+        - action: type_text
+          text: 'testuser5554@test.com'
+        - action: tap
+          target: '비밀번호'
+        - action: type_text
+          text: 'Test1234!'
+        - action: tap
+          target: '로그인'
+        - action: wait
+          duration: 5000
+        - action: screenshot
+          description: '홈 화면 진입 확인'
+      expected: '홈 화면 캘린더 표시'
+
+    - id: A008
+      name: '거래 추가 - 금액 미입력'
+      category: transaction_edge
+      priority: high
+      steps:
+        - action: tap
+          target_description: 'FAB (플로팅 액션 버튼)'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '거래 추가 시트'
+        # 금액 미입력 상태로 저장 시도
+        - action: tap
+          target: '저장'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '금액 미입력 에러 확인'
+      expected: '"금액을 입력해주세요" 에러 또는 금액 0이면 저장 불가'
+
+    - id: A009
+      name: '거래 추가 - 지출 정상 추가'
+      category: transaction
+      priority: critical
+      steps:
+        - action: tap
+          target: '지출'
+        - action: tap
+          target_description: '금액 입력 필드'
+        - action: type_text
+          text: '15000'
+        - action: screenshot
+          description: '금액 입력 완료'
+        - action: tap
+          target: '저장'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '거래 추가 후 홈 화면'
+      expected: '15,000원 지출 거래가 추가되어 캘린더에 표시'
+
+    - id: A010
+      name: '거래 추가 - 수입 추가'
+      category: transaction
+      priority: critical
+      steps:
+        - action: tap
+          target_description: 'FAB'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '수입'
+        - action: tap
+          target_description: '금액 입력 필드'
+        - action: type_text
+          text: '3000000'
+        - action: tap
+          target: '저장'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '수입 추가 후 확인'
+      expected: '3,000,000원 수입 거래 추가 완료'
+
+    - id: A011
+      name: '뷰 전환 - 캘린더/리스트/주간/일간'
+      category: navigation
+      priority: medium
+      steps:
+        - action: screenshot
+          description: '캘린더 뷰 기본 상태'
+        - action: tap
+          target: '리스트'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '리스트 뷰'
+        - action: tap
+          target: '주간'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '주간 뷰'
+        - action: tap
+          target: '일간'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '일간 뷰'
+        - action: tap
+          target: '캘린더'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '캘린더 뷰 복귀'
+      expected: '모든 뷰 전환이 정상 동작'
+
+    - id: A012
+      name: '검색 - 빈 검색어'
+      category: search_edge
+      priority: medium
+      steps:
+        - action: tap
+          target_description: '검색 아이콘'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '검색 화면 초기 상태'
+        - action: screenshot
+          description: '빈 검색어 상태 확인'
+        - action: press_button
+          button: back
+      expected: '빈 검색어 시 결과 없음 또는 안내 표시'
+
+    - id: A013
+      name: '검색 - 존재하지 않는 키워드'
+      category: search_edge
+      priority: medium
+      steps:
+        - action: tap
+          target_description: '검색 아이콘'
+        - action: wait
+          duration: 1000
+        - action: type_text
+          text: 'zzzzzzzznotexist'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '검색 결과 없음 상태'
+        - action: press_button
+          button: back
+      expected: '결과 없음 Empty State 표시'
+
+    # --- Phase 3: 공유 기능 (5556 계정 초대) ---
+
+    - id: A014
+      name: '공유 관리 - 초대 다이얼로그 엣지케이스'
+      category: share_edge
+      priority: critical
+      steps:
+        - action: tap
+          target_description: '더보기/메뉴'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '가계부 및 공유 관리'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '공유 관리 화면'
+        # 초대 버튼 탭
+        - action: tap
+          target: '초대'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '초대 다이얼로그'
+        # 빈 이메일로 초대
+        - action: tap
+          target: '초대'
+          description: '다이얼로그의 초대 버튼'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '빈 이메일 에러'
+        # 잘못된 이메일 형식
+        - action: tap
+          target_description: '이메일 입력 필드'
+        - action: type_text
+          text: 'notanemail'
+        - action: tap
+          target: '초대'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '잘못된 이메일 형식 에러'
+        # 자기 자신 초대
+        - action: tap
+          target_description: '이메일 입력 필드'
+        - action: clear_text
+        - action: type_text
+          text: 'testuser5554@test.com'
+        - action: tap
+          target: '초대'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '자기 자신 초대 에러'
+        # 미가입 사용자 초대
+        - action: tap
+          target_description: '이메일 입력 필드'
+        - action: clear_text
+        - action: type_text
+          text: 'nonexistent@nobody.com'
+        - action: tap
+          target: '초대'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '미가입 사용자 에러'
+        - action: tap
+          target: '취소'
+      expected: '빈 이메일, 잘못된 형식, 자기 자신, 미가입 사용자 모두 에러 표시'
+
+    - id: A015
+      name: '공유 초대 - 5556 사용자에게 초대 보내기'
+      category: share
+      priority: critical
+      note: 'Group B의 B005 회원가입 완료 후 실행해야 함'
+      steps:
+        - action: tap
+          target: '초대'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target_description: '이메일 입력 필드'
+        - action: type_text
+          text: 'testuser5556@test.com'
+        - action: tap
+          target: '초대'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '초대 전송 결과'
+      expected: '초대가 성공적으로 전송됨'
+
+    - id: A016
+      name: '공유 초대 - 중복 초대 시도'
+      category: share_edge
+      priority: high
+      steps:
+        - action: tap
+          target: '초대'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target_description: '이메일 입력 필드'
+        - action: type_text
+          text: 'testuser5556@test.com'
+        - action: tap
+          target: '초대'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '중복 초대 에러 확인'
+      expected: '"이미 초대를 보냈습니다" 에러 표시'
+
+    - id: A017
+      name: '공유 멤버 관리 - 멤버 방출'
+      category: share
+      priority: critical
+      note: 'B007(초대 수락) 완료 후 실행'
+      steps:
+        - action: press_button
+          button: back
+        - action: tap
+          target: '가계부 및 공유 관리'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '공유 관리 - 멤버 확인'
+        # 멤버 정보 탭
+        - action: tap
+          target_description: '멤버 수 영역'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '멤버 목록 바텀시트'
+        # 방출 버튼 탭
+        - action: tap
+          target: '방출하기'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '방출 확인 다이얼로그'
+        - action: tap
+          target: '확인'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '멤버 방출 후 상태'
+      expected: '멤버가 방출되고 공유 가계부에서 제거됨'
+
+    # --- Phase 4: 가계부 관리 엣지케이스 ---
+
+    - id: A018
+      name: '가계부 관리 - 생성/수정/삭제'
+      category: ledger_edge
+      priority: high
+      steps:
+        - action: press_button
+          button: back
+        - action: tap
+          target_description: '더보기/메뉴'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '가계부 관리'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '가계부 관리 화면'
+        # 새 가계부 생성
+        - action: tap
+          target_description: 'FAB'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '가계부 생성 다이얼로그'
+        # 빈 이름으로 생성 시도
+        - action: tap
+          target: '저장'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '빈 이름 validation 에러'
+        # 이름 입력 후 생성
+        - action: tap
+          target_description: '가계부 이름 입력 필드'
+        - action: type_text
+          text: '테스트 가계부'
+        - action: tap
+          target: '저장'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '가계부 생성 완료'
+      expected: '새 가계부 생성 성공'
+
+    - id: A019
+      name: '가계부 삭제 - 마지막 가계부 삭제 방지'
+      category: ledger_edge
+      priority: high
+      note: '가계부가 1개만 남았을 때 삭제 시도'
+      steps:
+        - action: screenshot
+          description: '현재 가계부 목록'
+        # 첫 번째 가계부의 팝업 메뉴
+        - action: tap
+          target_description: '더보기 팝업 메뉴 (첫 번째 가계부)'
+        - action: wait
+          duration: 500
+        - action: tap
+          target: '삭제'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '삭제 확인 또는 불가 메시지'
+      expected: '마지막 가계부면 "최소 1개의 가계부가 필요합니다" 메시지'
+
+    # --- Phase 5: 로그아웃 ---
+
+    - id: A020
+      name: '로그아웃'
+      category: auth
+      priority: critical
+      steps:
+        - action: press_button
+          button: back
+        - action: press_button
+          button: back
+        - action: tap
+          target_description: '더보기/메뉴'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '설정'
+        - action: wait
+          duration: 1000
+        - action: swipe
+          direction: up
+          description: '하단으로 스크롤'
+        - action: tap
+          target: '로그아웃'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '로그아웃 확인 다이얼로그'
+        - action: tap
+          target: '확인'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '로그인 화면 복귀'
+      expected: '로그인 화면으로 돌아감'
+
+  # ========================================
+  # Group B: emulator-5556
+  # Phase 1: 회원가입 엣지케이스 + 실제 가입
+  # Phase 2: 카테고리/결제수단/고정비 관리
+  # Phase 3: 공유 초대 수락/탈퇴
+  # ========================================
+  group_b:
+    # --- Phase 1: 회원가입 ---
+
+    - id: B001
+      name: '회원가입 - 이미 가입된 이메일'
+      category: auth_edge
+      priority: high
+      steps:
+        - action: launch_app
+          package: com.household.shared.shared_household_account
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '로그인 화면'
+        - action: tap
+          target: '회원가입'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '회원가입 화면'
+        # 이미 존재하는 계정으로 가입 시도
+        - action: tap
+          target: '이름'
+        - action: type_text
+          text: '테스트'
+        - action: tap
+          target: '이메일'
+        - action: type_text
+          text: 'user1@test.com'
+        - action: tap
+          target: '비밀번호'
+        - action: type_text
+          text: 'Test1234!'
+        - action: tap
+          target: '비밀번호 확인'
+        - action: type_text
+          text: 'Test1234!'
+        - action: tap
+          target: '회원가입'
+        - action: wait
+          duration: 5000
+        - action: screenshot
+          description: '중복 이메일 에러 확인'
+      expected: '"이미 가입된 이메일입니다" 에러 표시'
+
+    - id: B002
+      name: '회원가입 - 비밀번호 보기/숨기기 토글'
+      category: auth_edge
+      priority: low
+      steps:
+        - action: tap
+          target: '비밀번호'
+        - action: clear_text
+        - action: type_text
+          text: 'Visible123!'
+        - action: screenshot
+          description: '비밀번호 숨김 상태'
+        - action: tap
+          target_description: '비밀번호 보기 토글 아이콘'
+        - action: screenshot
+          description: '비밀번호 표시 상태'
+      expected: '비밀번호 보기/숨기기 토글 동작'
+
+    - id: B003
+      name: '로그인으로 돌아가기 링크'
+      category: auth_edge
+      priority: low
+      steps:
+        - action: tap
+          target: '로그인'
+          description: '"이미 계정이 있으신가요? 로그인" 링크'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '로그인 화면 복귀'
+      expected: '로그인 화면으로 돌아감'
+
+    - id: B004
+      name: '비밀번호 찾기 - 이메일 전송 성공 화면'
+      category: auth_edge
+      priority: medium
+      steps:
+        - action: tap
+          target: '비밀번호를 잊으셨나요?'
+        - action: wait
+          duration: 2000
+        - action: tap
+          target: '이메일'
+        - action: type_text
+          text: 'user1@test.com'
+        - action: tap
+          target: '재설정 링크 보내기'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '이메일 전송 성공 화면 확인'
+        - action: tap
+          target: '로그인으로 돌아가기'
+        - action: wait
+          duration: 1000
+      expected: '이메일 전송 성공 뷰 표시 후 로그인 화면 복귀'
+
+    - id: B005
+      name: '회원가입 - 실제 계정 생성 (테스터B)'
+      category: auth
+      priority: critical
+      steps:
+        - action: tap
+          target: '회원가입'
+        - action: wait
+          duration: 2000
+        - action: tap
+          target: '이름'
+        - action: type_text
+          text: '테스터B'
+        - action: tap
+          target: '이메일'
+        - action: type_text
+          text: 'testuser5556@test.com'
+        - action: tap
+          target: '비밀번호'
+        - action: type_text
+          text: 'Test1234!'
+        - action: tap
+          target: '비밀번호 확인'
+        - action: type_text
+          text: 'Test1234!'
+        - action: screenshot
+          description: '회원가입 정보 입력 완료'
+        - action: tap
+          target: '회원가입'
+        - action: wait
+          duration: 5000
+        - action: screenshot
+          description: '회원가입 결과'
+      expected: '회원가입 성공, 홈 화면 또는 이메일 인증 화면'
+
+    # --- Phase 2: 기능 관리 엣지케이스 ---
+
+    - id: B006
+      name: '카테고리 관리 - 빈 이름으로 추가 시도'
+      category: category_edge
+      priority: high
+      steps:
+        - action: tap
+          target_description: '더보기/메뉴'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '카테고리 관리'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '카테고리 관리 화면'
+        - action: tap
+          target_description: 'FAB'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '카테고리 추가 다이얼로그'
+        # 빈 이름으로 저장 시도
+        - action: tap
+          target: '저장'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '빈 이름 validation 에러'
+        # 정상 추가
+        - action: tap
+          target_description: '카테고리 이름 입력 필드'
+        - action: type_text
+          text: '테스트카테고리'
+        - action: tap
+          target: '저장'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '카테고리 추가 완료'
+      expected: '빈 이름 에러 후 정상 추가 성공'
+
+    # --- Phase 3: 공유 초대 수락/탈퇴 ---
+
+    - id: B007
+      name: '공유 초대 수락'
+      category: share
+      priority: critical
+      note: 'A015(초대 전송) 완료 후 실행해야 함'
+      steps:
+        - action: press_button
+          button: back
+        - action: tap
+          target_description: '더보기/메뉴'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '가계부 및 공유 관리'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '공유 관리 - 초대받은 가계부 확인'
+        # 초대받은 가계부 섹션 확인
+        - action: swipe
+          direction: up
+          description: '아래로 스크롤하여 초대받은 가계부 확인'
+        - action: screenshot
+          description: '초대받은 가계부 카드'
+        # 수락 버튼 탭
+        - action: tap
+          target: '수락'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '초대 수락 결과'
+      expected: '초대가 수락되어 공유 가계부에 참여'
+
+    - id: B008
+      name: '공유 가계부 사용 전환'
+      category: share
+      priority: high
+      steps:
+        - action: tap
+          target: '사용'
+          description: '공유 가계부를 현재 가계부로 설정'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '공유 가계부로 전환됨'
+      expected: '공유 가계부가 현재 사용 가계부로 설정'
+
+    - id: B009
+      name: '공유 가계부에서 거래 추가'
+      category: share
+      priority: high
+      steps:
+        - action: press_button
+          button: back
+        - action: wait
+          duration: 1000
+        - action: tap
+          target_description: 'FAB'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '지출'
+        - action: tap
+          target_description: '금액 입력 필드'
+        - action: type_text
+          text: '25000'
+        - action: tap
+          target: '저장'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '공유 가계부에서 거래 추가 확인'
+      expected: '공유 가계부에 거래가 추가됨 (5554에서도 보여야 함)'
+
+    - id: B010
+      name: '공유 가계부 탈퇴'
+      category: share
+      priority: critical
+      steps:
+        - action: tap
+          target_description: '더보기/메뉴'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '가계부 및 공유 관리'
+        - action: wait
+          duration: 2000
+        - action: swipe
+          direction: up
+        - action: screenshot
+          description: '초대받은 가계부 영역'
+        - action: tap
+          target: '탈퇴'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '탈퇴 확인 다이얼로그'
+        - action: tap
+          target: '확인'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '탈퇴 후 상태'
+      expected: '공유 가계부에서 탈퇴, 초대받은 가계부에서 사라짐'
+
+    # --- Phase 4: 결제수단/고정비 ---
+
+    - id: B011
+      name: '결제수단 추가 - 직접입력'
+      category: payment_method
+      priority: high
+      steps:
+        - action: press_button
+          button: back
+        - action: tap
+          target_description: '더보기/메뉴'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '결제수단 관리'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '결제수단 관리 화면'
+        - action: tap
+          target_description: 'FAB'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '추가 모드 선택'
+        - action: tap
+          target: '직접입력'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target_description: '결제수단 이름 입력'
+        - action: type_text
+          text: '테스트카드'
+        - action: tap
+          target: '저장하기'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '결제수단 추가 완료'
+      expected: '테스트카드 결제수단 추가 성공'
+
+    - id: B012
+      name: '고정비 관리 확인'
+      category: fixed_expense
+      priority: medium
+      steps:
+        - action: press_button
+          button: back
+        - action: tap
+          target_description: '더보기/메뉴'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '고정비 관리'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '고정비 관리 화면'
+      expected: '고정비 카테고리 목록 표시'
+
+    - id: B013
+      name: '설정 - 테마 전환 (다크/라이트)'
+      category: settings
+      priority: medium
+      steps:
+        - action: press_button
+          button: back
+        - action: tap
+          target_description: '더보기/메뉴'
+        - action: wait
+          duration: 1000
+        - action: tap
+          target: '설정'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '설정 화면'
+        - action: tap
+          target: '테마'
+        - action: wait
+          duration: 500
+        - action: tap
+          target: '다크 모드'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '다크 모드 적용'
+        # 다시 라이트 모드로
+        - action: tap
+          target: '테마'
+        - action: wait
+          duration: 500
+        - action: tap
+          target: '라이트 모드'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '라이트 모드 복귀'
+      expected: '다크/라이트 모드 전환 정상 동작'
+
+    - id: B014
+      name: '약관/개인정보처리방침 확인'
+      category: settings
+      priority: low
+      steps:
+        - action: swipe
+          direction: up
+          description: '하단으로 스크롤'
+        - action: tap
+          target: '이용약관'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '이용약관 페이지'
+        - action: press_button
+          button: back
+        - action: tap
+          target: '개인정보처리방침'
+        - action: wait
+          duration: 2000
+        - action: screenshot
+          description: '개인정보처리방침 페이지'
+        - action: press_button
+          button: back
+      expected: '이용약관, 개인정보처리방침 페이지 정상 표시'
+
+    - id: B015
+      name: '로그아웃'
+      category: auth
+      priority: critical
+      steps:
+        - action: swipe
+          direction: up
+        - action: tap
+          target: '로그아웃'
+        - action: wait
+          duration: 1000
+        - action: screenshot
+          description: '로그아웃 확인 다이얼로그'
+        - action: tap
+          target: '확인'
+        - action: wait
+          duration: 3000
+        - action: screenshot
+          description: '로그인 화면 복귀'
+      expected: '로그아웃 후 로그인 화면'
+
+# 실행 조율 가이드
+execution_coordination:
+  sync_points:
+    - name: '회원가입 완료 동기화'
+      description: |
+        A005(5554 회원가입)와 B005(5556 회원가입)가 모두 완료된 후
+        A015(초대 전송)을 실행해야 함
+      wait_for: [A005, B005]
+      then: A015
+
+    - name: '초대 전송 후 수락'
+      description: |
+        A015(초대 전송) 완료 후 B007(초대 수락)을 실행
+      wait_for: [A015]
+      then: B007
+
+    - name: '초대 수락 후 방출 테스트'
+      description: |
+        B007(초대 수락) 완료 후 A017(멤버 방출) 실행 가능
+        또는 B010(탈퇴) 먼저 실행 가능
+      wait_for: [B007]
+      then: [A017, B010]
+
+  parallel_phases:
+    phase_1:
+      description: '인증 엣지케이스 (병렬)'
+      group_a: [A001, A002, A003, A004, A005, A006]
+      group_b: [B001, B002, B003, B004, B005]
+
+    phase_2:
+      description: '기능 테스트 (병렬)'
+      group_a: [A007, A008, A009, A010, A011, A012, A013]
+      group_b: [B006, B011, B012, B013, B014]
+
+    phase_3:
+      description: '공유 기능 (동기화 필요)'
+      sequence:
+        - step: 'A014 (초대 엣지케이스)'
+        - step: 'A015 (초대 전송)'
+        - step: 'B007 (초대 수락)'
+        - step: 'B008 (공유 가계부 사용)'
+        - step: 'B009 (공유 가계부 거래 추가)'
+        - step: 'B010 (탈퇴) 또는 A017 (방출)'
+
+    phase_4:
+      description: '정리 (병렬)'
+      group_a: [A018, A019, A020]
+      group_b: [B015]
+
+summary:
+  total_scenarios: 35
+  group_a_count: 20
+  group_b_count: 15
+  by_category:
+    auth_edge: 8
+    auth: 4
+    transaction_edge: 1
+    transaction: 2
+    navigation: 1
+    search_edge: 2
+    share: 5
+    share_edge: 2
+    category_edge: 1
+    payment_method: 1
+    fixed_expense: 1
+    ledger_edge: 2
+    settings: 2
+    settings_low: 1
+  by_priority:
+    critical: 10
+    high: 10
+    medium: 9
+    low: 3

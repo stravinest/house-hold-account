@@ -1,0 +1,35 @@
+appId: com.household.shared.shared_household_account
+---
+# E02: 카테고리 미선택 거래 저장
+# 카테고리를 선택하지 않아도 거래가 정상적으로 저장되는지 확인 (카테고리는 nullable)
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# FAB 버튼 클릭
+- tapOn:
+    id: 'fab_add_transaction'
+
+# 지출 탭 선택
+- tapOn: '지출'
+
+# 금액 입력
+- tapOn: '금액'
+- inputText: '5000'
+
+# 제목 입력
+- tapOn: '제목'
+- inputText: '카테고리없는거래'
+
+# 카테고리 선택하지 않고 바로 저장
+- tapOn: '저장'
+
+# 거래 추가 성공 메시지 확인
+- extendedWaitUntil:
+    visible: '거래가 추가되었습니다'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/e02'

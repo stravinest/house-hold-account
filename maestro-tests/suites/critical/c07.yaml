@@ -1,0 +1,38 @@
+appId: com.household.shared.shared_household_account
+---
+# C07: 공유 초대 보내기 (user1)
+# user1이 user2에게 가계부 공유 초대를 보내고 성공 메시지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 더보기 탭 이동
+- tapOn: '더보기'
+- extendedWaitUntil:
+    visible: '더보기'
+    timeout: 5000
+
+# 공유 관리(가계부 관리) 진입
+- tapOn: '가계부 관리'
+- extendedWaitUntil:
+    visible: '초대'
+    timeout: 5000
+
+# 초대 버튼 탭
+- tapOn: '초대'
+
+# 이메일 입력
+- inputText: 'user2@test.com'
+
+# 초대 전송
+- tapOn: '초대'
+
+# 성공 메시지 확인
+- extendedWaitUntil:
+    visible: '초대를 보냈습니다'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/c07'

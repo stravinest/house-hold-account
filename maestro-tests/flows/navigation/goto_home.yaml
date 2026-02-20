@@ -1,0 +1,9 @@
+appId: com.household.shared.shared_household_account
+---
+# 홈(캘린더) 탭으로 이동
+
+- tapOn: '캘린더'
+
+- extendedWaitUntil:
+    visible: '캘린더'
+    timeout: 5000

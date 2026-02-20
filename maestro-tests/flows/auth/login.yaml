@@ -1,0 +1,24 @@
+appId: com.household.shared.shared_household_account
+---
+# 공통 로그인 플로우 (clearState 없이)
+# 환경변수: EMAIL, PASSWORD
+
+- launchApp
+
+- extendedWaitUntil:
+    visible: '로그인'
+    timeout: 10000
+
+- tapOn: '이메일'
+- inputText: '${EMAIL}'
+
+- tapOn: '비밀번호'
+- inputText: '${PASSWORD}'
+
+- hideKeyboard
+
+- tapOn: '로그인'
+
+- extendedWaitUntil:
+    visible: '캘린더'
+    timeout: 30000

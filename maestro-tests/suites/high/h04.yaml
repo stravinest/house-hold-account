@@ -1,0 +1,39 @@
+appId: com.household.shared.shared_household_account
+---
+# H04: 결제수단 생성 (user2)
+# 더보기 > 결제수단에서 새 결제수단을 추가
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user2@test.com'
+      PASSWORD: 'testpass123'
+
+# 더보기 탭 이동
+- tapOn: '더보기'
+- extendedWaitUntil:
+    visible: '더보기'
+    timeout: 5000
+
+# 결제수단 관리 진입
+- tapOn: '결제수단'
+- extendedWaitUntil:
+    visible: '결제수단'
+    timeout: 5000
+
+# 결제수단 추가 버튼 탭
+- tapOn: '결제수단 추가'
+
+# 결제수단 이름 입력
+- tapOn: '결제수단 이름'
+- inputText: 'E2E테스트카드'
+
+# 저장
+- tapOn: '저장'
+
+# 생성된 결제수단이 목록에 표시되는지 확인
+- extendedWaitUntil:
+    visible: 'E2E테스트카드'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/h04'

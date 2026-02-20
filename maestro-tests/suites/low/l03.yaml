@@ -1,0 +1,49 @@
+appId: com.household.shared.shared_household_account
+---
+# L03: 네트워크 에러 발생 시 재시도 확인
+# 비행기모드로 네트워크를 끊은 뒤 작업 시도 > 에러 확인 > 네트워크 복구 > 재시도 성공
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 캘린더 화면 확인
+- assertVisible: '지출'
+
+# adb로 비행기모드 활성화 (네트워크 끊기)
+- runScript:
+    script: 'adb shell settings put global airplane_mode_on 1 && adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true'
+
+# 잠시 대기 후 통계 탭 이동 (네트워크 필요한 작업)
+- tapOn: '통계'
+
+# 에러 또는 로딩 실패 상태 확인
+- extendedWaitUntil:
+    true:
+      or:
+        - visible: '오류'
+        - visible: '다시 시도'
+        - visible: '네트워크'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/l03_network_error'
+
+# adb로 비행기모드 비활성화 (네트워크 복구)
+- runScript:
+    script: 'adb shell settings put global airplane_mode_on 0 && adb shell am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false'
+
+# 네트워크 복구 대기
+- extendedWaitUntil:
+    timeout: 5000
+
+# 다시 시도 (화면 당기기 또는 탭 다시 클릭)
+- tapOn: '통계'
+
+# 정상 로드 확인
+- extendedWaitUntil:
+    visible: '통계'
+    timeout: 15000
+
+- takeScreenshot: 'screenshots/l03_recovered'

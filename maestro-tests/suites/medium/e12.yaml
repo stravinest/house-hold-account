@@ -1,0 +1,40 @@
+appId: com.household.shared.shared_household_account
+---
+# E12: 언어 변경 후 라벨 확인
+# 한국어에서 English로 변경한 뒤 UI 라벨이 정상적으로 바뀌는지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 한국어 상태 스크린샷
+- takeScreenshot: 'screenshots/e12_korean'
+
+# 더보기 탭 이동
+- tapOn: '더보기'
+
+# 설정 진입
+- tapOn: '설정'
+
+# 언어 설정 탭
+- tapOn: '언어'
+
+# English 선택
+- tapOn: 'English'
+
+# 설정 반영 대기
+- extendedWaitUntil:
+    visible: 'Settings'
+    timeout: 5000
+
+# 뒤로가기로 홈 화면 이동
+- back
+- back
+
+# 영어 라벨 확인
+- assertVisible: 'Calendar'
+
+# 영어 모드 적용 후 스크린샷
+- takeScreenshot: 'screenshots/e12_english'

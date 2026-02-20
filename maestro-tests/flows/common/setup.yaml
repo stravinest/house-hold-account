@@ -1,0 +1,51 @@
+appId: com.household.shared.shared_household_account
+---
+# 공통 셋업 - 앱 초기화 및 로그인
+# 환경변수: EMAIL, PASSWORD
+
+- clearState
+
+- launchApp
+
+# 로그인 화면이 나올 때까지 대기
+- extendedWaitUntil:
+    visible: '로그인'
+    timeout: 10000
+
+# 이메일 입력
+- tapOn: '이메일'
+- inputText: '${EMAIL}'
+
+# 비밀번호 입력
+- tapOn: '비밀번호'
+- inputText: '${PASSWORD}'
+
+# 키보드 숨기기
+- hideKeyboard
+
+# 로그인 버튼 클릭
+- tapOn: '로그인'
+
+# 로그인 처리 대기 - 로그인 버튼이 사라질 때까지
+- extendedWaitUntil:
+    notVisible: '비밀번호를 잊으셨나요?'
+    timeout: 30000
+
+# 환영 다이얼로그 확인 버튼 탭 (좌표 기반 - 다이얼로그 하단 중앙)
+# 720x1280 에뮬레이터 기준 확인 버튼 위치
+- tapOn:
+    point: '50%,75%'
+
+- waitForAnimationToEnd
+
+# 앱 권한 설정 다이얼로그 나중에 버튼 (있으면)
+- tapOn:
+    text: '나중에'
+    optional: true
+
+- waitForAnimationToEnd
+
+# 홈 화면 확인
+- extendedWaitUntil:
+    visible: '지출'
+    timeout: 10000

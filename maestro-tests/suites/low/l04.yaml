@@ -1,0 +1,24 @@
+appId: com.household.shared.shared_household_account
+---
+# L04: 로딩 인디케이터 표시 확인
+# 통계 탭 이동 시 로딩 인디케이터가 표시되는지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 통계 탭 이동
+- tapOn: '통계'
+
+# 로딩 상태 스크린샷 (빠르게 캡처)
+- takeScreenshot: 'screenshots/l04_loading'
+
+# 로딩 완료 대기
+- extendedWaitUntil:
+    visible: '통계'
+    timeout: 15000
+
+# 로딩 완료 후 스크린샷
+- takeScreenshot: 'screenshots/l04_loaded'

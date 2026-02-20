@@ -1,0 +1,15 @@
+appId: com.household.shared.shared_household_account
+---
+# C01: 로그인 성공 (user1)
+# user1 계정으로 로그인 후 캘린더 화면이 표시되는지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 홈 화면 캘린더 요소 확인
+- assertVisible: '지출'
+
+- takeScreenshot: 'screenshots/c01'

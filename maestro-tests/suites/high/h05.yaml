@@ -1,0 +1,21 @@
+appId: com.household.shared.shared_household_account
+---
+# H05: 통계 차트 조회 (user1)
+# 로그인 후 통계 탭에서 차트가 정상 표시되는지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 통계 탭 이동
+- tapOn: '통계'
+- extendedWaitUntil:
+    visible: '통계'
+    timeout: 5000
+
+# 통계 화면이 로드되었는지 확인
+- assertVisible: '통계'
+
+- takeScreenshot: 'screenshots/h05'

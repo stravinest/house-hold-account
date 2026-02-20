@@ -1,0 +1,9 @@
+appId: com.household.shared.shared_household_account
+---
+# 설정 화면으로 이동
+
+- tapOn: '더보기'
+
+- extendedWaitUntil:
+    visible: '설정'
+    timeout: 5000

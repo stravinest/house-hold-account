@@ -1,0 +1,41 @@
+appId: com.household.shared.shared_household_account
+---
+# E08: 반복+할부 동시 설정 충돌 방지 확인
+# 반복 설정과 할부 설정을 동시에 활성화할 수 없는지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# FAB 버튼 클릭
+- tapOn:
+    id: 'fab_add_transaction'
+
+# 지출 탭 선택
+- tapOn: '지출'
+
+# 금액 입력
+- tapOn: '금액'
+- inputText: '50000'
+
+# 반복 설정 활성화
+- tapOn: '반복'
+
+# 반복 옵션이 표시되는지 확인
+- extendedWaitUntil:
+    visible: '반복'
+    timeout: 5000
+
+- takeScreenshot: 'screenshots/e08_repeat'
+
+# 할부 설정 시도
+- scrollUntilVisible:
+    element: '할부'
+    direction: DOWN
+
+- tapOn: '할부'
+
+# 반복과 할부가 동시 설정되지 않는지 확인 (충돌 방지 UI)
+- takeScreenshot: 'screenshots/e08_conflict'

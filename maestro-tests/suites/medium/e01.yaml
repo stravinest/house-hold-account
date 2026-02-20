@@ -1,0 +1,35 @@
+appId: com.household.shared.shared_household_account
+---
+# E01: 거래 금액 0원 입력 시 유효성 에러 확인
+# 지출 거래에서 금액을 0으로 입력하면 저장이 불가능한지 검증
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# FAB 버튼 클릭하여 거래 추가 시트 열기
+- tapOn:
+    id: 'fab_add_transaction'
+
+# 지출 탭 선택
+- tapOn: '지출'
+
+# 금액 필드에 0 입력
+- tapOn: '금액'
+- inputText: '0'
+
+# 제목 입력
+- tapOn: '제목'
+- inputText: '테스트거래'
+
+# 저장 버튼 클릭
+- tapOn: '저장'
+
+# 유효성 에러 메시지 확인
+- extendedWaitUntil:
+    visible: '금액을 입력해주세요'
+    timeout: 5000
+
+- takeScreenshot: 'screenshots/e01'

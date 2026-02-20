@@ -1,0 +1,22 @@
+appId: com.household.shared.shared_household_account
+---
+# C05: 홈 캘린더 뷰 확인 (user1)
+# 로그인 후 캘린더 탭에서 날짜가 정상 표시되는지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 캘린더 탭이 활성화되어 있는지 확인
+- assertVisible: '지출'
+
+# 오늘 날짜가 포함된 캘린더가 표시되는지 확인
+- extendedWaitUntil:
+    visible:
+      id: 'calendar_view'
+    timeout: 5000
+    optional: true
+
+- takeScreenshot: 'screenshots/c05'

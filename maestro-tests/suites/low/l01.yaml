@@ -1,0 +1,16 @@
+appId: com.household.shared.shared_household_account
+---
+# L01: 빈 거래 목록 상태 확인
+# 거래가 없는 상태에서 홈 화면이 빈 상태 UI를 정상 표시하는지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 캘린더 화면 확인
+- assertVisible: '지출'
+
+# 홈 화면의 빈 상태 스크린샷
+- takeScreenshot: 'screenshots/l01_empty_home'

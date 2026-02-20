@@ -1,0 +1,9 @@
+appId: com.household.shared.shared_household_account
+---
+# 통계 탭으로 이동
+
+- tapOn: '통계'
+
+- extendedWaitUntil:
+    visible: '통계'
+    timeout: 5000

@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="Medium_Phone_2" tests="3" failures="2" time="153.0">
+    <testcase id="c01" name="c01" classname="c01" time="52.0" status="ERROR">
+      <failure>Assertion is false: "확인" is visible</failure>
+    </testcase>
+    <testcase id="c03" name="c03" classname="c03" time="61.0" status="ERROR">
+      <failure>Element not found: Text matching regex: 금액</failure>
+    </testcase>
+    <testcase id="c05" name="c05" classname="c05" time="40.0" status="SUCCESS"/>
+  </testsuite>
+</testsuites>

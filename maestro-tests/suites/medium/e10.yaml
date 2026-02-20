@@ -1,0 +1,38 @@
+appId: com.household.shared.shared_household_account
+---
+# E10: 1억 초과 금액 입력 시 동작 확인
+# 매우 큰 금액(100,000,001원)을 입력했을 때 앱이 정상 동작하는지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# FAB 버튼 클릭
+- tapOn:
+    id: 'fab_add_transaction'
+
+# 지출 탭 선택
+- tapOn: '지출'
+
+# 큰 금액 입력
+- tapOn: '금액'
+- inputText: '100000001'
+
+# 제목 입력
+- tapOn: '제목'
+- inputText: '큰금액테스트'
+
+# 저장 시도
+- tapOn: '저장'
+
+# 앱 크래시 없이 동작하는지 확인 (성공 또는 에러 메시지)
+- extendedWaitUntil:
+    true:
+      or:
+        - visible: '거래가 추가되었습니다'
+        - visible: '오류'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/e10'

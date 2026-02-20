@@ -1,0 +1,39 @@
+appId: com.household.shared.shared_household_account
+---
+# H03: 카테고리 생성 (user1)
+# 더보기 > 카테고리에서 새 카테고리를 추가
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# 더보기 탭 이동
+- tapOn: '더보기'
+- extendedWaitUntil:
+    visible: '더보기'
+    timeout: 5000
+
+# 카테고리 관리 진입
+- tapOn: '카테고리'
+- extendedWaitUntil:
+    visible: '카테고리'
+    timeout: 5000
+
+# 카테고리 추가 버튼 탭
+- tapOn: '카테고리 추가'
+
+# 카테고리 이름 입력
+- tapOn: '카테고리 이름'
+- inputText: 'E2E테스트카테고리'
+
+# 저장
+- tapOn: '저장'
+
+# 생성된 카테고리가 목록에 표시되는지 확인
+- extendedWaitUntil:
+    visible: 'E2E테스트카테고리'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/h03'

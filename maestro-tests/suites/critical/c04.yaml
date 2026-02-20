@@ -1,0 +1,39 @@
+appId: com.household.shared.shared_household_account
+---
+# C04: 수입 거래 추가 (user2)
+# 로그인 후 FAB 버튼으로 수입 거래를 추가하고 성공 메시지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user2@test.com'
+      PASSWORD: 'testpass123'
+
+# FAB(+) 버튼 탭하여 거래 추가 시트 열기
+- tapOn:
+    id: 'add_transaction_fab'
+    optional: true
+- extendedWaitUntil:
+    visible: '지출'
+    timeout: 5000
+
+# 수입 탭 선택
+- tapOn: '수입'
+
+# 금액 입력
+- tapOn: '금액'
+- inputText: '50000'
+
+# 제목 입력
+- tapOn: '제목'
+- inputText: '테스트수입'
+
+# 저장 버튼 탭
+- tapOn: '저장'
+
+# 성공 메시지 확인
+- extendedWaitUntil:
+    visible: '거래가 추가되었습니다'
+    timeout: 10000
+
+- takeScreenshot: 'screenshots/c04'

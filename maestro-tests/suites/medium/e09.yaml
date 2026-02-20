@@ -1,0 +1,35 @@
+appId: com.household.shared.shared_household_account
+---
+# E09: 미래 날짜 선택 가능 여부 확인
+# 거래 추가 시 미래 날짜를 선택할 수 있는지 확인
+
+- runFlow:
+    file: '../../flows/common/setup.yaml'
+    env:
+      EMAIL: 'user1@test.com'
+      PASSWORD: 'testpass123'
+
+# FAB 버튼 클릭
+- tapOn:
+    id: 'fab_add_transaction'
+
+# 지출 탭 선택
+- tapOn: '지출'
+
+# 금액 입력
+- tapOn: '금액'
+- inputText: '10000'
+
+# 날짜 선택 필드 탭
+- tapOn: '날짜'
+
+# 날짜 피커에서 다음 달로 이동
+- tapOn: '>'
+
+# 미래 날짜 선택 가능 여부 스크린샷
+- takeScreenshot: 'screenshots/e09_future_date'
+
+# 날짜 선택 확인
+- tapOn: '확인'
+
+- takeScreenshot: 'screenshots/e09'
