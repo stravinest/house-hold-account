@@ -51,6 +51,7 @@ jobs:
               -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
               -H "apikey: $SUPABASE_SERVICE_KEY" \
               -H "Accept: application/json" \
+              -H "Accept-Profile: house" \
               -H "Prefer: count=exact" \
               "${SUPABASE_URL}/rest/v1/${TABLE}?select=*&limit=100000")
 
