@@ -143,14 +143,14 @@ class CategoryNotifier extends SafeNotifier<List<Category>> {
     }
   }
 
-  Future<void> updateCategory({
+  Future<Category> updateCategory({
     required String id,
     String? name,
     String? icon,
     String? color,
   }) async {
     try {
-      await safeAsync(
+      final result = await safeAsync(
         () => _repository.updateCategory(
           id: id,
           name: name,
@@ -161,6 +161,7 @@ class CategoryNotifier extends SafeNotifier<List<Category>> {
 
       safeInvalidate(categoriesProvider);
       await loadCategories();
+      return result!;
     } catch (e, st) {
       safeUpdateState(AsyncValue.error(e, st));
       rethrow;

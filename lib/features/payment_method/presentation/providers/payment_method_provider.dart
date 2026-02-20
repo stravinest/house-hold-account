@@ -222,7 +222,7 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
     }
   }
 
-  Future<void> updatePaymentMethod({
+  Future<PaymentMethod> updatePaymentMethod({
     required String id,
     String? name,
     String? icon,
@@ -230,7 +230,7 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
     bool? canAutoSave,
   }) async {
     try {
-      await safeAsync(
+      final result = await safeAsync(
         () => _repository.updatePaymentMethod(
           id: id,
           name: name,
@@ -242,6 +242,7 @@ class PaymentMethodNotifier extends SafeNotifier<List<PaymentMethod>> {
 
       // Realtime subscription이 변경을 감지하므로 수동 로드가 불필요합니다.
       safeInvalidate(paymentMethodsProvider);
+      return result!;
     } catch (e, st) {
       debugPrint('PaymentMethod update fail: $e');
       safeUpdateState(AsyncValue.error(e, st));

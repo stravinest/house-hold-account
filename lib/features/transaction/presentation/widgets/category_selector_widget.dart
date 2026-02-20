@@ -6,6 +6,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/widgets/category_icon.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../category/domain/entities/category.dart';
+import '../../../category/presentation/pages/category_management_page.dart';
 import '../../../category/presentation/providers/category_provider.dart';
 
 /// 카테고리 선택 결과
@@ -52,232 +53,49 @@ class _CategorySelectorWidgetState
     extends ConsumerState<CategorySelectorWidget> {
   bool _isEditMode = false;
 
-  // 랜덤 색상 생성
-  String _generateRandomColor() {
-    final colors = [
-      '#4CAF50',
-      '#2196F3',
-      '#F44336',
-      '#FF9800',
-      '#9C27B0',
-      '#00BCD4',
-      '#E91E63',
-      '#795548',
-      '#607D8B',
-      '#3F51B5',
-      '#009688',
-      '#CDDC39',
-    ];
-    return colors[(DateTime.now().millisecondsSinceEpoch % colors.length)];
-  }
-
   /// 카테고리 추가 다이얼로그 표시
-  void _showAddCategoryDialog() {
-    final l10n = AppLocalizations.of(context);
-    final nameController = TextEditingController();
-    var isLoading = false;
-
-    String typeLabel;
-    switch (widget.transactionType) {
-      case 'expense':
-        typeLabel = l10n.transactionExpense;
-        break;
-      case 'income':
-        typeLabel = l10n.transactionIncome;
-        break;
-      default:
-        typeLabel = l10n.transactionAsset;
-    }
-
-    showDialog(
+  Future<void> _showAddCategoryDialog() async {
+    final result = await showDialog<Category>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (_, setDialogState) {
-          Future<void> submit() async {
-            if (isLoading) return;
-            setDialogState(() => isLoading = true);
-            try {
-              await _submitCategory(dialogContext, nameController);
-            } finally {
-              if (dialogContext.mounted) {
-                setDialogState(() => isLoading = false);
-              }
-            }
-          }
-
-          return AlertDialog(
-            title: Text(l10n.categoryAddType(typeLabel)),
-            content: TextField(
-              controller: nameController,
-              autofocus: true,
-              enabled: !isLoading,
-              decoration: InputDecoration(
-                labelText: l10n.categoryName,
-                hintText: l10n.categoryNameHintExample,
-                border: const OutlineInputBorder(),
-              ),
-              onSubmitted: isLoading ? null : (_) => submit(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: isLoading
-                    ? null
-                    : () => Navigator.pop(dialogContext),
-                child: Text(l10n.commonCancel),
-              ),
-              FilledButton(
-                onPressed: isLoading ? null : () => submit(),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.commonAdd),
-              ),
-            ],
-          );
-        },
+      builder: (context) => MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: CategoryEditDialog(type: widget.transactionType),
       ),
     );
-  }
 
-  /// 카테고리 생성 제출
-  Future<void> _submitCategory(
-    BuildContext dialogContext,
-    TextEditingController nameController,
-  ) async {
-    final l10n = AppLocalizations.of(context);
-    if (nameController.text.trim().isEmpty) {
-      SnackBarUtils.showError(context, l10n.categoryNameRequired);
-      return;
-    }
-
-    try {
-      final newCategory = await ref
-          .read(categoryNotifierProvider.notifier)
-          .createCategory(
-            name: nameController.text.trim(),
-            icon: '',
-            color: _generateRandomColor(),
-            type: widget.transactionType,
-          );
-
-      widget.onCategorySelected(newCategory);
-
-      if (dialogContext.mounted) {
-        Navigator.pop(dialogContext);
-      }
-
-      SnackBarUtils.showSuccess(context, l10n.categoryAdded);
-
+    if (result != null) {
+      widget.onCategorySelected(result);
       ref.invalidate(categoriesProvider);
       ref.invalidate(incomeCategoriesProvider);
       ref.invalidate(expenseCategoriesProvider);
       ref.invalidate(savingCategoriesProvider);
-    } catch (e) {
-      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     }
   }
 
   /// 카테고리 수정 다이얼로그
-  void _showEditCategoryDialog(Category category) {
-    final l10n = AppLocalizations.of(context);
-    final nameController = TextEditingController(text: category.name);
-    var isLoading = false;
-
-    showDialog(
+  Future<void> _showEditCategoryDialog(Category category) async {
+    final result = await showDialog<Category>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (_, setDialogState) {
-          Future<void> submit() async {
-            if (isLoading) return;
-            setDialogState(() => isLoading = true);
-            try {
-              await _submitEditCategory(
-                dialogContext,
-                category,
-                nameController,
-              );
-            } finally {
-              if (dialogContext.mounted) {
-                setDialogState(() => isLoading = false);
-              }
-            }
-          }
-
-          return AlertDialog(
-            title: Text(l10n.categoryEdit),
-            content: TextField(
-              controller: nameController,
-              autofocus: true,
-              enabled: !isLoading,
-              decoration: InputDecoration(
-                labelText: l10n.categoryName,
-                border: const OutlineInputBorder(),
-              ),
-              onSubmitted: isLoading ? null : (_) => submit(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: isLoading
-                    ? null
-                    : () => Navigator.pop(dialogContext),
-                child: Text(l10n.commonCancel),
-              ),
-              FilledButton(
-                onPressed: isLoading ? null : () => submit(),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.commonSave),
-              ),
-            ],
-          );
-        },
+      builder: (context) => MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: CategoryEditDialog(
+          type: category.type,
+          category: category,
+        ),
       ),
     );
-  }
 
-  /// 카테고리 수정 제출
-  Future<void> _submitEditCategory(
-    BuildContext dialogContext,
-    Category category,
-    TextEditingController nameController,
-  ) async {
-    final l10n = AppLocalizations.of(context);
-    final newName = nameController.text.trim();
-
-    if (newName.isEmpty) {
-      SnackBarUtils.showError(context, l10n.categoryNameRequired);
-      return;
-    }
-
-    if (newName == category.name) {
-      Navigator.pop(dialogContext);
-      return;
-    }
-
-    try {
-      await ref
-          .read(categoryNotifierProvider.notifier)
-          .updateCategory(id: category.id, name: newName);
-
-      if (dialogContext.mounted) {
-        Navigator.pop(dialogContext);
+    if (result != null) {
+      // 수정된 카테고리가 현재 선택된 카테고리면 업데이트
+      if (widget.selectedCategory?.id == result.id) {
+        widget.onCategorySelected(result);
       }
-
-      SnackBarUtils.showSuccess(context, l10n.commonSuccess);
-
       ref.invalidate(categoriesProvider);
       ref.invalidate(incomeCategoriesProvider);
       ref.invalidate(expenseCategoriesProvider);
       ref.invalidate(savingCategoriesProvider);
-    } catch (e) {
-      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     }
   }
 

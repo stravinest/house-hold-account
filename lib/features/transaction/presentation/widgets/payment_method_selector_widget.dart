@@ -1,14 +1,12 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
-import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/category_icon.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../payment_method/domain/entities/payment_method.dart';
+import '../../../payment_method/presentation/pages/payment_method_management_page.dart';
 import '../../../payment_method/presentation/providers/payment_method_provider.dart';
 
 /// 결제수단 선택 위젯
@@ -40,206 +38,42 @@ class _PaymentMethodSelectorWidgetState
     extends ConsumerState<PaymentMethodSelectorWidget> {
   bool _isEditMode = false;
 
-  // 랜덤 색상 생성
-  String _generateRandomColor() {
-    final random = Random();
-    return PaymentMethodColors.palette[random.nextInt(
-      PaymentMethodColors.palette.length,
-    )];
-  }
-
   /// 결제수단 추가 다이얼로그 표시
-  void _showAddPaymentMethodDialog() {
-    final l10n = AppLocalizations.of(context);
-    final nameController = TextEditingController();
-    var isLoading = false;
-
-    showDialog(
+  Future<void> _showAddPaymentMethodDialog() async {
+    final result = await showDialog<PaymentMethod>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (_, setDialogState) {
-          Future<void> submit() async {
-            if (isLoading) return;
-            setDialogState(() => isLoading = true);
-            try {
-              await _submitPaymentMethod(dialogContext, nameController);
-            } finally {
-              if (dialogContext.mounted) {
-                setDialogState(() => isLoading = false);
-              }
-            }
-          }
-
-          return AlertDialog(
-            title: Text(l10n.paymentMethodAdd),
-            content: TextField(
-              controller: nameController,
-              autofocus: true,
-              enabled: !isLoading,
-              decoration: InputDecoration(
-                labelText: l10n.paymentMethodName,
-                hintText: l10n.paymentMethodNameHintExample,
-                border: const OutlineInputBorder(),
-              ),
-              onSubmitted: isLoading ? null : (_) => submit(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: isLoading
-                    ? null
-                    : () => Navigator.pop(dialogContext),
-                child: Text(l10n.commonCancel),
-              ),
-              FilledButton(
-                onPressed: isLoading ? null : () => submit(),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.commonAdd),
-              ),
-            ],
-          );
-        },
+      builder: (context) => MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: const SharedPaymentMethodEditDialog(),
       ),
     );
-  }
 
-  /// 결제수단 생성 제출
-  Future<void> _submitPaymentMethod(
-    BuildContext dialogContext,
-    TextEditingController nameController,
-  ) async {
-    final l10n = AppLocalizations.of(context);
-    if (nameController.text.trim().isEmpty) {
-      SnackBarUtils.showError(context, l10n.paymentMethodNameRequired);
-      return;
-    }
-
-    try {
-      final newPaymentMethod = await ref
-          .read(paymentMethodNotifierProvider.notifier)
-          .createPaymentMethod(
-            name: nameController.text.trim(),
-            icon: '',
-            color: _generateRandomColor(),
-            canAutoSave: false, // 공유 결제수단 (자동수집 아님)
-          );
-
-      widget.onPaymentMethodSelected(newPaymentMethod);
-
-      if (dialogContext.mounted) {
-        Navigator.pop(dialogContext);
-        SnackBarUtils.showSuccess(context, l10n.paymentMethodAdded);
-      }
-
+    if (result != null) {
+      widget.onPaymentMethodSelected(result);
       ref.invalidate(sharedPaymentMethodsProvider);
       ref.invalidate(selectablePaymentMethodsProvider);
-    } catch (e) {
-      if (context.mounted) {
-        SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
-      }
     }
   }
 
   /// 결제수단 수정 다이얼로그
-  void _showEditPaymentMethodDialog(PaymentMethod method) {
-    final l10n = AppLocalizations.of(context);
-    final nameController = TextEditingController(text: method.name);
-    var isLoading = false;
-
-    showDialog(
+  Future<void> _showEditPaymentMethodDialog(PaymentMethod method) async {
+    final result = await showDialog<PaymentMethod>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (_, setDialogState) {
-          Future<void> submit() async {
-            if (isLoading) return;
-            setDialogState(() => isLoading = true);
-            try {
-              await _submitEditPaymentMethod(
-                dialogContext,
-                method,
-                nameController,
-              );
-            } finally {
-              if (dialogContext.mounted) {
-                setDialogState(() => isLoading = false);
-              }
-            }
-          }
-
-          return AlertDialog(
-            title: Text(l10n.paymentMethodEdit),
-            content: TextField(
-              controller: nameController,
-              autofocus: true,
-              enabled: !isLoading,
-              decoration: InputDecoration(
-                labelText: l10n.paymentMethodName,
-                border: const OutlineInputBorder(),
-              ),
-              onSubmitted: isLoading ? null : (_) => submit(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: isLoading
-                    ? null
-                    : () => Navigator.pop(dialogContext),
-                child: Text(l10n.commonCancel),
-              ),
-              FilledButton(
-                onPressed: isLoading ? null : () => submit(),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(l10n.commonSave),
-              ),
-            ],
-          );
-        },
+      builder: (context) => MediaQuery.removeViewInsets(
+        context: context,
+        removeBottom: true,
+        child: SharedPaymentMethodEditDialog(paymentMethod: method),
       ),
     );
-  }
 
-  /// 결제수단 수정 제출
-  Future<void> _submitEditPaymentMethod(
-    BuildContext dialogContext,
-    PaymentMethod method,
-    TextEditingController nameController,
-  ) async {
-    final l10n = AppLocalizations.of(context);
-    final newName = nameController.text.trim();
-
-    if (newName.isEmpty) {
-      SnackBarUtils.showError(context, l10n.paymentMethodNameRequired);
-      return;
-    }
-
-    if (newName == method.name) {
-      Navigator.pop(dialogContext);
-      return;
-    }
-
-    try {
-      await ref
-          .read(paymentMethodNotifierProvider.notifier)
-          .updatePaymentMethod(id: method.id, name: newName);
-
-      if (dialogContext.mounted) {
-        Navigator.pop(dialogContext);
+    if (result != null) {
+      // 수정된 결제수단이 현재 선택된 것이면 업데이트
+      if (widget.selectedPaymentMethod?.id == result.id) {
+        widget.onPaymentMethodSelected(result);
       }
-
-      SnackBarUtils.showSuccess(context, l10n.commonSuccess);
-
       ref.invalidate(sharedPaymentMethodsProvider);
       ref.invalidate(selectablePaymentMethodsProvider);
-    } catch (e) {
-      SnackBarUtils.showError(context, l10n.errorWithMessage(e.toString()));
     }
   }
 

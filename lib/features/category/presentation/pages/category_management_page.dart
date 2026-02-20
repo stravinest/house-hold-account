@@ -82,7 +82,7 @@ class _CategoryManagementPageState extends ConsumerState<CategoryManagementPage>
       builder: (context) => MediaQuery.removeViewInsets(
         context: context,
         removeBottom: true,
-        child: _CategoryDialog(type: type),
+        child: CategoryEditDialog(type: type),
       ),
     );
   }
@@ -217,7 +217,7 @@ class _CategoryTile extends ConsumerWidget {
       builder: (context) => MediaQuery.removeViewInsets(
         context: context,
         removeBottom: true,
-        child: _CategoryDialog(type: category.type, category: category),
+        child: CategoryEditDialog(type: category.type, category: category),
       ),
     );
   }
@@ -253,17 +253,21 @@ class _CategoryTile extends ConsumerWidget {
   }
 }
 
-class _CategoryDialog extends ConsumerStatefulWidget {
+/// 카테고리 추가/수정 다이얼로그 (이름 + 색상 + 아이콘)
+///
+/// 거래 추가 화면과 카테고리 관리 페이지에서 공통으로 사용됩니다.
+/// 생성/수정된 카테고리를 Navigator.pop으로 반환합니다.
+class CategoryEditDialog extends ConsumerStatefulWidget {
   final String type;
   final Category? category;
 
-  const _CategoryDialog({required this.type, this.category});
+  const CategoryEditDialog({super.key, required this.type, this.category});
 
   @override
-  ConsumerState<_CategoryDialog> createState() => _CategoryDialogState();
+  ConsumerState<CategoryEditDialog> createState() => _CategoryEditDialogState();
 }
 
-class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
+class _CategoryEditDialogState extends ConsumerState<CategoryEditDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late String _selectedColor;
@@ -477,8 +481,9 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
     final l10n = AppLocalizations.of(context);
 
     try {
+      Category? result;
       if (widget.category != null) {
-        await ref
+        result = await ref
             .read(categoryNotifierProvider.notifier)
             .updateCategory(
               id: widget.category!.id,
@@ -487,7 +492,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
               color: _selectedColor,
             );
       } else {
-        await ref
+        result = await ref
             .read(categoryNotifierProvider.notifier)
             .createCategory(
               name: _nameController.text.trim(),
@@ -498,7 +503,7 @@ class _CategoryDialogState extends ConsumerState<_CategoryDialog> {
       }
 
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, result);
         SnackBarUtils.showSuccess(
           context,
           widget.category != null ? l10n.categoryUpdated : l10n.categoryAdded,

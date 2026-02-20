@@ -652,7 +652,7 @@ class _PaymentMethodListView extends ConsumerWidget {
       builder: (context) => MediaQuery.removeViewInsets(
         context: context,
         removeBottom: true,
-        child: const _SharedPaymentMethodDialog(),
+        child: const SharedPaymentMethodEditDialog(),
       ),
     );
   }
@@ -677,7 +677,7 @@ class _PaymentMethodListView extends ConsumerWidget {
         builder: (context) => MediaQuery.removeViewInsets(
           context: context,
           removeBottom: true,
-          child: _SharedPaymentMethodDialog(paymentMethod: paymentMethod),
+          child: SharedPaymentMethodEditDialog(paymentMethod: paymentMethod),
         ),
       );
     } else {
@@ -2072,19 +2072,22 @@ class _PendingTransactionEditSheetState
   }
 }
 
-/// 공유 결제수단 추가/수정 다이얼로그 (카테고리 다이얼로그와 동일한 디자인)
-class _SharedPaymentMethodDialog extends ConsumerStatefulWidget {
+/// 공유 결제수단 추가/수정 다이얼로그 (이름 + 색상 + 아이콘)
+///
+/// 거래 추가 화면과 결제수단 관리 페이지에서 공통으로 사용됩니다.
+/// 생성/수정된 결제수단을 Navigator.pop으로 반환합니다.
+class SharedPaymentMethodEditDialog extends ConsumerStatefulWidget {
   final PaymentMethod? paymentMethod;
 
-  const _SharedPaymentMethodDialog({this.paymentMethod});
+  const SharedPaymentMethodEditDialog({super.key, this.paymentMethod});
 
   @override
-  ConsumerState<_SharedPaymentMethodDialog> createState() =>
-      _SharedPaymentMethodDialogState();
+  ConsumerState<SharedPaymentMethodEditDialog> createState() =>
+      _SharedPaymentMethodEditDialogState();
 }
 
-class _SharedPaymentMethodDialogState
-    extends ConsumerState<_SharedPaymentMethodDialog> {
+class _SharedPaymentMethodEditDialogState
+    extends ConsumerState<SharedPaymentMethodEditDialog> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late String _selectedColor;
@@ -2285,8 +2288,9 @@ class _SharedPaymentMethodDialogState
     final l10n = AppLocalizations.of(context);
 
     try {
+      PaymentMethod? result;
       if (isEdit) {
-        await ref
+        result = await ref
             .read(paymentMethodNotifierProvider.notifier)
             .updatePaymentMethod(
               id: widget.paymentMethod!.id,
@@ -2296,11 +2300,11 @@ class _SharedPaymentMethodDialogState
             );
 
         if (mounted) {
-          Navigator.pop(context);
+          Navigator.pop(context, result);
           SnackBarUtils.showSuccess(context, l10n.paymentMethodUpdated);
         }
       } else {
-        await ref
+        result = await ref
             .read(paymentMethodNotifierProvider.notifier)
             .createPaymentMethod(
               name: _nameController.text.trim(),
@@ -2310,7 +2314,7 @@ class _SharedPaymentMethodDialogState
             );
 
         if (mounted) {
-          Navigator.pop(context);
+          Navigator.pop(context, result);
           SnackBarUtils.showSuccess(context, l10n.paymentMethodAdded);
         }
       }
