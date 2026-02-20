@@ -7,6 +7,8 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/recurring_template_provider.dart';
 import '../widgets/edit_transaction_sheet.dart';
@@ -28,6 +30,9 @@ class _TemplateData {
   final String? fixedExpenseCategoryId;
   final String? fixedExpenseCategoryName;
   final String? paymentMethodId;
+  final String? userId;
+  final String? userDisplayName;
+  final String? userColor;
 
   _TemplateData._({
     required this.id,
@@ -45,12 +50,16 @@ class _TemplateData {
     this.fixedExpenseCategoryId,
     this.fixedExpenseCategoryName,
     this.paymentMethodId,
+    this.userId,
+    this.userDisplayName,
+    this.userColor,
   });
 
   factory _TemplateData.fromMap(Map<String, dynamic> map) {
     final category = map['categories'] as Map<String, dynamic>?;
     final fixedCategory =
         map['fixed_expense_categories'] as Map<String, dynamic>?;
+    final profile = map['profiles'] as Map<String, dynamic>?;
     return _TemplateData._(
       id: map['id'] as String,
       type: map['type'] as String? ?? 'expense',
@@ -68,6 +77,9 @@ class _TemplateData {
           map['fixed_expense_category_id'] as String?,
       fixedExpenseCategoryName: fixedCategory?['name'] as String?,
       paymentMethodId: map['payment_method_id'] as String?,
+      userId: map['user_id'] as String?,
+      userDisplayName: profile?['display_name'] as String?,
+      userColor: profile?['color'] as String?,
     );
   }
 
@@ -135,7 +147,6 @@ class _TemplateData {
   }
 
   // EditTransactionSheet에 전달할 Transaction 객체 생성
-  // ledgerId, userId는 템플릿 수정 모드에서 사용하지 않으므로 빈 값
   Transaction toFakeTransaction() {
     final now = DateTime.now();
     return Transaction(
@@ -160,12 +171,29 @@ class _TemplateData {
   }
 }
 
+Color? _parseHexColor(String? hexString) {
+  if (hexString == null || hexString.isEmpty) return null;
+  final hex = hexString.replaceFirst('#', '');
+  if (hex.length != 6) return null;
+  final parsed = int.tryParse('FF$hex', radix: 16);
+  return parsed != null ? Color(parsed) : null;
+}
+
 class RecurringTemplateManagementPage extends ConsumerWidget {
   const RecurringTemplateManagementPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final currentUser = ref.watch(currentUserProvider);
+    final currentUserId = currentUser?.id;
+    final currentLedgerAsync = ref.watch(currentLedgerProvider);
+    final isShared = currentLedgerAsync.valueOrNull?.isShared ?? false;
+
+    if (isShared) {
+      return _SharedLedgerView(currentUserId: currentUserId);
+    }
+
     final templatesAsync = ref.watch(recurringTemplatesProvider);
 
     return Scaffold(
@@ -183,17 +211,25 @@ class RecurringTemplateManagementPage extends ConsumerWidget {
                 message: l10n.recurringTemplateEmpty,
               );
             }
+
+            final allData =
+                templates.map((t) => _TemplateData.fromMap(t)).toList();
+
             return ListView.separated(
-              padding: const EdgeInsets.symmetric(
-                horizontal: Spacing.md,
-                vertical: Spacing.sm,
+              padding: const EdgeInsets.only(
+                left: Spacing.md,
+                right: Spacing.md,
+                top: Spacing.sm,
+                bottom: kBottomNavigationBarHeight + Spacing.md,
               ),
-              itemCount: templates.length,
-              separatorBuilder: (_, _) =>
+              itemCount: allData.length,
+              separatorBuilder: (_, __) =>
                   const SizedBox(height: Spacing.sm),
               itemBuilder: (context, index) {
-                final data = _TemplateData.fromMap(templates[index]);
-                return _TemplateCard(data: data);
+                return _TemplateCard(
+                  data: allData[index],
+                  isOwner: true,
+                );
               },
             );
           },
@@ -205,10 +241,140 @@ class RecurringTemplateManagementPage extends ConsumerWidget {
   }
 }
 
+// 공유 가계부: Provider 기반 유저별 그룹핑
+class _SharedLedgerView extends ConsumerWidget {
+  final String? currentUserId;
+
+  const _SharedLedgerView({required this.currentUserId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final groupedAsync = ref.watch(groupedRecurringTemplatesProvider);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l10n.recurringTemplateManagement),
+        scrolledUnderElevation: 0,
+      ),
+      body: CenteredContent(
+        maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
+        child: groupedAsync.when(
+          data: (groupedEntries) {
+            if (groupedEntries.isEmpty) {
+              return EmptyState(
+                icon: Icons.repeat_outlined,
+                message: l10n.recurringTemplateEmpty,
+              );
+            }
+
+            return _SharedLedgerList(
+              groupedEntries: groupedEntries,
+              currentUserId: currentUserId,
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text(e.toString())),
+        ),
+      ),
+    );
+  }
+}
+
+// 공유 가계부: 유저별 그룹 리스트
+class _SharedLedgerList extends StatelessWidget {
+  final List<MapEntry<String, List<Map<String, dynamic>>>> groupedEntries;
+  final String? currentUserId;
+
+  const _SharedLedgerList({
+    required this.groupedEntries,
+    required this.currentUserId,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
+
+    final items = <Widget>[];
+    for (final entry in groupedEntries) {
+      final userId = entry.key;
+      final rawTemplates = entry.value;
+      final templates =
+          rawTemplates.map((t) => _TemplateData.fromMap(t)).toList();
+      final first = templates.first;
+      final displayName = (first.userDisplayName != null &&
+              first.userDisplayName!.isNotEmpty)
+          ? first.userDisplayName!
+          : l10n.shareUnknown;
+      final isMe = userId == currentUserId;
+      final userColor = _parseHexColor(first.userColor);
+
+      // 유저 헤더
+      items.add(
+        Padding(
+          padding: const EdgeInsets.only(
+            top: Spacing.md,
+            bottom: Spacing.xs,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: userColor ?? colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: Spacing.xs),
+              Text(
+                displayName,
+                style: textTheme.labelLarge?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: Spacing.xs),
+              Text(
+                '(${templates.length})',
+                style: textTheme.labelMedium?.copyWith(
+                  color: colorScheme.outline,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      for (final data in templates) {
+        items.add(
+          Padding(
+            padding: const EdgeInsets.only(bottom: Spacing.sm),
+            child: _TemplateCard(data: data, isOwner: isMe),
+          ),
+        );
+      }
+    }
+
+    return ListView(
+      padding: const EdgeInsets.only(
+        left: Spacing.md,
+        right: Spacing.md,
+        top: Spacing.xs,
+        bottom: kBottomNavigationBarHeight + Spacing.md,
+      ),
+      children: items,
+    );
+  }
+}
+
 class _TemplateCard extends ConsumerWidget {
   final _TemplateData data;
+  final bool isOwner;
 
-  const _TemplateCard({required this.data});
+  const _TemplateCard({required this.data, required this.isOwner});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -233,7 +399,9 @@ class _TemplateCard extends ConsumerWidget {
           : colorScheme.surfaceContainerHighest.withAlpha(60),
       child: InkWell(
         borderRadius: BorderRadius.circular(BorderRadiusToken.md),
-        onTap: () => _handleMenuAction(context, ref, 'edit', l10n),
+        onTap: isOwner
+            ? () => _handleMenuAction(context, ref, 'edit', l10n)
+            : () => _showReadOnlyDetail(context, l10n),
         child: Padding(
           padding: const EdgeInsets.all(Spacing.md),
           child: Row(
@@ -307,61 +475,142 @@ class _TemplateCard extends ConsumerWidget {
               ),
               const SizedBox(width: Spacing.xs),
 
-              // 더보기 메뉴
-              PopupMenuButton<String>(
-                onSelected: (value) =>
-                    _handleMenuAction(context, ref, value, l10n),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                iconSize: 20,
-                icon: Icon(
-                  Icons.more_vert,
-                  color: colorScheme.onSurfaceVariant,
+              // 더보기 메뉴 (본인 템플릿만 표시)
+              if (isOwner)
+                PopupMenuButton<String>(
+                  onSelected: (value) =>
+                      _handleMenuAction(context, ref, value, l10n),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  iconSize: 20,
+                  icon: Icon(
+                    Icons.more_vert,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.edit, size: 20),
+                          const SizedBox(width: Spacing.sm),
+                          Text(l10n.recurringTemplateEdit),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'toggle',
+                      child: Row(
+                        children: [
+                          Icon(
+                            data.isActive ? Icons.pause : Icons.play_arrow,
+                            size: 20,
+                          ),
+                          const SizedBox(width: Spacing.sm),
+                          Text(data.isActive
+                              ? l10n.recurringTemplatePause
+                              : l10n.recurringTemplateResume),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          Icon(Icons.delete, size: 20, color: colorScheme.error),
+                          const SizedBox(width: Spacing.sm),
+                          Text(
+                            l10n.recurringTemplateDelete,
+                            style: TextStyle(color: colorScheme.error),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'edit',
-                    child: Row(
-                      children: [
-                        const Icon(Icons.edit, size: 20),
-                        const SizedBox(width: Spacing.sm),
-                        Text(l10n.recurringTemplateEdit),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'toggle',
-                    child: Row(
-                      children: [
-                        Icon(
-                          data.isActive ? Icons.pause : Icons.play_arrow,
-                          size: 20,
-                        ),
-                        const SizedBox(width: Spacing.sm),
-                        Text(data.isActive
-                            ? l10n.recurringTemplatePause
-                            : l10n.recurringTemplateResume),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete, size: 20, color: colorScheme.error),
-                        const SizedBox(width: Spacing.sm),
-                        Text(
-                          l10n.recurringTemplateDelete,
-                          style: TextStyle(color: colorScheme.error),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // 읽기 전용 상세 보기 (다른 유저의 반복거래)
+  void _showReadOnlyDetail(BuildContext context, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final formatter = NumberFormat('#,###');
+    final color = data.typeColor(colorScheme);
+
+    final typeLabel = switch (data.type) {
+      'income' => l10n.transactionIncome,
+      'asset' => l10n.transactionAsset,
+      _ => l10n.transactionExpense,
+    };
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(data.typeIcon, color: color, size: 22),
+            const SizedBox(width: Spacing.sm),
+            Expanded(
+              child: Text(
+                data.displayTitle(l10n),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _DetailRow(
+              label: l10n.transactionTypeLabel,
+              value: typeLabel,
+              textTheme: textTheme,
+            ),
+            const SizedBox(height: Spacing.sm),
+            _DetailRow(
+              label: l10n.transactionAmount,
+              value: '${formatter.format(data.amount)}${l10n.transactionAmountUnit}',
+              valueColor: color,
+              textTheme: textTheme,
+            ),
+            const SizedBox(height: Spacing.sm),
+            _DetailRow(
+              label: l10n.recurringTemplateEditRecurringType,
+              value: data.recurringScheduleText(l10n),
+              textTheme: textTheme,
+            ),
+            if (data.displayCategoryName != null) ...[
+              const SizedBox(height: Spacing.sm),
+              _DetailRow(
+                label: l10n.transactionCategory,
+                value: data.displayCategoryName!,
+                textTheme: textTheme,
+              ),
+            ],
+            if (data.memo != null && data.memo!.isNotEmpty) ...[
+              const SizedBox(height: Spacing.sm),
+              _DetailRow(
+                label: l10n.transactionMemo,
+                value: data.memo!,
+                textTheme: textTheme,
+              ),
+            ],
+            const SizedBox(height: Spacing.md),
+            _StatusBadge(isActive: data.isActive, l10n: l10n),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.commonClose),
+          ),
+        ],
       ),
     );
   }
@@ -438,6 +687,48 @@ class _TemplateCard extends ConsumerWidget {
         SnackBarUtils.showError(context, e.toString());
       }
     }
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final TextTheme textTheme;
+
+  const _DetailRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    required this.textTheme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 72,
+          child: Text(
+            label,
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: textTheme.bodyMedium?.copyWith(
+              color: valueColor,
+              fontWeight: valueColor != null ? FontWeight.w600 : null,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

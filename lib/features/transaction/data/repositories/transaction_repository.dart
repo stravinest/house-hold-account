@@ -544,7 +544,7 @@ class TransactionRepository {
     final response = await _client
         .from('recurring_templates')
         .select(
-          '*, categories(name, icon, color), payment_methods(name), fixed_expense_categories(name, icon, color)',
+          '*, categories(name, icon, color), payment_methods(name), fixed_expense_categories(name, icon, color), profiles(display_name, color)',
         )
         .eq('ledger_id', ledgerId)
         .order('created_at', ascending: false);

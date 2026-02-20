@@ -1,7 +1,7 @@
 name: shared_household_account
 description: '공유 가계부 앱 - 가족/커플/룸메이트와 함께 사용하는 가계부'
 publish_to: 'none'
-version: 1.0.20+25
+version: 1.0.21+26
 
 environment:
   sdk: ^3.10.3
