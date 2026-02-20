@@ -16,12 +16,33 @@ class PaymentMethodDonutChart extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final statisticsAsync = ref.watch(paymentMethodStatisticsProvider);
 
+    // 유저 선택 상태에 따라 중앙 라벨 결정
+    final sharedState =
+        ref.watch(paymentMethodSharedStatisticsStateProvider);
+    final isShared = ref.watch(isSharedLedgerProvider);
+    final userStatsAsync =
+        ref.watch(paymentMethodStatisticsByUserProvider);
+
+    String centerLabel = l10n.statisticsTotalExpense;
+    if (isShared &&
+        sharedState.mode == SharedStatisticsMode.singleUser &&
+        sharedState.selectedUserId != null) {
+      final userStats = userStatsAsync.valueOrNull;
+      if (userStats != null &&
+          userStats.containsKey(sharedState.selectedUserId)) {
+        centerLabel = userStats[sharedState.selectedUserId]!.userName;
+      }
+    } else if (isShared &&
+        sharedState.mode == SharedStatisticsMode.combined) {
+      centerLabel = l10n.statisticsFilterCombined;
+    }
+
     return statisticsAsync.when(
       data: (statistics) {
         if (statistics.isEmpty) {
-          return _buildEmptyState(context, l10n);
+          return _buildEmptyState(context, l10n, centerLabel);
         }
-        return _buildChart(context, l10n, statistics);
+        return _buildChart(context, l10n, statistics, centerLabel);
       },
       loading: () => const SizedBox(
         height: 250,
@@ -32,15 +53,32 @@ class PaymentMethodDonutChart extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context, AppLocalizations l10n) {
+  Widget _buildEmptyState(
+    BuildContext context,
+    AppLocalizations l10n,
+    String centerLabel,
+  ) {
+    final theme = Theme.of(context);
     return SizedBox(
       height: 250,
       child: Center(
-        child: Text(
-          l10n.statisticsNoData,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              centerLabel,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.statisticsNoData,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -50,6 +88,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     List<PaymentMethodStatistics> statistics,
+    String centerLabel,
   ) {
     final totalAmount = statistics.fold(0, (sum, item) => sum + item.amount);
 
@@ -69,7 +108,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
             ),
           ),
           // 중앙 총금액 표시
-          _buildCenterText(context, l10n, totalAmount),
+          _buildCenterText(context, l10n, totalAmount, centerLabel),
         ],
       ),
     );
@@ -104,6 +143,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
     BuildContext context,
     AppLocalizations l10n,
     int totalAmount,
+    String centerLabel,
   ) {
     final theme = Theme.of(context);
 
@@ -111,7 +151,7 @@ class PaymentMethodDonutChart extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          l10n.statisticsTotalExpense,
+          centerLabel,
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

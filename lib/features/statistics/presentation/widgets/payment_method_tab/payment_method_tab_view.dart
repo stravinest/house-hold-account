@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../core/utils/snackbar_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
+import '../../../../share/presentation/providers/share_provider.dart';
 import '../../providers/statistics_provider.dart';
+import '../common/expense_type_filter.dart';
+import '../common/member_tabs.dart';
 import 'payment_method_donut_chart.dart';
 import 'payment_method_list.dart';
 
@@ -11,6 +15,7 @@ class PaymentMethodTabView extends ConsumerWidget {
 
   Future<void> _onRefresh(WidgetRef ref) async {
     ref.invalidate(paymentMethodStatisticsProvider);
+    ref.invalidate(paymentMethodStatisticsByUserProvider);
     await ref.read(paymentMethodStatisticsProvider.future);
   }
 
@@ -18,6 +23,9 @@ class PaymentMethodTabView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final expenseTypeFilter =
+        ref.watch(selectedPaymentMethodExpenseTypeFilterProvider);
+    final isShared = ref.watch(isSharedLedgerProvider);
 
     return RefreshIndicator(
       onRefresh: () => _onRefresh(ref),
@@ -27,45 +35,80 @@ class PaymentMethodTabView extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 안내 메시지 (지출만 표시)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 18,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
+            // 필터 섹션: 지출 라벨(탭 시 토스트) + 구분선 + 전체/고정비/변동비
+            Row(
+              children: [
+                // 지출 고정 라벨 (탭하면 안내 토스트 표시)
+                GestureDetector(
+                  onTap: () {
+                    SnackBarUtils.showInfo(
+                      context,
                       l10n.statisticsPaymentNotice,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 8, horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.account_balance_wallet_outlined,
+                          size: 16,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          l10n.statisticsTypeExpense,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 1,
+                  height: 20,
+                  child:
+                      ColoredBox(color: theme.colorScheme.outlineVariant),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: ExpenseTypeFilterWidget(
+                    selectedFilter: expenseTypeFilter,
+                    onChanged: (filter) {
+                      ref
+                          .read(
+                              selectedPaymentMethodExpenseTypeFilterProvider
+                                  .notifier)
+                          .state = filter;
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 
-            // 도넛 차트
+            // 도넛 차트 카드
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
+                boxShadow: [
                   BoxShadow(
-                    color: Color(0x0D000000),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -78,6 +121,11 @@ class PaymentMethodTabView extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
                   const PaymentMethodDonutChart(),
+                  // 유저별 탭 (공유 가계부일 때만, 도넛 차트 아래)
+                  if (isShared) ...[
+                    const SizedBox(height: 16),
+                    const _PaymentMethodMemberTabs(),
+                  ],
                 ],
               ),
             ),
@@ -88,11 +136,11 @@ class PaymentMethodTabView extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainer,
                 borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
+                boxShadow: [
                   BoxShadow(
-                    color: Color(0x0D000000),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -113,6 +161,36 @@ class PaymentMethodTabView extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// 유저별 탭 - 공통 MemberTabs 위젯 사용
+class _PaymentMethodMemberTabs extends ConsumerWidget {
+  const _PaymentMethodMemberTabs();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final membersAsync = ref.watch(currentLedgerMembersProvider);
+    final sharedState =
+        ref.watch(paymentMethodSharedStatisticsStateProvider);
+
+    return membersAsync.when(
+      data: (members) {
+        if (members.length < 2) return const SizedBox.shrink();
+
+        return MemberTabs(
+          members: members,
+          sharedState: sharedState,
+          onStateChanged: (newState) {
+            ref
+                .read(paymentMethodSharedStatisticsStateProvider.notifier)
+                .state = newState;
+          },
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

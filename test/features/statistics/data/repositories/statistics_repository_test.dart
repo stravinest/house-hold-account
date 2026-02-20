@@ -99,13 +99,19 @@ void main() {
       expect(result[0].amount, 30000);
     });
 
-    test('고정비를 지출에 편입하는 경우 고정비 카테고리로 별도 그룹화된다', () async {
+    test('고정비 거래도 원래 카테고리 이름으로 표시된다', () async {
       final mockData = [
         {
           'amount': 50000,
           'category_id': 'cat-1',
           'is_fixed_expense': true,
+          'fixed_expense_category_id': 'fcat-1',
           'categories': {
+            'name': '관리비',
+            'icon': '🏠',
+            'color': '#FF9800',
+          },
+          'fixed_expense_categories': {
             'name': '관리비',
             'icon': '🏠',
             'color': '#FF9800',
@@ -115,11 +121,13 @@ void main() {
           'amount': 30000,
           'category_id': 'cat-2',
           'is_fixed_expense': false,
+          'fixed_expense_category_id': null,
           'categories': {
             'name': '식비',
             'icon': '🍔',
             'color': '#FF5733',
           },
+          'fixed_expense_categories': null,
         },
       ];
 
@@ -132,11 +140,10 @@ void main() {
         year: 2026,
         month: 2,
         type: 'expense',
-        includeFixedExpenseInExpense: true,
       );
 
       expect(result.length, 2);
-      expect(result[0].categoryName, '고정비');
+      expect(result[0].categoryName, '관리비');
       expect(result[0].amount, 50000);
       expect(result[1].categoryName, '식비');
       expect(result[1].amount, 30000);

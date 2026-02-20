@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../fixed_expense/presentation/providers/fixed_expense_settings_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../share/presentation/providers/share_provider.dart';
 import '../../data/repositories/statistics_repository.dart';
@@ -79,18 +78,12 @@ final categoryExpenseStatisticsProvider =
       final repository = ref.watch(statisticsRepositoryProvider);
       final expenseTypeFilter = ref.watch(selectedExpenseTypeFilterProvider);
 
-      // 고정비 설정 가져오기
-      final includeFixedExpenseInExpense = await ref.watch(
-        includeFixedExpenseInExpenseProvider.future,
-      );
-
       return repository.getCategoryStatistics(
         ledgerId: ledgerId,
         year: date.year,
         month: date.month,
         type: 'expense',
         expenseTypeFilter: expenseTypeFilter,
-        includeFixedExpenseInExpense: includeFixedExpenseInExpense,
       );
     });
 
@@ -186,6 +179,18 @@ final monthComparisonProvider = FutureProvider<MonthComparisonData>((
   );
 });
 
+// 결제수단 탭 전용 고정비/변동비 필터 (카테고리 탭과 독립)
+final selectedPaymentMethodExpenseTypeFilterProvider =
+    StateProvider<ExpenseTypeFilter>(
+  (ref) => ExpenseTypeFilter.all,
+);
+
+// 결제수단 탭 전용 공유 통계 상태 (유저 선택)
+final paymentMethodSharedStatisticsStateProvider =
+    StateProvider<SharedStatisticsState>((ref) {
+  return const SharedStatisticsState(mode: SharedStatisticsMode.combined);
+});
+
 // 결제수단별 통계
 final paymentMethodStatisticsProvider =
     FutureProvider<List<PaymentMethodStatistics>>((ref) async {
@@ -194,6 +199,30 @@ final paymentMethodStatisticsProvider =
 
       final date = ref.watch(statisticsSelectedDateProvider);
       final repository = ref.watch(statisticsRepositoryProvider);
+      final expenseTypeFilter =
+          ref.watch(selectedPaymentMethodExpenseTypeFilterProvider);
+
+      // 유저 필터 확인 (유효하지 않은 userId는 combined로 폴백)
+      final sharedState =
+          ref.watch(paymentMethodSharedStatisticsStateProvider);
+      String? userId;
+      if (sharedState.mode == SharedStatisticsMode.singleUser &&
+          sharedState.selectedUserId != null) {
+        final members =
+            await ref.watch(currentLedgerMembersProvider.future);
+        final isValid = members
+            .any((m) => m.userId == sharedState.selectedUserId);
+        if (isValid) {
+          userId = sharedState.selectedUserId;
+        } else {
+          // 멤버가 가계부를 나간 경우 combined로 폴백
+          ref
+              .read(paymentMethodSharedStatisticsStateProvider.notifier)
+              .state = const SharedStatisticsState(
+            mode: SharedStatisticsMode.combined,
+          );
+        }
+      }
 
       // 결제수단 탭에서는 항상 지출만 표시
       return repository.getPaymentMethodStatistics(
@@ -201,7 +230,51 @@ final paymentMethodStatisticsProvider =
         year: date.year,
         month: date.month,
         type: 'expense',
+        expenseTypeFilter: expenseTypeFilter,
+        userId: userId,
       );
+    });
+
+// 사용자별 결제수단 통계 (공유 가계부용)
+final paymentMethodStatisticsByUserProvider =
+    FutureProvider<Map<String, UserPaymentMethodStatistics>>((ref) async {
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      if (ledgerId == null) return {};
+
+      final date = ref.watch(statisticsSelectedDateProvider);
+      final repository = ref.watch(statisticsRepositoryProvider);
+      final expenseTypeFilter =
+          ref.watch(selectedPaymentMethodExpenseTypeFilterProvider);
+
+      final userStats = await repository.getPaymentMethodStatisticsByUser(
+        ledgerId: ledgerId,
+        year: date.year,
+        month: date.month,
+        type: 'expense',
+        expenseTypeFilter: expenseTypeFilter,
+      );
+
+      // 모든 가계부 멤버를 포함 (거래가 없는 멤버도 0원으로 추가)
+      final members = await ref.watch(currentLedgerMembersProvider.future);
+      final orderedStats = <String, UserPaymentMethodStatistics>{};
+
+      for (final member in members) {
+        if (userStats.containsKey(member.userId)) {
+          orderedStats[member.userId] = userStats[member.userId]!;
+        } else {
+          final displayName =
+              member.displayName ?? member.email?.split('@').first ?? member.userId.substring(0, 8);
+          orderedStats[member.userId] = UserPaymentMethodStatistics(
+            userId: member.userId,
+            userName: displayName,
+            userColor: member.color ?? '#4CAF50',
+            totalAmount: 0,
+            paymentMethods: {},
+          );
+        }
+      }
+
+      return orderedStats;
     });
 
 // 월별 추이 (평균값 포함, 지출 시 고정비/변동비 필터 적용)
@@ -327,7 +400,7 @@ final categoryStatisticsByUserProvider =
           orderedStats[member.userId] = userStats[member.userId]!;
         } else {
           final displayName =
-              member.displayName ?? member.email?.split('@').first ?? 'Unknown';
+              member.displayName ?? member.email?.split('@').first ?? member.userId.substring(0, 8);
           orderedStats[member.userId] = UserCategoryStatistics(
             userId: member.userId,
             userName: displayName,

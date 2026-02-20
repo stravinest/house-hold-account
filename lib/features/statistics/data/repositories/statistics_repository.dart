@@ -5,9 +5,6 @@ import '../../domain/entities/statistics_entities.dart';
 
 class StatisticsRepository {
   // 하드코딩 문자열 상수 - UI에서 CategoryL10nHelper로 번역됨
-  static const _fixedExpenseName = '고정비';
-  static const _fixedExpenseIcon = 'push_pin';
-  static const _fixedExpenseColor = '#FF9800';
   static const _uncategorizedName = '미지정';
   static const _uncategorizedIcon = '';
   static const _uncategorizedColor = '#9E9E9E';
@@ -24,7 +21,6 @@ class StatisticsRepository {
     required int month,
     required String type, // 'income' or 'expense'
     ExpenseTypeFilter? expenseTypeFilter,
-    bool? includeFixedExpenseInExpense, // 고정비를 지출에 편입할지 여부
   }) async {
     final startDate = DateTime(year, month, 1);
     final endDate = DateTime(year, month + 1, 0);
@@ -81,25 +77,13 @@ class StatisticsRepository {
           ? rowMap['fixed_expense_categories'] as Map<String, dynamic>?
           : rowMap['categories'] as Map<String, dynamic>?;
 
-      // 고정비 설정에 따라 그룹키 결정
+      // 카테고리 정보 결정
       String groupKey;
       String categoryName;
       String categoryIcon;
       String categoryColor;
 
-      // 지출 타입이고, 고정비 편입 설정이 true이고, 실제로 고정비인 경우
-      // 단, ExpenseTypeFilter가 all일 때만 적용 (고정비/변동비 필터 시에는 원래 카테고리로 표시)
-      if (type == 'expense' &&
-          includeFixedExpenseInExpense == true &&
-          isFixedExpense &&
-          (expenseTypeFilter == null ||
-              expenseTypeFilter == ExpenseTypeFilter.all)) {
-        // 고정비를 별도 카테고리로 그룹화
-        groupKey = '_fixed_expense_';
-        categoryName = _fixedExpenseName;
-        categoryIcon = _fixedExpenseIcon;
-        categoryColor = _fixedExpenseColor;
-      } else {
+      {
         // 고정비 거래는 fixed_expense_categories에서 카테고리 정보를 가져옴
         if (isFixedExpense && !useFixedExpenseCategory) {
           final fixedCategory =
@@ -503,19 +487,42 @@ class StatisticsRepository {
     required int year,
     required int month,
     required String type,
+    ExpenseTypeFilter? expenseTypeFilter,
+    String? userId,
   }) async {
     final startDate = DateTime(year, month, 1);
     final endDate = DateTime(year, month + 1, 0);
 
-    final response = await _client
+    var query = _client
         .from('transactions')
         .select(
-          'amount, payment_method_id, payment_methods(name, icon, color, can_auto_save)',
+          'amount, payment_method_id, is_fixed_expense, payment_methods(name, icon, color, can_auto_save)',
         )
         .eq('ledger_id', ledgerId)
         .eq('type', type)
         .gte('date', startDate.toIso8601String().split('T').first)
         .lte('date', endDate.toIso8601String().split('T').first);
+
+    // 고정비/변동비 필터 적용
+    if (type == 'expense' && expenseTypeFilter != null) {
+      switch (expenseTypeFilter) {
+        case ExpenseTypeFilter.fixed:
+          query = query.eq('is_fixed_expense', true);
+          break;
+        case ExpenseTypeFilter.variable:
+          query = query.eq('is_fixed_expense', false);
+          break;
+        case ExpenseTypeFilter.all:
+          break;
+      }
+    }
+
+    // 유저 필터 적용
+    if (userId != null) {
+      query = query.eq('user_id', userId);
+    }
+
+    final response = await query;
 
     // 결제수단별로 그룹화
     final Map<String, PaymentMethodStatistics> grouped = {};
@@ -576,6 +583,149 @@ class StatisticsRepository {
     }).toList()..sort((a, b) => b.amount.compareTo(a.amount));
 
     return result;
+  }
+
+  // 사용자별 결제수단 통계 조회 (공유 가계부용)
+  Future<Map<String, UserPaymentMethodStatistics>>
+      getPaymentMethodStatisticsByUser({
+    required String ledgerId,
+    required int year,
+    required int month,
+    required String type,
+    ExpenseTypeFilter? expenseTypeFilter,
+  }) async {
+    final startDate = DateTime(year, month, 1);
+    final endDate = DateTime(year, month + 1, 0);
+
+    var query = _client
+        .from('transactions')
+        .select(
+          'amount, payment_method_id, user_id, is_fixed_expense, payment_methods(name, icon, color, can_auto_save), profiles!user_id(display_name, email, color)',
+        )
+        .eq('ledger_id', ledgerId)
+        .eq('type', type)
+        .gte('date', startDate.toIso8601String().split('T').first)
+        .lte('date', endDate.toIso8601String().split('T').first);
+
+    // 고정비/변동비 필터 적용
+    if (type == 'expense' && expenseTypeFilter != null) {
+      switch (expenseTypeFilter) {
+        case ExpenseTypeFilter.fixed:
+          query = query.eq('is_fixed_expense', true);
+          break;
+        case ExpenseTypeFilter.variable:
+          query = query.eq('is_fixed_expense', false);
+          break;
+        case ExpenseTypeFilter.all:
+          break;
+      }
+    }
+
+    final response = await query;
+
+    // 사용자별로 그룹화
+    final Map<String, UserPaymentMethodStatistics> userStats = {};
+
+    for (final row in response as List) {
+      final rowMap = row as Map<String, dynamic>;
+      final userId = rowMap['user_id'] as String?;
+      if (userId == null) continue;
+
+      final amount = (rowMap['amount'] as num?)?.toInt() ?? 0;
+      final paymentMethodIdValue = rowMap['payment_method_id'];
+      final paymentMethodId = paymentMethodIdValue?.toString();
+      final paymentMethod =
+          rowMap['payment_methods'] as Map<String, dynamic>?;
+      final profile = rowMap['profiles'] as Map<String, dynamic>?;
+
+      // 사용자 정보 추출
+      final displayName = profile?['display_name'] as String?;
+      final email = profile?['email'] as String?;
+      final userColor = profile?['color'] as String? ?? '#4CAF50';
+      final userName =
+          displayName ?? email?.split('@').first ?? 'Unknown';
+
+      // 결제수단 정보 추출
+      String pmName = _uncategorizedName;
+      String pmIcon = _uncategorizedIcon;
+      String pmColor = _uncategorizedColor;
+      bool canAutoSave = false;
+
+      if (paymentMethod != null) {
+        pmName =
+            paymentMethod['name']?.toString() ?? _uncategorizedName;
+        pmIcon = paymentMethod['icon']?.toString() ?? '';
+        pmColor = paymentMethod['color']?.toString() ?? '#9E9E9E';
+        canAutoSave = paymentMethod['can_auto_save'] == true;
+      }
+
+      final groupKey = _getPaymentMethodGroupKey(
+        paymentMethodId: paymentMethodId,
+        name: pmName,
+        canAutoSave: canAutoSave,
+      );
+
+      // 사용자 통계 초기화
+      if (!userStats.containsKey(userId)) {
+        userStats[userId] = UserPaymentMethodStatistics(
+          userId: userId,
+          userName: userName,
+          userColor: userColor,
+          totalAmount: 0,
+          paymentMethods: {},
+        );
+      }
+
+      // 총액 누적
+      userStats[userId] = userStats[userId]!.copyWith(
+        totalAmount: userStats[userId]!.totalAmount + amount,
+      );
+
+      // 결제수단별 누적
+      final currentPMs = Map<String, PaymentMethodStatistics>.from(
+        userStats[userId]!.paymentMethods,
+      );
+      if (currentPMs.containsKey(groupKey)) {
+        currentPMs[groupKey] = currentPMs[groupKey]!.copyWith(
+          amount: currentPMs[groupKey]!.amount + amount,
+        );
+      } else {
+        currentPMs[groupKey] = PaymentMethodStatistics(
+          paymentMethodId: groupKey,
+          paymentMethodName: pmName,
+          paymentMethodIcon: pmIcon,
+          paymentMethodColor: pmColor,
+          canAutoSave: canAutoSave,
+          amount: amount,
+          percentage: 0,
+        );
+      }
+
+      userStats[userId] = userStats[userId]!.copyWith(
+        paymentMethods: currentPMs,
+      );
+    }
+
+    // 각 사용자의 결제수단 비율 계산 및 정렬
+    for (final userId in userStats.keys) {
+      final total = userStats[userId]!.totalAmount;
+      final sortedPMs = userStats[userId]!.paymentMethods.values.map((pm) {
+        final percentage =
+            total > 0 ? (pm.amount / total) * 100 : 0.0;
+        return pm.copyWith(percentage: percentage);
+      }).toList()
+        ..sort((a, b) => b.amount.compareTo(a.amount));
+
+      final sortedMap = <String, PaymentMethodStatistics>{};
+      for (final pm in sortedPMs) {
+        sortedMap[pm.paymentMethodId] = pm;
+      }
+
+      userStats[userId] =
+          userStats[userId]!.copyWith(paymentMethods: sortedMap);
+    }
+
+    return userStats;
   }
 
   // 연별 추이 (최근 N년) - 단일 쿼리로 최적화
@@ -1086,4 +1236,44 @@ class CategoryTopTransaction {
     required this.userName,
     required this.userColor,
   });
+}
+
+// 사용자별 결제수단 통계 모델 (공유 가계부용)
+class UserPaymentMethodStatistics {
+  final String userId;
+  final String userName;
+  final String userColor;
+  final int totalAmount;
+  final Map<String, PaymentMethodStatistics> paymentMethods;
+
+  const UserPaymentMethodStatistics({
+    required this.userId,
+    required this.userName,
+    required this.userColor,
+    required this.totalAmount,
+    required this.paymentMethods,
+  });
+
+  UserPaymentMethodStatistics copyWith({
+    String? userId,
+    String? userName,
+    String? userColor,
+    int? totalAmount,
+    Map<String, PaymentMethodStatistics>? paymentMethods,
+  }) {
+    return UserPaymentMethodStatistics(
+      userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
+      userColor: userColor ?? this.userColor,
+      totalAmount: totalAmount ?? this.totalAmount,
+      paymentMethods: paymentMethods ?? this.paymentMethods,
+    );
+  }
+
+  // 결제수단 리스트로 변환 (정렬된 상태)
+  List<PaymentMethodStatistics> get paymentMethodList {
+    final list = paymentMethods.values.toList()
+      ..sort((a, b) => b.amount.compareTo(a.amount));
+    return list;
+  }
 }
