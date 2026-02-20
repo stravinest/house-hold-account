@@ -40,21 +40,11 @@ jobs:
         run: flutter test --coverage --reporter expanded
         continue-on-error: true
 
-      - name: Check test coverage
-        run: |
-          dart pub global activate coverage
-          dart pub global run coverage:format_coverage \
-            --lcov \
-            --in=coverage \
-            --out=coverage/lcov.info \
-            --packages=.packages \
-            --report-on=lib
-
-      - name: Generate coverage report
+      - name: Coverage summary
         run: |
           if [ -f coverage/lcov.info ]; then
             echo "Coverage file exists"
-            lcov --summary coverage/lcov.info
+            wc -l coverage/lcov.info
           else
             echo "No coverage file found"
           fi
