@@ -4,15 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_household_account/features/transaction/data/repositories/transaction_repository.dart';
+import 'package:shared_household_account/features/auth/presentation/providers/auth_provider.dart';
 import 'package:shared_household_account/features/transaction/presentation/providers/recurring_template_provider.dart';
 import 'package:shared_household_account/features/transaction/presentation/providers/transaction_provider.dart';
 import 'package:shared_household_account/features/ledger/presentation/providers/ledger_provider.dart';
 import 'package:shared_household_account/features/transaction/presentation/pages/recurring_template_management_page.dart';
 import 'package:shared_household_account/l10n/generated/app_localizations.dart';
+import 'package:shared_household_account/features/ledger/domain/entities/ledger.dart';
 import 'package:shared_household_account/shared/widgets/empty_state.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockTransactionRepository extends Mock implements TransactionRepository {}
+
+class MockUser extends Mock implements User {
+  @override
+  String get id => 'user-me';
+}
 
 // AppLocalizations를 지원하는 테스트 래퍼 위젯
 Widget createTestWidget({
@@ -660,6 +668,174 @@ void main() {
 
       // 에러 메시지가 표시되는지 확인
       expect(find.textContaining('Exception'), findsOneWidget);
+    });
+
+    group('공유 가계부 - isShared 분기 테스트', () {
+      // 공유 가계부(isShared=true)일 때 사용하는 템플릿 데이터
+      // user_id와 profiles 정보가 포함되어 유저별 그룹핑이 가능해야 함
+      final sharedTemplates = [
+        {
+          'id': 'template-1',
+          'type': 'income',
+          'amount': 3327247,
+          'title': '월급',
+          'is_active': true,
+          'is_fixed_expense': false,
+          'recurring_type': 'monthly',
+          'start_date': '2026-01-05',
+          'user_id': 'user-me',
+          'profiles': {'display_name': '나', 'color': '#A8D8EA'},
+          'categories': {'name': '급여', 'icon': 'work', 'color': '#00FF00'},
+        },
+        {
+          'id': 'template-2',
+          'type': 'expense',
+          'amount': 117840,
+          'title': '다온보험',
+          'is_active': true,
+          'is_fixed_expense': false,
+          'recurring_type': 'monthly',
+          'start_date': '2026-01-05',
+          'user_id': 'user-me',
+          'profiles': {'display_name': '나', 'color': '#A8D8EA'},
+          'categories': {'name': '보험료', 'icon': 'shield', 'color': '#FF0000'},
+        },
+        {
+          'id': 'template-3',
+          'type': 'expense',
+          'amount': 62530,
+          'title': 'Db손해보험',
+          'is_active': true,
+          'is_fixed_expense': false,
+          'recurring_type': 'monthly',
+          'start_date': '2026-01-15',
+          'user_id': 'user-other',
+          'profiles': {'display_name': '배우자', 'color': '#FFB6A3'},
+          'categories': {'name': '보험료', 'icon': 'shield', 'color': '#FF0000'},
+        },
+      ];
+
+      testWidgets(
+          '공유 가계부(isShared=true)일 때 유저별 그룹 헤더가 표시되고 '
+          '상대방 반복거래에는 더보기 메뉴(more_vert)가 표시되지 않는다',
+          (WidgetTester tester) async {
+        when(() => mockRepository.getAllRecurringTemplates(
+                ledgerId: 'test-ledger-id'))
+            .thenAnswer((_) async => sharedTemplates);
+
+        // 유저별 그룹핑된 데이터 (현재 유저 먼저, 그 다음 상대방)
+        final groupedEntries = [
+          MapEntry('user-me', [sharedTemplates[0], sharedTemplates[1]]),
+          MapEntry('user-other', [sharedTemplates[2]]),
+        ];
+
+        final now = DateTime.now();
+        await tester.pumpWidget(
+          createTestWidget(
+            overrides: [
+              transactionRepositoryProvider
+                  .overrideWithValue(mockRepository),
+              selectedLedgerIdProvider
+                  .overrideWith((ref) => 'test-ledger-id'),
+              // currentUserProvider를 MockUser로 override (Supabase 의존 제거)
+              currentUserProvider.overrideWithValue(MockUser()),
+              // 공유 가계부로 설정
+              currentLedgerProvider.overrideWith((ref) async => Ledger(
+                    id: 'test-ledger-id',
+                    name: '내 가계부',
+                    currency: 'KRW',
+                    ownerId: 'user-me',
+                    isShared: true,
+                    createdAt: now,
+                    updatedAt: now,
+                  )),
+              // 그룹핑된 데이터 직접 제공
+              groupedRecurringTemplatesProvider
+                  .overrideWith((ref) async => groupedEntries),
+            ],
+            child: const RecurringTemplateManagementPage(),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // 유저 헤더에 유저명이 표시되는지 확인
+        expect(find.text('나'), findsOneWidget);
+        expect(find.text('배우자'), findsOneWidget);
+
+        // 내 템플릿(2개)에만 more_vert가 표시되고
+        // 상대방 템플릿(1개)에는 표시되지 않아야 한다
+        // 총 more_vert 아이콘은 2개여야 한다
+        expect(find.byIcon(Icons.more_vert), findsNWidgets(2));
+      });
+
+      testWidgets(
+          '개인 가계부(isShared=false)일 때 유저 헤더 없이 '
+          '모든 반복거래에 더보기 메뉴가 표시된다',
+          (WidgetTester tester) async {
+        // isShared=false 이면 개인 뷰로 렌더링됨
+        // 이 경우 모든 카드에 isOwner=true가 설정됨
+        final personalTemplates = [
+          {
+            'id': 'template-1',
+            'type': 'expense',
+            'amount': 50000,
+            'title': '구독',
+            'is_active': true,
+            'is_fixed_expense': false,
+            'recurring_type': 'monthly',
+            'start_date': '2026-01-01',
+            'categories': null,
+          },
+          {
+            'id': 'template-2',
+            'type': 'expense',
+            'amount': 30000,
+            'title': '교통',
+            'is_active': true,
+            'is_fixed_expense': false,
+            'recurring_type': 'monthly',
+            'start_date': '2026-01-01',
+            'categories': null,
+          },
+        ];
+
+        when(() => mockRepository.getAllRecurringTemplates(
+                ledgerId: 'test-ledger-id'))
+            .thenAnswer((_) async => personalTemplates);
+
+        final now = DateTime.now();
+        await tester.pumpWidget(
+          createTestWidget(
+            overrides: [
+              transactionRepositoryProvider
+                  .overrideWithValue(mockRepository),
+              selectedLedgerIdProvider
+                  .overrideWith((ref) => 'test-ledger-id'),
+              // 개인 가계부로 설정
+              currentLedgerProvider.overrideWith((ref) async => Ledger(
+                    id: 'test-ledger-id',
+                    name: '내 가계부',
+                    currency: 'KRW',
+                    ownerId: 'user-me',
+                    isShared: false,
+                    createdAt: now,
+                    updatedAt: now,
+                  )),
+            ],
+            child: const RecurringTemplateManagementPage(),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        // 유저 헤더가 표시되지 않는다
+        expect(find.text('나'), findsNothing);
+        expect(find.text('배우자'), findsNothing);
+
+        // 모든 카드에 more_vert가 표시된다 (개인이므로 모두 본인 것)
+        expect(find.byIcon(Icons.more_vert), findsNWidgets(2));
+      });
     });
   });
 }
