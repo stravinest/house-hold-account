@@ -16,6 +16,14 @@ class GuideColors {
   static const onSurfaceVariant = Color(0xFF44483E);
   static const outlineVariant = Color(0xFFC4C8BB);
   static const onPrimary = Color(0xFFFFFFFF);
+  static const white = Color(0xFFFFFFFF);
+  static const expense = Color(0xFFE53935);
+  static const warning = Color(0xFFE65100);
+  static const error = Color(0xFFBA1A1A);
+  static const memberBlue = Color(0xFFA8D8EA);
+  static const memberCoral = Color(0xFFFFB6A3);
+  static const chipBlueBorder = Color(0xFF90CAF9);
+  static const chipOrangeBorder = Color(0xFFFFAB91);
 }
 
 class GuidePage extends StatelessWidget {
@@ -26,7 +34,9 @@ class GuidePage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
+      backgroundColor: GuideColors.surface,
       appBar: AppBar(
+        backgroundColor: GuideColors.surface,
         title: Text(l10n.settingsGuide),
         scrolledUnderElevation: 0,
       ),
@@ -73,16 +83,20 @@ class GuidePage extends StatelessWidget {
           const Divider(color: GuideColors.outlineVariant, height: 1),
           const SizedBox(height: 24),
 
-          _GuideCard(
+          _GuideNavigationCard(
             icon: Icons.edit_note,
             title: l10n.guideRecordTitle,
             description: l10n.guideRecordDescription,
+            badgeLabel: l10n.guideDetailView,
+            onTap: () => context.push(Routes.transactionGuide),
           ),
           const SizedBox(height: 24),
-          _GuideCard(
+          _GuideNavigationCard(
             icon: Icons.group,
             title: l10n.guideShareTitle,
             description: l10n.guideShareDescription,
+            badgeLabel: l10n.guideDetailView,
+            onTap: () => context.push(Routes.shareGuide),
           ),
           const SizedBox(height: 24),
           _GuideCard(
@@ -92,7 +106,7 @@ class GuidePage extends StatelessWidget {
           ),
           if (Platform.isAndroid) ...[
             const SizedBox(height: 24),
-            _AutoCollectCard(
+            _GuideNavigationCard(
               icon: Icons.phonelink_ring,
               title: l10n.guideAutoCollectTitle,
               description: l10n.guideAutoCollectDescription,
@@ -115,9 +129,9 @@ class GuidePage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Tip',
-                  style: TextStyle(
+                Text(
+                  l10n.guideTipLabel,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                     color: GuideColors.primary,
@@ -204,14 +218,14 @@ class _GuideCard extends StatelessWidget {
   }
 }
 
-class _AutoCollectCard extends StatelessWidget {
+class _GuideNavigationCard extends StatelessWidget {
   final IconData icon;
   final String title;
   final String description;
   final String badgeLabel;
   final VoidCallback onTap;
 
-  const _AutoCollectCard({
+  const _GuideNavigationCard({
     required this.icon,
     required this.title,
     required this.description,
@@ -241,8 +255,8 @@ class _AutoCollectCard extends StatelessWidget {
                 color: GuideColors.primaryContainer,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.phonelink_ring,
+              child: Icon(
+                icon,
                 size: 24,
                 color: GuideColors.primary,
               ),

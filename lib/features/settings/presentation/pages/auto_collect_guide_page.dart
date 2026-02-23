@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
+import '../widgets/guide_common_widgets.dart';
 import 'guide_page.dart' show GuideColors;
 
 class AutoCollectGuidePage extends StatelessWidget {
@@ -12,7 +13,9 @@ class AutoCollectGuidePage extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Scaffold(
+      backgroundColor: GuideColors.surface,
       appBar: AppBar(
+        backgroundColor: GuideColors.surface,
         title: Text(l10n.autoCollectGuideTitle),
         scrolledUnderElevation: 0,
       ),
@@ -20,48 +23,21 @@ class AutoCollectGuidePage extends StatelessWidget {
         padding: const EdgeInsets.all(Spacing.md + Spacing.xs),
         children: [
           // 안내 배너
-          Container(
-            padding: const EdgeInsets.all(Spacing.md),
-            decoration: BoxDecoration(
-              color: GuideColors.primaryContainer,
-              borderRadius: BorderRadius.circular(Spacing.md),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.info_outline,
-                  size: 20,
-                  color: GuideColors.primary,
-                ),
-                const SizedBox(width: Spacing.sm),
-                Expanded(
-                  child: Text(
-                    l10n.autoCollectGuideIntro,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: GuideColors.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+          GuideInfoBanner(text: l10n.autoCollectGuideIntro),
 
           const SizedBox(height: Spacing.lg),
 
           // Step 1
-          _StepHeader(number: '1', title: l10n.autoCollectGuideStep1Title),
+          GuideStepHeader(stepLabel: l10n.autoCollectGuideStepLabel('1', l10n.autoCollectGuideStep1Title)),
           const SizedBox(height: Spacing.sm),
-          _StepCard(
+          GuideStepCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.autoCollectGuideStep1Desc,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     color: GuideColors.onSurfaceVariant,
                     height: 1.4,
                   ),
@@ -110,16 +86,16 @@ class AutoCollectGuidePage extends StatelessWidget {
           const SizedBox(height: Spacing.lg),
 
           // Step 2
-          _StepHeader(number: '2', title: l10n.autoCollectGuideStep2Title),
+          GuideStepHeader(stepLabel: l10n.autoCollectGuideStepLabel('2', l10n.autoCollectGuideStep2Title)),
           const SizedBox(height: Spacing.sm),
-          _StepCard(
+          GuideStepCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.autoCollectGuideStep2Desc,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     color: GuideColors.onSurfaceVariant,
                     height: 1.4,
                   ),
@@ -140,18 +116,18 @@ class AutoCollectGuidePage extends StatelessWidget {
                             color: GuideColors.primaryContainer,
                             borderRadius: BorderRadius.circular(20),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.sms_outlined,
                                 size: 16,
                                 color: GuideColors.primary,
                               ),
-                              SizedBox(width: 6),
+                              const SizedBox(width: 6),
                               Text(
-                                'SMS',
-                                style: TextStyle(
+                                l10n.autoCollectGuideMockSms,
+                                style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                   color: GuideColors.primary,
@@ -161,19 +137,19 @@ class AutoCollectGuidePage extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const Expanded(
+                      Expanded(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.notifications_outlined,
                               size: 16,
                               color: GuideColors.onSurfaceVariant,
                             ),
-                            SizedBox(width: 6),
+                            const SizedBox(width: 6),
                             Text(
-                              'Push',
-                              style: TextStyle(
+                              l10n.autoCollectGuideMockPush,
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: GuideColors.onSurfaceVariant,
                               ),
@@ -199,10 +175,81 @@ class AutoCollectGuidePage extends StatelessWidget {
 
           const SizedBox(height: Spacing.lg),
 
-          // Step 3
-          _StepHeader(number: '3', title: l10n.autoCollectGuideStep3Title),
+          // Step 3 - 수집 규칙 설정
+          GuideStepHeader(stepLabel: l10n.autoCollectGuideStepLabel('3', l10n.autoCollectGuideRulesTitle)),
           const SizedBox(height: Spacing.sm),
-          _StepCard(
+          GuideStepCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.autoCollectGuideRulesDesc,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: GuideColors.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                // 감지 키워드 섹션
+                _KeywordSection(
+                  icon: Icons.search,
+                  iconColor: GuideColors.primary,
+                  title: l10n.autoCollectGuideDetectKeyword,
+                  description: l10n.autoCollectGuideDetectKeywordDesc,
+                  chips: [l10n.autoCollectGuideMockDetectChipKb, l10n.autoCollectGuideMockDetectChipApproval],
+                  chipBorderColor: GuideColors.primary,
+                ),
+                const SizedBox(height: Spacing.md),
+                // 금지 키워드 섹션
+                _KeywordSection(
+                  icon: Icons.block,
+                  iconColor: GuideColors.warning,
+                  title: l10n.autoCollectGuideExcludeKeyword,
+                  description: l10n.autoCollectGuideExcludeKeywordDesc,
+                  chips: [l10n.autoCollectGuideMockExcludeChipBalance, l10n.autoCollectGuideMockExcludeChipPoint],
+                  chipBorderColor: GuideColors.warning,
+                ),
+                const SizedBox(height: Spacing.md),
+                // Tip 박스
+                Container(
+                  padding: const EdgeInsets.all(Spacing.sm),
+                  decoration: BoxDecoration(
+                    color: GuideColors.primaryContainer,
+                    borderRadius: BorderRadius.circular(Spacing.sm),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.lightbulb_outline,
+                        size: 16,
+                        color: GuideColors.primary,
+                      ),
+                      const SizedBox(width: Spacing.xs),
+                      Expanded(
+                        child: Text(
+                          l10n.autoCollectGuideKeywordTip,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: GuideColors.onSurfaceVariant,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: Spacing.lg),
+
+          // Step 4 - 처리 모드 선택
+          GuideStepHeader(stepLabel: l10n.autoCollectGuideStepLabel('4', l10n.autoCollectGuideStep3Title)),
+          const SizedBox(height: Spacing.sm),
+          GuideStepCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -223,17 +270,17 @@ class AutoCollectGuidePage extends StatelessWidget {
 
           const SizedBox(height: Spacing.lg),
 
-          // Step 4
-          _StepHeader(number: '4', title: l10n.autoCollectGuideStep4Title),
+          // Step 5 - 수집내역 확인
+          GuideStepHeader(stepLabel: l10n.autoCollectGuideStepLabel('5', l10n.autoCollectGuideStep4Title)),
           const SizedBox(height: Spacing.sm),
-          _StepCard(
+          GuideStepCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.autoCollectGuideStep4Desc,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 13,
                     color: GuideColors.onSurfaceVariant,
                     height: 1.4,
                   ),
@@ -264,7 +311,7 @@ class AutoCollectGuidePage extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFFBA1A1A),
+                              color: GuideColors.error,
                             ),
                           ),
                         ],
@@ -313,43 +360,6 @@ class AutoCollectGuidePage extends StatelessWidget {
   }
 }
 
-class _StepHeader extends StatelessWidget {
-  final String number;
-  final String title;
-
-  const _StepHeader({required this.number, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    return Text(
-      l10n.autoCollectGuideStepLabel(number, title),
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: GuideColors.onSurface,
-      ),
-    );
-  }
-}
-
-class _StepCard extends StatelessWidget {
-  final Widget child;
-
-  const _StepCard({required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(Spacing.md),
-      decoration: BoxDecoration(
-        color: GuideColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(Spacing.md),
-      ),
-      child: child,
-    );
-  }
-}
 
 class _ModeOption extends StatelessWidget {
   final String title;
@@ -423,6 +433,88 @@ class _ModeOption extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KeywordSection extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String description;
+  final List<String> chips;
+  final Color chipBorderColor;
+
+  const _KeywordSection({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.description,
+    required this.chips,
+    required this.chipBorderColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(Spacing.sm),
+      decoration: BoxDecoration(
+        color: GuideColors.surface,
+        borderRadius: BorderRadius.circular(Spacing.sm),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: iconColor),
+              const SizedBox(width: Spacing.xs),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: iconColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Spacing.xs),
+          Text(
+            description,
+            style: const TextStyle(
+              fontSize: 11,
+              color: GuideColors.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: Spacing.sm),
+          Wrap(
+            spacing: Spacing.xs,
+            children: chips
+                .map(
+                  (chip) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: Spacing.sm,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: chipBorderColor, width: 1),
+                      borderRadius: BorderRadius.circular(Spacing.md),
+                    ),
+                    child: Text(
+                      chip,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: chipBorderColor,
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ],
       ),

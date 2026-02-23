@@ -21,6 +21,8 @@ import '../features/search/presentation/pages/search_page.dart';
 import '../features/transaction/presentation/pages/recurring_template_management_page.dart';
 import '../features/settings/presentation/pages/auto_collect_guide_page.dart';
 import '../features/settings/presentation/pages/guide_page.dart';
+import '../features/settings/presentation/pages/share_guide_page.dart';
+import '../features/settings/presentation/pages/transaction_guide_page.dart';
 import '../features/settings/presentation/pages/privacy_policy_page.dart';
 import '../features/settings/presentation/pages/settings_page.dart';
 import '../features/settings/presentation/pages/terms_of_service_page.dart';
@@ -63,6 +65,8 @@ class Routes {
   static const String guide = '/guide';
   static const String recurringTemplates = '/recurring-templates';
   static const String autoCollectGuide = '/guide/auto-collect';
+  static const String transactionGuide = '/guide/transaction';
+  static const String shareGuide = '/guide/share';
   static const String debugTest = '/debug-test';
 }
 
@@ -320,6 +324,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => slideTransition(
           key: state.pageKey,
           child: const AutoCollectGuidePage(),
+        ),
+      ),
+
+      // 거래 기록 가이드 - 슬라이드 전환
+      GoRoute(
+        path: Routes.transactionGuide,
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const TransactionGuidePage(),
+        ),
+      ),
+
+      // 가계부 공유 가이드 - 슬라이드 전환
+      GoRoute(
+        path: Routes.shareGuide,
+        pageBuilder: (context, state) => slideTransition(
+          key: state.pageKey,
+          child: const ShareGuidePage(),
         ),
       ),
 

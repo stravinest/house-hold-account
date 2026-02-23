@@ -944,6 +944,48 @@ abstract class AppLocalizations {
   /// **'SMS: 문자 수신 권한 필요\nPush: 알림 접근 권한 필요'**
   String get autoCollectGuideStep2Note;
 
+  /// No description provided for @autoCollectGuideRulesTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'수집 규칙 설정'**
+  String get autoCollectGuideRulesTitle;
+
+  /// No description provided for @autoCollectGuideRulesDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단을 등록하면 자동으로 수집 규칙이 생성됩니다. 감지 키워드와 금지 키워드를 편집하여 수집 정확도를 높일 수 있습니다.'**
+  String get autoCollectGuideRulesDesc;
+
+  /// No description provided for @autoCollectGuideDetectKeyword.
+  ///
+  /// In ko, this message translates to:
+  /// **'감지 키워드'**
+  String get autoCollectGuideDetectKeyword;
+
+  /// No description provided for @autoCollectGuideDetectKeywordDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS/Push 알림에서 이 키워드가 포함된 메시지만 수집합니다. 카드사명, 앱 이름 등을 입력하세요.'**
+  String get autoCollectGuideDetectKeywordDesc;
+
+  /// No description provided for @autoCollectGuideExcludeKeyword.
+  ///
+  /// In ko, this message translates to:
+  /// **'금지 키워드'**
+  String get autoCollectGuideExcludeKeyword;
+
+  /// No description provided for @autoCollectGuideExcludeKeywordDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 키워드가 포함된 메시지는 수집에서 제외됩니다. 잔액 알림, 포인트 적립 등 거래가 아닌 알림을 걸러낼 때 유용합니다.'**
+  String get autoCollectGuideExcludeKeywordDesc;
+
+  /// No description provided for @autoCollectGuideKeywordTip.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단 수정 화면에서 감지/금지 키워드를 언제든 편집할 수 있습니다. 수집이 부정확하다면 키워드를 조정해 보세요.'**
+  String get autoCollectGuideKeywordTip;
+
   /// No description provided for @autoCollectGuideStep3Title.
   ///
   /// In ko, this message translates to:
@@ -1027,6 +1069,534 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'승인'**
   String get autoCollectGuideApprove;
+
+  /// No description provided for @autoCollectGuideMockSms.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS'**
+  String get autoCollectGuideMockSms;
+
+  /// No description provided for @autoCollectGuideMockPush.
+  ///
+  /// In ko, this message translates to:
+  /// **'Push'**
+  String get autoCollectGuideMockPush;
+
+  /// No description provided for @autoCollectGuideMockDetectChipKb.
+  ///
+  /// In ko, this message translates to:
+  /// **'KB국민'**
+  String get autoCollectGuideMockDetectChipKb;
+
+  /// No description provided for @autoCollectGuideMockDetectChipApproval.
+  ///
+  /// In ko, this message translates to:
+  /// **'승인'**
+  String get autoCollectGuideMockDetectChipApproval;
+
+  /// No description provided for @autoCollectGuideMockExcludeChipBalance.
+  ///
+  /// In ko, this message translates to:
+  /// **'잔액'**
+  String get autoCollectGuideMockExcludeChipBalance;
+
+  /// No description provided for @autoCollectGuideMockExcludeChipPoint.
+  ///
+  /// In ko, this message translates to:
+  /// **'포인트'**
+  String get autoCollectGuideMockExcludeChipPoint;
+
+  /// No description provided for @transactionGuideTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 기록 가이드'**
+  String get transactionGuideTitle;
+
+  /// No description provided for @transactionGuideIntro.
+  ///
+  /// In ko, this message translates to:
+  /// **'수입, 지출, 자산 거래를 간편하게 기록하세요. 카테고리, 메모를 입력할 수 있습니다.'**
+  String get transactionGuideIntro;
+
+  /// No description provided for @transactionGuideStep1Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'+ 버튼으로 거래 추가'**
+  String get transactionGuideStep1Title;
+
+  /// No description provided for @transactionGuideStep1Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'하단의 + 버튼을 눌러 새 거래를 추가하세요. 수입/지출/자산 중 거래 유형을 선택할 수 있습니다.'**
+  String get transactionGuideStep1Desc;
+
+  /// No description provided for @transactionGuideStep2Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액 입력'**
+  String get transactionGuideStep2Title;
+
+  /// No description provided for @transactionGuideStep2Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액을 입력하세요. 숫자 키패드가 자동으로 표시됩니다. 할부 거래도 지원합니다.'**
+  String get transactionGuideStep2Desc;
+
+  /// No description provided for @transactionGuideStep3Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'상세 정보 입력'**
+  String get transactionGuideStep3Title;
+
+  /// No description provided for @transactionGuideStep3Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리, 결제수단, 메모, 날짜 등 상세 정보를 입력하세요.'**
+  String get transactionGuideStep3Desc;
+
+  /// No description provided for @transactionGuideStep4Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정비 / 할부 / 반복 설정'**
+  String get transactionGuideStep4Title;
+
+  /// No description provided for @transactionGuideStep4Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'거래 저장 시 고정비 등록, 할부 입력, 반복주기 설정을 할 수 있습니다. 각 옵션을 활용하면 매월 자동으로 거래가 기록됩니다.'**
+  String get transactionGuideStep4Desc;
+
+  /// No description provided for @transactionGuideStep5Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복거래 확인하기'**
+  String get transactionGuideStep5Title;
+
+  /// No description provided for @transactionGuideStep5Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 고정비, 할부, 반복 거래는 설정 > 반복거래 관리에서 확인하고 관리할 수 있습니다.'**
+  String get transactionGuideStep5Desc;
+
+  /// No description provided for @transactionGuideStep6Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장 완료'**
+  String get transactionGuideStep6Title;
+
+  /// No description provided for @transactionGuideStep6Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'모든 정보를 입력한 후 저장 버튼을 눌러 거래를 기록하세요. 저장된 거래는 캘린더와 목록에서 확인할 수 있습니다.'**
+  String get transactionGuideStep6Desc;
+
+  /// No description provided for @transactionGuideTip.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정비와 반복거래는 설정 > 반복거래 관리에서 수정/삭제할 수 있습니다. 할부 거래의 남은 회차도 이곳에서 확인 가능합니다.'**
+  String get transactionGuideTip;
+
+  /// No description provided for @transactionGuideMockIncome.
+  ///
+  /// In ko, this message translates to:
+  /// **'수입'**
+  String get transactionGuideMockIncome;
+
+  /// No description provided for @transactionGuideMockExpense.
+  ///
+  /// In ko, this message translates to:
+  /// **'지출'**
+  String get transactionGuideMockExpense;
+
+  /// No description provided for @transactionGuideMockAsset.
+  ///
+  /// In ko, this message translates to:
+  /// **'자산'**
+  String get transactionGuideMockAsset;
+
+  /// No description provided for @transactionGuideMockAmountLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액'**
+  String get transactionGuideMockAmountLabel;
+
+  /// No description provided for @transactionGuideMockAmountValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'25,000원'**
+  String get transactionGuideMockAmountValue;
+
+  /// No description provided for @transactionGuideMockCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리'**
+  String get transactionGuideMockCategory;
+
+  /// No description provided for @transactionGuideMockCategoryValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'식비'**
+  String get transactionGuideMockCategoryValue;
+
+  /// No description provided for @transactionGuideMockPaymentMethod.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단'**
+  String get transactionGuideMockPaymentMethod;
+
+  /// No description provided for @transactionGuideMockPaymentMethodValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'KB국민카드'**
+  String get transactionGuideMockPaymentMethodValue;
+
+  /// No description provided for @transactionGuideMockMemo.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모'**
+  String get transactionGuideMockMemo;
+
+  /// No description provided for @transactionGuideMockMemoValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'점심 식사'**
+  String get transactionGuideMockMemoValue;
+
+  /// No description provided for @transactionGuideMockFixedExpenseRegister.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정비 등록'**
+  String get transactionGuideMockFixedExpenseRegister;
+
+  /// No description provided for @transactionGuideMockFixedExpenseToggle.
+  ///
+  /// In ko, this message translates to:
+  /// **'고정비로 등록'**
+  String get transactionGuideMockFixedExpenseToggle;
+
+  /// No description provided for @transactionGuideMockFixedExpenseNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'매월 같은 금액이 자동 기록됩니다.\n(월세, 구독료, 보험료 등)'**
+  String get transactionGuideMockFixedExpenseNote;
+
+  /// No description provided for @transactionGuideMockInstallmentInput.
+  ///
+  /// In ko, this message translates to:
+  /// **'할부 입력'**
+  String get transactionGuideMockInstallmentInput;
+
+  /// No description provided for @transactionGuideMockInstallment.
+  ///
+  /// In ko, this message translates to:
+  /// **'할부'**
+  String get transactionGuideMockInstallment;
+
+  /// No description provided for @transactionGuideMockInstallmentMonths.
+  ///
+  /// In ko, this message translates to:
+  /// **'3개월'**
+  String get transactionGuideMockInstallmentMonths;
+
+  /// No description provided for @transactionGuideMockInstallmentNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'현재 1/3 회차 진행 중 (잔여 2회)\n반복거래 관리에서 할부 진행 상황을 확인하세요.'**
+  String get transactionGuideMockInstallmentNote;
+
+  /// No description provided for @transactionGuideMockRecurringSetting.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복주기 설정'**
+  String get transactionGuideMockRecurringSetting;
+
+  /// No description provided for @transactionGuideMockRepeat.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복'**
+  String get transactionGuideMockRepeat;
+
+  /// No description provided for @transactionGuideMockMonthly.
+  ///
+  /// In ko, this message translates to:
+  /// **'매월'**
+  String get transactionGuideMockMonthly;
+
+  /// No description provided for @transactionGuideMockDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'날짜'**
+  String get transactionGuideMockDate;
+
+  /// No description provided for @transactionGuideMockDay15.
+  ///
+  /// In ko, this message translates to:
+  /// **'15일'**
+  String get transactionGuideMockDay15;
+
+  /// No description provided for @transactionGuideMockDaily.
+  ///
+  /// In ko, this message translates to:
+  /// **'매일'**
+  String get transactionGuideMockDaily;
+
+  /// No description provided for @transactionGuideMockWeekly.
+  ///
+  /// In ko, this message translates to:
+  /// **'매주'**
+  String get transactionGuideMockWeekly;
+
+  /// No description provided for @transactionGuideMockRecurringNote.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정한 주기에 따라 거래가 자동 생성됩니다.'**
+  String get transactionGuideMockRecurringNote;
+
+  /// No description provided for @transactionGuideMockSettings.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정'**
+  String get transactionGuideMockSettings;
+
+  /// No description provided for @transactionGuideMockRecurringManagement.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복거래 관리'**
+  String get transactionGuideMockRecurringManagement;
+
+  /// No description provided for @transactionGuideMockNetflix.
+  ///
+  /// In ko, this message translates to:
+  /// **'넷플릭스'**
+  String get transactionGuideMockNetflix;
+
+  /// No description provided for @transactionGuideMockNetflixAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'-17,000원'**
+  String get transactionGuideMockNetflixAmount;
+
+  /// No description provided for @transactionGuideMockRent.
+  ///
+  /// In ko, this message translates to:
+  /// **'월세'**
+  String get transactionGuideMockRent;
+
+  /// No description provided for @transactionGuideMockRentAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'-500,000원'**
+  String get transactionGuideMockRentAmount;
+
+  /// No description provided for @transactionGuideMockSave.
+  ///
+  /// In ko, this message translates to:
+  /// **'저장'**
+  String get transactionGuideMockSave;
+
+  /// No description provided for @transactionGuideStepLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'Step {number}. {title}'**
+  String transactionGuideStepLabel(String number, String title);
+
+  /// No description provided for @shareGuideTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'가계부 공유 가이드'**
+  String get shareGuideTitle;
+
+  /// No description provided for @shareGuideIntro.
+  ///
+  /// In ko, this message translates to:
+  /// **'가족, 커플, 룸메이트와 가계부를 공유하여 함께 수입과 지출을 관리하세요. 실시간 동기화로 모든 멤버가 최신 기록을 확인할 수 있습니다.'**
+  String get shareGuideIntro;
+
+  /// No description provided for @shareGuideStep1Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'멤버 초대하기'**
+  String get shareGuideStep1Title;
+
+  /// No description provided for @shareGuideStep1Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정 > 멤버 관리에서 초대 버튼을 눌러 함께 사용할 멤버를 초대하세요. 이메일 주소로 초대장을 보낼 수 있습니다.'**
+  String get shareGuideStep1Desc;
+
+  /// No description provided for @shareGuideStep2Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대 수락'**
+  String get shareGuideStep2Title;
+
+  /// No description provided for @shareGuideStep2Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대받은 멤버는 앱에서 알림을 통해 초대를 확인하고 수락할 수 있습니다. 수락 즉시 가계부가 공유됩니다.'**
+  String get shareGuideStep2Desc;
+
+  /// No description provided for @shareGuideStep3Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'실시간 동기화'**
+  String get shareGuideStep3Title;
+
+  /// No description provided for @shareGuideStep3Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유가 시작되면 모든 멤버의 거래가 실시간으로 동기화됩니다. 캘린더에서 각 멤버의 거래를 색상별로 구분할 수 있습니다.'**
+  String get shareGuideStep3Desc;
+
+  /// No description provided for @shareGuideStep4Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'캘린더에서 확인하기'**
+  String get shareGuideStep4Title;
+
+  /// No description provided for @shareGuideStep4Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'공유된 가계부의 거래는 캘린더에서 멤버별 색상으로 구분되어 표시됩니다. 누가 얼마를 썼는지 한눈에 확인할 수 있습니다.'**
+  String get shareGuideStep4Desc;
+
+  /// No description provided for @shareGuideStep5Title.
+  ///
+  /// In ko, this message translates to:
+  /// **'통계에서 확인하기'**
+  String get shareGuideStep5Title;
+
+  /// No description provided for @shareGuideStep5Desc.
+  ///
+  /// In ko, this message translates to:
+  /// **'통계 탭에서 전체 지출은 물론 멤버별 지출 비율을 차트로 확인할 수 있습니다. 누가 얼마나 기여했는지 한눈에 파악하세요.'**
+  String get shareGuideStep5Desc;
+
+  /// No description provided for @shareGuideTip.
+  ///
+  /// In ko, this message translates to:
+  /// **'멤버별 색상은 설정 > 내 색상 변경에서 커스텀할 수 있습니다. 통계에서 멤버별 필터로 개인 지출만 따로 확인도 가능합니다.'**
+  String get shareGuideTip;
+
+  /// No description provided for @shareGuideMockEmail.
+  ///
+  /// In ko, this message translates to:
+  /// **'example@email.com'**
+  String get shareGuideMockEmail;
+
+  /// No description provided for @shareGuideMockInviteBtn.
+  ///
+  /// In ko, this message translates to:
+  /// **'초대 보내기'**
+  String get shareGuideMockInviteBtn;
+
+  /// No description provided for @shareGuideMockInviteArrived.
+  ///
+  /// In ko, this message translates to:
+  /// **'가계부 초대가 도착했습니다'**
+  String get shareGuideMockInviteArrived;
+
+  /// No description provided for @shareGuideMockReject.
+  ///
+  /// In ko, this message translates to:
+  /// **'거절'**
+  String get shareGuideMockReject;
+
+  /// No description provided for @shareGuideMockAccept.
+  ///
+  /// In ko, this message translates to:
+  /// **'수락'**
+  String get shareGuideMockAccept;
+
+  /// No description provided for @shareGuideMockMe.
+  ///
+  /// In ko, this message translates to:
+  /// **'나'**
+  String get shareGuideMockMe;
+
+  /// No description provided for @shareGuideMockMeAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'-25,000원'**
+  String get shareGuideMockMeAmount;
+
+  /// No description provided for @shareGuideMockPartner.
+  ///
+  /// In ko, this message translates to:
+  /// **'파트너'**
+  String get shareGuideMockPartner;
+
+  /// No description provided for @shareGuideMockPartnerAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'-15,000원'**
+  String get shareGuideMockPartnerAmount;
+
+  /// No description provided for @shareGuideMockCalendarDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'2월 15일 (토)'**
+  String get shareGuideMockCalendarDate;
+
+  /// No description provided for @shareGuideMockStarbucks.
+  ///
+  /// In ko, this message translates to:
+  /// **'스타벅스'**
+  String get shareGuideMockStarbucks;
+
+  /// No description provided for @shareGuideMockCafeDrink.
+  ///
+  /// In ko, this message translates to:
+  /// **'카페/음료'**
+  String get shareGuideMockCafeDrink;
+
+  /// No description provided for @shareGuideMockStarbucksAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'-5,500원'**
+  String get shareGuideMockStarbucksAmount;
+
+  /// No description provided for @shareGuideMockEmart.
+  ///
+  /// In ko, this message translates to:
+  /// **'이마트'**
+  String get shareGuideMockEmart;
+
+  /// No description provided for @shareGuideMockGrocery.
+  ///
+  /// In ko, this message translates to:
+  /// **'장보기'**
+  String get shareGuideMockGrocery;
+
+  /// No description provided for @shareGuideMockEmartAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'-32,000원'**
+  String get shareGuideMockEmartAmount;
+
+  /// No description provided for @shareGuideMockChartTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'2월 멤버별 지출'**
+  String get shareGuideMockChartTitle;
+
+  /// No description provided for @shareGuideMockMeChartAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'450,000원'**
+  String get shareGuideMockMeChartAmount;
+
+  /// No description provided for @shareGuideMockPartnerChartAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'250,000원'**
+  String get shareGuideMockPartnerChartAmount;
+
+  /// No description provided for @shareGuideStepLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'Step {number}. {title}'**
+  String shareGuideStepLabel(String number, String title);
 
   /// No description provided for @settingsTerms.
   ///
@@ -2911,6 +3481,42 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'감지 키워드 저장에 실패했습니다'**
   String get paymentMethodWizardKeywordsSaveFailed;
+
+  /// No description provided for @paymentMethodWizardExcludedKeywords.
+  ///
+  /// In ko, this message translates to:
+  /// **'금지 키워드'**
+  String get paymentMethodWizardExcludedKeywords;
+
+  /// No description provided for @paymentMethodWizardEditExcludedKeywordsTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'금지 키워드 수정'**
+  String get paymentMethodWizardEditExcludedKeywordsTitle;
+
+  /// No description provided for @paymentMethodWizardEditExcludedKeywordsDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 키워드가 포함된 알림은 수집하지 않습니다.'**
+  String get paymentMethodWizardEditExcludedKeywordsDescription;
+
+  /// No description provided for @paymentMethodWizardExcludedKeywordsSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'금지 키워드가 저장되었습니다'**
+  String get paymentMethodWizardExcludedKeywordsSaved;
+
+  /// No description provided for @paymentMethodWizardExcludedKeywordsSaveFailed.
+  ///
+  /// In ko, this message translates to:
+  /// **'금지 키워드 저장에 실패했습니다'**
+  String get paymentMethodWizardExcludedKeywordsSaveFailed;
+
+  /// No description provided for @paymentMethodWizardNoExcludedKeywords.
+  ///
+  /// In ko, this message translates to:
+  /// **'설정된 금지 키워드가 없습니다'**
+  String get paymentMethodWizardNoExcludedKeywords;
 
   /// No description provided for @errorGeneric.
   ///

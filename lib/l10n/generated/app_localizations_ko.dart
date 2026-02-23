@@ -453,6 +453,31 @@ class AppLocalizationsKo extends AppLocalizations {
   String get autoCollectGuideStep2Note => 'SMS: 문자 수신 권한 필요\nPush: 알림 접근 권한 필요';
 
   @override
+  String get autoCollectGuideRulesTitle => '수집 규칙 설정';
+
+  @override
+  String get autoCollectGuideRulesDesc =>
+      '결제수단을 등록하면 자동으로 수집 규칙이 생성됩니다. 감지 키워드와 금지 키워드를 편집하여 수집 정확도를 높일 수 있습니다.';
+
+  @override
+  String get autoCollectGuideDetectKeyword => '감지 키워드';
+
+  @override
+  String get autoCollectGuideDetectKeywordDesc =>
+      'SMS/Push 알림에서 이 키워드가 포함된 메시지만 수집합니다. 카드사명, 앱 이름 등을 입력하세요.';
+
+  @override
+  String get autoCollectGuideExcludeKeyword => '금지 키워드';
+
+  @override
+  String get autoCollectGuideExcludeKeywordDesc =>
+      '이 키워드가 포함된 메시지는 수집에서 제외됩니다. 잔액 알림, 포인트 적립 등 거래가 아닌 알림을 걸러낼 때 유용합니다.';
+
+  @override
+  String get autoCollectGuideKeywordTip =>
+      '결제수단 수정 화면에서 감지/금지 키워드를 언제든 편집할 수 있습니다. 수집이 부정확하다면 키워드를 조정해 보세요.';
+
+  @override
   String get autoCollectGuideStep3Title => '처리 모드 선택';
 
   @override
@@ -496,6 +521,290 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get autoCollectGuideApprove => '승인';
+
+  @override
+  String get autoCollectGuideMockSms => 'SMS';
+
+  @override
+  String get autoCollectGuideMockPush => 'Push';
+
+  @override
+  String get autoCollectGuideMockDetectChipKb => 'KB국민';
+
+  @override
+  String get autoCollectGuideMockDetectChipApproval => '승인';
+
+  @override
+  String get autoCollectGuideMockExcludeChipBalance => '잔액';
+
+  @override
+  String get autoCollectGuideMockExcludeChipPoint => '포인트';
+
+  @override
+  String get transactionGuideTitle => '거래 기록 가이드';
+
+  @override
+  String get transactionGuideIntro =>
+      '수입, 지출, 자산 거래를 간편하게 기록하세요. 카테고리, 메모를 입력할 수 있습니다.';
+
+  @override
+  String get transactionGuideStep1Title => '+ 버튼으로 거래 추가';
+
+  @override
+  String get transactionGuideStep1Desc =>
+      '하단의 + 버튼을 눌러 새 거래를 추가하세요. 수입/지출/자산 중 거래 유형을 선택할 수 있습니다.';
+
+  @override
+  String get transactionGuideStep2Title => '금액 입력';
+
+  @override
+  String get transactionGuideStep2Desc =>
+      '금액을 입력하세요. 숫자 키패드가 자동으로 표시됩니다. 할부 거래도 지원합니다.';
+
+  @override
+  String get transactionGuideStep3Title => '상세 정보 입력';
+
+  @override
+  String get transactionGuideStep3Desc => '카테고리, 결제수단, 메모, 날짜 등 상세 정보를 입력하세요.';
+
+  @override
+  String get transactionGuideStep4Title => '고정비 / 할부 / 반복 설정';
+
+  @override
+  String get transactionGuideStep4Desc =>
+      '거래 저장 시 고정비 등록, 할부 입력, 반복주기 설정을 할 수 있습니다. 각 옵션을 활용하면 매월 자동으로 거래가 기록됩니다.';
+
+  @override
+  String get transactionGuideStep5Title => '반복거래 확인하기';
+
+  @override
+  String get transactionGuideStep5Desc =>
+      '등록된 고정비, 할부, 반복 거래는 설정 > 반복거래 관리에서 확인하고 관리할 수 있습니다.';
+
+  @override
+  String get transactionGuideStep6Title => '저장 완료';
+
+  @override
+  String get transactionGuideStep6Desc =>
+      '모든 정보를 입력한 후 저장 버튼을 눌러 거래를 기록하세요. 저장된 거래는 캘린더와 목록에서 확인할 수 있습니다.';
+
+  @override
+  String get transactionGuideTip =>
+      '고정비와 반복거래는 설정 > 반복거래 관리에서 수정/삭제할 수 있습니다. 할부 거래의 남은 회차도 이곳에서 확인 가능합니다.';
+
+  @override
+  String get transactionGuideMockIncome => '수입';
+
+  @override
+  String get transactionGuideMockExpense => '지출';
+
+  @override
+  String get transactionGuideMockAsset => '자산';
+
+  @override
+  String get transactionGuideMockAmountLabel => '금액';
+
+  @override
+  String get transactionGuideMockAmountValue => '25,000원';
+
+  @override
+  String get transactionGuideMockCategory => '카테고리';
+
+  @override
+  String get transactionGuideMockCategoryValue => '식비';
+
+  @override
+  String get transactionGuideMockPaymentMethod => '결제수단';
+
+  @override
+  String get transactionGuideMockPaymentMethodValue => 'KB국민카드';
+
+  @override
+  String get transactionGuideMockMemo => '메모';
+
+  @override
+  String get transactionGuideMockMemoValue => '점심 식사';
+
+  @override
+  String get transactionGuideMockFixedExpenseRegister => '고정비 등록';
+
+  @override
+  String get transactionGuideMockFixedExpenseToggle => '고정비로 등록';
+
+  @override
+  String get transactionGuideMockFixedExpenseNote =>
+      '매월 같은 금액이 자동 기록됩니다.\n(월세, 구독료, 보험료 등)';
+
+  @override
+  String get transactionGuideMockInstallmentInput => '할부 입력';
+
+  @override
+  String get transactionGuideMockInstallment => '할부';
+
+  @override
+  String get transactionGuideMockInstallmentMonths => '3개월';
+
+  @override
+  String get transactionGuideMockInstallmentNote =>
+      '현재 1/3 회차 진행 중 (잔여 2회)\n반복거래 관리에서 할부 진행 상황을 확인하세요.';
+
+  @override
+  String get transactionGuideMockRecurringSetting => '반복주기 설정';
+
+  @override
+  String get transactionGuideMockRepeat => '반복';
+
+  @override
+  String get transactionGuideMockMonthly => '매월';
+
+  @override
+  String get transactionGuideMockDate => '날짜';
+
+  @override
+  String get transactionGuideMockDay15 => '15일';
+
+  @override
+  String get transactionGuideMockDaily => '매일';
+
+  @override
+  String get transactionGuideMockWeekly => '매주';
+
+  @override
+  String get transactionGuideMockRecurringNote => '설정한 주기에 따라 거래가 자동 생성됩니다.';
+
+  @override
+  String get transactionGuideMockSettings => '설정';
+
+  @override
+  String get transactionGuideMockRecurringManagement => '반복거래 관리';
+
+  @override
+  String get transactionGuideMockNetflix => '넷플릭스';
+
+  @override
+  String get transactionGuideMockNetflixAmount => '-17,000원';
+
+  @override
+  String get transactionGuideMockRent => '월세';
+
+  @override
+  String get transactionGuideMockRentAmount => '-500,000원';
+
+  @override
+  String get transactionGuideMockSave => '저장';
+
+  @override
+  String transactionGuideStepLabel(String number, String title) {
+    return 'Step $number. $title';
+  }
+
+  @override
+  String get shareGuideTitle => '가계부 공유 가이드';
+
+  @override
+  String get shareGuideIntro =>
+      '가족, 커플, 룸메이트와 가계부를 공유하여 함께 수입과 지출을 관리하세요. 실시간 동기화로 모든 멤버가 최신 기록을 확인할 수 있습니다.';
+
+  @override
+  String get shareGuideStep1Title => '멤버 초대하기';
+
+  @override
+  String get shareGuideStep1Desc =>
+      '설정 > 멤버 관리에서 초대 버튼을 눌러 함께 사용할 멤버를 초대하세요. 이메일 주소로 초대장을 보낼 수 있습니다.';
+
+  @override
+  String get shareGuideStep2Title => '초대 수락';
+
+  @override
+  String get shareGuideStep2Desc =>
+      '초대받은 멤버는 앱에서 알림을 통해 초대를 확인하고 수락할 수 있습니다. 수락 즉시 가계부가 공유됩니다.';
+
+  @override
+  String get shareGuideStep3Title => '실시간 동기화';
+
+  @override
+  String get shareGuideStep3Desc =>
+      '공유가 시작되면 모든 멤버의 거래가 실시간으로 동기화됩니다. 캘린더에서 각 멤버의 거래를 색상별로 구분할 수 있습니다.';
+
+  @override
+  String get shareGuideStep4Title => '캘린더에서 확인하기';
+
+  @override
+  String get shareGuideStep4Desc =>
+      '공유된 가계부의 거래는 캘린더에서 멤버별 색상으로 구분되어 표시됩니다. 누가 얼마를 썼는지 한눈에 확인할 수 있습니다.';
+
+  @override
+  String get shareGuideStep5Title => '통계에서 확인하기';
+
+  @override
+  String get shareGuideStep5Desc =>
+      '통계 탭에서 전체 지출은 물론 멤버별 지출 비율을 차트로 확인할 수 있습니다. 누가 얼마나 기여했는지 한눈에 파악하세요.';
+
+  @override
+  String get shareGuideTip =>
+      '멤버별 색상은 설정 > 내 색상 변경에서 커스텀할 수 있습니다. 통계에서 멤버별 필터로 개인 지출만 따로 확인도 가능합니다.';
+
+  @override
+  String get shareGuideMockEmail => 'example@email.com';
+
+  @override
+  String get shareGuideMockInviteBtn => '초대 보내기';
+
+  @override
+  String get shareGuideMockInviteArrived => '가계부 초대가 도착했습니다';
+
+  @override
+  String get shareGuideMockReject => '거절';
+
+  @override
+  String get shareGuideMockAccept => '수락';
+
+  @override
+  String get shareGuideMockMe => '나';
+
+  @override
+  String get shareGuideMockMeAmount => '-25,000원';
+
+  @override
+  String get shareGuideMockPartner => '파트너';
+
+  @override
+  String get shareGuideMockPartnerAmount => '-15,000원';
+
+  @override
+  String get shareGuideMockCalendarDate => '2월 15일 (토)';
+
+  @override
+  String get shareGuideMockStarbucks => '스타벅스';
+
+  @override
+  String get shareGuideMockCafeDrink => '카페/음료';
+
+  @override
+  String get shareGuideMockStarbucksAmount => '-5,500원';
+
+  @override
+  String get shareGuideMockEmart => '이마트';
+
+  @override
+  String get shareGuideMockGrocery => '장보기';
+
+  @override
+  String get shareGuideMockEmartAmount => '-32,000원';
+
+  @override
+  String get shareGuideMockChartTitle => '2월 멤버별 지출';
+
+  @override
+  String get shareGuideMockMeChartAmount => '450,000원';
+
+  @override
+  String get shareGuideMockPartnerChartAmount => '250,000원';
+
+  @override
+  String shareGuideStepLabel(String number, String title) {
+    return 'Step $number. $title';
+  }
 
   @override
   String get settingsTerms => '이용약관';
@@ -1501,6 +1810,26 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get paymentMethodWizardKeywordsSaveFailed => '감지 키워드 저장에 실패했습니다';
+
+  @override
+  String get paymentMethodWizardExcludedKeywords => '금지 키워드';
+
+  @override
+  String get paymentMethodWizardEditExcludedKeywordsTitle => '금지 키워드 수정';
+
+  @override
+  String get paymentMethodWizardEditExcludedKeywordsDescription =>
+      '이 키워드가 포함된 알림은 수집하지 않습니다.';
+
+  @override
+  String get paymentMethodWizardExcludedKeywordsSaved => '금지 키워드가 저장되었습니다';
+
+  @override
+  String get paymentMethodWizardExcludedKeywordsSaveFailed =>
+      '금지 키워드 저장에 실패했습니다';
+
+  @override
+  String get paymentMethodWizardNoExcludedKeywords => '설정된 금지 키워드가 없습니다';
 
   @override
   String get errorGeneric => '오류가 발생했습니다';

@@ -467,6 +467,31 @@ class AppLocalizationsEn extends AppLocalizations {
       'SMS: Requires SMS permission\nPush: Requires notification access permission';
 
   @override
+  String get autoCollectGuideRulesTitle => 'Collection Rules Setup';
+
+  @override
+  String get autoCollectGuideRulesDesc =>
+      'Collection rules are automatically created when you register a payment method. Edit detect and exclude keywords to improve collection accuracy.';
+
+  @override
+  String get autoCollectGuideDetectKeyword => 'Detect Keywords';
+
+  @override
+  String get autoCollectGuideDetectKeywordDesc =>
+      'Only messages containing these keywords from SMS/Push notifications will be collected. Enter card company names, app names, etc.';
+
+  @override
+  String get autoCollectGuideExcludeKeyword => 'Exclude Keywords';
+
+  @override
+  String get autoCollectGuideExcludeKeywordDesc =>
+      'Messages containing these keywords will be excluded from collection. Useful for filtering out non-transaction notifications like balance alerts or point rewards.';
+
+  @override
+  String get autoCollectGuideKeywordTip =>
+      'You can edit detect/exclude keywords anytime in the payment method edit screen. If collection is inaccurate, try adjusting the keywords.';
+
+  @override
   String get autoCollectGuideStep3Title => 'Select Processing Mode';
 
   @override
@@ -512,6 +537,293 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoCollectGuideApprove => 'Approve';
+
+  @override
+  String get autoCollectGuideMockSms => 'SMS';
+
+  @override
+  String get autoCollectGuideMockPush => 'Push';
+
+  @override
+  String get autoCollectGuideMockDetectChipKb => 'KB Card';
+
+  @override
+  String get autoCollectGuideMockDetectChipApproval => 'Approved';
+
+  @override
+  String get autoCollectGuideMockExcludeChipBalance => 'Balance';
+
+  @override
+  String get autoCollectGuideMockExcludeChipPoint => 'Points';
+
+  @override
+  String get transactionGuideTitle => 'Transaction Recording Guide';
+
+  @override
+  String get transactionGuideIntro =>
+      'Record income, expense, and asset transactions easily. You can enter category, memo and more.';
+
+  @override
+  String get transactionGuideStep1Title => 'Add Transaction with + Button';
+
+  @override
+  String get transactionGuideStep1Desc =>
+      'Tap the + button at the bottom to add a new transaction. Choose between income, expense, or asset type.';
+
+  @override
+  String get transactionGuideStep2Title => 'Enter Amount';
+
+  @override
+  String get transactionGuideStep2Desc =>
+      'Enter the amount. The numeric keypad will appear automatically. Installment payments are also supported.';
+
+  @override
+  String get transactionGuideStep3Title => 'Enter Details';
+
+  @override
+  String get transactionGuideStep3Desc =>
+      'Enter details such as category, payment method, memo, and date.';
+
+  @override
+  String get transactionGuideStep4Title =>
+      'Fixed Cost / Installment / Recurring Settings';
+
+  @override
+  String get transactionGuideStep4Desc =>
+      'When saving a transaction, you can register fixed costs, enter installments, or set recurring schedules. Each option enables automatic monthly recording.';
+
+  @override
+  String get transactionGuideStep5Title => 'Check Recurring Transactions';
+
+  @override
+  String get transactionGuideStep5Desc =>
+      'Registered fixed costs, installments, and recurring transactions can be managed in Settings > Recurring Transaction Management.';
+
+  @override
+  String get transactionGuideStep6Title => 'Save Complete';
+
+  @override
+  String get transactionGuideStep6Desc =>
+      'After entering all information, tap the Save button to record the transaction. Saved transactions can be viewed in the calendar and list.';
+
+  @override
+  String get transactionGuideTip =>
+      'Fixed costs and recurring transactions can be modified/deleted in Settings > Recurring Transaction Management. Remaining installment periods can also be checked there.';
+
+  @override
+  String get transactionGuideMockIncome => 'Income';
+
+  @override
+  String get transactionGuideMockExpense => 'Expense';
+
+  @override
+  String get transactionGuideMockAsset => 'Asset';
+
+  @override
+  String get transactionGuideMockAmountLabel => 'Amount';
+
+  @override
+  String get transactionGuideMockAmountValue => '25,000 KRW';
+
+  @override
+  String get transactionGuideMockCategory => 'Category';
+
+  @override
+  String get transactionGuideMockCategoryValue => 'Food';
+
+  @override
+  String get transactionGuideMockPaymentMethod => 'Payment Method';
+
+  @override
+  String get transactionGuideMockPaymentMethodValue => 'KB Card';
+
+  @override
+  String get transactionGuideMockMemo => 'Memo';
+
+  @override
+  String get transactionGuideMockMemoValue => 'Lunch';
+
+  @override
+  String get transactionGuideMockFixedExpenseRegister => 'Register Fixed Cost';
+
+  @override
+  String get transactionGuideMockFixedExpenseToggle => 'Register as Fixed Cost';
+
+  @override
+  String get transactionGuideMockFixedExpenseNote =>
+      'The same amount is automatically recorded every month.\n(Rent, subscriptions, insurance, etc.)';
+
+  @override
+  String get transactionGuideMockInstallmentInput => 'Installment Input';
+
+  @override
+  String get transactionGuideMockInstallment => 'Installment';
+
+  @override
+  String get transactionGuideMockInstallmentMonths => '3 months';
+
+  @override
+  String get transactionGuideMockInstallmentNote =>
+      'Currently on installment 1/3 (2 remaining)\nCheck installment progress in Recurring Transaction Management.';
+
+  @override
+  String get transactionGuideMockRecurringSetting => 'Recurrence Setting';
+
+  @override
+  String get transactionGuideMockRepeat => 'Repeat';
+
+  @override
+  String get transactionGuideMockMonthly => 'Monthly';
+
+  @override
+  String get transactionGuideMockDate => 'Date';
+
+  @override
+  String get transactionGuideMockDay15 => '15th';
+
+  @override
+  String get transactionGuideMockDaily => 'Daily';
+
+  @override
+  String get transactionGuideMockWeekly => 'Weekly';
+
+  @override
+  String get transactionGuideMockRecurringNote =>
+      'Transactions are automatically created based on the set cycle.';
+
+  @override
+  String get transactionGuideMockSettings => 'Settings';
+
+  @override
+  String get transactionGuideMockRecurringManagement => 'Recurring Management';
+
+  @override
+  String get transactionGuideMockNetflix => 'Netflix';
+
+  @override
+  String get transactionGuideMockNetflixAmount => '-17,000 KRW';
+
+  @override
+  String get transactionGuideMockRent => 'Rent';
+
+  @override
+  String get transactionGuideMockRentAmount => '-500,000 KRW';
+
+  @override
+  String get transactionGuideMockSave => 'Save';
+
+  @override
+  String transactionGuideStepLabel(String number, String title) {
+    return 'Step $number. $title';
+  }
+
+  @override
+  String get shareGuideTitle => 'Ledger Sharing Guide';
+
+  @override
+  String get shareGuideIntro =>
+      'Share your ledger with family, couples, or roommates to manage income and expenses together. Real-time sync keeps all members up to date.';
+
+  @override
+  String get shareGuideStep1Title => 'Invite Members';
+
+  @override
+  String get shareGuideStep1Desc =>
+      'Go to Settings > Member Management and tap the invite button. You can send invitations via email.';
+
+  @override
+  String get shareGuideStep2Title => 'Accept Invitation';
+
+  @override
+  String get shareGuideStep2Desc =>
+      'Invited members can check and accept the invitation through app notifications. The ledger is shared immediately upon acceptance.';
+
+  @override
+  String get shareGuideStep3Title => 'Real-time Sync';
+
+  @override
+  String get shareGuideStep3Desc =>
+      'Once sharing begins, all members\' transactions sync in real-time. You can distinguish each member\'s transactions by color on the calendar.';
+
+  @override
+  String get shareGuideStep4Title => 'Check on Calendar';
+
+  @override
+  String get shareGuideStep4Desc =>
+      'Shared ledger transactions are displayed with member-specific colors on the calendar. See who spent how much at a glance.';
+
+  @override
+  String get shareGuideStep5Title => 'Check Statistics';
+
+  @override
+  String get shareGuideStep5Desc =>
+      'View overall spending and member-specific spending ratios in the Statistics tab. See how much each member contributed at a glance.';
+
+  @override
+  String get shareGuideTip =>
+      'Member colors can be customized in Settings > Change My Color. You can also filter by member in statistics to view individual spending.';
+
+  @override
+  String get shareGuideMockEmail => 'example@email.com';
+
+  @override
+  String get shareGuideMockInviteBtn => 'Send Invite';
+
+  @override
+  String get shareGuideMockInviteArrived => 'You have a ledger invitation';
+
+  @override
+  String get shareGuideMockReject => 'Decline';
+
+  @override
+  String get shareGuideMockAccept => 'Accept';
+
+  @override
+  String get shareGuideMockMe => 'Me';
+
+  @override
+  String get shareGuideMockMeAmount => '-25,000 KRW';
+
+  @override
+  String get shareGuideMockPartner => 'Partner';
+
+  @override
+  String get shareGuideMockPartnerAmount => '-15,000 KRW';
+
+  @override
+  String get shareGuideMockCalendarDate => 'Feb 15 (Sat)';
+
+  @override
+  String get shareGuideMockStarbucks => 'Starbucks';
+
+  @override
+  String get shareGuideMockCafeDrink => 'Cafe/Drinks';
+
+  @override
+  String get shareGuideMockStarbucksAmount => '-5,500 KRW';
+
+  @override
+  String get shareGuideMockEmart => 'E-Mart';
+
+  @override
+  String get shareGuideMockGrocery => 'Groceries';
+
+  @override
+  String get shareGuideMockEmartAmount => '-32,000 KRW';
+
+  @override
+  String get shareGuideMockChartTitle => 'Feb Member Spending';
+
+  @override
+  String get shareGuideMockMeChartAmount => '450,000 KRW';
+
+  @override
+  String get shareGuideMockPartnerChartAmount => '250,000 KRW';
+
+  @override
+  String shareGuideStepLabel(String number, String title) {
+    return 'Step $number. $title';
+  }
 
   @override
   String get settingsTerms => 'Terms of Service';
@@ -1543,6 +1855,29 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get paymentMethodWizardKeywordsSaveFailed =>
       'Failed to save detection keywords';
+
+  @override
+  String get paymentMethodWizardExcludedKeywords => 'Excluded Keywords';
+
+  @override
+  String get paymentMethodWizardEditExcludedKeywordsTitle =>
+      'Edit Excluded Keywords';
+
+  @override
+  String get paymentMethodWizardEditExcludedKeywordsDescription =>
+      'Notifications containing these keywords will be ignored.';
+
+  @override
+  String get paymentMethodWizardExcludedKeywordsSaved =>
+      'Excluded keywords saved';
+
+  @override
+  String get paymentMethodWizardExcludedKeywordsSaveFailed =>
+      'Failed to save excluded keywords';
+
+  @override
+  String get paymentMethodWizardNoExcludedKeywords =>
+      'No excluded keywords set';
 
   @override
   String get errorGeneric => 'An error occurred';
