@@ -565,6 +565,7 @@ class _PaymentMethodWizardPageState
           sampleSms: _generatedFormat!.sampleSms,
           isSystem: false,
           confidence: _generatedFormat!.confidence,
+          excludedKeywords: _generatedFormat!.excludedKeywords,
         );
       } else {
         // 템플릿이 없는 경우 결제수단 이름 기반으로 기본 format 생성
@@ -593,6 +594,7 @@ class _PaymentMethodWizardPageState
           dateRegex: _generatedPushFormat!.dateRegex,
           sampleNotification: _generatedPushFormat!.sampleNotification,
           confidence: _generatedPushFormat!.confidence,
+          excludedKeywords: _generatedPushFormat!.excludedKeywords,
         );
       } else {
         // 기본 포맷 생성
@@ -1220,38 +1222,45 @@ class _PaymentMethodWizardPageState
                     children: [
                       const Icon(
                         Icons.auto_awesome,
-                        size: 20,
+                        size: 18,
                         color: Color(0xFF1976D2),
                       ),
-                      const SizedBox(width: Spacing.sm),
+                      const SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           l10n.paymentMethodWizardCurrentRules,
                           style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                           ),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: _showEditKeywordsDialog,
-                        icon: const Icon(Icons.edit, size: 16),
-                        tooltip: l10n.paymentMethodEditKeywords,
-                        constraints: const BoxConstraints(),
-                        padding: EdgeInsets.zero,
                       ),
                     ],
                   ),
                   const Divider(color: Color(0xFF90CAF9)),
-                  // 감지 키워드 - Chip 형태로 표시
-                  Text(
-                    l10n.paymentMethodWizardDetectionKeywords,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF424242),
-                    ),
+                  // 감지 키워드 섹션
+                  Row(
+                    children: [
+                      Text(
+                        l10n.paymentMethodWizardDetectionKeywords,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF666666),
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: _showEditKeywordsDialog,
+                        child: const Icon(
+                          Icons.edit,
+                          size: 14,
+                          color: Color(0xFF44483E),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: Spacing.sm),
+                  const SizedBox(height: Spacing.xs),
                   Wrap(
                     spacing: Spacing.sm,
                     runSpacing: Spacing.sm,
@@ -1264,7 +1273,7 @@ class _PaymentMethodWizardPageState
                               (keyword) => Chip(
                                 label: Text(
                                   keyword,
-                                  style: const TextStyle(fontSize: 13),
+                                  style: const TextStyle(fontSize: 12),
                                 ),
                                 backgroundColor: Colors.white,
                                 side: const BorderSide(
@@ -1275,13 +1284,39 @@ class _PaymentMethodWizardPageState
                             )
                             .toList(),
                   ),
-                  const SizedBox(height: Spacing.sm + Spacing.xs),
-                  // 금액 패턴
+                  const SizedBox(height: Spacing.md),
+                  // 금지 키워드 섹션
+                  Row(
+                    children: [
+                      Text(
+                        l10n.paymentMethodWizardExcludedKeywords,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF666666),
+                        ),
+                      ),
+                      const Spacer(),
+                      GestureDetector(
+                        onTap: _showEditExcludedKeywordsDialog,
+                        child: const Icon(
+                          Icons.edit,
+                          size: 14,
+                          color: Color(0xFF44483E),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: Spacing.xs),
+                  _buildExcludedKeywordsChips(l10n),
+                  const SizedBox(height: Spacing.md),
+                  // 금액 패턴 섹션
                   Text(
                     l10n.paymentMethodWizardAmountPattern,
                     style: const TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF424242),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF666666),
                     ),
                   ),
                   const SizedBox(height: Spacing.xs),
@@ -1292,8 +1327,8 @@ class _PaymentMethodWizardPageState
                           : _generatedFormat!.amountRegex,
                     ),
                     style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
                     ),
                   ),
                 ],
@@ -1525,6 +1560,8 @@ class _PaymentMethodWizardPageState
   Future<void> _saveKeywordsToDb({
     required String formatId,
     required Future<void> Function() updateAction,
+    String? successMessage,
+    String? failureMessage,
   }) async {
     if (!isEdit || formatId.isEmpty) return;
 
@@ -1534,7 +1571,7 @@ class _PaymentMethodWizardPageState
         final l10n = AppLocalizations.of(context);
         SnackBarUtils.showSuccess(
           context,
-          l10n.paymentMethodWizardKeywordsSaved,
+          successMessage ?? l10n.paymentMethodWizardKeywordsSaved,
         );
       }
     } catch (e) {
@@ -1543,7 +1580,124 @@ class _PaymentMethodWizardPageState
         final l10n = AppLocalizations.of(context);
         SnackBarUtils.showError(
           context,
-          l10n.paymentMethodWizardKeywordsSaveFailed,
+          failureMessage ?? l10n.paymentMethodWizardKeywordsSaveFailed,
+        );
+      }
+    }
+  }
+
+  Widget _buildExcludedKeywordsChips(AppLocalizations l10n) {
+    final isPushMode = _notificationType == AutoCollectSource.push.name;
+    final excludedKeywords = isPushMode
+        ? (_generatedPushFormat?.excludedKeywords ?? [])
+        : (_generatedFormat?.excludedKeywords ?? []);
+
+    if (excludedKeywords.isEmpty) {
+      return Text(
+        l10n.paymentMethodWizardNoExcludedKeywords,
+        style: TextStyle(
+          fontSize: 12,
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: Spacing.sm,
+      runSpacing: Spacing.sm,
+      children: excludedKeywords
+          .map(
+            (keyword) => Chip(
+              label: Text(
+                keyword,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFFE65100),
+                ),
+              ),
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Color(0xFFFFAB91)),
+              visualDensity: VisualDensity.compact,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Future<void> _showEditExcludedKeywordsDialog() async {
+    final isPushMode = _notificationType == AutoCollectSource.push.name;
+
+    List<String> currentKeywords;
+    if (isPushMode) {
+      if (_generatedPushFormat == null) return;
+      currentKeywords =
+          List<String>.from(_generatedPushFormat!.excludedKeywords);
+    } else {
+      if (_generatedFormat == null) return;
+      currentKeywords = List<String>.from(_generatedFormat!.excludedKeywords);
+    }
+
+    _keywordsController.clear();
+
+    if (!mounted) return;
+
+    final l10n = AppLocalizations.of(context);
+
+    final result = await showDialog<List<String>>(
+      context: context,
+      builder: (dialogContext) {
+        return _KeywordEditDialog(
+          initialKeywords: currentKeywords,
+          keywordsController: _keywordsController,
+          title: l10n.paymentMethodWizardEditExcludedKeywordsTitle,
+          description: l10n.paymentMethodWizardEditExcludedKeywordsDescription,
+          allowEmpty: true,
+        );
+      },
+    );
+
+    if (result != null && mounted) {
+      if (isPushMode) {
+        setState(() {
+          _generatedPushFormat = _generatedPushFormat!.copyWith(
+            excludedKeywords: result,
+          );
+        });
+
+        await _saveKeywordsToDb(
+          formatId: _generatedPushFormat!.id,
+          updateAction: () async {
+            final pushFormatRepository = ref.read(
+              learnedPushFormatRepositoryProvider,
+            );
+            await pushFormatRepository.updateFormat(
+              id: _generatedPushFormat!.id,
+              excludedKeywords: result,
+            );
+          },
+          successMessage: l10n.paymentMethodWizardExcludedKeywordsSaved,
+          failureMessage: l10n.paymentMethodWizardExcludedKeywordsSaveFailed,
+        );
+      } else {
+        setState(() {
+          _generatedFormat = _generatedFormat!.copyWith(
+            excludedKeywords: result,
+          );
+        });
+
+        await _saveKeywordsToDb(
+          formatId: _generatedFormat!.id,
+          updateAction: () async {
+            final formatRepository = ref.read(
+              learnedSmsFormatRepositoryProvider,
+            );
+            await formatRepository.updateFormat(
+              id: _generatedFormat!.id,
+              excludedKeywords: result,
+            );
+          },
+          successMessage: l10n.paymentMethodWizardExcludedKeywordsSaved,
+          failureMessage: l10n.paymentMethodWizardExcludedKeywordsSaveFailed,
         );
       }
     }
@@ -1778,10 +1932,16 @@ class _PaymentMethodWizardPageState
 class _KeywordEditDialog extends StatefulWidget {
   final List<String> initialKeywords;
   final TextEditingController keywordsController;
+  final String? title;
+  final String? description;
+  final bool allowEmpty;
 
   const _KeywordEditDialog({
     required this.initialKeywords,
     required this.keywordsController,
+    this.title,
+    this.description,
+    this.allowEmpty = false,
   });
 
   @override
@@ -1840,7 +2000,9 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
     final colorScheme = Theme.of(context).colorScheme;
 
     return AlertDialog(
-      title: Text(l10n.paymentMethodWizardEditKeywordsTitle),
+      title: Text(
+        widget.title ?? l10n.paymentMethodWizardEditKeywordsTitle,
+      ),
       content: SizedBox(
         width: double.maxFinite,
         child: SingleChildScrollView(
@@ -1849,7 +2011,8 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.paymentMethodWizardEditKeywordsDescription,
+              widget.description ??
+                  l10n.paymentMethodWizardEditKeywordsDescription,
               style: TextStyle(
                 fontSize: 13,
                 color: colorScheme.onSurfaceVariant,
@@ -1913,7 +2076,7 @@ class _KeywordEditDialogState extends State<_KeywordEditDialog> {
         ),
         FilledButton(
           onPressed: () {
-            if (_keywords.isEmpty) {
+            if (_keywords.isEmpty && !widget.allowEmpty) {
               SnackBarUtils.showError(
                 context,
                 l10n.paymentMethodWizardEditKeywordsMinError,

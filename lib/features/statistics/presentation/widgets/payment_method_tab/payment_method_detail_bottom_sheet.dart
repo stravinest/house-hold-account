@@ -1,41 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../../core/utils/color_utils.dart';
 import '../../../../../core/utils/number_format_utils.dart';
 import '../../../../../l10n/generated/app_localizations.dart';
 import '../../../../../shared/themes/design_tokens.dart';
+import '../../../../../shared/widgets/category_icon.dart';
 import '../../providers/statistics_provider.dart';
 import '../common/top_transaction_row.dart';
 
-/// 카테고리 상세 Bottom Sheet - Top5 거래 표시
-class CategoryDetailBottomSheet extends ConsumerWidget {
-  const CategoryDetailBottomSheet({super.key});
+/// 결제수단 상세 Bottom Sheet - Top5 거래 표시
+class PaymentMethodDetailBottomSheet extends ConsumerWidget {
+  const PaymentMethodDetailBottomSheet({super.key});
 
   static void show(
     BuildContext context,
     WidgetRef ref, {
-    required String categoryId,
-    required String categoryName,
-    required String categoryColor,
-    required String categoryIcon,
-    required double categoryPercentage,
-    required String type,
+    required String paymentMethodId,
+    required String paymentMethodName,
+    required String paymentMethodIcon,
+    required String paymentMethodColor,
+    required bool canAutoSave,
+    required double percentage,
     required int totalAmount,
-    bool isFixedExpenseFilter = false,
     String? selectedUserId,
+    bool isFixedExpenseFilter = false,
   }) {
-    ref.read(categoryDetailStateProvider.notifier).state = CategoryDetailState(
+    ref.read(paymentMethodDetailStateProvider.notifier).state =
+        PaymentMethodDetailState(
       isOpen: true,
-      categoryId: categoryId,
-      categoryName: categoryName,
-      categoryColor: categoryColor,
-      categoryIcon: categoryIcon,
-      categoryPercentage: categoryPercentage,
-      type: type,
+      paymentMethodId: paymentMethodId,
+      paymentMethodName: paymentMethodName,
+      paymentMethodIcon: paymentMethodIcon,
+      paymentMethodColor: paymentMethodColor,
+      canAutoSave: canAutoSave,
+      percentage: percentage,
       totalAmount: totalAmount,
-      isFixedExpenseFilter: isFixedExpenseFilter,
       selectedUserId: selectedUserId,
+      isFixedExpenseFilter: isFixedExpenseFilter,
     );
 
     showModalBottomSheet(
@@ -44,10 +45,10 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
       useSafeArea: true,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const CategoryDetailBottomSheet(),
+      builder: (_) => const PaymentMethodDetailBottomSheet(),
     ).whenComplete(() {
-      ref.read(categoryDetailStateProvider.notifier).state =
-          const CategoryDetailState();
+      ref.read(paymentMethodDetailStateProvider.notifier).state =
+          const PaymentMethodDetailState();
     });
   }
 
@@ -55,25 +56,9 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
-    final state = ref.watch(categoryDetailStateProvider);
-    final topItemsAsync = ref.watch(categoryTopTransactionsProvider);
+    final state = ref.watch(paymentMethodDetailStateProvider);
+    final topItemsAsync = ref.watch(paymentMethodTopTransactionsProvider);
     final numberFormat = NumberFormatUtils.currency;
-
-    final categoryColor = ColorUtils.parseHexColor(
-      state.categoryColor,
-      fallback: const Color(0xFF9E9E9E),
-    );
-
-    final amountPrefix = state.type == 'expense'
-        ? '-'
-        : state.type == 'income'
-            ? '+'
-            : '';
-    final amountColor = state.type == 'expense'
-        ? const Color(0xFFBA1A1A)
-        : state.type == 'income'
-            ? const Color(0xFF2E7D32)
-            : const Color(0xFF1565C0);
 
     return Container(
       constraints: BoxConstraints(
@@ -105,32 +90,33 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
               children: [
                 Row(
                   children: [
-                    Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: categoryColor,
-                        shape: BoxShape.circle,
-                      ),
+                    CategoryIcon(
+                      icon: state.paymentMethodIcon,
+                      name: state.paymentMethodName,
+                      color: state.paymentMethodColor,
+                      size: CategoryIconSize.small,
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      state.categoryName,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: Text(
+                        state.paymentMethodName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${state.categoryPercentage.toStringAsFixed(1)}%',
+                      '${state.percentage.toStringAsFixed(1)}%',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
                     IconButton(
                       onPressed: () => Navigator.pop(context),
                       icon: Icon(
@@ -152,7 +138,7 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
                   textBaseline: TextBaseline.alphabetic,
                   children: [
                     Text(
-                      '$amountPrefix${numberFormat.format(state.totalAmount)}${l10n.transactionAmountUnit}',
+                      '-${numberFormat.format(state.totalAmount)}${l10n.transactionAmountUnit}',
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
@@ -187,17 +173,12 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _getListTitle(state.type, l10n),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  Text(
+                    l10n.statisticsCategoryTopExpense,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   topItemsAsync.when(
@@ -222,11 +203,9 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
                         children: items.map((item) {
                           return TopTransactionRow(
                             item: item,
-                            amountPrefix: amountPrefix,
-                            amountColor: amountColor,
-                            rankBgColor: state.type == 'asset'
-                                ? const Color(0xFF1565C0)
-                                : const Color(0xFF2E7D32),
+                            amountPrefix: '-',
+                            amountColor: colorScheme.error,
+                            rankBgColor: colorScheme.error,
                             isLast: item.rank == items.length,
                           );
                         }).toList(),
@@ -256,16 +235,5 @@ class CategoryDetailBottomSheet extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  String _getListTitle(String type, AppLocalizations l10n) {
-    switch (type) {
-      case 'income':
-        return l10n.statisticsCategoryTopIncome;
-      case 'asset':
-        return l10n.statisticsCategoryTopAsset;
-      default:
-        return l10n.statisticsCategoryTopExpense;
-    }
   }
 }

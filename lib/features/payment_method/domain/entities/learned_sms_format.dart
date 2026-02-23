@@ -20,6 +20,7 @@ class LearnedSmsFormat extends Equatable implements LearnedFormat {
   @override
   final double confidence;
   final int matchCount;
+  final List<String> excludedKeywords;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -36,6 +37,7 @@ class LearnedSmsFormat extends Equatable implements LearnedFormat {
     this.isSystem = false,
     this.confidence = 0.8,
     this.matchCount = 0,
+    this.excludedKeywords = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -58,6 +60,7 @@ class LearnedSmsFormat extends Equatable implements LearnedFormat {
     bool? isSystem,
     double? confidence,
     int? matchCount,
+    List<String>? excludedKeywords,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -74,6 +77,7 @@ class LearnedSmsFormat extends Equatable implements LearnedFormat {
       isSystem: isSystem ?? this.isSystem,
       confidence: confidence ?? this.confidence,
       matchCount: matchCount ?? this.matchCount,
+      excludedKeywords: excludedKeywords ?? this.excludedKeywords,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -93,6 +97,7 @@ class LearnedSmsFormat extends Equatable implements LearnedFormat {
     isSystem,
     confidence,
     matchCount,
+    excludedKeywords,
     createdAt,
     updatedAt,
   ];

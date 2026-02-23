@@ -64,6 +64,7 @@ class LearnedSmsFormatRepository {
     String? sampleSms,
     bool isSystem = false,
     double confidence = 0.8,
+    List<String> excludedKeywords = const [],
   }) async {
     final data = LearnedSmsFormatModel.toCreateJson(
       paymentMethodId: paymentMethodId,
@@ -76,6 +77,7 @@ class LearnedSmsFormatRepository {
       sampleSms: sampleSms,
       isSystem: isSystem,
       confidence: confidence,
+      excludedKeywords: excludedKeywords,
     );
 
     final response = await _client
@@ -96,6 +98,7 @@ class LearnedSmsFormatRepository {
     String? merchantRegex,
     String? dateRegex,
     double? confidence,
+    List<String>? excludedKeywords,
   }) async {
     final updates = <String, dynamic>{'updated_at': DateTimeUtils.nowUtcIso()};
     if (senderPattern != null) updates['sender_pattern'] = senderPattern;
@@ -105,6 +108,9 @@ class LearnedSmsFormatRepository {
     if (merchantRegex != null) updates['merchant_regex'] = merchantRegex;
     if (dateRegex != null) updates['date_regex'] = dateRegex;
     if (confidence != null) updates['confidence'] = confidence;
+    if (excludedKeywords != null) {
+      updates['excluded_keywords'] = excludedKeywords;
+    }
 
     final response = await _client
         .from('learned_sms_formats')

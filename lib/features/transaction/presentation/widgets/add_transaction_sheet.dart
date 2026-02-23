@@ -264,14 +264,13 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
             }),
           ),
           const SizedBox(height: Spacing.lg),
-          TitleInputField(controller: _titleController),
+          TitleInputField(controller: _titleController, autofocus: true),
           const SizedBox(height: Spacing.md),
-          if (_installmentResult == null) ...[
+          if (!_isInstallmentMode) ...[
             AmountInputField(
               controller: _amountController,
               focusNode: _amountFocusNode,
               isInstallmentMode: _isInstallmentMode,
-              autofocus: true,
             ),
             const Divider(),
           ],
@@ -326,6 +325,7 @@ class _AddTransactionSheetState extends ConsumerState<AddTransactionSheet> {
   Widget _buildInstallment() => InstallmentInputWidget(
     startDate: _selectedDate,
     enabled: !_isLoading,
+    isInstallmentMode: _isInstallmentMode,
     onModeChanged: (isOn) => setState(() {
       _isInstallmentMode = isOn;
       if (!isOn) _installmentResult = null;

@@ -413,6 +413,7 @@ class _SharedLegendList extends StatelessWidget {
           return GestureDetector(
             onTap: () {
               final expenseFilter = ref.read(selectedExpenseTypeFilterProvider);
+              final currentSharedState = ref.read(sharedStatisticsStateProvider);
               CategoryDetailBottomSheet.show(
                 context,
                 ref,
@@ -427,6 +428,7 @@ class _SharedLegendList extends StatelessWidget {
                 type: type,
                 totalAmount: item.amount,
                 isFixedExpenseFilter: expenseFilter == ExpenseTypeFilter.fixed,
+                selectedUserId: currentSharedState.selectedUserId,
               );
             },
             child: Container(

@@ -62,12 +62,14 @@ class InstallmentResult {
 class InstallmentInputWidget extends StatefulWidget {
   final DateTime startDate;
   final bool enabled;
+  final bool isInstallmentMode;
   final ValueChanged<bool> onModeChanged;
   final ValueChanged<InstallmentResult> onApplied;
 
   const InstallmentInputWidget({
     super.key,
     required this.startDate,
+    required this.isInstallmentMode,
     required this.onModeChanged,
     required this.onApplied,
     this.enabled = true,
@@ -78,7 +80,6 @@ class InstallmentInputWidget extends StatefulWidget {
 }
 
 class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
-  bool _isInstallment = false;
   final _totalAmountController = TextEditingController();
   final _monthsController = TextEditingController();
   InstallmentResult? _previewResult;
@@ -166,18 +167,17 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
           title: Text(l10n.installmentInput),
           subtitle: Text(l10n.installmentInputDescription),
           trailing: Switch(
-            value: _isInstallment,
+            value: widget.isInstallmentMode,
             onChanged: widget.enabled
                 ? (value) {
-                    setState(() {
-                      _isInstallment = value;
-                      if (!value) {
+                    if (!value) {
+                      setState(() {
                         _totalAmountController.clear();
                         _monthsController.clear();
                         _previewResult = null;
                         _isApplied = false;
-                      }
-                    });
+                      });
+                    }
                     widget.onModeChanged(value);
                   }
                 : null,
@@ -185,7 +185,7 @@ class _InstallmentInputWidgetState extends State<InstallmentInputWidget> {
         ),
 
         // 할부 설정 (활성화된 경우)
-        if (_isInstallment) ...[
+        if (widget.isInstallmentMode) ...[
           const SizedBox(height: 16),
 
           // 적용 완료 상태 표시

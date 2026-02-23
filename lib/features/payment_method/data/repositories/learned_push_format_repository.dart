@@ -64,6 +64,7 @@ class LearnedPushFormatRepository {
     String? dateRegex,
     String? sampleNotification,
     double confidence = 0.8,
+    List<String> excludedKeywords = const [],
   }) async {
     final data = LearnedPushFormatModel.toCreateJson(
       paymentMethodId: paymentMethodId,
@@ -75,6 +76,7 @@ class LearnedPushFormatRepository {
       dateRegex: dateRegex,
       sampleNotification: sampleNotification,
       confidence: confidence,
+      excludedKeywords: excludedKeywords,
     );
 
     final response = await _client
@@ -95,6 +97,7 @@ class LearnedPushFormatRepository {
     String? merchantRegex,
     String? dateRegex,
     double? confidence,
+    List<String>? excludedKeywords,
   }) async {
     final updates = <String, dynamic>{'updated_at': DateTimeUtils.nowUtcIso()};
     if (packageName != null) updates['package_name'] = packageName;
@@ -104,6 +107,9 @@ class LearnedPushFormatRepository {
     if (merchantRegex != null) updates['merchant_regex'] = merchantRegex;
     if (dateRegex != null) updates['date_regex'] = dateRegex;
     if (confidence != null) updates['confidence'] = confidence;
+    if (excludedKeywords != null) {
+      updates['excluded_keywords'] = excludedKeywords;
+    }
 
     final response = await _client
         .from('learned_push_formats')

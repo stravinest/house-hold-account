@@ -46,14 +46,20 @@ class TransactionTypeSelector extends StatelessWidget {
 /// 제목 입력 필드
 class TitleInputField extends StatelessWidget {
   final TextEditingController controller;
+  final bool autofocus;
 
-  const TitleInputField({super.key, required this.controller});
+  const TitleInputField({
+    super.key,
+    required this.controller,
+    this.autofocus = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return TextFormField(
       controller: controller,
+      autofocus: autofocus,
       maxLines: 1,
       maxLength: 40,
       textInputAction: TextInputAction.next,

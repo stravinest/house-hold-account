@@ -17,6 +17,7 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
     super.isSystem,
     super.confidence,
     super.matchCount,
+    super.excludedKeywords,
     required super.createdAt,
     required super.updatedAt,
   });
@@ -48,6 +49,14 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
       }
     }
 
+    final excludedKeywordsRaw = json['excluded_keywords'];
+    List<String> excludedKeywords = [];
+    if (excludedKeywordsRaw != null) {
+      if (excludedKeywordsRaw is List) {
+        excludedKeywords = excludedKeywordsRaw.cast<String>();
+      }
+    }
+
     return LearnedSmsFormatModel(
       id: json['id'] as String,
       paymentMethodId: json['payment_method_id'] as String,
@@ -61,6 +70,7 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
       isSystem: json['is_system'] as bool? ?? false,
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.8,
       matchCount: json['match_count'] as int? ?? 0,
+      excludedKeywords: excludedKeywords,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -80,6 +90,7 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
       'is_system': isSystem,
       'confidence': confidence,
       'match_count': matchCount,
+      'excluded_keywords': excludedKeywords,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -96,6 +107,7 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
     String? sampleSms,
     bool isSystem = false,
     double confidence = 0.8,
+    List<String> excludedKeywords = const [],
   }) {
     return {
       'payment_method_id': paymentMethodId,
@@ -108,6 +120,7 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
       if (sampleSms != null) 'sample_sms': sampleSms,
       'is_system': isSystem,
       'confidence': confidence,
+      'excluded_keywords': excludedKeywords,
     };
   }
 
@@ -126,6 +139,7 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
       isSystem: entity.isSystem,
       confidence: entity.confidence,
       matchCount: entity.matchCount,
+      excludedKeywords: entity.excludedKeywords,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
@@ -146,6 +160,7 @@ class LearnedSmsFormatModel extends LearnedSmsFormat {
       isSystem: isSystem,
       confidence: confidence,
       matchCount: matchCount,
+      excludedKeywords: excludedKeywords,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

@@ -425,6 +425,7 @@ class CategoryDetailState {
   final String type; // expense, income, asset
   final int totalAmount;
   final bool isFixedExpenseFilter; // 고정비 필터에서 진입했는지 여부
+  final String? selectedUserId; // 유저 필터
 
   const CategoryDetailState({
     this.isOpen = false,
@@ -436,6 +437,7 @@ class CategoryDetailState {
     this.type = 'expense',
     this.totalAmount = 0,
     this.isFixedExpenseFilter = false,
+    this.selectedUserId,
   });
 }
 
@@ -468,6 +470,7 @@ final categoryTopTransactionsProvider =
         categoryId: state.categoryId,
         isFixedExpenseFilter: state.isFixedExpenseFilter,
         expenseTypeFilter: state.type == 'expense' ? expenseTypeFilter : null,
+        userId: state.selectedUserId,
       );
     });
 
@@ -486,3 +489,66 @@ final sharedTotalAmountProvider = Provider<int>((ref) {
 
   return userStats.values.fold(0, (sum, user) => sum + user.totalAmount);
 });
+
+// 결제수단 상세 팝업 상태
+class PaymentMethodDetailState {
+  final bool isOpen;
+  final String paymentMethodId;
+  final String paymentMethodName;
+  final String paymentMethodIcon;
+  final String paymentMethodColor;
+  final bool canAutoSave;
+  final double percentage;
+  final int totalAmount;
+  final String? selectedUserId;
+  final bool isFixedExpenseFilter;
+
+  const PaymentMethodDetailState({
+    this.isOpen = false,
+    this.paymentMethodId = '',
+    this.paymentMethodName = '',
+    this.paymentMethodIcon = '',
+    this.paymentMethodColor = '',
+    this.canAutoSave = false,
+    this.percentage = 0,
+    this.totalAmount = 0,
+    this.selectedUserId,
+    this.isFixedExpenseFilter = false,
+  });
+}
+
+final paymentMethodDetailStateProvider =
+    StateProvider<PaymentMethodDetailState>(
+  (ref) => const PaymentMethodDetailState(),
+);
+
+// 결제수단 Top5 거래 조회
+final paymentMethodTopTransactionsProvider =
+    FutureProvider<CategoryTopResult>((ref) async {
+      final state = ref.watch(paymentMethodDetailStateProvider);
+      if (!state.isOpen || state.paymentMethodId.isEmpty) {
+        return const CategoryTopResult(items: [], totalAmount: 0);
+      }
+
+      final ledgerId = ref.watch(selectedLedgerIdProvider);
+      if (ledgerId == null) {
+        return const CategoryTopResult(items: [], totalAmount: 0);
+      }
+
+      final date = ref.watch(statisticsSelectedDateProvider);
+      final repository = ref.watch(statisticsRepositoryProvider);
+      final expenseTypeFilter =
+          ref.watch(selectedPaymentMethodExpenseTypeFilterProvider);
+
+      return repository.getPaymentMethodTopTransactions(
+        ledgerId: ledgerId,
+        year: date.year,
+        month: date.month,
+        type: 'expense',
+        paymentMethodId: state.paymentMethodId,
+        paymentMethodName: state.paymentMethodName,
+        canAutoSave: state.canAutoSave,
+        userId: state.selectedUserId,
+        expenseTypeFilter: expenseTypeFilter,
+      );
+    });

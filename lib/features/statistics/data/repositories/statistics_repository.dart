@@ -916,6 +916,7 @@ class StatisticsRepository {
     required String categoryId,
     bool isFixedExpenseFilter = false,
     ExpenseTypeFilter? expenseTypeFilter,
+    String? userId,
     int limit = 5,
   }) async {
     final startDate = DateTime(year, month, 1);
@@ -930,6 +931,11 @@ class StatisticsRepository {
         .eq('type', type)
         .gte('date', startDate.toIso8601String().split('T').first)
         .lte('date', endDate.toIso8601String().split('T').first);
+
+    // 유저 필터 적용
+    if (userId != null) {
+      query = query.eq('user_id', userId);
+    }
 
     // 고정비/변동비 필터 적용 (지출 타입일 때)
     if (type == 'expense' && expenseTypeFilter != null) {
@@ -980,6 +986,116 @@ class StatisticsRepository {
     final topRows = allRows.take(limit).toList();
 
     // 요일 배열: DateTime.weekday는 1(월)~7(일)
+    const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
+    final items = <CategoryTopTransaction>[];
+
+    for (int i = 0; i < topRows.length; i++) {
+      final row = topRows[i];
+      final amount = (row['amount'] as num?)?.toInt() ?? 0;
+      final profile = row['profiles'] as Map<String, dynamic>?;
+      final dateStr = row['date'] as String;
+      final txDate = DateTime.parse(dateStr);
+      final formattedDate =
+          '${txDate.month}월 ${txDate.day}일 (${dayNames[txDate.weekday - 1]})';
+
+      items.add(CategoryTopTransaction(
+        rank: i + 1,
+        title: row['title'] as String? ?? '',
+        amount: amount,
+        percentage: totalAmount > 0
+            ? ((amount / totalAmount) * 1000).round() / 10
+            : 0.0,
+        date: formattedDate,
+        userName: profile?['display_name'] as String? ?? '',
+        userColor: profile?['color'] as String? ?? '#A8D8EA',
+      ));
+    }
+
+    return CategoryTopResult(items: items, totalAmount: totalAmount);
+  }
+
+  // 결제수단 내 Top5 거래 조회
+  Future<CategoryTopResult> getPaymentMethodTopTransactions({
+    required String ledgerId,
+    required int year,
+    required int month,
+    required String type,
+    required String paymentMethodId,
+    required String paymentMethodName,
+    required bool canAutoSave,
+    String? userId,
+    ExpenseTypeFilter? expenseTypeFilter,
+    int limit = 5,
+  }) async {
+    final startDate = DateTime(year, month, 1);
+    final endDate = DateTime(year, month + 1, 0);
+
+    var query = _client
+        .from('transactions')
+        .select(
+          'id, title, amount, date, user_id, payment_method_id, profiles!user_id(display_name, color), payment_methods!payment_method_id(name, can_auto_save)',
+        )
+        .eq('ledger_id', ledgerId)
+        .eq('type', type)
+        .gte('date', startDate.toIso8601String().split('T').first)
+        .lte('date', endDate.toIso8601String().split('T').first);
+
+    // 유저 필터 적용
+    if (userId != null) {
+      query = query.eq('user_id', userId);
+    }
+
+    // 고정비/변동비 필터 적용
+    if (type == 'expense' && expenseTypeFilter != null) {
+      switch (expenseTypeFilter) {
+        case ExpenseTypeFilter.fixed:
+          query = query.eq('is_fixed_expense', true);
+          break;
+        case ExpenseTypeFilter.variable:
+          query = query.eq('is_fixed_expense', false);
+          break;
+        case ExpenseTypeFilter.all:
+          break;
+      }
+    }
+
+    // 미지정 결제수단
+    if (paymentMethodId == '_no_payment_method_') {
+      query = query.isFilter('payment_method_id', null);
+    } else if (canAutoSave) {
+      // 자동수집 결제수단은 이름 기준 매칭 (사용자별 독립 관리)
+      query = query
+          .not('payment_method_id', 'is', null)
+          .eq('payment_methods.name', paymentMethodName)
+          .eq('payment_methods.can_auto_save', true);
+    } else {
+      query = query.eq('payment_method_id', paymentMethodId);
+    }
+
+    final allRows = await query;
+
+    // 자동수집 결제수단: 서버 필터가 embedded resource에 대해 row를 제외하지 않을 수 있으므로
+    // payment_methods가 빈 객체인 row를 제거
+    final filteredRows = canAutoSave && paymentMethodId != '_no_payment_method_'
+        ? allRows.where((row) {
+            final pm = row['payment_methods'];
+            return pm != null && pm is Map && pm.isNotEmpty;
+          }).toList()
+        : allRows;
+
+    // 총액 계산
+    final totalAmount = filteredRows.fold<int>(
+      0,
+      (sum, row) => sum + ((row['amount'] as num?)?.toInt() ?? 0),
+    );
+
+    // 금액순 정렬 후 상위 limit개 추출
+    filteredRows.sort(
+      (a, b) =>
+          ((b['amount'] as num?) ?? 0).compareTo((a['amount'] as num?) ?? 0),
+    );
+    final topRows = filteredRows.take(limit).toList();
+
     const dayNames = ['월', '화', '수', '목', '금', '토', '일'];
     final items = <CategoryTopTransaction>[];
 

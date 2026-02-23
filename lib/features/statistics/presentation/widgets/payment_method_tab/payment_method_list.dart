@@ -8,6 +8,7 @@ import '../../../../../shared/widgets/category_icon.dart';
 import '../../../../../shared/widgets/skeleton_loading.dart';
 import '../../../domain/entities/statistics_entities.dart';
 import '../../providers/statistics_provider.dart';
+import 'payment_method_detail_bottom_sheet.dart';
 
 class PaymentMethodList extends ConsumerWidget {
   const PaymentMethodList({super.key});
@@ -23,15 +24,29 @@ class PaymentMethodList extends ConsumerWidget {
           return const SizedBox.shrink();
         }
 
-        return ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: statistics.length,
-          separatorBuilder: (context, index) => const Divider(height: 1),
-          itemBuilder: (context, index) {
-            final item = statistics[index];
-            return _PaymentMethodItem(rank: index + 1, item: item, l10n: l10n);
-          },
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 4),
+              child: Text(
+                l10n.statisticsTapToDetail,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: statistics.length,
+              separatorBuilder: (context, index) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final item = statistics[index];
+                return _PaymentMethodItem(rank: index + 1, item: item, l10n: l10n);
+              },
+            ),
+          ],
         );
       },
       loading: () => const _SkeletonPaymentMethodList(),
@@ -41,7 +56,7 @@ class PaymentMethodList extends ConsumerWidget {
   }
 }
 
-class _PaymentMethodItem extends StatelessWidget {
+class _PaymentMethodItem extends ConsumerWidget {
   final int rank;
   final PaymentMethodStatistics item;
   final AppLocalizations l10n;
@@ -53,78 +68,100 @@ class _PaymentMethodItem extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final color = ColorUtils.parseHexColor(
       item.paymentMethodColor,
       fallback: const Color(0xFF9E9E9E),
     );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              // 결제수단 아이콘
-              CategoryIcon(
-                icon: item.paymentMethodIcon,
-                name: item.paymentMethodName,
-                color: item.paymentMethodColor,
-                size: CategoryIconSize.small,
-              ),
-              const SizedBox(width: 12),
-              // 결제수단명 + 뱃지
-              Expanded(
-                child: Row(
-                  children: [
-                    // 결제수단명
-                    Flexible(
-                      child: Text(
-                        item.paymentMethodName,
-                        style: theme.textTheme.bodyLarge,
-                        overflow: TextOverflow.ellipsis,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        final sharedState =
+            ref.read(paymentMethodSharedStatisticsStateProvider);
+        final expenseFilter =
+            ref.read(selectedPaymentMethodExpenseTypeFilterProvider);
+        PaymentMethodDetailBottomSheet.show(
+          context,
+          ref,
+          paymentMethodId: item.paymentMethodId,
+          paymentMethodName: item.paymentMethodName,
+          paymentMethodIcon: item.paymentMethodIcon,
+          paymentMethodColor: item.paymentMethodColor,
+          canAutoSave: item.canAutoSave,
+          percentage: item.percentage,
+          totalAmount: item.amount,
+          selectedUserId: sharedState.selectedUserId,
+          isFixedExpenseFilter: expenseFilter == ExpenseTypeFilter.fixed,
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                // 결제수단 아이콘
+                CategoryIcon(
+                  icon: item.paymentMethodIcon,
+                  name: item.paymentMethodName,
+                  color: item.paymentMethodColor,
+                  size: CategoryIconSize.small,
+                ),
+                const SizedBox(width: 12),
+                // 결제수단명 + 뱃지
+                Expanded(
+                  child: Row(
+                    children: [
+                      // 결제수단명
+                      Flexible(
+                        child: Text(
+                          item.paymentMethodName,
+                          style: theme.textTheme.bodyLarge,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 4),
-                    // 뱃지 (미지정 결제수단은 뱃지 표시 안 함)
-                    if (item.paymentMethodId != '_no_payment_method_')
-                      _PaymentMethodBadge(
-                        canAutoSave: item.canAutoSave,
-                        l10n: l10n,
-                      ),
-                  ],
+                      const SizedBox(width: 4),
+                      // 뱃지 (미지정 결제수단은 뱃지 표시 안 함)
+                      if (item.paymentMethodId != '_no_payment_method_')
+                        _PaymentMethodBadge(
+                          canAutoSave: item.canAutoSave,
+                          l10n: l10n,
+                        ),
+                    ],
+                  ),
                 ),
-              ),
-              // 비율
-              Text(
-                '${item.percentage.toStringAsFixed(1)}%',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                // 비율
+                Text(
+                  '${item.percentage.toStringAsFixed(1)}%',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              // 금액
-              Text(
-                '${NumberFormatUtils.currency.format(item.amount)}${l10n.transactionAmountUnit}',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w500,
+                const SizedBox(width: 12),
+                // 금액
+                Text(
+                  '${NumberFormatUtils.currency.format(item.amount)}${l10n.transactionAmountUnit}',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // 진행 바
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: item.percentage / 100,
-              backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 6,
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 8),
+            // 진행 바
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: item.percentage / 100,
+                backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                valueColor: AlwaysStoppedAnimation<Color>(color),
+                minHeight: 6,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

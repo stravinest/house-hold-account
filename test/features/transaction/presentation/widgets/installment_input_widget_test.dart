@@ -19,6 +19,7 @@ void main() {
           home: Scaffold(
             body: InstallmentInputWidget(
               startDate: startDate,
+              isInstallmentMode: false,
               onModeChanged: (value) {
                 modeChanged = value;
               },
@@ -50,6 +51,7 @@ void main() {
           home: Scaffold(
             body: InstallmentInputWidget(
               startDate: startDate,
+              isInstallmentMode: false,
               onModeChanged: (value) {
                 modeChanged = value;
               },
@@ -80,6 +82,7 @@ void main() {
           home: Scaffold(
             body: InstallmentInputWidget(
               startDate: startDate,
+              isInstallmentMode: false,
               enabled: false,
               onModeChanged: (value) {},
               onApplied: (result) {},
@@ -105,6 +108,7 @@ void main() {
           home: Scaffold(
             body: InstallmentInputWidget(
               startDate: startDate,
+              isInstallmentMode: false,
               onModeChanged: (value) {},
               onApplied: (result) {},
             ),

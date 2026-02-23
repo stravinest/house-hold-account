@@ -55607,6 +55607,11 @@
               "width": "fill_container",
               "fill": "$--surface-container",
               "cornerRadius": "$--radius-md",
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "$--primary"
+              },
               "gap": 16,
               "padding": 16,
               "alignItems": "center",
@@ -55667,6 +55672,16 @@
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "icon_font",
+                  "id": "M2ENZ",
+                  "name": "chevron1",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "chevron_right",
+                  "iconFontFamily": "Material Symbols Outlined",
+                  "fill": "$--primary"
                 }
               ]
             },
@@ -55677,6 +55692,11 @@
               "width": "fill_container",
               "fill": "$--surface-container",
               "cornerRadius": "$--radius-md",
+              "stroke": {
+                "align": "inside",
+                "thickness": 1,
+                "fill": "$--primary"
+              },
               "gap": 16,
               "padding": 16,
               "alignItems": "center",
@@ -55737,6 +55757,16 @@
                       "fontWeight": "normal"
                     }
                   ]
+                },
+                {
+                  "type": "icon_font",
+                  "id": "e0uG2",
+                  "name": "chevron2",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "chevron_right",
+                  "iconFontFamily": "Material Symbols Outlined",
+                  "fill": "$--primary"
                 }
               ]
             },
@@ -64123,6 +64153,2081 @@
                       "fill": "$--on-surface-variant"
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "3enEz",
+      "x": 2020,
+      "y": 9300,
+      "name": "Guide - Transaction Detail",
+      "clip": true,
+      "width": 393,
+      "height": 2200,
+      "fill": "$--surface",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "baf3s",
+          "name": "bar",
+          "width": "fill_container",
+          "height": 56,
+          "gap": 8,
+          "padding": [
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "78M3p",
+              "name": "barBack",
+              "width": 24,
+              "height": 24,
+              "iconFontName": "arrow_back",
+              "iconFontFamily": "Material Symbols Outlined",
+              "fill": "$--on-surface"
+            },
+            {
+              "type": "text",
+              "id": "d2Dl2",
+              "name": "barTitle",
+              "fill": "$--on-surface",
+              "content": "거래 기록 가이드",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "7PwEc",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "1FcI3",
+              "name": "intro",
+              "width": "fill_container",
+              "fill": "$--primary-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "ig8Nc",
+                  "name": "introIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "info",
+                  "iconFontFamily": "lucide",
+                  "fill": "$--primary"
+                },
+                {
+                  "type": "text",
+                  "id": "HQiHp",
+                  "name": "introText",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "수입, 지출, 자산 거래를 간편하게 기록하세요. 카테고리, 메모, 사진까지 첨부할 수 있습니다.",
+                  "lineHeight": 1.5,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "fHILY",
+              "name": "step1Header",
+              "fill": "$--on-surface",
+              "content": "Step 1. + 버튼으로 거래 추가",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "drY16",
+              "name": "step1Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "FdnSW",
+                  "name": "s1desc",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "하단의 + 버튼을 눌러 새 거래를 추가하세요. 수입/지출/자산 중 거래 유형을 선택할 수 있습니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "eUcC6",
+                  "name": "s1Mock",
+                  "width": "fill_container",
+                  "gap": 8,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "yOomU",
+                      "name": "tabIncome",
+                      "fill": "$--primary-container",
+                      "cornerRadius": 20,
+                      "gap": 6,
+                      "padding": [
+                        8,
+                        16
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "GBsqF",
+                          "name": "s1tab1ic",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "add_circle",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "2ZeFT",
+                          "name": "s1tab1tx",
+                          "fill": "$--primary",
+                          "content": "수입",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "4CHCw",
+                      "name": "tabExpense",
+                      "fill": "$--surface-container-highest",
+                      "cornerRadius": 20,
+                      "gap": 6,
+                      "padding": [
+                        8,
+                        16
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "ZPLq0",
+                          "name": "s1tab2ic",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "do_not_disturb_on",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--on-surface-variant"
+                        },
+                        {
+                          "type": "text",
+                          "id": "1f2sH",
+                          "name": "s1tab2tx",
+                          "fill": "$--on-surface-variant",
+                          "content": "지출",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "EBY6B",
+                      "name": "tabAsset",
+                      "fill": "$--surface-container-highest",
+                      "cornerRadius": 20,
+                      "gap": 6,
+                      "padding": [
+                        8,
+                        16
+                      ],
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "PSeql",
+                          "name": "s1tab3ic",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "account_balance",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--on-surface-variant"
+                        },
+                        {
+                          "type": "text",
+                          "id": "Hbpsz",
+                          "name": "s1tab3tx",
+                          "fill": "$--on-surface-variant",
+                          "content": "자산",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "7DiLO",
+              "name": "step2Header",
+              "fill": "$--on-surface",
+              "content": "Step 2. 금액 입력",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "YUJ2B",
+              "name": "step2Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "0NFa0",
+                  "name": "s2desc",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "금액을 입력하세요. 숫자 키패드가 자동으로 표시됩니다. 할부 거래도 지원합니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "q0YE2",
+                  "name": "s2Mock",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "XTFFe",
+                      "name": "s2label",
+                      "fill": "$--on-surface-variant",
+                      "content": "금액",
+                      "fontFamily": "Inter",
+                      "fontSize": 12,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "MtNL7",
+                      "name": "s2val",
+                      "fill": "$--on-surface",
+                      "content": "25,000원",
+                      "fontFamily": "Inter",
+                      "fontSize": 20,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "uHPWt",
+                      "name": "s2div",
+                      "fill": "$--primary",
+                      "width": "fill_container",
+                      "height": 1
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "2YzVn",
+              "name": "step3Header",
+              "fill": "$--on-surface",
+              "content": "Step 3. 상세 정보 입력",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "text",
+              "id": "jIv5k",
+              "name": "step4Header",
+              "fill": "$--on-surface",
+              "content": "Step 4. 고정비 / 할부 / 반복 설정",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "hqsJx",
+              "name": "step4Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 16,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "6iHTx",
+                  "name": "s4desc",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "거래 저장 시 고정비 등록, 할부 입력, 반복주기 설정을 할 수 있습니다. 각 옵션을 활용하면 매월 자동으로 거래가 기록됩니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "tc7md",
+                  "name": "fixedSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "TAPCU",
+                      "name": "fixedHeader",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "B8zzK",
+                          "name": "fixIc",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "keep",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "9lx17",
+                          "name": "fixTx",
+                          "fill": "$--on-surface",
+                          "content": "고정비 등록",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mEPnt",
+                      "name": "fixedMock",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Jg3M7",
+                          "name": "fixedRow",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "YrBPw",
+                              "name": "fixL",
+                              "fill": "$--on-surface",
+                              "content": "고정비로 등록",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "LPuH0",
+                              "name": "toggle",
+                              "width": 44,
+                              "height": 24,
+                              "fill": "$--primary",
+                              "cornerRadius": 12,
+                              "layout": "none",
+                              "children": [
+                                {
+                                  "type": "ellipse",
+                                  "id": "kbd1b",
+                                  "x": 0,
+                                  "y": 0,
+                                  "name": "fixDot",
+                                  "fill": "#FFFFFF",
+                                  "width": 20,
+                                  "height": 20
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "lKFQl",
+                          "name": "fixNote",
+                          "fill": "$--on-surface-variant",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "매월 같은 금액이 자동 기록됩니다.\n(월세, 구독료, 보험료 등)",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "04Xf3",
+                  "name": "installSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "q6tbu",
+                      "name": "instHeader",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "Amf5a",
+                          "name": "instIc",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "credit_card",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "QZSdc",
+                          "name": "instTx",
+                          "fill": "$--on-surface",
+                          "content": "할부 입력",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "30joM",
+                      "name": "instMock",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "layout": "vertical",
+                      "gap": 8,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "sVTNr",
+                          "name": "instRow",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "VDWmQ",
+                              "name": "instL",
+                              "fill": "$--on-surface-variant",
+                              "content": "할부 개월",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "JypO4",
+                              "name": "instVal",
+                              "gap": 4,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "Sixjw",
+                                  "name": "instVtx",
+                                  "fill": "$--on-surface",
+                                  "content": "3개월",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 14,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "icon_font",
+                                  "id": "EoPki",
+                                  "name": "instVic",
+                                  "width": 16,
+                                  "height": 16,
+                                  "iconFontName": "keyboard_arrow_down",
+                                  "iconFontFamily": "Material Symbols Outlined",
+                                  "fill": "$--on-surface-variant"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "o8FNM",
+                          "name": "instProgress",
+                          "width": "fill_container",
+                          "height": 6,
+                          "fill": "$--surface-container-highest",
+                          "cornerRadius": 3,
+                          "layout": "none",
+                          "children": [
+                            {
+                              "type": "rectangle",
+                              "cornerRadius": 3,
+                              "id": "NUsQf",
+                              "x": 0,
+                              "y": 0,
+                              "name": "instBar",
+                              "fill": "$--primary",
+                              "width": 120,
+                              "height": 6
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "amN23",
+                          "name": "instNote",
+                          "fill": "$--on-surface-variant",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "현재 1/3 회차 진행 중 (잔여 2회)\n반복거래 관리에서 할부 진행 상황을 확인하세요.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "d2J3v",
+                  "name": "repeatSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "lJlBC",
+                      "name": "repHeader",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "4LHFh",
+                          "name": "repIc",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "repeat",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "k2tTt",
+                          "name": "repTx",
+                          "fill": "$--on-surface",
+                          "content": "반복주기 설정",
+                          "fontFamily": "Inter",
+                          "fontSize": 14,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "NOr6P",
+                      "name": "repMock",
+                      "width": "fill_container",
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 8,
+                      "layout": "vertical",
+                      "gap": 10,
+                      "padding": 12,
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Mqu1H",
+                          "name": "repRow1",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "PPfbk",
+                              "name": "repR1L",
+                              "fill": "$--on-surface-variant",
+                              "content": "반복 주기",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "9dzxr",
+                              "name": "repVal",
+                              "gap": 4,
+                              "alignItems": "center",
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "ZSOGn",
+                                  "name": "repR1Vt",
+                                  "fill": "$--on-surface",
+                                  "content": "매월",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "600"
+                                },
+                                {
+                                  "type": "icon_font",
+                                  "id": "9Tau1",
+                                  "name": "repR1Vi",
+                                  "width": 16,
+                                  "height": 16,
+                                  "iconFontName": "keyboard_arrow_down",
+                                  "iconFontFamily": "Material Symbols Outlined",
+                                  "fill": "$--on-surface-variant"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "rectangle",
+                          "id": "LbiRm",
+                          "name": "repDiv",
+                          "fill": "$--outline-variant",
+                          "width": "fill_container",
+                          "height": 1
+                        },
+                        {
+                          "type": "frame",
+                          "id": "MFXKg",
+                          "name": "repRow2",
+                          "width": "fill_container",
+                          "justifyContent": "space_between",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "fl7Jf",
+                              "name": "repR2L",
+                              "fill": "$--on-surface-variant",
+                              "content": "반복일",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "normal"
+                            },
+                            {
+                              "type": "text",
+                              "id": "bSE1D",
+                              "name": "repR2V",
+                              "fill": "$--on-surface",
+                              "content": "매월 15일",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "uDYYD",
+                          "name": "repOptions",
+                          "width": "fill_container",
+                          "gap": 6,
+                          "justifyContent": "center",
+                          "children": [
+                            {
+                              "type": "frame",
+                              "id": "m0ycD",
+                              "name": "op1",
+                              "fill": "$--primary-container",
+                              "cornerRadius": 12,
+                              "padding": [
+                                4,
+                                10
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "5rC25",
+                                  "name": "op1t",
+                                  "fill": "$--primary",
+                                  "content": "매주",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "FkHgH",
+                              "name": "op2",
+                              "fill": "$--primary",
+                              "cornerRadius": 12,
+                              "padding": [
+                                4,
+                                10
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "7cf43",
+                                  "name": "op2t",
+                                  "fill": "$--on-primary",
+                                  "content": "매월",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "600"
+                                }
+                              ]
+                            },
+                            {
+                              "type": "frame",
+                              "id": "zD6tF",
+                              "name": "op3",
+                              "fill": "$--primary-container",
+                              "cornerRadius": 12,
+                              "padding": [
+                                4,
+                                10
+                              ],
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "iLTDN",
+                                  "name": "op3t",
+                                  "fill": "$--primary",
+                                  "content": "매년",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "500"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "cLSeP",
+                          "name": "repNote",
+                          "fill": "$--on-surface-variant",
+                          "textGrowth": "fixed-width",
+                          "width": "fill_container",
+                          "content": "설정한 주기에 따라 거래가 자동 생성됩니다.",
+                          "lineHeight": 1.4,
+                          "fontFamily": "Inter",
+                          "fontSize": 11,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "E8RbV",
+              "name": "step5Header",
+              "fill": "$--on-surface",
+              "content": "Step 5. 반복거래 확인하기",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "7362p",
+              "name": "step5Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "ajOFF",
+                  "name": "s5desc",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "등록된 고정비, 할부, 반복 거래는 설정 > 반복거래 관리에서 확인하고 관리할 수 있습니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "vU9CJ",
+                  "name": "s5Mock",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "sLCzp",
+                      "name": "pathRow",
+                      "width": "fill_container",
+                      "gap": 6,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "KhBa5",
+                          "name": "s5p1",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "settings",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--on-surface-variant"
+                        },
+                        {
+                          "type": "text",
+                          "id": "AeuLe",
+                          "name": "s5p2",
+                          "fill": "$--on-surface-variant",
+                          "content": "설정",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "Fgc2q",
+                          "name": "s5p3",
+                          "width": 14,
+                          "height": 14,
+                          "iconFontName": "chevron_right",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--on-surface-variant"
+                        },
+                        {
+                          "type": "text",
+                          "id": "ekCuL",
+                          "name": "s5p4",
+                          "fill": "$--primary",
+                          "content": "반복거래 관리",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "mBy8L",
+                      "name": "s5div",
+                      "fill": "$--outline-variant",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "SaYy5",
+                      "name": "recurItem1",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "VZ0fN",
+                          "name": "i1left",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "SOxn9",
+                              "name": "i1ic",
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "repeat",
+                              "iconFontFamily": "Material Symbols Outlined",
+                              "fill": "$--primary"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "dBmez",
+                              "name": "i1info",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "QIjco",
+                                  "name": "i1name",
+                                  "fill": "$--on-surface",
+                                  "content": "넷플릭스",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "WkCkV",
+                                  "name": "i1sub",
+                                  "fill": "$--on-surface-variant",
+                                  "content": "매월 15일 | 고정비",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "tjpLu",
+                          "name": "i1amt",
+                          "fill": "#E53935",
+                          "content": "-17,000원",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "6Dq3e",
+                      "name": "div1",
+                      "fill": "$--outline-variant",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YAVwM",
+                      "name": "recurItem2",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "Exho2",
+                          "name": "i2left",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "YHVLm",
+                              "name": "i2ic",
+                              "width": 16,
+                              "height": 16,
+                              "iconFontName": "credit_card",
+                              "iconFontFamily": "Material Symbols Outlined",
+                              "fill": "$--primary"
+                            },
+                            {
+                              "type": "frame",
+                              "id": "bmnUM",
+                              "name": "i2info",
+                              "layout": "vertical",
+                              "gap": 2,
+                              "children": [
+                                {
+                                  "type": "text",
+                                  "id": "TTDxi",
+                                  "name": "i2name",
+                                  "fill": "$--on-surface",
+                                  "content": "노트북 할부",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 13,
+                                  "fontWeight": "500"
+                                },
+                                {
+                                  "type": "text",
+                                  "id": "a839D",
+                                  "name": "i2sub",
+                                  "fill": "$--on-surface-variant",
+                                  "content": "매월 10일 | 할부 2/12회차",
+                                  "fontFamily": "Inter",
+                                  "fontSize": 11,
+                                  "fontWeight": "normal"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "Hs44m",
+                          "name": "i2amt",
+                          "fill": "#E53935",
+                          "content": "-125,000원",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "84Jfe",
+              "name": "step4Header",
+              "fill": "$--on-surface",
+              "content": "Step 6. 저장 완료",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "ktgum",
+              "name": "step4Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "JJXun",
+                  "name": "s4desc",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "모든 정보를 입력한 후 저장 버튼을 눌러 거래를 기록하세요. 저장된 거래는 캘린더와 목록에서 확인할 수 있습니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "3K0dY",
+                  "name": "saveBtn",
+                  "width": "fill_container",
+                  "height": 44,
+                  "fill": "$--primary",
+                  "cornerRadius": 22,
+                  "gap": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "pf3va",
+                      "name": "s4ico",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "check",
+                      "iconFontFamily": "Material Symbols Outlined",
+                      "fill": "$--on-primary"
+                    },
+                    {
+                      "type": "text",
+                      "id": "DhdW3",
+                      "name": "s4txt",
+                      "fill": "$--on-primary",
+                      "content": "저장",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "rGs5G",
+              "name": "tipSection",
+              "width": "fill_container",
+              "fill": "$--primary-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                12,
+                16
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "xqo0j",
+                  "name": "tipTitle",
+                  "fill": "$--primary",
+                  "content": "Tip",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "GOHhx",
+                  "name": "tipDesc",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "고정비와 반복거래는 설정 > 반복거래 관리에서 수정/삭제할 수 있습니다. 할부 거래의 남은 회차도 이곳에서 확인 가능합니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "LF9l2",
+              "name": "step3Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "CXvU1",
+                  "name": "s3desc",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "카테고리, 결제수단, 메모, 날짜 등 상세 정보를 입력하세요. 사진 첨부도 가능합니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "t5xZw",
+                  "name": "s3Mock",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "uWQCy",
+                      "name": "row1",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "ZY8ik",
+                          "name": "s3r1l",
+                          "fill": "$--on-surface-variant",
+                          "content": "카테고리",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "yBqWk",
+                          "name": "s3r1v",
+                          "fill": "$--on-surface",
+                          "content": "식비",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "1Rgqo",
+                      "name": "s3d1",
+                      "fill": "$--outline-variant",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "xK896",
+                      "name": "row2",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "SD8aZ",
+                          "name": "s3r2l",
+                          "fill": "$--on-surface-variant",
+                          "content": "결제수단",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "xwMaV",
+                          "name": "s3r2v",
+                          "fill": "$--on-surface",
+                          "content": "KB국민카드",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "UWY3D",
+                      "name": "s3d2",
+                      "fill": "$--outline-variant",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "edXmE",
+                      "name": "row3",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "XPbJh",
+                          "name": "s3r3l",
+                          "fill": "$--on-surface-variant",
+                          "content": "메모",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        },
+                        {
+                          "type": "text",
+                          "id": "06OdY",
+                          "name": "s3r3v",
+                          "fill": "$--on-surface",
+                          "content": "점심 식사",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "LUeWj",
+      "x": 2513,
+      "y": 9300,
+      "name": "Guide - Share Detail",
+      "clip": true,
+      "width": 393,
+      "height": 1500,
+      "fill": "$--surface",
+      "layout": "vertical",
+      "children": [
+        {
+          "type": "frame",
+          "id": "TpdHG",
+          "name": "bar",
+          "width": "fill_container",
+          "height": 56,
+          "gap": 8,
+          "padding": [
+            0,
+            16
+          ],
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "icon_font",
+              "id": "OqzWy",
+              "name": "bk",
+              "width": 24,
+              "height": 24,
+              "iconFontName": "arrow_back",
+              "iconFontFamily": "Material Symbols Outlined",
+              "fill": "$--on-surface"
+            },
+            {
+              "type": "text",
+              "id": "iB8dL",
+              "name": "bt",
+              "fill": "$--on-surface",
+              "content": "가계부 공유 가이드",
+              "fontFamily": "Inter",
+              "fontSize": 20,
+              "fontWeight": "500"
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "i0Hel",
+          "name": "Body",
+          "width": "fill_container",
+          "height": "fill_container",
+          "layout": "vertical",
+          "gap": 20,
+          "padding": 20,
+          "children": [
+            {
+              "type": "frame",
+              "id": "7vsb7",
+              "name": "intro",
+              "width": "fill_container",
+              "fill": "$--primary-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "DDA6h",
+                  "name": "inic",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "info",
+                  "iconFontFamily": "lucide",
+                  "fill": "$--primary"
+                },
+                {
+                  "type": "text",
+                  "id": "ZiUfi",
+                  "name": "intx",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "가족, 커플, 룸메이트와 가계부를 공유하여 함께 수입과 지출을 관리하세요. 실시간 동기화로 모든 멤버가 최신 기록을 확인할 수 있습니다.",
+                  "lineHeight": 1.5,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "WlO1u",
+              "name": "h1",
+              "fill": "$--on-surface",
+              "content": "Step 1. 멤버 초대하기",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "NsdVt",
+              "name": "step1Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "KX70c",
+                  "name": "d1",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "설정 > 멤버 관리에서 초대 버튼을 눌러 함께 사용할 멤버를 초대하세요. 이메일 주소로 초대장을 보낼 수 있습니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "io62t",
+                  "name": "mockInvite",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "gap": 12,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "aEDLM",
+                      "name": "emailRow",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "TjrLo",
+                          "name": "m1ic",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "mail",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--on-surface-variant"
+                        },
+                        {
+                          "type": "text",
+                          "id": "tnp9m",
+                          "name": "m1tx",
+                          "fill": "$--on-surface-variant",
+                          "content": "example@email.com",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Q9Qn2",
+                      "name": "inviteBtn",
+                      "width": "fill_container",
+                      "height": 40,
+                      "fill": "$--primary",
+                      "cornerRadius": 20,
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "sTBuw",
+                          "name": "m1btx",
+                          "fill": "$--on-primary",
+                          "content": "초대 보내기",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "600"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "u4KdZ",
+              "name": "h2",
+              "fill": "$--on-surface",
+              "content": "Step 2. 초대 수락",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "Hwolm",
+              "name": "step2Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "mesK8",
+                  "name": "d2",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "초대받은 멤버는 앱에서 알림을 통해 초대를 확인하고 수락할 수 있습니다. 수락 즉시 가계부가 공유됩니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "GWsaI",
+                  "name": "mockAccept",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "hA5lp",
+                      "name": "notifRow",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "DvRqZ",
+                          "name": "m2ic",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "notifications",
+                          "iconFontFamily": "Material Symbols Outlined",
+                          "fill": "$--primary"
+                        },
+                        {
+                          "type": "text",
+                          "id": "i94iq",
+                          "name": "m2tx",
+                          "fill": "$--on-surface",
+                          "content": "가계부 초대가 도착했습니다",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "6A5RM",
+                      "name": "acceptBtns",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "justifyContent": "end",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "pbKwN",
+                          "name": "rejectBtn",
+                          "cornerRadius": 8,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 1,
+                            "fill": "$--outline"
+                          },
+                          "padding": [
+                            6,
+                            16
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "pjW4b",
+                              "name": "rbt",
+                              "fill": "$--on-surface-variant",
+                              "content": "거절",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "frame",
+                          "id": "w6fsJ",
+                          "name": "acceptBtn",
+                          "fill": "$--primary",
+                          "cornerRadius": 8,
+                          "padding": [
+                            6,
+                            16
+                          ],
+                          "justifyContent": "center",
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "text",
+                              "id": "pjyEd",
+                              "name": "abt",
+                              "fill": "$--on-primary",
+                              "content": "수락",
+                              "fontFamily": "Inter",
+                              "fontSize": 12,
+                              "fontWeight": "600"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "85HDi",
+              "name": "h3",
+              "fill": "$--on-surface",
+              "content": "Step 3. 실시간 동기화",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "nlCyA",
+              "name": "step3Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "MAyda",
+                  "name": "d3",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "공유가 시작되면 모든 멤버의 거래가 실시간으로 동기화됩니다. 캘린더에서 각 멤버의 거래를 색상별로 구분할 수 있습니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "ZNkdS",
+                  "name": "mockSync",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "gap": 8,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "Nha7B",
+                      "name": "member1",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "baJkc",
+                          "name": "dot1",
+                          "fill": "#A8D8EA",
+                          "width": 10,
+                          "height": 10
+                        },
+                        {
+                          "type": "text",
+                          "id": "WkPBs",
+                          "name": "n1",
+                          "fill": "$--on-surface",
+                          "content": "나",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "1G0pM",
+                          "name": "a1",
+                          "fill": "#E53935",
+                          "content": "-25,000원",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "5yrzj",
+                      "name": "member2",
+                      "width": "fill_container",
+                      "gap": 8,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "ellipse",
+                          "id": "NJTkY",
+                          "name": "dot2",
+                          "fill": "#FFB6A3",
+                          "width": 10,
+                          "height": 10
+                        },
+                        {
+                          "type": "text",
+                          "id": "SmfqK",
+                          "name": "n2",
+                          "fill": "$--on-surface",
+                          "content": "파트너",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        },
+                        {
+                          "type": "text",
+                          "id": "5Rtw6",
+                          "name": "a2",
+                          "fill": "#E53935",
+                          "content": "-15,000원",
+                          "fontFamily": "Inter",
+                          "fontSize": 13,
+                          "fontWeight": "500"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "id": "f2aMw",
+              "name": "h4",
+              "fill": "$--on-surface",
+              "content": "Step 4. 멤버 권한 관리",
+              "fontFamily": "Inter",
+              "fontSize": 16,
+              "fontWeight": "700"
+            },
+            {
+              "type": "frame",
+              "id": "TEZmD",
+              "name": "step4Card",
+              "width": "fill_container",
+              "fill": "$--surface-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 12,
+              "padding": 16,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "zIWeh",
+                  "name": "d4",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "가계부 소유자는 멤버의 권한을 관리할 수 있습니다. 관리자, 일반 멤버 등 역할을 지정하여 접근 권한을 설정하세요.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "G7oj6",
+                  "name": "mockRoles",
+                  "width": "fill_container",
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 8,
+                  "layout": "vertical",
+                  "gap": 10,
+                  "padding": 12,
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "6HuWS",
+                      "name": "roleRow1",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "v0cnp",
+                          "name": "r1left",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "TQg99",
+                              "name": "r1ic",
+                              "width": 18,
+                              "height": 18,
+                              "iconFontName": "shield",
+                              "iconFontFamily": "Material Symbols Outlined",
+                              "fill": "$--primary"
+                            },
+                            {
+                              "type": "text",
+                              "id": "Kk15C",
+                              "name": "r1tx",
+                              "fill": "$--on-surface",
+                              "content": "소유자",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "H0WZ7",
+                          "name": "r1d",
+                          "fill": "$--on-surface-variant",
+                          "content": "모든 권한",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "UDucI",
+                      "name": "div",
+                      "fill": "$--outline-variant",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "BqX8q",
+                      "name": "roleRow2",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "GHxUS",
+                          "name": "r2left",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "VcRyE",
+                              "name": "r2ic",
+                              "width": 18,
+                              "height": 18,
+                              "iconFontName": "admin_panel_settings",
+                              "iconFontFamily": "Material Symbols Outlined",
+                              "fill": "$--on-surface-variant"
+                            },
+                            {
+                              "type": "text",
+                              "id": "eAIZ7",
+                              "name": "r2tx",
+                              "fill": "$--on-surface",
+                              "content": "관리자",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "LUvyk",
+                          "name": "r2d",
+                          "fill": "$--on-surface-variant",
+                          "content": "편집 + 초대",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "rectangle",
+                      "id": "wsfP8",
+                      "name": "div2",
+                      "fill": "$--outline-variant",
+                      "width": "fill_container",
+                      "height": 1
+                    },
+                    {
+                      "type": "frame",
+                      "id": "C4CtW",
+                      "name": "roleRow3",
+                      "width": "fill_container",
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "U56HZ",
+                          "name": "r3left",
+                          "gap": 8,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "4jVjE",
+                              "name": "r3ic",
+                              "width": 18,
+                              "height": 18,
+                              "iconFontName": "person",
+                              "iconFontFamily": "Material Symbols Outlined",
+                              "fill": "$--on-surface-variant"
+                            },
+                            {
+                              "type": "text",
+                              "id": "CJfsQ",
+                              "name": "r3tx",
+                              "fill": "$--on-surface",
+                              "content": "멤버",
+                              "fontFamily": "Inter",
+                              "fontSize": 13,
+                              "fontWeight": "500"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "text",
+                          "id": "hUTrs",
+                          "name": "r3d",
+                          "fill": "$--on-surface-variant",
+                          "content": "기록만 가능",
+                          "fontFamily": "Inter",
+                          "fontSize": 12,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "tMVTT",
+              "name": "tipSection",
+              "width": "fill_container",
+              "fill": "$--primary-container",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "gap": 8,
+              "padding": [
+                12,
+                16
+              ],
+              "children": [
+                {
+                  "type": "text",
+                  "id": "T9UXZ",
+                  "name": "tt",
+                  "fill": "$--primary",
+                  "content": "Tip",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "700"
+                },
+                {
+                  "type": "text",
+                  "id": "kM9ad",
+                  "name": "td",
+                  "fill": "$--on-surface-variant",
+                  "textGrowth": "fixed-width",
+                  "width": "fill_container",
+                  "content": "가계부를 나가려면 설정 > 멤버 관리에서 나가기를 선택하세요. 소유자는 가계부를 삭제하거나 다른 멤버에게 소유권을 이전할 수 있습니다.",
+                  "lineHeight": 1.4,
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
                 }
               ]
             }

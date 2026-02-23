@@ -16,6 +16,7 @@ class LearnedPushFormatModel extends LearnedPushFormat {
     super.sampleNotification,
     super.confidence,
     super.matchCount,
+    super.excludedKeywords,
     required super.createdAt,
     required super.updatedAt,
   });
@@ -47,6 +48,14 @@ class LearnedPushFormatModel extends LearnedPushFormat {
       }
     }
 
+    final excludedKeywordsRaw = json['excluded_keywords'];
+    List<String> excludedKeywords = [];
+    if (excludedKeywordsRaw != null) {
+      if (excludedKeywordsRaw is List) {
+        excludedKeywords = excludedKeywordsRaw.cast<String>();
+      }
+    }
+
     return LearnedPushFormatModel(
       id: json['id'] as String,
       paymentMethodId: json['payment_method_id'] as String,
@@ -59,6 +68,7 @@ class LearnedPushFormatModel extends LearnedPushFormat {
       sampleNotification: json['sample_notification'] as String?,
       confidence: (json['confidence'] as num?)?.toDouble() ?? 0.8,
       matchCount: json['match_count'] as int? ?? 0,
+      excludedKeywords: excludedKeywords,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -77,6 +87,7 @@ class LearnedPushFormatModel extends LearnedPushFormat {
       'sample_notification': sampleNotification,
       'confidence': confidence,
       'match_count': matchCount,
+      'excluded_keywords': excludedKeywords,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -92,6 +103,7 @@ class LearnedPushFormatModel extends LearnedPushFormat {
     String? dateRegex,
     String? sampleNotification,
     double confidence = 0.8,
+    List<String> excludedKeywords = const [],
   }) {
     return {
       'payment_method_id': paymentMethodId,
@@ -103,6 +115,7 @@ class LearnedPushFormatModel extends LearnedPushFormat {
       if (dateRegex != null) 'date_regex': dateRegex,
       if (sampleNotification != null) 'sample_notification': sampleNotification,
       'confidence': confidence,
+      'excluded_keywords': excludedKeywords,
     };
   }
 
@@ -120,6 +133,7 @@ class LearnedPushFormatModel extends LearnedPushFormat {
       sampleNotification: entity.sampleNotification,
       confidence: entity.confidence,
       matchCount: entity.matchCount,
+      excludedKeywords: entity.excludedKeywords,
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     );
@@ -139,6 +153,7 @@ class LearnedPushFormatModel extends LearnedPushFormat {
       sampleNotification: sampleNotification,
       confidence: confidence,
       matchCount: matchCount,
+      excludedKeywords: excludedKeywords,
       createdAt: createdAt,
       updatedAt: updatedAt,
     );

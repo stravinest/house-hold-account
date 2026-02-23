@@ -346,22 +346,33 @@ class SmsListenerService {
         for (final format in formats) {
           final senderPattern = format.senderPattern.toLowerCase();
 
+          bool senderMatched = false;
           if (senderLower.contains(senderPattern) ||
               contentLower.contains(senderPattern)) {
+            senderMatched = true;
+          }
+
+          if (!senderMatched) {
+            for (final keyword in format.senderKeywords) {
+              if (senderLower.contains(keyword.toLowerCase()) ||
+                  contentLower.contains(keyword.toLowerCase())) {
+                senderMatched = true;
+                break;
+              }
+            }
+          }
+
+          if (senderMatched) {
+            // 금지 키워드 체크
+            if (format.excludedKeywords.any(
+              (kw) => contentLower.contains(kw.toLowerCase()),
+            )) {
+              continue;
+            }
             return _PaymentMethodMatchResult(
               paymentMethod: pm,
               learnedFormat: format.toEntity(),
             );
-          }
-
-          for (final keyword in format.senderKeywords) {
-            if (senderLower.contains(keyword.toLowerCase()) ||
-                contentLower.contains(keyword.toLowerCase())) {
-              return _PaymentMethodMatchResult(
-                paymentMethod: pm,
-                learnedFormat: format.toEntity(),
-              );
-            }
           }
         }
       }

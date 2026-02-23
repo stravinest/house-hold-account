@@ -19,6 +19,7 @@ class LearnedPushFormat extends Equatable implements LearnedFormat {
   @override
   final double confidence;
   final int matchCount;
+  final List<String> excludedKeywords;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -34,6 +35,7 @@ class LearnedPushFormat extends Equatable implements LearnedFormat {
     this.sampleNotification,
     this.confidence = 0.8,
     this.matchCount = 0,
+    this.excludedKeywords = const [],
     required this.createdAt,
     required this.updatedAt,
   });
@@ -44,7 +46,14 @@ class LearnedPushFormat extends Equatable implements LearnedFormat {
 
   bool matchesNotification(String packageName, String content) {
     if (!matchesPackageName(packageName)) return false;
-    return appKeywords.any((keyword) => content.contains(keyword));
+    final contentLower = content.toLowerCase();
+    if (!appKeywords.any((kw) => contentLower.contains(kw.toLowerCase()))) {
+      return false;
+    }
+    if (excludedKeywords.any((kw) => contentLower.contains(kw.toLowerCase()))) {
+      return false;
+    }
+    return true;
   }
 
   LearnedPushFormat copyWith({
@@ -59,6 +68,7 @@ class LearnedPushFormat extends Equatable implements LearnedFormat {
     String? sampleNotification,
     double? confidence,
     int? matchCount,
+    List<String>? excludedKeywords,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -74,6 +84,7 @@ class LearnedPushFormat extends Equatable implements LearnedFormat {
       sampleNotification: sampleNotification ?? this.sampleNotification,
       confidence: confidence ?? this.confidence,
       matchCount: matchCount ?? this.matchCount,
+      excludedKeywords: excludedKeywords ?? this.excludedKeywords,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -92,6 +103,7 @@ class LearnedPushFormat extends Equatable implements LearnedFormat {
     sampleNotification,
     confidence,
     matchCount,
+    excludedKeywords,
     createdAt,
     updatedAt,
   ];
