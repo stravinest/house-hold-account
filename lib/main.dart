@@ -244,9 +244,16 @@ class _SharedHouseholdAccountAppState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // 로그인 상태일 때만 업데이트 체크
       final session = SupabaseConfig.auth.currentSession;
       if (session != null) {
+        // 백그라운드 복귀 시 Access Token 선제적 갱신
+        // (장시간 백그라운드 후 토큰 만료로 인한 인증 실패 방지)
+        unawaited(
+          SupabaseConfig.auth.refreshSession().then((_) {}).catchError((e) {
+            debugPrint('Session refresh on resume failed: $e');
+          }),
+        );
+
         // Provider 캐시 초기화 후 재체크 (24시간 캐시로 중복 API 호출 방지)
         ref.invalidate(appUpdateProvider);
         _checkForAppUpdate();

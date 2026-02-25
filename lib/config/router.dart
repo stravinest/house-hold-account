@@ -116,6 +116,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // 스플래시 화면에서는 리다이렉트하지 않음
       if (isSplash) return null;
 
+      // 인증 상태가 아직 로딩 중이면 리다이렉트 보류
+      // (백그라운드 복귀 시 세션 복원이 완료되지 않은 상태에서
+      //  로그인 페이지로 튕기는 것을 방지)
+      if (authState.isLoading) return null;
+
       // 딥링크 라우트는 리다이렉트하지 않음 (이미 로그인된 상태에서만 접근 가능)
       if (isDeepLinkRoute && isLoggedIn) {
         return null;
