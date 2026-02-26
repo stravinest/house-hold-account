@@ -14,6 +14,7 @@ import '../features/fixed_expense/presentation/pages/fixed_expense_management_pa
 import '../features/ledger/presentation/pages/home_page.dart';
 import '../features/ledger/presentation/pages/ledger_management_page.dart';
 import '../features/payment_method/presentation/pages/auto_save_settings_page.dart';
+import '../features/payment_method/presentation/pages/category_keyword_mapping_page.dart';
 import '../features/payment_method/presentation/pages/debug_test_page.dart';
 import '../features/payment_method/presentation/pages/payment_method_management_page.dart';
 import '../features/payment_method/presentation/pages/pending_transactions_page.dart';
@@ -58,6 +59,8 @@ class Routes {
   static const String quickExpense = '/quick-expense';
   static const String autoSaveSettings =
       '/settings/payment-methods/:id/auto-save';
+  static const String categoryKeywordMapping =
+      '/settings/payment-methods/:id/category-mapping/:sourceType';
   static const String pendingTransactions = '/settings/pending-transactions';
   static const String termsOfService = '/terms-of-service';
   static const String privacyPolicy = '/privacy-policy';
@@ -303,6 +306,45 @@ final routerProvider = Provider<GoRouter>((ref) {
           return slideTransition(
             key: state.pageKey,
             child: AutoSaveSettingsPage(paymentMethodId: paymentMethodId),
+          );
+        },
+      ),
+
+      // 카테고리 키워드 매핑 - 슬라이드 전환
+      GoRoute(
+        path: Routes.categoryKeywordMapping,
+        pageBuilder: (context, state) {
+          final paymentMethodId = state.pathParameters['id']!;
+          final sourceType = state.pathParameters['sourceType']!;
+          final extra = state.extra as Map<String, dynamic>?;
+          final ledgerId = extra?['ledgerId'] as String? ?? '';
+          return slideTransition(
+            key: state.pageKey,
+            child: CategoryKeywordMappingPage(
+              paymentMethodId: paymentMethodId,
+              sourceType: sourceType,
+              ledgerId: ledgerId,
+            ),
+          );
+        },
+      ),
+
+      // 카테고리 키워드 자동연결 - 슬라이드 전환
+      GoRoute(
+        path: Routes.categoryKeywordMapping,
+        pageBuilder: (context, state) {
+          final paymentMethodId = state.pathParameters['id']!;
+          final sourceType = state.pathParameters['sourceType']!;
+          final ledgerId =
+              (state.extra as Map<String, dynamic>?)?['ledgerId'] as String? ??
+              '';
+          return slideTransition(
+            key: state.pageKey,
+            child: CategoryKeywordMappingPage(
+              paymentMethodId: paymentMethodId,
+              sourceType: sourceType,
+              ledgerId: ledgerId,
+            ),
           );
         },
       ),

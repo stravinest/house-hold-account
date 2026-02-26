@@ -7,11 +7,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../core/utils/color_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
+import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/utils/responsive_utils.dart';
 import '../../domain/entities/payment_method.dart';
 import '../../data/services/auto_save_service.dart';
 import '../providers/payment_method_provider.dart';
+import '../widgets/category_mapping_section.dart';
 import '../widgets/permission_request_dialog.dart';
 
 class AutoSaveSettingsPage extends ConsumerStatefulWidget {
@@ -67,6 +69,8 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
         final currentSource =
             _selectedSource ?? paymentMethod.autoCollectSource;
 
+        final ledgerId = ref.read(selectedLedgerIdProvider) ?? '';
+
         return _buildContent(
           context,
           l10n,
@@ -76,6 +80,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
           paymentMethod,
           currentMode,
           currentSource,
+          ledgerId,
         );
       },
     );
@@ -90,6 +95,7 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
     PaymentMethod paymentMethod,
     AutoSaveMode currentMode,
     AutoCollectSource currentSource,
+    String ledgerId,
   ) {
     return Scaffold(
       appBar: AppBar(
@@ -213,6 +219,15 @@ class _AutoSaveSettingsPageState extends ConsumerState<AutoSaveSettingsPage> {
             const SizedBox(height: Spacing.sm),
             _buildModeSelector(context, l10n, isAndroid, currentMode),
             const SizedBox(height: Spacing.lg),
+
+            // 카테고리 자동연결 섹션 (자동수집 지원 결제수단만)
+            if (isAndroid && paymentMethod.canAutoSave && ledgerId.isNotEmpty) ...[
+              const SizedBox(height: Spacing.lg),
+              CategoryMappingSection(
+                paymentMethodId: paymentMethod.id,
+                ledgerId: ledgerId,
+              ),
+            ],
 
             // Permission notice (auto-collect always requires permission)
             if (isAndroid) ...[

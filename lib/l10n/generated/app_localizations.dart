@@ -1016,6 +1016,42 @@ abstract class AppLocalizations {
   /// **'수집 즉시 거래를 자동 저장합니다'**
   String get autoCollectGuideModeAutoDesc;
 
+  /// No description provided for @autoCollectGuideCategoryMappingTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리 자동연결'**
+  String get autoCollectGuideCategoryMappingTitle;
+
+  /// No description provided for @autoCollectGuideCategoryMappingDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'특정 키워드가 포함된 문자나 푸시 알림이 수집되면 자동으로 지정한 카테고리로 분류됩니다.'**
+  String get autoCollectGuideCategoryMappingDesc;
+
+  /// No description provided for @autoCollectGuideCategoryMappingDetail1.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS와 Push 각각 별도로 키워드-카테고리 매핑을 설정할 수 있습니다.'**
+  String get autoCollectGuideCategoryMappingDetail1;
+
+  /// No description provided for @autoCollectGuideCategoryMappingDetail2.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 키워드 \'스타벅스\'를 \'카페/음료\' 카테고리에 연결하면, 스타벅스 결제 시 자동으로 해당 카테고리가 지정됩니다.'**
+  String get autoCollectGuideCategoryMappingDetail2;
+
+  /// No description provided for @autoCollectGuideCategoryMappingMockKeyword.
+  ///
+  /// In ko, this message translates to:
+  /// **'스타벅스'**
+  String get autoCollectGuideCategoryMappingMockKeyword;
+
+  /// No description provided for @autoCollectGuideCategoryMappingMockCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'카페/음료'**
+  String get autoCollectGuideCategoryMappingMockCategory;
+
   /// No description provided for @autoCollectGuideStep4Title.
   ///
   /// In ko, this message translates to:
@@ -6312,6 +6348,180 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'종료일 설정'**
   String get recurringTemplateEditSetEndDate;
+
+  /// No description provided for @categoryMappingSmsTtile.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS 카테고리 자동연결'**
+  String get categoryMappingSmsTtile;
+
+  /// No description provided for @categoryMappingPushTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'Push 카테고리 자동연결'**
+  String get categoryMappingPushTitle;
+
+  /// No description provided for @categoryMappingSmsDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS에 키워드가 포함된 거래는 자동으로 해당 카테고리로 분류됩니다.'**
+  String get categoryMappingSmsDescription;
+
+  /// No description provided for @categoryMappingPushDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'Push 알림에 키워드가 포함된 거래는 자동으로 해당 카테고리로 분류됩니다.'**
+  String get categoryMappingPushDescription;
+
+  /// No description provided for @categoryMappingEmpty.
+  ///
+  /// In ko, this message translates to:
+  /// **'등록된 자동연결이 없습니다'**
+  String get categoryMappingEmpty;
+
+  /// No description provided for @categoryMappingUnknown.
+  ///
+  /// In ko, this message translates to:
+  /// **'알 수 없는 카테고리'**
+  String get categoryMappingUnknown;
+
+  /// No description provided for @categoryMappingDeleteTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동연결 삭제'**
+  String get categoryMappingDeleteTitle;
+
+  /// No description provided for @categoryMappingDeleteMessage.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 자동연결을 삭제하시겠습니까?'**
+  String get categoryMappingDeleteMessage;
+
+  /// No description provided for @categoryMappingDeleted.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동연결이 삭제되었습니다.'**
+  String get categoryMappingDeleted;
+
+  /// No description provided for @categoryMappingAddTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 연결 추가'**
+  String get categoryMappingAddTitle;
+
+  /// No description provided for @categoryMappingSourceType.
+  ///
+  /// In ko, this message translates to:
+  /// **'수집 유형'**
+  String get categoryMappingSourceType;
+
+  /// No description provided for @categoryMappingKeyword.
+  ///
+  /// In ko, this message translates to:
+  /// **'키워드'**
+  String get categoryMappingKeyword;
+
+  /// No description provided for @categoryMappingKeywordHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 스타벅스, 편의점'**
+  String get categoryMappingKeywordHint;
+
+  /// No description provided for @categoryMappingKeywordHelper.
+  ///
+  /// In ko, this message translates to:
+  /// **'이 키워드가 포함된 거래는 아래 카테고리로 자동 분류됩니다.'**
+  String get categoryMappingKeywordHelper;
+
+  /// No description provided for @categoryMappingKeywordRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'키워드를 입력해주세요.'**
+  String get categoryMappingKeywordRequired;
+
+  /// No description provided for @categoryMappingCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'연결할 카테고리'**
+  String get categoryMappingCategory;
+
+  /// No description provided for @categoryMappingCategoryHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리 선택'**
+  String get categoryMappingCategoryHint;
+
+  /// No description provided for @categoryMappingCategoryRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리를 선택해주세요.'**
+  String get categoryMappingCategoryRequired;
+
+  /// No description provided for @categoryMappingAdded.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동연결이 추가되었습니다.'**
+  String get categoryMappingAdded;
+
+  /// No description provided for @categoryMappingSectionTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리 자동연결'**
+  String get categoryMappingSectionTitle;
+
+  /// No description provided for @categoryMappingSectionSms.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS'**
+  String get categoryMappingSectionSms;
+
+  /// No description provided for @categoryMappingSectionPush.
+  ///
+  /// In ko, this message translates to:
+  /// **'Push'**
+  String get categoryMappingSectionPush;
+
+  /// No description provided for @categoryMappingSectionDescription.
+  ///
+  /// In ko, this message translates to:
+  /// **'SMS/Push에 특정 텍스트가 포함되면 자동으로 카테고리를 연결합니다.'**
+  String get categoryMappingSectionDescription;
+
+  /// No description provided for @categoryMappingCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 연결됨'**
+  String categoryMappingCount(int count);
+
+  /// No description provided for @categoryMappingManage.
+  ///
+  /// In ko, this message translates to:
+  /// **'관리'**
+  String get categoryMappingManage;
+
+  /// No description provided for @categoryMappingAddNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 연결 추가'**
+  String get categoryMappingAddNew;
+
+  /// No description provided for @categoryMappingRoute.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리 자동연결 설정'**
+  String get categoryMappingRoute;
+
+  /// No description provided for @categoryMappingAdd.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 연결 추가'**
+  String get categoryMappingAdd;
+
+  /// No description provided for @categoryMappingViewAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 보기'**
+  String get categoryMappingViewAll;
 }
 
 class _AppLocalizationsDelegate

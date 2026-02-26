@@ -22,6 +22,8 @@ import '../../data/services/sms_scanner_service.dart';
 import '../../data/services/auto_save_service.dart';
 import '../../data/services/default_format_generator.dart';
 import '../providers/payment_method_provider.dart';
+import '../widgets/category_mapping_section.dart';
+import '../../../ledger/presentation/providers/ledger_provider.dart';
 
 /// Payment method add mode
 enum PaymentMethodAddMode {
@@ -1364,6 +1366,21 @@ class _PaymentMethodWizardPageState
           ),
           const SizedBox(height: Spacing.sm + Spacing.xs),
           _buildAutoSaveModeSelector(l10n),
+
+          // 카테고리 자동연결 섹션 (수정 모드에서만 표시)
+          if (isEdit && widget.paymentMethod != null) ...[
+            const SizedBox(height: Spacing.lg),
+            Builder(
+              builder: (context) {
+                final ledgerId = ref.read(selectedLedgerIdProvider) ?? '';
+                if (ledgerId.isEmpty) return const SizedBox.shrink();
+                return CategoryMappingSection(
+                  paymentMethodId: widget.paymentMethod!.id,
+                  ledgerId: ledgerId,
+                );
+              },
+            ),
+          ],
 
           const SizedBox(height: Spacing.xl),
         ],

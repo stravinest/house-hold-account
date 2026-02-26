@@ -160,6 +160,12 @@
   "autoCollectGuideModeSuggestDesc": "Requires user confirmation after collection",
   "autoCollectGuideModeAuto": "Auto Mode",
   "autoCollectGuideModeAutoDesc": "Automatically saves transactions immediately",
+  "autoCollectGuideCategoryMappingTitle": "Auto Category Mapping",
+  "autoCollectGuideCategoryMappingDesc": "When collected messages or push notifications contain a specific keyword, they are automatically classified into the designated category.",
+  "autoCollectGuideCategoryMappingDetail1": "You can set keyword-category mappings separately for SMS and Push.",
+  "autoCollectGuideCategoryMappingDetail2": "Example: Link keyword 'Starbucks' to 'Cafe/Drinks' category, and Starbucks payments will be automatically categorized.",
+  "autoCollectGuideCategoryMappingMockKeyword": "Starbucks",
+  "autoCollectGuideCategoryMappingMockCategory": "Cafe/Drinks",
   "autoCollectGuideStep4Title": "Review Collected Items",
   "autoCollectGuideStep4Desc": "Check and approve/reject auto-collected transactions in Payment Methods > Collection History tab.",
   "autoCollectGuideStepLabel": "Step {number}. {title}",
@@ -1177,5 +1183,42 @@
   "recurringTemplateEditRecurringType": "Recurring Type",
   "recurringTemplateEditEndDate": "End Date",
   "recurringTemplateEditNoEndDate": "No end date",
-  "recurringTemplateEditSetEndDate": "Set end date"
+  "recurringTemplateEditSetEndDate": "Set end date",
+
+  "categoryMappingSmsTtile": "SMS Category Auto-Mapping",
+  "categoryMappingPushTitle": "Push Category Auto-Mapping",
+  "categoryMappingSmsDescription": "Transactions containing the keyword in SMS will be automatically categorized.",
+  "categoryMappingPushDescription": "Transactions containing the keyword in Push notifications will be automatically categorized.",
+  "categoryMappingEmpty": "No auto-mappings registered",
+  "categoryMappingUnknown": "Unknown category",
+  "categoryMappingDeleteTitle": "Delete Auto-Mapping",
+  "categoryMappingDeleteMessage": "Are you sure you want to delete this auto-mapping?",
+  "categoryMappingDeleted": "Auto-mapping deleted.",
+  "categoryMappingAddTitle": "Add New Mapping",
+  "categoryMappingSourceType": "Source Type",
+  "categoryMappingKeyword": "Keyword",
+  "categoryMappingKeywordHint": "e.g. Starbucks, Convenience store",
+  "categoryMappingKeywordHelper": "Transactions containing this keyword will be automatically categorized.",
+  "categoryMappingKeywordRequired": "Please enter a keyword.",
+  "categoryMappingCategory": "Target Category",
+  "categoryMappingCategoryHint": "Select category",
+  "categoryMappingCategoryRequired": "Please select a category.",
+  "categoryMappingAdded": "Auto-mapping added.",
+  "categoryMappingSectionTitle": "Category Auto-Mapping",
+  "categoryMappingSectionSms": "SMS",
+  "categoryMappingSectionPush": "Push",
+  "categoryMappingSectionDescription": "Automatically map categories when specific text is found in SMS/Push messages.",
+  "categoryMappingCount": "{count} mapped",
+  "@categoryMappingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "categoryMappingManage": "Manage",
+  "categoryMappingAddNew": "Add New Mapping",
+  "categoryMappingRoute": "Category Auto-Mapping Settings",
+  "categoryMappingAdd": "Add New Mapping",
+  "categoryMappingViewAll": "View All"
 }

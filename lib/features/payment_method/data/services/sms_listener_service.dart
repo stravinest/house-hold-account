@@ -470,7 +470,17 @@ class SmsListenerService {
     }
 
     String? categoryId = paymentMethod.defaultCategoryId;
+    if (categoryId == null) {
+      // 1순위: 사용자 키워드 매핑 (원본 메시지 기반)
+      categoryId = await _categoryMappingService.findCategoryByKeywordMapping(
+        content,
+        paymentMethod.id,
+        'sms',
+        _currentLedgerId!,
+      );
+    }
     if (categoryId == null && parsedResult.merchant != null) {
+      // 2순위: 기존 상호명 기반 매핑
       categoryId = await _categoryMappingService.findCategoryId(
         parsedResult.merchant!,
         _currentLedgerId!,

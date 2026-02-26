@@ -493,6 +493,27 @@ class AppLocalizationsKo extends AppLocalizations {
   String get autoCollectGuideModeAutoDesc => '수집 즉시 거래를 자동 저장합니다';
 
   @override
+  String get autoCollectGuideCategoryMappingTitle => '카테고리 자동연결';
+
+  @override
+  String get autoCollectGuideCategoryMappingDesc =>
+      '특정 키워드가 포함된 문자나 푸시 알림이 수집되면 자동으로 지정한 카테고리로 분류됩니다.';
+
+  @override
+  String get autoCollectGuideCategoryMappingDetail1 =>
+      'SMS와 Push 각각 별도로 키워드-카테고리 매핑을 설정할 수 있습니다.';
+
+  @override
+  String get autoCollectGuideCategoryMappingDetail2 =>
+      '예: 키워드 \'스타벅스\'를 \'카페/음료\' 카테고리에 연결하면, 스타벅스 결제 시 자동으로 해당 카테고리가 지정됩니다.';
+
+  @override
+  String get autoCollectGuideCategoryMappingMockKeyword => '스타벅스';
+
+  @override
+  String get autoCollectGuideCategoryMappingMockCategory => '카페/음료';
+
+  @override
   String get autoCollectGuideStep4Title => '수집내역 확인';
 
   @override
@@ -3336,4 +3357,97 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get recurringTemplateEditSetEndDate => '종료일 설정';
+
+  @override
+  String get categoryMappingSmsTtile => 'SMS 카테고리 자동연결';
+
+  @override
+  String get categoryMappingPushTitle => 'Push 카테고리 자동연결';
+
+  @override
+  String get categoryMappingSmsDescription =>
+      'SMS에 키워드가 포함된 거래는 자동으로 해당 카테고리로 분류됩니다.';
+
+  @override
+  String get categoryMappingPushDescription =>
+      'Push 알림에 키워드가 포함된 거래는 자동으로 해당 카테고리로 분류됩니다.';
+
+  @override
+  String get categoryMappingEmpty => '등록된 자동연결이 없습니다';
+
+  @override
+  String get categoryMappingUnknown => '알 수 없는 카테고리';
+
+  @override
+  String get categoryMappingDeleteTitle => '자동연결 삭제';
+
+  @override
+  String get categoryMappingDeleteMessage => '이 자동연결을 삭제하시겠습니까?';
+
+  @override
+  String get categoryMappingDeleted => '자동연결이 삭제되었습니다.';
+
+  @override
+  String get categoryMappingAddTitle => '새 연결 추가';
+
+  @override
+  String get categoryMappingSourceType => '수집 유형';
+
+  @override
+  String get categoryMappingKeyword => '키워드';
+
+  @override
+  String get categoryMappingKeywordHint => '예: 스타벅스, 편의점';
+
+  @override
+  String get categoryMappingKeywordHelper =>
+      '이 키워드가 포함된 거래는 아래 카테고리로 자동 분류됩니다.';
+
+  @override
+  String get categoryMappingKeywordRequired => '키워드를 입력해주세요.';
+
+  @override
+  String get categoryMappingCategory => '연결할 카테고리';
+
+  @override
+  String get categoryMappingCategoryHint => '카테고리 선택';
+
+  @override
+  String get categoryMappingCategoryRequired => '카테고리를 선택해주세요.';
+
+  @override
+  String get categoryMappingAdded => '자동연결이 추가되었습니다.';
+
+  @override
+  String get categoryMappingSectionTitle => '카테고리 자동연결';
+
+  @override
+  String get categoryMappingSectionSms => 'SMS';
+
+  @override
+  String get categoryMappingSectionPush => 'Push';
+
+  @override
+  String get categoryMappingSectionDescription =>
+      'SMS/Push에 특정 텍스트가 포함되면 자동으로 카테고리를 연결합니다.';
+
+  @override
+  String categoryMappingCount(int count) {
+    return '$count개 연결됨';
+  }
+
+  @override
+  String get categoryMappingManage => '관리';
+
+  @override
+  String get categoryMappingAddNew => '새 연결 추가';
+
+  @override
+  String get categoryMappingRoute => '카테고리 자동연결 설정';
+
+  @override
+  String get categoryMappingAdd => '새 연결 추가';
+
+  @override
+  String get categoryMappingViewAll => '전체 보기';
 }

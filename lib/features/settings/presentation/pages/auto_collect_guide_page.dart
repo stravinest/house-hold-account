@@ -270,8 +270,110 @@ class AutoCollectGuidePage extends StatelessWidget {
 
           const SizedBox(height: Spacing.lg),
 
-          // Step 5 - 수집내역 확인
-          GuideStepHeader(stepLabel: l10n.autoCollectGuideStepLabel('5', l10n.autoCollectGuideStep4Title)),
+          // Step 5 - 카테고리 자동연결
+          GuideStepHeader(stepLabel: l10n.autoCollectGuideStepLabel('5', l10n.autoCollectGuideCategoryMappingTitle)),
+          const SizedBox(height: Spacing.sm),
+          GuideStepCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.autoCollectGuideCategoryMappingDesc,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: GuideColors.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: Spacing.sm),
+                Text(
+                  l10n.autoCollectGuideCategoryMappingDetail1,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: GuideColors.onSurfaceVariant,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                // 매핑 예시 모크업
+                Container(
+                  padding: const EdgeInsets.all(Spacing.sm),
+                  decoration: BoxDecoration(
+                    color: GuideColors.surface,
+                    borderRadius: BorderRadius.circular(Spacing.sm),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.autoCollectGuideCategoryMappingMockKeyword,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: GuideColors.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Text(
+                            '\u2192  ',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: GuideColors.onSurfaceVariant,
+                            ),
+                          ),
+                          Text(
+                            l10n.autoCollectGuideCategoryMappingMockCategory,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: GuideColors.primary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: Spacing.md),
+                // Tip 박스
+                Container(
+                  padding: const EdgeInsets.all(Spacing.sm),
+                  decoration: BoxDecoration(
+                    color: GuideColors.primaryContainer,
+                    borderRadius: BorderRadius.circular(Spacing.sm),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.lightbulb_outline,
+                        size: 16,
+                        color: GuideColors.primary,
+                      ),
+                      const SizedBox(width: Spacing.xs),
+                      Expanded(
+                        child: Text(
+                          l10n.autoCollectGuideCategoryMappingDetail2,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: GuideColors.onSurfaceVariant,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: Spacing.lg),
+
+          // Step 6 - 수집내역 확인
+          GuideStepHeader(stepLabel: l10n.autoCollectGuideStepLabel('6', l10n.autoCollectGuideStep4Title)),
           const SizedBox(height: Spacing.sm),
           GuideStepCard(
             child: Column(

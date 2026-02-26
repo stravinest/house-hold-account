@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../../config/supabase_config.dart';
+import '../repositories/category_keyword_mapping_repository.dart';
 
 /// 상호명-카테고리 매핑 규칙
 class MerchantCategoryRule {
@@ -329,13 +330,15 @@ class SystemCategoryRules {
 /// 상호명을 기반으로 적절한 카테고리를 추천합니다.
 class CategoryMappingService {
   final dynamic _client;
+  final CategoryKeywordMappingRepository _keywordMappingRepository;
 
   // 캐시: ledgerId -> rules
   final Map<String, List<MerchantCategoryRule>> _ruleCache = {};
 
   /// 기본 생성자 - Supabase 클라이언트 주입
   CategoryMappingService({dynamic client})
-    : _client = client ?? SupabaseConfig.client;
+    : _client = client ?? SupabaseConfig.client,
+      _keywordMappingRepository = CategoryKeywordMappingRepository();
 
   /// LIKE 패턴에서 특수문자 이스케이프 (SQL Injection 방지)
   String _escapeLikePattern(String input) {
@@ -345,20 +348,76 @@ class CategoryMappingService {
         .replaceAll('_', r'\_');
   }
 
+  /// 키워드 매핑으로 카테고리 찾기
+  ///
+  /// sourceContent(원본 메시지)에서 등록된 keyword 포함 여부 확인
+  /// 여러 개 매칭 시 가장 긴 키워드 우선 (구체적 매칭)
+  Future<String?> findCategoryByKeywordMapping(
+    String sourceContent,
+    String paymentMethodId,
+    String sourceType,
+    String ledgerId,
+  ) async {
+    if (sourceContent.isEmpty || paymentMethodId.isEmpty) return null;
+
+    try {
+      final mappings = await _keywordMappingRepository.getByPaymentMethod(
+        paymentMethodId,
+        sourceType: sourceType,
+      );
+
+      if (mappings.isEmpty) return null;
+
+      final lowerContent = sourceContent.toLowerCase();
+
+      // 매칭되는 키워드 필터링
+      final matched = mappings.where((m) {
+        return lowerContent.contains(m.keyword.toLowerCase());
+      }).toList();
+
+      if (matched.isEmpty) return null;
+
+      // 가장 긴 키워드 우선 (구체적 매칭)
+      matched.sort((a, b) => b.keyword.length.compareTo(a.keyword.length));
+
+      return matched.first.categoryId;
+    } catch (e) {
+      debugPrint('CategoryMappingService.findCategoryByKeywordMapping error: $e');
+      return null;
+    }
+  }
+
   /// 상호명으로 카테고리 찾기
   ///
-  /// 1. 사용자 정의 규칙 우선
-  /// 2. 시스템 기본 규칙 적용
-  /// 3. 매칭 안되면 null
+  /// 1. 키워드 매핑 우선 (sourceContent/paymentMethodId/sourceType 제공 시)
+  /// 2. 사용자 정의 규칙
+  /// 3. 시스템 기본 규칙 적용
+  /// 4. 매칭 안되면 null
   Future<String?> findCategoryId(
     String merchant,
     String ledgerId, {
     bool useCache = true,
+    String? sourceContent,
+    String? paymentMethodId,
+    String? sourceType,
   }) async {
     if (merchant.isEmpty) return null;
 
     try {
-      // 1. 사용자 정의 규칙 확인
+      // 1. 키워드 매핑 확인 (sourceContent와 paymentMethodId가 있을 때)
+      if (sourceContent != null &&
+          paymentMethodId != null &&
+          sourceType != null) {
+        final keywordCategoryId = await findCategoryByKeywordMapping(
+          sourceContent,
+          paymentMethodId,
+          sourceType,
+          ledgerId,
+        );
+        if (keywordCategoryId != null) return keywordCategoryId;
+      }
+
+      // 2. 사용자 정의 규칙 확인
       final userCategoryId = await _findByUserRules(
         merchant,
         ledgerId,
@@ -366,11 +425,11 @@ class CategoryMappingService {
       );
       if (userCategoryId != null) return userCategoryId;
 
-      // 2. 시스템 규칙으로 카테고리명 찾기
+      // 3. 시스템 규칙으로 카테고리명 찾기
       final systemCategoryName = _findBySystemRules(merchant);
       if (systemCategoryName == null) return null;
 
-      // 3. 카테고리명으로 실제 ID 조회
+      // 4. 카테고리명으로 실제 ID 조회
       return _getCategoryIdByName(systemCategoryName, ledgerId);
     } catch (e, st) {
       // 카테고리 매핑 실패는 치명적이지 않음 - null 반환

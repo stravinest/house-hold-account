@@ -509,6 +509,27 @@ class AppLocalizationsEn extends AppLocalizations {
       'Automatically saves transactions immediately';
 
   @override
+  String get autoCollectGuideCategoryMappingTitle => 'Auto Category Mapping';
+
+  @override
+  String get autoCollectGuideCategoryMappingDesc =>
+      'When collected messages or push notifications contain a specific keyword, they are automatically classified into the designated category.';
+
+  @override
+  String get autoCollectGuideCategoryMappingDetail1 =>
+      'You can set keyword-category mappings separately for SMS and Push.';
+
+  @override
+  String get autoCollectGuideCategoryMappingDetail2 =>
+      'Example: Link keyword \'Starbucks\' to \'Cafe/Drinks\' category, and Starbucks payments will be automatically categorized.';
+
+  @override
+  String get autoCollectGuideCategoryMappingMockKeyword => 'Starbucks';
+
+  @override
+  String get autoCollectGuideCategoryMappingMockCategory => 'Cafe/Drinks';
+
+  @override
   String get autoCollectGuideStep4Title => 'Review Collected Items';
 
   @override
@@ -3428,4 +3449,98 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get recurringTemplateEditSetEndDate => 'Set end date';
+
+  @override
+  String get categoryMappingSmsTtile => 'SMS Category Auto-Mapping';
+
+  @override
+  String get categoryMappingPushTitle => 'Push Category Auto-Mapping';
+
+  @override
+  String get categoryMappingSmsDescription =>
+      'Transactions containing the keyword in SMS will be automatically categorized.';
+
+  @override
+  String get categoryMappingPushDescription =>
+      'Transactions containing the keyword in Push notifications will be automatically categorized.';
+
+  @override
+  String get categoryMappingEmpty => 'No auto-mappings registered';
+
+  @override
+  String get categoryMappingUnknown => 'Unknown category';
+
+  @override
+  String get categoryMappingDeleteTitle => 'Delete Auto-Mapping';
+
+  @override
+  String get categoryMappingDeleteMessage =>
+      'Are you sure you want to delete this auto-mapping?';
+
+  @override
+  String get categoryMappingDeleted => 'Auto-mapping deleted.';
+
+  @override
+  String get categoryMappingAddTitle => 'Add New Mapping';
+
+  @override
+  String get categoryMappingSourceType => 'Source Type';
+
+  @override
+  String get categoryMappingKeyword => 'Keyword';
+
+  @override
+  String get categoryMappingKeywordHint => 'e.g. Starbucks, Convenience store';
+
+  @override
+  String get categoryMappingKeywordHelper =>
+      'Transactions containing this keyword will be automatically categorized.';
+
+  @override
+  String get categoryMappingKeywordRequired => 'Please enter a keyword.';
+
+  @override
+  String get categoryMappingCategory => 'Target Category';
+
+  @override
+  String get categoryMappingCategoryHint => 'Select category';
+
+  @override
+  String get categoryMappingCategoryRequired => 'Please select a category.';
+
+  @override
+  String get categoryMappingAdded => 'Auto-mapping added.';
+
+  @override
+  String get categoryMappingSectionTitle => 'Category Auto-Mapping';
+
+  @override
+  String get categoryMappingSectionSms => 'SMS';
+
+  @override
+  String get categoryMappingSectionPush => 'Push';
+
+  @override
+  String get categoryMappingSectionDescription =>
+      'Automatically map categories when specific text is found in SMS/Push messages.';
+
+  @override
+  String categoryMappingCount(int count) {
+    return '$count mapped';
+  }
+
+  @override
+  String get categoryMappingManage => 'Manage';
+
+  @override
+  String get categoryMappingAddNew => 'Add New Mapping';
+
+  @override
+  String get categoryMappingRoute => 'Category Auto-Mapping Settings';
+
+  @override
+  String get categoryMappingAdd => 'Add New Mapping';
+
+  @override
+  String get categoryMappingViewAll => 'View All';
 }
