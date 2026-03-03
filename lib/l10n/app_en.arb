@@ -1220,5 +1220,8 @@
   "categoryMappingAddNew": "Add New Mapping",
   "categoryMappingRoute": "Category Auto-Mapping Settings",
   "categoryMappingAdd": "Add New Mapping",
-  "categoryMappingViewAll": "View All"
+  "categoryMappingViewAll": "View All",
+  "categoryMappingFromTransaction": "Link Category",
+  "categoryMappingSuggestedKeywords": "Suggested Keywords",
+  "categoryMappingDirectInput": "Direct Input"
 }

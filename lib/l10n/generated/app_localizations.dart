@@ -6522,6 +6522,24 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'전체 보기'**
   String get categoryMappingViewAll;
+
+  /// No description provided for @categoryMappingFromTransaction.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리 연결'**
+  String get categoryMappingFromTransaction;
+
+  /// No description provided for @categoryMappingSuggestedKeywords.
+  ///
+  /// In ko, this message translates to:
+  /// **'추천 키워드'**
+  String get categoryMappingSuggestedKeywords;
+
+  /// No description provided for @categoryMappingDirectInput.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 입력'**
+  String get categoryMappingDirectInput;
 }
 
 class _AppLocalizationsDelegate

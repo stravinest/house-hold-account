@@ -3543,4 +3543,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryMappingViewAll => 'View All';
+
+  @override
+  String get categoryMappingFromTransaction => 'Link Category';
+
+  @override
+  String get categoryMappingSuggestedKeywords => 'Suggested Keywords';
+
+  @override
+  String get categoryMappingDirectInput => 'Direct Input';
 }

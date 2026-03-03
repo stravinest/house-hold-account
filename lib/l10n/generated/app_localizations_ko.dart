@@ -3450,4 +3450,13 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get categoryMappingViewAll => '전체 보기';
+
+  @override
+  String get categoryMappingFromTransaction => '카테고리 연결';
+
+  @override
+  String get categoryMappingSuggestedKeywords => '추천 키워드';
+
+  @override
+  String get categoryMappingDirectInput => '직접 입력';
 }

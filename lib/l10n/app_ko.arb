@@ -1707,5 +1707,8 @@
   "categoryMappingAddNew": "새 연결 추가",
   "categoryMappingRoute": "카테고리 자동연결 설정",
   "categoryMappingAdd": "새 연결 추가",
-  "categoryMappingViewAll": "전체 보기"
+  "categoryMappingViewAll": "전체 보기",
+  "categoryMappingFromTransaction": "카테고리 연결",
+  "categoryMappingSuggestedKeywords": "추천 키워드",
+  "categoryMappingDirectInput": "직접 입력"
 }

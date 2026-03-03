@@ -7,6 +7,7 @@ import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../payment_method/presentation/widgets/add_category_mapping_from_transaction_dialog.dart';
 import '../../domain/entities/transaction.dart';
 import '../providers/transaction_provider.dart';
 import 'edit_transaction_sheet.dart';
@@ -66,6 +67,12 @@ class TransactionDetailSheet extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
+                      if (transaction.paymentMethodId != null)
+                        TextButton.icon(
+                          icon: const Icon(Icons.link, size: 18),
+                          label: Text(l10n.categoryMappingFromTransaction),
+                          onPressed: () => _openCategoryMappingDialog(context),
+                        ),
                       TextButton.icon(
                         icon: const Icon(Icons.edit, size: 18),
                         label: Text(l10n.commonEdit),
@@ -336,6 +343,18 @@ class TransactionDetailSheet extends ConsumerWidget {
       valueWidget: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: badges,
+      ),
+    );
+  }
+
+  void _openCategoryMappingDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AddCategoryMappingFromTransactionDialog(
+        paymentMethodId: transaction.paymentMethodId!,
+        ledgerId: transaction.ledgerId,
+        transactionTitle: transaction.title,
+        transactionAmount: transaction.amount.toDouble(),
       ),
     );
   }
