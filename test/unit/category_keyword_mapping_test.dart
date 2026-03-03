@@ -53,7 +53,7 @@ void main() {
         ledgerId: 'ledger-1',
         keyword: 'GS25',
         categoryId: 'cat-2',
-        sourceType: 'push',
+        sourceType: 'notification',
         createdBy: 'user-1',
         createdAt: now,
         updatedAt: now,
@@ -88,7 +88,7 @@ void main() {
       expect(updated.sourceType, original.sourceType);
     });
 
-    test('sourceType은 sms 또는 push 값을 가져야 한다', () {
+    test('sourceType은 sms 또는 notification 값을 가져야 한다', () {
       final smsMapping = CategoryKeywordMapping(
         id: 'id-1',
         paymentMethodId: 'pm-1',
@@ -101,20 +101,20 @@ void main() {
         updatedAt: now,
       );
 
-      final pushMapping = CategoryKeywordMapping(
+      final notificationMapping = CategoryKeywordMapping(
         id: 'id-2',
         paymentMethodId: 'pm-1',
         ledgerId: 'ledger-1',
         keyword: 'CU편의점',
         categoryId: 'cat-2',
-        sourceType: 'push',
+        sourceType: 'notification',
         createdBy: 'user-1',
         createdAt: now,
         updatedAt: now,
       );
 
       expect(smsMapping.sourceType, 'sms');
-      expect(pushMapping.sourceType, 'push');
+      expect(notificationMapping.sourceType, 'notification');
     });
   });
 
@@ -181,7 +181,7 @@ void main() {
         ledgerId: 'ledger-1',
         keyword: 'GS25',
         categoryId: 'cat-2',
-        sourceType: 'push',
+        sourceType: 'notification',
         createdBy: 'user-1',
         createdAt: now,
         updatedAt: now,
@@ -226,17 +226,17 @@ void main() {
       expect(json['created_by'], 'user-1');
     });
 
-    test('toCreateJson에서 sourceType이 push일 때 올바른 JSON을 생성해야 한다', () {
+    test('toCreateJson에서 sourceType이 notification일 때 올바른 JSON을 생성해야 한다', () {
       final json = CategoryKeywordMappingModel.toCreateJson(
         paymentMethodId: 'pm-2',
         ledgerId: 'ledger-2',
         keyword: 'GS25',
         categoryId: 'cat-3',
-        sourceType: 'push',
+        sourceType: 'notification',
         createdBy: 'user-2',
       );
 
-      expect(json['source_type'], 'push');
+      expect(json['source_type'], 'notification');
       expect(json['keyword'], 'GS25');
       expect(json['payment_method_id'], 'pm-2');
     });

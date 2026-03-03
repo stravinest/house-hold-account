@@ -151,7 +151,7 @@ void main() {
       'Push 매핑이 1개 있을 때 "1개 연결됨" 텍스트가 Push 행에 표시되어야 한다',
       (WidgetTester tester) async {
         final pushMappings = [
-          _buildMapping(id: 'id-3', sourceType: 'push', keyword: 'KB Pay'),
+          _buildMapping(id: 'id-3', sourceType: 'notification', keyword: 'KB Pay'),
         ];
 
         await tester.pumpWidget(_buildTestApp(mappings: pushMappings));
