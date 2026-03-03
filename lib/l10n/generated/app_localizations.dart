@@ -4250,6 +4250,96 @@ abstract class AppLocalizations {
   /// **'미분류'**
   String get searchUncategorized;
 
+  /// No description provided for @searchSelectionMode.
+  ///
+  /// In ko, this message translates to:
+  /// **'선택 모드'**
+  String get searchSelectionMode;
+
+  /// No description provided for @searchSelectAll.
+  ///
+  /// In ko, this message translates to:
+  /// **'전체 선택'**
+  String get searchSelectAll;
+
+  /// No description provided for @searchSelectedCount.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}개 선택됨'**
+  String searchSelectedCount(int count);
+
+  /// No description provided for @searchBatchEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'일괄 수정'**
+  String get searchBatchEdit;
+
+  /// No description provided for @searchBatchEditTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'일괄 수정'**
+  String get searchBatchEditTitle;
+
+  /// No description provided for @searchBatchEditFieldAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액'**
+  String get searchBatchEditFieldAmount;
+
+  /// No description provided for @searchBatchEditFieldTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'제목'**
+  String get searchBatchEditFieldTitle;
+
+  /// No description provided for @searchBatchEditFieldMemo.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모'**
+  String get searchBatchEditFieldMemo;
+
+  /// No description provided for @searchBatchEditFieldCategory.
+  ///
+  /// In ko, this message translates to:
+  /// **'카테고리'**
+  String get searchBatchEditFieldCategory;
+
+  /// No description provided for @searchBatchEditFieldPaymentMethod.
+  ///
+  /// In ko, this message translates to:
+  /// **'결제수단'**
+  String get searchBatchEditFieldPaymentMethod;
+
+  /// No description provided for @searchBatchEditApplyChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'변경'**
+  String get searchBatchEditApplyChange;
+
+  /// No description provided for @searchBatchEditNoFieldSelected.
+  ///
+  /// In ko, this message translates to:
+  /// **'변경할 필드를 하나 이상 선택해주세요'**
+  String get searchBatchEditNoFieldSelected;
+
+  /// No description provided for @searchBatchEditSuccess.
+  ///
+  /// In ko, this message translates to:
+  /// **'{count}건의 거래가 수정되었습니다'**
+  String searchBatchEditSuccess(int count);
+
+  /// No description provided for @searchRecurringTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'반복거래는 반복거래 관리에서 수정해주세요'**
+  String get searchRecurringTooltip;
+
+  /// No description provided for @searchOtherUserTooltip.
+  ///
+  /// In ko, this message translates to:
+  /// **'다른 사용자의 거래는 수정할 수 없습니다'**
+  String get searchOtherUserTooltip;
+
   /// No description provided for @shareManagementTitle.
   ///
   /// In ko, this message translates to:

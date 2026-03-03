@@ -313,7 +313,17 @@ class _HomePageState extends ConsumerState<HomePage> {
             : null,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: const Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(Icons.search, size: 24),
+                Positioned(
+                  right: -6,
+                  bottom: -4,
+                  child: Icon(Icons.swap_horiz, size: 13),
+                ),
+              ],
+            ),
             tooltip: l10n.tooltipSearch,
             onPressed: () {
               context.push(Routes.search);

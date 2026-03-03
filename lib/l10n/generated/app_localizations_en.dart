@@ -2294,6 +2294,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchUncategorized => 'Uncategorized';
 
   @override
+  String get searchSelectionMode => 'Selection Mode';
+
+  @override
+  String get searchSelectAll => 'Select All';
+
+  @override
+  String searchSelectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get searchBatchEdit => 'Batch Edit';
+
+  @override
+  String get searchBatchEditTitle => 'Batch Edit';
+
+  @override
+  String get searchBatchEditFieldAmount => 'Amount';
+
+  @override
+  String get searchBatchEditFieldTitle => 'Title';
+
+  @override
+  String get searchBatchEditFieldMemo => 'Memo';
+
+  @override
+  String get searchBatchEditFieldCategory => 'Category';
+
+  @override
+  String get searchBatchEditFieldPaymentMethod => 'Payment Method';
+
+  @override
+  String get searchBatchEditApplyChange => 'Change';
+
+  @override
+  String get searchBatchEditNoFieldSelected =>
+      'Please select at least one field to change';
+
+  @override
+  String searchBatchEditSuccess(int count) {
+    return '$count transactions updated';
+  }
+
+  @override
+  String get searchRecurringTooltip =>
+      'Please edit recurring transactions in recurring management';
+
+  @override
+  String get searchOtherUserTooltip => 'Cannot edit other user\'s transactions';
+
+  @override
   String get shareManagementTitle => 'Ledger & Share Management';
 
   @override

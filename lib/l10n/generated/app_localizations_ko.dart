@@ -2230,6 +2230,55 @@ class AppLocalizationsKo extends AppLocalizations {
   String get searchUncategorized => '미분류';
 
   @override
+  String get searchSelectionMode => '선택 모드';
+
+  @override
+  String get searchSelectAll => '전체 선택';
+
+  @override
+  String searchSelectedCount(int count) {
+    return '$count개 선택됨';
+  }
+
+  @override
+  String get searchBatchEdit => '일괄 수정';
+
+  @override
+  String get searchBatchEditTitle => '일괄 수정';
+
+  @override
+  String get searchBatchEditFieldAmount => '금액';
+
+  @override
+  String get searchBatchEditFieldTitle => '제목';
+
+  @override
+  String get searchBatchEditFieldMemo => '메모';
+
+  @override
+  String get searchBatchEditFieldCategory => '카테고리';
+
+  @override
+  String get searchBatchEditFieldPaymentMethod => '결제수단';
+
+  @override
+  String get searchBatchEditApplyChange => '변경';
+
+  @override
+  String get searchBatchEditNoFieldSelected => '변경할 필드를 하나 이상 선택해주세요';
+
+  @override
+  String searchBatchEditSuccess(int count) {
+    return '$count건의 거래가 수정되었습니다';
+  }
+
+  @override
+  String get searchRecurringTooltip => '반복거래는 반복거래 관리에서 수정해주세요';
+
+  @override
+  String get searchOtherUserTooltip => '다른 사용자의 거래는 수정할 수 없습니다';
+
+  @override
   String get shareManagementTitle => '가계부 및 공유 관리';
 
   @override

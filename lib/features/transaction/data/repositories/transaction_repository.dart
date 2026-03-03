@@ -376,6 +376,27 @@ class TransactionRepository {
     }
   }
 
+  // 여러 거래 일괄 수정 (최대 50건)
+  Future<void> batchUpdateTransactions({
+    required List<String> ids,
+    required Map<String, dynamic> updates,
+  }) async {
+    if (ids.isEmpty) return;
+    if (ids.length > 50) {
+      throw Exception('Batch update is limited to 50 transactions');
+    }
+
+    final data = <String, dynamic>{
+      'updated_at': DateTimeUtils.nowUtcIso(),
+      ...updates,
+    };
+
+    await _client
+        .from('transactions')
+        .update(data)
+        .inFilter('id', ids);
+  }
+
   // 실시간 구독
   RealtimeChannel subscribeTransactions({
     required String ledgerId,

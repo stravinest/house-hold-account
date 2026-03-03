@@ -1058,6 +1058,35 @@
   "searchEmpty": "제목/메모로 거래 내역을 검색하세요",
   "searchNoResults": "검색 결과가 없습니다",
   "searchUncategorized": "미분류",
+  "searchSelectionMode": "선택 모드",
+  "searchSelectAll": "전체 선택",
+  "searchSelectedCount": "{count}개 선택됨",
+  "@searchSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchBatchEdit": "일괄 수정",
+  "searchBatchEditTitle": "일괄 수정",
+  "searchBatchEditFieldAmount": "금액",
+  "searchBatchEditFieldTitle": "제목",
+  "searchBatchEditFieldMemo": "메모",
+  "searchBatchEditFieldCategory": "카테고리",
+  "searchBatchEditFieldPaymentMethod": "결제수단",
+  "searchBatchEditApplyChange": "변경",
+  "searchBatchEditNoFieldSelected": "변경할 필드를 하나 이상 선택해주세요",
+  "searchBatchEditSuccess": "{count}건의 거래가 수정되었습니다",
+  "@searchBatchEditSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchRecurringTooltip": "반복거래는 반복거래 관리에서 수정해주세요",
+  "searchOtherUserTooltip": "다른 사용자의 거래는 수정할 수 없습니다",
   "shareManagementTitle": "가계부 및 공유 관리",
   "shareMyLedgers": "내 가계부",
   "shareInvitedLedgers": "초대받은 가계부",

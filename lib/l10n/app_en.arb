@@ -770,6 +770,35 @@
   "searchEmpty": "Search transactions by title or memo",
   "searchNoResults": "No search results",
   "searchUncategorized": "Uncategorized",
+  "searchSelectionMode": "Selection Mode",
+  "searchSelectAll": "Select All",
+  "searchSelectedCount": "{count} selected",
+  "@searchSelectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchBatchEdit": "Batch Edit",
+  "searchBatchEditTitle": "Batch Edit",
+  "searchBatchEditFieldAmount": "Amount",
+  "searchBatchEditFieldTitle": "Title",
+  "searchBatchEditFieldMemo": "Memo",
+  "searchBatchEditFieldCategory": "Category",
+  "searchBatchEditFieldPaymentMethod": "Payment Method",
+  "searchBatchEditApplyChange": "Change",
+  "searchBatchEditNoFieldSelected": "Please select at least one field to change",
+  "searchBatchEditSuccess": "{count} transactions updated",
+  "@searchBatchEditSuccess": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "searchRecurringTooltip": "Please edit recurring transactions in recurring management",
+  "searchOtherUserTooltip": "Cannot edit other user's transactions",
   "shareManagementTitle": "Ledger & Share Management",
   "shareMyLedgers": "My Ledgers",
   "shareInvitedLedgers": "Invited Ledgers",

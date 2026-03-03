@@ -69,14 +69,21 @@ class FakeQueryBuilder implements Future<List<Map<String, dynamic>>> {
 }
 
 /// Fake CategoryKeywordMappingRepository - SupabaseClient 초기화 없이 동작하는 테스트용 Repository
+/// sourceType별로 다른 결과를 반환할 수 있도록 sourceTypeResults 맵을 지원한다
 class FakeCategoryKeywordMappingRepository implements CategoryKeywordMappingRepository {
   List<CategoryKeywordMappingModel> result = [];
+  Map<String, List<CategoryKeywordMappingModel>> sourceTypeResults = {};
 
   @override
   Future<List<CategoryKeywordMappingModel>> getByPaymentMethod(
     String paymentMethodId, {
     String? sourceType,
-  }) async => result;
+  }) async {
+    if (sourceType != null && sourceTypeResults.containsKey(sourceType)) {
+      return sourceTypeResults[sourceType]!;
+    }
+    return result;
+  }
 
   @override
   Future<List<CategoryKeywordMappingModel>> getByLedger(
@@ -330,6 +337,224 @@ void main() {
       test('빈 상호명은 null을 반환한다', () async {
         // When
         final categoryId = await service.findCategoryId('', 'ledger-1');
+
+        // Then
+        expect(categoryId, isNull);
+      });
+    });
+
+    group('findCategoryByKeywordMapping - 키워드 매핑 기반 카테고리 조회', () {
+      late FakeCategoryKeywordMappingRepository fakeRepo;
+
+      setUp(() {
+        fakeRepo = FakeCategoryKeywordMappingRepository();
+        fakeClient = FakeSupabaseClient();
+        service = CategoryMappingService(
+          client: fakeClient,
+          keywordMappingRepository: fakeRepo,
+        );
+      });
+
+      CategoryKeywordMappingModel createMapping({
+        required String keyword,
+        required String categoryId,
+        required String sourceType,
+      }) {
+        return CategoryKeywordMappingModel(
+          id: 'mapping-$keyword',
+          paymentMethodId: 'pm-1',
+          ledgerId: 'ledger-1',
+          keyword: keyword,
+          categoryId: categoryId,
+          sourceType: sourceType,
+          createdBy: 'user-1',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        );
+      }
+
+      test('SMS sourceType으로 등록된 키워드가 SMS 메시지에서 정확히 매칭된다', () async {
+        // Given: SMS용 키워드 매핑 등록
+        fakeRepo.sourceTypeResults['sms'] = [
+          createMapping(keyword: '스타벅스', categoryId: 'food-id', sourceType: 'sms'),
+        ];
+
+        // When: SMS 원본 메시지에서 키워드 검색
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '[KB국민카드] 스타벅스 강남점 15,000원 결제',
+          'pm-1',
+          'sms',
+          'ledger-1',
+        );
+
+        // Then: 식비 카테고리 ID 반환
+        expect(categoryId, equals('food-id'));
+      });
+
+      test('notification sourceType으로 등록된 키워드가 알림 메시지에서 정확히 매칭된다', () async {
+        // Given: notification용 키워드 매핑 등록
+        fakeRepo.sourceTypeResults['notification'] = [
+          createMapping(keyword: '샐러디', categoryId: 'food-id', sourceType: 'notification'),
+        ];
+
+        // When: 알림 원본 메시지에서 키워드 검색
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '샐러디 판교테크 12,500원 결제완료',
+          'pm-1',
+          'notification',
+          'ledger-1',
+        );
+
+        // Then: 식비 카테고리 ID 반환
+        expect(categoryId, equals('food-id'));
+      });
+
+      test('SMS 키워드 매핑은 notification sourceType으로 조회 시 매칭되지 않는다', () async {
+        // Given: SMS에만 키워드 매핑 등록, notification에는 없음
+        fakeRepo.sourceTypeResults['sms'] = [
+          createMapping(keyword: '스타벅스', categoryId: 'food-id', sourceType: 'sms'),
+        ];
+        fakeRepo.sourceTypeResults['notification'] = [];
+
+        // When: notification sourceType으로 조회
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '스타벅스 강남점 15,000원',
+          'pm-1',
+          'notification',
+          'ledger-1',
+        );
+
+        // Then: 매칭되지 않아 null 반환
+        expect(categoryId, isNull);
+      });
+
+      test('notification 키워드 매핑은 sms sourceType으로 조회 시 매칭되지 않는다', () async {
+        // Given: notification에만 키워드 매핑 등록, sms에는 없음
+        fakeRepo.sourceTypeResults['notification'] = [
+          createMapping(keyword: '샐러디', categoryId: 'food-id', sourceType: 'notification'),
+        ];
+        fakeRepo.sourceTypeResults['sms'] = [];
+
+        // When: sms sourceType으로 조회
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '샐러디 판교테크 12,500원',
+          'pm-1',
+          'sms',
+          'ledger-1',
+        );
+
+        // Then: 매칭되지 않아 null 반환
+        expect(categoryId, isNull);
+      });
+
+      test('동일 키워드가 SMS와 notification에 각각 다른 카테고리로 매핑될 수 있다', () async {
+        // Given: 같은 키워드 '스타벅스'가 sourceType별로 다른 카테고리에 매핑
+        fakeRepo.sourceTypeResults['sms'] = [
+          createMapping(keyword: '스타벅스', categoryId: 'sms-food-id', sourceType: 'sms'),
+        ];
+        fakeRepo.sourceTypeResults['notification'] = [
+          createMapping(keyword: '스타벅스', categoryId: 'noti-food-id', sourceType: 'notification'),
+        ];
+
+        // When & Then: SMS 조회 시 sms-food-id 반환
+        final smsCategoryId = await service.findCategoryByKeywordMapping(
+          '스타벅스 강남점',
+          'pm-1',
+          'sms',
+          'ledger-1',
+        );
+        expect(smsCategoryId, equals('sms-food-id'));
+
+        // When & Then: notification 조회 시 noti-food-id 반환
+        final notiCategoryId = await service.findCategoryByKeywordMapping(
+          '스타벅스 강남점',
+          'pm-1',
+          'notification',
+          'ledger-1',
+        );
+        expect(notiCategoryId, equals('noti-food-id'));
+      });
+
+      test('여러 키워드 매칭 시 가장 긴 키워드가 우선 매칭된다', () async {
+        // Given: '스타벅스'와 '스타벅스 리저브'가 둘 다 등록됨
+        fakeRepo.sourceTypeResults['sms'] = [
+          createMapping(keyword: '스타벅스', categoryId: 'food-id', sourceType: 'sms'),
+          createMapping(keyword: '스타벅스 리저브', categoryId: 'premium-food-id', sourceType: 'sms'),
+        ];
+
+        // When: '스타벅스 리저브' 포함 메시지로 조회
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '[KB] 스타벅스 리저브 강남점 8,500원',
+          'pm-1',
+          'sms',
+          'ledger-1',
+        );
+
+        // Then: 더 긴 '스타벅스 리저브' 키워드에 매핑된 카테고리 반환
+        expect(categoryId, equals('premium-food-id'));
+      });
+
+      test('빈 sourceContent는 null을 반환한다', () async {
+        // Given: 키워드 매핑이 존재하더라도
+        fakeRepo.sourceTypeResults['sms'] = [
+          createMapping(keyword: '스타벅스', categoryId: 'food-id', sourceType: 'sms'),
+        ];
+
+        // When: 빈 메시지로 조회
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '',
+          'pm-1',
+          'sms',
+          'ledger-1',
+        );
+
+        // Then: null 반환
+        expect(categoryId, isNull);
+      });
+
+      test('빈 paymentMethodId는 null을 반환한다', () async {
+        // When: 빈 결제수단 ID로 조회
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '스타벅스 강남점',
+          '',
+          'sms',
+          'ledger-1',
+        );
+
+        // Then: null 반환
+        expect(categoryId, isNull);
+      });
+
+      test('키워드 매칭은 대소문자를 구분하지 않는다', () async {
+        // Given: 소문자 키워드 등록
+        fakeRepo.sourceTypeResults['notification'] = [
+          createMapping(keyword: 'starbucks', categoryId: 'food-id', sourceType: 'notification'),
+        ];
+
+        // When: 대문자 포함 메시지로 조회
+        final categoryId = await service.findCategoryByKeywordMapping(
+          'STARBUCKS 강남점 결제 15,000원',
+          'pm-1',
+          'notification',
+          'ledger-1',
+        );
+
+        // Then: 대소문자 무시하고 매칭
+        expect(categoryId, equals('food-id'));
+      });
+
+      test('매핑이 없는 sourceType은 null을 반환한다', () async {
+        // Given: sms, notification 어디에도 매핑 없음
+        fakeRepo.sourceTypeResults['sms'] = [];
+        fakeRepo.sourceTypeResults['notification'] = [];
+
+        // When
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '스타벅스 강남점',
+          'pm-1',
+          'sms',
+          'ledger-1',
+        );
 
         // Then
         expect(categoryId, isNull);
