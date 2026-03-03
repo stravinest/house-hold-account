@@ -32,7 +32,7 @@ class CategoryMappingSection extends ConsumerWidget {
             .toList() ??
         [];
     final pushMappings = allMappingsAsync.valueOrNull
-            ?.where((m) => m.sourceType == 'push')
+            ?.where((m) => m.sourceType == 'notification')
             .toList() ??
         [];
 
@@ -86,7 +86,7 @@ class CategoryMappingSection extends ConsumerWidget {
           badgeTextColor: colorScheme.onTertiaryContainer,
           onManageTap: () {
             context.push(
-              '/settings/payment-methods/$paymentMethodId/category-mapping/push',
+              '/settings/payment-methods/$paymentMethodId/category-mapping/notification',
               extra: {'ledgerId': ledgerId},
             );
           },

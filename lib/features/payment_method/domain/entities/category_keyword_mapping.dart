@@ -6,7 +6,7 @@ class CategoryKeywordMapping extends Equatable {
   final String ledgerId;
   final String keyword;
   final String categoryId;
-  final String sourceType; // 'sms' or 'push'
+  final String sourceType; // 'sms' or 'notification'
   final String createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;

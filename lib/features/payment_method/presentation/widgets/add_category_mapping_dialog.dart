@@ -110,7 +110,7 @@ class _AddCategoryMappingDialogState
                       icon: const Icon(Icons.sms_outlined),
                     ),
                     ButtonSegment<String>(
-                      value: 'push',
+                      value: 'notification',
                       label: Text(l10n.autoSaveSettingsSourcePush),
                       icon: const Icon(Icons.notifications_outlined),
                     ),
@@ -292,7 +292,7 @@ class _AddCategoryMappingDialogState
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     assert(
-      _selectedSourceType == 'sms' || _selectedSourceType == 'push',
+      _selectedSourceType == 'sms' || _selectedSourceType == 'notification',
       'Invalid sourceType: $_selectedSourceType',
     );
 

@@ -907,7 +907,7 @@ class NotificationListenerWrapper {
       categoryId = await _categoryMappingService.findCategoryByKeywordMapping(
         content,
         paymentMethod.id,
-        'push',
+        'notification',
         _currentLedgerId!,
       );
     }
