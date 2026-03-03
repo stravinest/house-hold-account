@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_household_account/features/payment_method/data/models/category_keyword_mapping_model.dart';
+import 'package:shared_household_account/features/payment_method/data/repositories/category_keyword_mapping_repository.dart';
 import 'package:shared_household_account/features/payment_method/data/services/category_mapping_service.dart';
-
-import '../../../../helpers/test_helpers.dart';
 
 /// Fake Supabase Client - 테이블별 Fake 쿼리 빌더 반환
 class FakeSupabaseClient {
@@ -68,6 +68,43 @@ class FakeQueryBuilder implements Future<List<Map<String, dynamic>>> {
       Future.value(listResult).whenComplete(action);
 }
 
+/// Fake CategoryKeywordMappingRepository - SupabaseClient 초기화 없이 동작하는 테스트용 Repository
+class FakeCategoryKeywordMappingRepository implements CategoryKeywordMappingRepository {
+  List<CategoryKeywordMappingModel> result = [];
+
+  @override
+  Future<List<CategoryKeywordMappingModel>> getByPaymentMethod(
+    String paymentMethodId, {
+    String? sourceType,
+  }) async => result;
+
+  @override
+  Future<List<CategoryKeywordMappingModel>> getByLedger(
+    String ledgerId, {
+    String? sourceType,
+  }) async => result;
+
+  @override
+  Future<CategoryKeywordMappingModel> create({
+    required String paymentMethodId,
+    required String ledgerId,
+    required String keyword,
+    required String categoryId,
+    required String sourceType,
+    required String createdBy,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<void> delete(String id) async {}
+
+  @override
+  Future<CategoryKeywordMappingModel?> findByKeyword(
+    String paymentMethodId,
+    String keyword,
+    String sourceType,
+  ) async => null;
+}
+
 void main() {
   group('CategoryMappingService Tests', () {
     late CategoryMappingService service;
@@ -75,7 +112,10 @@ void main() {
 
     setUp(() {
       fakeClient = FakeSupabaseClient();
-      service = CategoryMappingService(client: fakeClient);
+      service = CategoryMappingService(
+        client: fakeClient,
+        keywordMappingRepository: FakeCategoryKeywordMappingRepository(),
+      );
     });
 
     group('MerchantCategoryRule', () {

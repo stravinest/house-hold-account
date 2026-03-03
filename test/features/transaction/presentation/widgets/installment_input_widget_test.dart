@@ -41,21 +41,25 @@ void main() {
     testWidgets('할부 스위치를 켜면 입력 폼이 표시된다', (tester) async {
       // Given
       final startDate = DateTime.now();
-      var modeChanged = false;
+      var isInstallmentMode = false;
 
-      // When
+      // When: StatefulBuilder로 감싸서 Switch 탭 시 실제 상태 업데이트
       await tester.pumpWidget(
         MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
-            body: InstallmentInputWidget(
-              startDate: startDate,
-              isInstallmentMode: false,
-              onModeChanged: (value) {
-                modeChanged = value;
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return InstallmentInputWidget(
+                  startDate: startDate,
+                  isInstallmentMode: isInstallmentMode,
+                  onModeChanged: (value) {
+                    setState(() => isInstallmentMode = value);
+                  },
+                  onApplied: (result) {},
+                );
               },
-              onApplied: (result) {},
             ),
           ),
         ),
@@ -67,7 +71,7 @@ void main() {
 
       // Then: TextFormField가 2개 표시되어야 함 (총 금액, 개월 수)
       expect(find.byType(TextFormField), findsNWidgets(2));
-      expect(modeChanged, true);
+      expect(isInstallmentMode, true);
     });
 
     testWidgets('enabled가 false일 때 스위치가 비활성화된다', (tester) async {

@@ -335,10 +335,12 @@ class CategoryMappingService {
   // 캐시: ledgerId -> rules
   final Map<String, List<MerchantCategoryRule>> _ruleCache = {};
 
-  /// 기본 생성자 - Supabase 클라이언트 주입
-  CategoryMappingService({dynamic client})
-    : _client = client ?? SupabaseConfig.client,
-      _keywordMappingRepository = CategoryKeywordMappingRepository();
+  /// 기본 생성자 - Supabase 클라이언트 및 Repository 주입
+  CategoryMappingService({
+    dynamic client,
+    CategoryKeywordMappingRepository? keywordMappingRepository,
+  }) : _client = client ?? SupabaseConfig.client,
+       _keywordMappingRepository = keywordMappingRepository ?? CategoryKeywordMappingRepository();
 
   /// LIKE 패턴에서 특수문자 이스케이프 (SQL Injection 방지)
   String _escapeLikePattern(String input) {
