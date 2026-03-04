@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_household_account/features/notification/data/services/notification_service.dart';
+import 'package:shared_household_account/features/notification/domain/entities/notification_type.dart';
+import 'package:shared_household_account/features/payment_method/data/models/learned_push_format_model.dart';
 import 'package:shared_household_account/features/payment_method/data/models/payment_method_model.dart';
+import 'package:shared_household_account/features/payment_method/data/models/pending_transaction_model.dart';
 import 'package:shared_household_account/features/payment_method/data/repositories/learned_push_format_repository.dart';
 import 'package:shared_household_account/features/payment_method/data/repositories/payment_method_repository.dart';
 import 'package:shared_household_account/features/payment_method/data/repositories/pending_transaction_repository.dart';
@@ -9,6 +12,7 @@ import 'package:shared_household_account/features/payment_method/data/services/c
 import 'package:shared_household_account/features/payment_method/data/services/duplicate_check_service.dart';
 import 'package:shared_household_account/features/payment_method/data/services/notification_listener_wrapper.dart';
 import 'package:shared_household_account/features/payment_method/domain/entities/payment_method.dart';
+import 'package:shared_household_account/features/payment_method/domain/entities/pending_transaction.dart';
 import 'package:shared_household_account/features/transaction/data/repositories/transaction_repository.dart';
 
 // Mock 클래스 정의
@@ -250,5 +254,311 @@ void main() {
         );
       });
     }
+  });
+
+  group('processManualNotification - 카테고리 매핑 흐름 검증', () {
+    late NotificationListenerWrapper wrapper;
+
+    // 테스트용 공통 픽스처
+    const testPackageName = 'com.kbcard.cxh.appcard';
+    const testTitle = 'KB Pay';
+    // 파싱 성공을 위해 금액 패턴과 거래 키워드가 반드시 포함되어야 함
+    // amountRegex: r'(\d{1,3}(,\d{3})*|\d+)원' 에 매칭되는 '15,000원'
+    // typeKeywords expense: ['승인', '결제'] 에 매칭되는 '승인'
+    // appKeywords: ['KB Pay'] 에 매칭되는 'KB Pay'
+    const testContent = 'KB Pay 승인 15,000원 스타벅스';
+
+    /// 테스트용 PaymentMethod 생성 헬퍼
+    PaymentMethodModel buildPaymentMethod({String? defaultCategoryId}) {
+      return PaymentMethodModel(
+        id: 'pm-1',
+        ledgerId: 'ledger-1',
+        ownerUserId: 'user-1',
+        name: 'KB Pay',
+        icon: 'credit_card',
+        color: '#FF0000',
+        isDefault: false,
+        sortOrder: 0,
+        createdAt: DateTime(2026, 1, 1),
+        autoSaveMode: AutoSaveMode.suggest,
+        canAutoSave: true,
+        autoCollectSource: AutoCollectSource.push,
+        defaultCategoryId: defaultCategoryId,
+      );
+    }
+
+    /// 테스트용 LearnedPushFormatModel 생성 헬퍼
+    LearnedPushFormatModel buildFormat() {
+      return LearnedPushFormatModel(
+        id: 'format-1',
+        paymentMethodId: 'pm-1',
+        packageName: testPackageName,
+        appKeywords: const ['KB Pay'],
+        amountRegex: r'(\d{1,3}(,\d{3})*|\d+)원',
+        typeKeywords: const {
+          'expense': ['승인', '결제'],
+          'income': ['입금'],
+        },
+        merchantRegex: null,
+        confidence: 0.9,
+        matchCount: 10,
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
+      );
+    }
+
+    /// 테스트용 PendingTransactionModel 반환값 생성 헬퍼
+    PendingTransactionModel buildPendingTx({String? parsedCategoryId}) {
+      final now = DateTime(2026, 1, 1);
+      return PendingTransactionModel(
+        id: 'pending-1',
+        ledgerId: 'ledger-1',
+        paymentMethodId: 'pm-1',
+        userId: 'user-1',
+        sourceType: SourceType.notification,
+        sourceContent: '$testTitle $testContent',
+        sourceTimestamp: now,
+        status: PendingTransactionStatus.pending,
+        createdAt: now,
+        updatedAt: now,
+        expiresAt: now.add(const Duration(days: 7)),
+        parsedCategoryId: parsedCategoryId,
+      );
+    }
+
+    setUp(() {
+      wrapper = NotificationListenerWrapper.forTesting(
+        paymentMethodRepository: mockPaymentMethodRepo,
+        pendingTransactionRepository: mockPendingTxRepo,
+        transactionRepository: mockTransactionRepo,
+        learnedPushFormatRepository: mockLearnedPushFormatRepo,
+        categoryMappingService: mockCategoryMappingService,
+        duplicateCheckService: mockDuplicateCheckService,
+        notificationService: mockNotificationService,
+      );
+
+      // registerFallbackValue: mocktail의 any()가 열거형/커스텀 타입 매칭을 위해 필요
+      registerFallbackValue(SourceType.notification);
+      registerFallbackValue(PendingTransactionStatus.pending);
+      registerFallbackValue(DateTime(2026));
+      registerFallbackValue(NotificationType.autoCollectSuggested);
+    });
+
+    /// 공통 mock stub 설정 헬퍼
+    void setupCommonStubs({
+      String? categoryIdFromKeyword,
+      String? categoryIdFromMerchant,
+      String? pendingTxCategoryId,
+    }) {
+      // DuplicateCheckService: 항상 중복 없음으로 응답
+      when(() => mockDuplicateCheckService.checkDuplicate(
+        amount: any(named: 'amount'),
+        paymentMethodId: any(named: 'paymentMethodId'),
+        ledgerId: any(named: 'ledgerId'),
+        timestamp: any(named: 'timestamp'),
+      )).thenAnswer((_) async => DuplicateCheckResult.notDuplicate('hash-123'));
+
+      // PendingTransactionRepository.createPendingTransaction: 성공 응답
+      when(() => mockPendingTxRepo.createPendingTransaction(
+        ledgerId: any(named: 'ledgerId'),
+        paymentMethodId: any(named: 'paymentMethodId'),
+        userId: any(named: 'userId'),
+        sourceType: any(named: 'sourceType'),
+        sourceSender: any(named: 'sourceSender'),
+        sourceContent: any(named: 'sourceContent'),
+        sourceTimestamp: any(named: 'sourceTimestamp'),
+        parsedAmount: any(named: 'parsedAmount'),
+        parsedType: any(named: 'parsedType'),
+        parsedMerchant: any(named: 'parsedMerchant'),
+        parsedCategoryId: any(named: 'parsedCategoryId'),
+        parsedDate: any(named: 'parsedDate'),
+        duplicateHash: any(named: 'duplicateHash'),
+        isDuplicate: any(named: 'isDuplicate'),
+        status: any(named: 'status'),
+        isViewed: any(named: 'isViewed'),
+      )).thenAnswer((_) async => buildPendingTx(
+        parsedCategoryId: pendingTxCategoryId,
+      ));
+
+      // LearnedPushFormatRepository.incrementMatchCount: 성공 응답
+      when(() => mockLearnedPushFormatRepo.incrementMatchCount(any()))
+          .thenAnswer((_) async {});
+
+      // CategoryMappingService.findCategoryByKeywordMapping: 기본값 null
+      when(() => mockCategoryMappingService.findCategoryByKeywordMapping(
+        any(),
+        any(),
+        any(),
+        any(),
+      )).thenAnswer((_) async => categoryIdFromKeyword);
+
+      // CategoryMappingService.findCategoryId: 기본값 null
+      when(() => mockCategoryMappingService.findCategoryId(
+        any(),
+        any(),
+        useCache: any(named: 'useCache'),
+      )).thenAnswer((_) async => categoryIdFromMerchant);
+
+      // NotificationService.sendAutoCollectNotification: 성공 응답
+      when(() => mockNotificationService.sendAutoCollectNotification(
+        userId: any(named: 'userId'),
+        type: any(named: 'type'),
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        data: any(named: 'data'),
+      )).thenAnswer((_) async {});
+    }
+
+    test(
+      'defaultCategoryId가 null인 결제수단으로 알림 처리 시 findCategoryByKeywordMapping이 호출되어야 한다',
+      () async {
+        // Given: defaultCategoryId가 없는 결제수단과 포맷 설정
+        final pm = buildPaymentMethod(defaultCategoryId: null);
+        final format = buildFormat();
+
+        wrapper.initializeForTesting(
+          userId: 'user-1',
+          ledgerId: 'ledger-1',
+          autoSavePaymentMethods: [pm],
+          learnedFormatsCache: {'pm-1': [format]},
+        );
+
+        setupCommonStubs(categoryIdFromKeyword: 'food-category-id');
+
+        // When: 실제 processManualNotification 호출
+        await wrapper.processManualNotification(
+          packageName: testPackageName,
+          title: testTitle,
+          content: testContent,
+        );
+
+        // Then: findCategoryByKeywordMapping이 'notification' sourceType으로 1회 호출되어야 한다
+        verify(() => mockCategoryMappingService.findCategoryByKeywordMapping(
+          any(),
+          'pm-1',
+          'notification',
+          'ledger-1',
+        )).called(1);
+      },
+    );
+
+    test(
+      'defaultCategoryId가 설정된 결제수단으로 알림 처리 시 findCategoryByKeywordMapping을 건너뛰어야 한다',
+      () async {
+        // Given: defaultCategoryId가 있는 결제수단과 포맷 설정
+        final pm = buildPaymentMethod(defaultCategoryId: 'default-cat-id');
+        final format = buildFormat();
+
+        wrapper.initializeForTesting(
+          userId: 'user-1',
+          ledgerId: 'ledger-1',
+          autoSavePaymentMethods: [pm],
+          learnedFormatsCache: {'pm-1': [format]},
+        );
+
+        setupCommonStubs();
+
+        // When: 실제 processManualNotification 호출
+        await wrapper.processManualNotification(
+          packageName: testPackageName,
+          title: testTitle,
+          content: testContent,
+        );
+
+        // Then: defaultCategoryId가 있으므로 키워드 매핑은 호출되지 않아야 한다
+        verifyNever(() => mockCategoryMappingService.findCategoryByKeywordMapping(
+          any(),
+          any(),
+          any(),
+          any(),
+        ));
+      },
+    );
+
+    test(
+      '키워드 매핑 성공 시 parsedCategoryId가 해당 카테고리 ID로 pending transaction을 생성해야 한다',
+      () async {
+        // Given: defaultCategoryId가 없고 키워드 매핑이 'food-category-id'를 반환하도록 설정
+        final pm = buildPaymentMethod(defaultCategoryId: null);
+        final format = buildFormat();
+
+        wrapper.initializeForTesting(
+          userId: 'user-1',
+          ledgerId: 'ledger-1',
+          autoSavePaymentMethods: [pm],
+          learnedFormatsCache: {'pm-1': [format]},
+        );
+
+        setupCommonStubs(
+          categoryIdFromKeyword: 'food-category-id',
+          pendingTxCategoryId: 'food-category-id',
+        );
+
+        // When: 실제 processManualNotification 호출
+        await wrapper.processManualNotification(
+          packageName: testPackageName,
+          title: testTitle,
+          content: testContent,
+        );
+
+        // Then: createPendingTransaction이 parsedCategoryId: 'food-category-id'로 호출되어야 한다
+        // parsedCategoryId named 파라미터만 captureAny로 캡처하여 정확히 검증
+        final captured = verify(() => mockPendingTxRepo.createPendingTransaction(
+          ledgerId: any(named: 'ledgerId'),
+          paymentMethodId: any(named: 'paymentMethodId'),
+          userId: any(named: 'userId'),
+          sourceType: any(named: 'sourceType'),
+          sourceSender: any(named: 'sourceSender'),
+          sourceContent: any(named: 'sourceContent'),
+          sourceTimestamp: any(named: 'sourceTimestamp'),
+          parsedAmount: any(named: 'parsedAmount'),
+          parsedType: any(named: 'parsedType'),
+          parsedMerchant: any(named: 'parsedMerchant'),
+          parsedCategoryId: captureAny(named: 'parsedCategoryId'),
+          parsedDate: any(named: 'parsedDate'),
+          duplicateHash: any(named: 'duplicateHash'),
+          isDuplicate: any(named: 'isDuplicate'),
+          status: any(named: 'status'),
+          isViewed: any(named: 'isViewed'),
+        )).captured;
+
+        // parsedCategoryId만 캡처했으므로 인덱스 0이 해당 값
+        expect(captured[0], equals('food-category-id'));
+      },
+    );
+
+    test(
+      '키워드 매핑이 null을 반환하면 findCategoryId가 상호명 기반 fallback으로 호출되어야 한다',
+      () async {
+        // Given: 키워드 매핑은 null, 상호명 매핑은 'merchant-category-id' 반환
+        final pm = buildPaymentMethod(defaultCategoryId: null);
+        final format = buildFormat();
+
+        wrapper.initializeForTesting(
+          userId: 'user-1',
+          ledgerId: 'ledger-1',
+          autoSavePaymentMethods: [pm],
+          learnedFormatsCache: {'pm-1': [format]},
+        );
+
+        setupCommonStubs(
+          categoryIdFromKeyword: null,
+          categoryIdFromMerchant: 'merchant-category-id',
+        );
+
+        // When: 실제 processManualNotification 호출
+        await wrapper.processManualNotification(
+          packageName: testPackageName,
+          title: testTitle,
+          content: testContent,
+        );
+
+        // Then: findCategoryId(상호명 기반 매핑)가 1회 호출되어야 한다
+        verify(() => mockCategoryMappingService.findCategoryId(
+          any(),
+          any(),
+        )).called(1);
+      },
+    );
   });
 }

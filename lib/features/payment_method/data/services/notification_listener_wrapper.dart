@@ -104,6 +104,22 @@ class NotificationListenerWrapper {
   List<PaymentMethodModel> _autoSavePaymentMethods = [];
   final Map<String, List<LearnedPushFormatModel>> _learnedFormatsCache = {};
 
+  /// 테스트용 내부 상태 초기화 - Platform.isAndroid 체크를 우회한다
+  @visibleForTesting
+  void initializeForTesting({
+    required String userId,
+    required String ledgerId,
+    List<PaymentMethodModel> autoSavePaymentMethods = const [],
+    Map<String, List<LearnedPushFormatModel>> learnedFormatsCache = const {},
+  }) {
+    _currentUserId = userId;
+    _currentLedgerId = ledgerId;
+    _autoSavePaymentMethods = autoSavePaymentMethods;
+    _learnedFormatsCache.clear();
+    _learnedFormatsCache.addAll(learnedFormatsCache);
+    _isInitialized = true;
+  }
+
   // SMS/Push 중복 수신 방지 캐시 (메시지 해시 → 타임스탬프)
   final Map<String, DateTime> _recentlyProcessedMessages = {};
   static const Duration _messageCacheDuration = Duration(seconds: 10);

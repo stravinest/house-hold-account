@@ -290,6 +290,15 @@ class FinancialNotificationListener : NotificationListenerService() {
                 Log.d(TAG, "  - Keywords: ${format.appKeywords}")
             }
 
+            // 조건 1-1: 금지 키워드 체크 (매칭되었더라도 금지 키워드 포함 시 제외)
+            val hasExcludedKeyword = format.excludedKeywords.any { keyword ->
+                combinedContent.contains(keyword, ignoreCase = true)
+            }
+            if (BuildConfig.DEBUG && hasExcludedKeyword && contentMatches) {
+                Log.d(TAG, "Excluded by keyword: ${format.excludedKeywords.filter { combinedContent.contains(it, ignoreCase = true) }}")
+            }
+            if (hasExcludedKeyword) return@find false
+
             // 조건 2: 권한 검증 (현재 사용자 소유 결제수단인지 확인)
             val isOwnedByCurrentUser = paymentMethodsCache.any { pm -> pm.id == format.paymentMethodId }
 
@@ -420,6 +429,16 @@ class FinancialNotificationListener : NotificationListenerService() {
         // DB source_type 컬럼은 'sms' | 'notification'
         val dbSourceType = sourceType
 
+        // 카테고리 키워드 매핑 조회 (Dart CategoryMappingService와 동일 로직)
+        val parsedCategoryId = supabaseHelper.findCategoryByKeywordMapping(
+            sourceContent = combinedContent,
+            paymentMethodId = paymentMethodId,
+            sourceType = dbSourceType
+        )
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "[CategoryMapping] Result: parsedCategoryId=$parsedCategoryId")
+        }
+
         val success = if (settings?.isAutoMode == true) {
             Log.d(TAG, "Auto mode enabled for payment method: $paymentMethodId, creating confirmed transaction")
             supabaseHelper.createConfirmedTransaction(
@@ -433,7 +452,7 @@ class FinancialNotificationListener : NotificationListenerService() {
                 parsedAmount = parsed.amount,
                 parsedType = parsed.transactionType,
                 parsedMerchant = parsed.merchant,
-                parsedCategoryId = null,
+                parsedCategoryId = parsedCategoryId,
                 duplicateHash = duplicateHash
             )
         } else {
@@ -449,7 +468,7 @@ class FinancialNotificationListener : NotificationListenerService() {
                 parsedAmount = parsed.amount,
                 parsedType = parsed.transactionType,
                 parsedMerchant = parsed.merchant,
-                parsedCategoryId = null,
+                parsedCategoryId = parsedCategoryId,
                 duplicateHash = duplicateHash,
                 isDuplicate = false
             )

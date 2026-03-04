@@ -68,7 +68,10 @@ class CategoryKeywordMappingRepository {
 
     final response = await _client
         .from('category_keyword_mappings')
-        .insert(data)
+        .upsert(
+          data,
+          onConflict: 'payment_method_id,keyword,source_type',
+        )
         .select()
         .single();
 

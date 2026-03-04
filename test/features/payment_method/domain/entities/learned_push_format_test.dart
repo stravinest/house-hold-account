@@ -110,6 +110,159 @@ void main() {
           false,
         );
       });
+
+      test('excludedKeywords가 비어있으면 정상적으로 매칭된다', () {
+        // Given: excludedKeywords가 비어있는 포맷
+        final format = LearnedPushFormat(
+          id: 'test-id',
+          paymentMethodId: 'pm-1',
+          packageName: 'com.kbcard.cxh.appcard',
+          appKeywords: ['KB Pay'],
+          amountRegex: r'\d+원',
+          typeKeywords: {'expense': ['승인']},
+          excludedKeywords: [],
+          createdAt: testCreatedAt,
+          updatedAt: testUpdatedAt,
+        );
+
+        // When & Then: excludedKeywords가 비어있으므로 정상 매칭
+        expect(
+          format.matchesNotification(
+            'com.kbcard.cxh.appcard',
+            '승인 10,000원 KB Pay 스타벅스',
+          ),
+          true,
+        );
+      });
+
+      test('excludedKeywords에 포함된 키워드가 content에 있으면 false를 반환한다', () {
+        // Given: '이벤트'가 금지 키워드로 설정된 포맷
+        final format = LearnedPushFormat(
+          id: 'test-id',
+          paymentMethodId: 'pm-1',
+          packageName: 'com.kbcard.cxh.appcard',
+          appKeywords: ['KB Pay'],
+          amountRegex: r'\d+원',
+          typeKeywords: {'expense': ['승인']},
+          excludedKeywords: ['이벤트', '광고'],
+          createdAt: testCreatedAt,
+          updatedAt: testUpdatedAt,
+        );
+
+        // When & Then: content에 '이벤트' 포함 -> false
+        expect(
+          format.matchesNotification(
+            'com.kbcard.cxh.appcard',
+            'KB Pay 이벤트 안내 10,000원 혜택',
+          ),
+          false,
+        );
+      });
+
+      test('excludedKeywords에 포함된 광고 키워드가 content에 있으면 false를 반환한다', () {
+        // Given: '광고'가 금지 키워드로 설정된 포맷
+        final format = LearnedPushFormat(
+          id: 'test-id',
+          paymentMethodId: 'pm-1',
+          packageName: 'com.kbcard.cxh.appcard',
+          appKeywords: ['KB Pay'],
+          amountRegex: r'\d+원',
+          typeKeywords: {'expense': ['승인']},
+          excludedKeywords: ['이벤트', '광고'],
+          createdAt: testCreatedAt,
+          updatedAt: testUpdatedAt,
+        );
+
+        // When & Then: content에 '광고' 포함 -> false
+        expect(
+          format.matchesNotification(
+            'com.kbcard.cxh.appcard',
+            'KB Pay 광고 특별 할인 안내',
+          ),
+          false,
+        );
+      });
+
+      test('excludedKeywords 대소문자를 무시하고 매칭한다', () {
+        // Given: 영문 금지 키워드
+        final format = LearnedPushFormat(
+          id: 'test-id',
+          paymentMethodId: 'pm-1',
+          packageName: 'com.kbcard.cxh.appcard',
+          appKeywords: ['KB Pay'],
+          amountRegex: r'\d+원',
+          typeKeywords: {'expense': ['승인']},
+          excludedKeywords: ['event', 'promotion'],
+          createdAt: testCreatedAt,
+          updatedAt: testUpdatedAt,
+        );
+
+        // When & Then: 대문자 EVENT도 매칭되어 false
+        expect(
+          format.matchesNotification(
+            'com.kbcard.cxh.appcard',
+            'KB Pay EVENT 안내',
+          ),
+          false,
+        );
+      });
+
+      test('appKeywords는 매칭되지만 excludedKeywords로 거부되는 케이스', () {
+        // Given: appKeywords와 excludedKeywords 동시 설정
+        final format = LearnedPushFormat(
+          id: 'test-id',
+          paymentMethodId: 'pm-1',
+          packageName: 'com.kbcard.cxh.appcard',
+          appKeywords: ['KB Pay', 'KB카드'],
+          amountRegex: r'\d+원',
+          typeKeywords: {'expense': ['승인']},
+          excludedKeywords: ['마케팅', '혜택안내'],
+          createdAt: testCreatedAt,
+          updatedAt: testUpdatedAt,
+        );
+
+        // When & Then: appKeywords('KB Pay')는 매칭되지만 excludedKeywords('혜택안내')로 거부
+        expect(
+          format.matchesNotification(
+            'com.kbcard.cxh.appcard',
+            'KB Pay 혜택안내 이번 달 할인',
+          ),
+          false,
+        );
+
+        // When & Then: excludedKeywords에 해당하지 않는 정상 알림은 매칭
+        expect(
+          format.matchesNotification(
+            'com.kbcard.cxh.appcard',
+            'KB Pay 승인 10,000원 스타벅스',
+          ),
+          true,
+        );
+      });
+
+      test('excludedKeywords가 content에 없으면 정상 매칭된다', () {
+        // Given: 금지 키워드가 있지만 content에는 없는 경우
+        final format = LearnedPushFormat(
+          id: 'test-id',
+          paymentMethodId: 'pm-1',
+          packageName: 'com.kbcard.cxh.appcard',
+          appKeywords: ['KB Pay'],
+          amountRegex: r'\d+원',
+          typeKeywords: {'expense': ['승인']},
+          excludedKeywords: ['이벤트', '광고', '마케팅'],
+          createdAt: testCreatedAt,
+          updatedAt: testUpdatedAt,
+        );
+
+        // When & Then: 금지 키워드가 content에 없으므로 정상 매칭
+        expect(
+          format.matchesNotification(
+            'com.kbcard.cxh.appcard',
+            'KB Pay 승인 15,000원 샐러디 판교테크',
+          ),
+          true,
+        );
+      });
     });
 
     group('copyWith', () {

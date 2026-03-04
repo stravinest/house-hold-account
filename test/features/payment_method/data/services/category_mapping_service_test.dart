@@ -112,6 +112,45 @@ class FakeCategoryKeywordMappingRepository implements CategoryKeywordMappingRepo
   ) async => null;
 }
 
+/// 에러를 던지는 테스트용 Repository - DB 에러 시나리오 검증용
+class ErrorThrowingKeywordMappingRepository implements CategoryKeywordMappingRepository {
+  @override
+  Future<List<CategoryKeywordMappingModel>> getByPaymentMethod(
+    String paymentMethodId, {
+    String? sourceType,
+  }) async {
+    throw Exception('DB connection failed');
+  }
+
+  @override
+  Future<List<CategoryKeywordMappingModel>> getByLedger(
+    String ledgerId, {
+    String? sourceType,
+  }) async {
+    throw Exception('DB connection failed');
+  }
+
+  @override
+  Future<CategoryKeywordMappingModel> create({
+    required String paymentMethodId,
+    required String ledgerId,
+    required String keyword,
+    required String categoryId,
+    required String sourceType,
+    required String createdBy,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<void> delete(String id) async {}
+
+  @override
+  Future<CategoryKeywordMappingModel?> findByKeyword(
+    String paymentMethodId,
+    String keyword,
+    String sourceType,
+  ) async => null;
+}
+
 void main() {
   group('CategoryMappingService Tests', () {
     late CategoryMappingService service;
@@ -558,6 +597,81 @@ void main() {
 
         // Then
         expect(categoryId, isNull);
+      });
+
+      test('Repository에서 에러 발생 시 null을 반환한다 (에러 처리)', () async {
+        // Given: 에러를 발생시키는 Repository
+        final errorRepo = ErrorThrowingKeywordMappingRepository();
+        final errorService = CategoryMappingService(
+          client: fakeClient,
+          keywordMappingRepository: errorRepo,
+        );
+
+        // When: 키워드 매핑 조회 시도
+        final categoryId = await errorService.findCategoryByKeywordMapping(
+          '스타벅스 강남점 15,000원',
+          'pm-1',
+          'sms',
+          'ledger-1',
+        );
+
+        // Then: 에러가 전파되지 않고 null 반환
+        expect(categoryId, isNull);
+      });
+
+      test('매핑 결과에서 키워드가 sourceContent에 포함되지 않으면 null을 반환한다', () async {
+        // Given: 키워드가 메시지에 포함되지 않는 매핑
+        fakeRepo.sourceTypeResults['sms'] = [
+          createMapping(keyword: '이디야', categoryId: 'food-id', sourceType: 'sms'),
+        ];
+
+        // When: 이디야가 포함되지 않은 메시지로 조회
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '[KB] 스타벅스 강남점 8,500원',
+          'pm-1',
+          'sms',
+          'ledger-1',
+        );
+
+        // Then: 매칭되지 않아 null 반환
+        expect(categoryId, isNull);
+      });
+
+      test('여러 키워드 중 짧은 키워드만 매칭되면 짧은 키워드의 카테고리를 반환한다', () async {
+        // Given: 두 키워드 중 하나만 매칭
+        fakeRepo.sourceTypeResults['notification'] = [
+          createMapping(keyword: '스타벅스', categoryId: 'food-id', sourceType: 'notification'),
+          createMapping(keyword: '스타벅스 리저브', categoryId: 'premium-id', sourceType: 'notification'),
+        ];
+
+        // When: '스타벅스'만 포함된 메시지 (리저브는 미포함)
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '스타벅스 강남역점 12,000원 결제',
+          'pm-1',
+          'notification',
+          'ledger-1',
+        );
+
+        // Then: 짧은 키워드 '스타벅스'에 매핑된 카테고리 반환
+        expect(categoryId, equals('food-id'));
+      });
+
+      test('빈 ledgerId가 전달되어도 paymentMethodId 기반으로 매핑을 조회하여 카테고리를 반환한다', () async {
+        // Given: 키워드 매핑이 존재할 때
+        fakeRepo.sourceTypeResults['sms'] = [
+          createMapping(keyword: '스타벅스', categoryId: 'food-id', sourceType: 'sms'),
+        ];
+
+        // When: 빈 ledgerId로 조회 (서비스는 ledgerId를 검증하지 않음)
+        final categoryId = await service.findCategoryByKeywordMapping(
+          '스타벅스 강남점',
+          'pm-1',
+          'sms',
+          '',
+        );
+
+        // Then: paymentMethodId 기반 매핑이 정상 동작하여 카테고리 반환
+        expect(categoryId, equals('food-id'));
       });
     });
 

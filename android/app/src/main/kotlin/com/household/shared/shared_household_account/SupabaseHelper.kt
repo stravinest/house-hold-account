@@ -31,6 +31,7 @@ data class LearnedPushFormat(
     val paymentMethodId: String,
     val packageName: String,
     val appKeywords: List<String>,
+    val excludedKeywords: List<String> = emptyList(),
     val amountRegex: String,
     val typeKeywords: Map<String, List<String>>,
     val merchantRegex: String?,
@@ -522,6 +523,7 @@ class SupabaseHelper private constructor(private val context: Context) {
                             paymentMethodId = item.getString("payment_method_id"),
                             packageName = item.getString("package_name"),
                             appKeywords = parseStringArray(item.optJSONArray("app_keywords")),
+                            excludedKeywords = parseStringArray(item.optJSONArray("excluded_keywords")),
                             amountRegex = item.optString("amount_regex", "([0-9,]+)\\s*원"),
                             typeKeywords = parseTypeKeywords(item.optJSONObject("type_keywords")),
                             merchantRegex = item.optString("merchant_regex", null),
@@ -687,6 +689,87 @@ class SupabaseHelper private constructor(private val context: Context) {
             null
         } catch (e: Exception) {
             Log.e(TAG, "Error getting payment method auto settings", e)
+            null
+        }
+    }
+
+    /**
+     * category_keyword_mappings 테이블에서 키워드 매핑으로 카테고리 ID 조회
+     * Dart CategoryMappingService.findCategoryByKeywordMapping과 동일한 로직
+     *
+     * @param sourceContent 원본 알림 내용
+     * @param paymentMethodId 결제수단 ID
+     * @param sourceType 소스 타입 (sms/notification)
+     * @return 매칭된 카테고리 ID (없으면 null)
+     */
+    suspend fun findCategoryByKeywordMapping(
+        sourceContent: String,
+        paymentMethodId: String,
+        sourceType: String
+    ): String? = withContext(Dispatchers.IO) {
+        try {
+            if (sourceContent.isEmpty() || paymentMethodId.isEmpty()) return@withContext null
+
+            val baseUrl = supabaseUrl ?: return@withContext null
+            val apiKey = anonKey ?: return@withContext null
+            val token = getValidToken() ?: return@withContext null
+
+            val encodedPmId = URLEncoder.encode(paymentMethodId, "UTF-8")
+            val encodedSourceType = URLEncoder.encode(sourceType, "UTF-8")
+            val url = "$baseUrl/rest/v1/category_keyword_mappings?payment_method_id=eq.$encodedPmId&source_type=eq.$encodedSourceType&select=keyword,category_id"
+
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("Authorization", "Bearer $token")
+                .addHeader("apikey", apiKey)
+                .addHeader("Accept-Profile", SCHEMA)
+                .build()
+
+            val response = client.newCall(request).execute()
+
+            if (response.isSuccessful) {
+                val responseBody = response.body?.string() ?: return@withContext null
+                val jsonArray = JSONArray(responseBody)
+
+                if (jsonArray.length() == 0) {
+                    if (BuildConfig.DEBUG) Log.d(TAG, "No keyword mappings found for PM: $paymentMethodId")
+                    return@withContext null
+                }
+
+                val lowerContent = sourceContent.lowercase()
+
+                // 매칭되는 키워드 찾기 (가장 긴 키워드 우선 = 구체적 매칭)
+                var bestMatch: String? = null
+                var bestKeywordLength = 0
+
+                for (i in 0 until jsonArray.length()) {
+                    val item = jsonArray.getJSONObject(i)
+                    val keyword = item.getString("keyword")
+                    val categoryId = item.getString("category_id")
+
+                    if (lowerContent.contains(keyword.lowercase()) && keyword.length > bestKeywordLength) {
+                        bestMatch = categoryId
+                        bestKeywordLength = keyword.length
+                        if (BuildConfig.DEBUG) {
+                            Log.d(TAG, "[CategoryMapping] keyword=\"$keyword\" matched -> categoryId=$categoryId")
+                        }
+                    }
+                }
+
+                if (bestMatch != null) {
+                    Log.d(TAG, "[CategoryMapping] Best match: categoryId=$bestMatch (keyword length=$bestKeywordLength)")
+                } else {
+                    if (BuildConfig.DEBUG) Log.d(TAG, "[CategoryMapping] No keyword matched in content")
+                }
+
+                bestMatch
+            } else {
+                Log.e(TAG, "Failed to query keyword mappings: ${response.code}")
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Exception while finding category by keyword mapping", e)
             null
         }
     }

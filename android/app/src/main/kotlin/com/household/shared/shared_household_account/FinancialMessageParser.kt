@@ -246,7 +246,19 @@ object FinancialMessageParser {
 
     private fun cleanMerchant(merchant: String?): String? {
         if (merchant == null) return null
+        // 날짜/시간 패턴 제거 (등록시간이 별도로 존재하므로 제목에서 불필요)
         var cleaned = merchant
+            .replace(Regex("\\d{1,2}/\\d{1,2}\\s+\\d{1,2}:\\d{2}\\s*"), "")
+            .replace(Regex("\\d{1,2}-\\d{1,2}\\s+\\d{1,2}:\\d{2}\\s*"), "")
+            .replace(Regex("\\d{4}\\.\\d{1,2}\\.\\d{1,2}\\s+\\d{1,2}:\\d{2}\\s*"), "")
+            .replace(Regex("\\d{1,2}월\\s*\\d{1,2}일\\s*\\d{1,2}시\\s*\\d{2}분\\s*"), "")
+            .replace(Regex("\\d{1,2}/\\d{1,2}\\s*"), "")
+            .replace(Regex("\\d{1,2}-\\d{1,2}\\s*"), "")
+            .replace(Regex("\\d{4}\\.\\d{1,2}\\.\\d{1,2}\\s*"), "")
+            .replace(Regex("\\d{1,2}:\\d{2}\\s*"), "")
+            .trim()
+        // 불필요한 접미사 제거
+        cleaned = cleaned
             .replace(Regex("\\(누적.*\\)"), "")
             .replace(Regex("잔액.*$"), "")
             .replace(Regex("누적.*$"), "")
