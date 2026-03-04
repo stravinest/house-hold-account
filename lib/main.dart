@@ -5,6 +5,7 @@ import 'package:app_links/app_links.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'l10n/generated/app_localizations.dart';
@@ -34,6 +35,9 @@ import 'shared/themes/theme_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // AdMob SDK 초기화
+  await MobileAds.instance.initialize();
 
   // 한국어 로케일 데이터 초기화 (DateFormat, NumberFormat 사용 전에 호출 필요)
   await initializeDateFormatting('ko_KR', null);

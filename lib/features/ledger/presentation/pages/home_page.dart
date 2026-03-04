@@ -3,12 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/router.dart';
 import '../../../../config/supabase_config.dart';
+import '../../../../core/services/ad_service.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
@@ -60,9 +62,15 @@ class _HomePageState extends ConsumerState<HomePage> {
   DateTime? _lastBackPress;
   final GlobalKey<_CalendarTabViewState> _calendarTabKey = GlobalKey();
 
+  BannerAd? _bannerAd;
+  bool _isBannerAdLoaded = false;
+  int _adRetryCount = 0;
+  static const _maxAdRetries = 3;
+
   @override
   void initState() {
     super.initState();
+    _loadBannerAd();
 
     // 앱 시작 시 가계부 목록 로드 및 첫 번째 가계부 자동 생성
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,7 +82,39 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   void dispose() {
+    final ad = _bannerAd;
+    _bannerAd = null;
+    ad?.dispose();
     super.dispose();
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AdService.bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          if (mounted) {
+            setState(() => _isBannerAdLoaded = true);
+          }
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('배너 광고 로드 실패: ${error.code} - ${error.message}');
+          ad.dispose();
+          _bannerAd = null;
+          if (mounted) {
+            setState(() => _isBannerAdLoaded = false);
+          }
+          if (_adRetryCount < _maxAdRetries) {
+            _adRetryCount++;
+            Future.delayed(const Duration(seconds: 60), () {
+              if (mounted) _loadBannerAd();
+            });
+          }
+        },
+      ),
+    )..load();
   }
 
   void _handleInitialTransactionType() {
@@ -339,44 +379,69 @@ class _HomePageState extends ConsumerState<HomePage> {
           const SizedBox(width: Spacing.xs),
         ],
       ),
-      body: CenteredContent(
-        maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
-        child: IndexedStack(
-          index: _selectedIndex,
-          children: [
-            CalendarTabView(
-              key: _calendarTabKey,
-              selectedDate: selectedDate,
-              focusedDate: selectedDate,
-              showUserSummary: _showUserSummary,
-              onDateSelected: (date) {
-                ref.read(selectedDateProvider.notifier).state = date;
-                _handleDateSelected(date);
-              },
-              onPageChanged: (focusedDate) {
-                final currentDate = ref.read(selectedDateProvider);
-                if (currentDate.year != focusedDate.year ||
-                    currentDate.month != focusedDate.month) {
-                  ref.read(selectedDateProvider.notifier).state = focusedDate;
-                  setState(() {
-                    _showUserSummary = false;
-                  });
-                }
-              },
-              onRefresh: _refreshCalendarData,
+      body: Stack(
+        children: [
+          CenteredContent(
+            maxWidth: context.isTabletOrLarger ? 600 : double.infinity,
+            child: IndexedStack(
+              index: _selectedIndex,
+              children: [
+                CalendarTabView(
+                  key: _calendarTabKey,
+                  selectedDate: selectedDate,
+                  focusedDate: selectedDate,
+                  showUserSummary: _showUserSummary,
+                  onDateSelected: (date) {
+                    ref.read(selectedDateProvider.notifier).state = date;
+                    _handleDateSelected(date);
+                  },
+                  onPageChanged: (focusedDate) {
+                    final currentDate = ref.read(selectedDateProvider);
+                    if (currentDate.year != focusedDate.year ||
+                        currentDate.month != focusedDate.month) {
+                      ref.read(selectedDateProvider.notifier).state = focusedDate;
+                      setState(() {
+                        _showUserSummary = false;
+                      });
+                    }
+                  },
+                  onRefresh: _refreshCalendarData,
+                ),
+                const StatisticsTabView(),
+                const AssetTabView(),
+                const MoreTabView(),
+              ],
             ),
-            const StatisticsTabView(),
-            const AssetTabView(),
-            const MoreTabView(),
-          ],
-        ),
+          ),
+          if (_isBannerAdLoaded && _bannerAd != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: Center(
+                child: SizedBox(
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ),
+            ),
+        ],
       ),
       floatingActionButton: _selectedIndex == 1
           ? null
-          : FloatingActionButton(
-              onPressed: () => _showAddTransactionSheet(context, selectedDate),
-              elevation: 6,
-              child: const Icon(Icons.add, size: 28),
+          : AnimatedPadding(
+              duration: const Duration(milliseconds: 200),
+              padding: EdgeInsets.only(
+                bottom: _isBannerAdLoaded && _bannerAd != null
+                    ? _bannerAd!.size.height.toDouble()
+                    : 0,
+              ),
+              child: FloatingActionButton(
+                onPressed: () => _showAddTransactionSheet(context, selectedDate),
+                elevation: 6,
+                child: const Icon(Icons.add, size: 28),
+              ),
             ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: NavigationBar(
