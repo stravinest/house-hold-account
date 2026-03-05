@@ -34,9 +34,9 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
 
   @override
   void dispose() {
+    _resendTimer?.cancel();
     _emailController.dispose();
     _otpController.dispose();
-    _resendTimer?.cancel();
     super.dispose();
   }
 
@@ -44,6 +44,10 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
     _resendCooldown = 60;
     _resendTimer?.cancel();
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       if (_resendCooldown <= 0) {
         timer.cancel();
       } else {
@@ -369,6 +373,7 @@ class _ForgotPasswordPageState extends ConsumerState<ForgotPasswordPage> {
             appContext: context,
             length: _otpLength,
             controller: _otpController,
+            autoDisposeControllers: false,
             keyboardType: TextInputType.number,
             animationType: AnimationType.fade,
             autoFocus: true,
