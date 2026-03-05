@@ -112,5 +112,52 @@ void main() {
         expect(result3, equals('3,000'));
       });
     });
+
+    group('compact - 간략화 숫자 포맷', () {
+      test('100만 이상은 M 단위로 표기한다', () {
+        expect(NumberFormatUtils.compact(1000000), equals('1.0M'));
+        expect(NumberFormatUtils.compact(1500000), equals('1.5M'));
+        expect(NumberFormatUtils.compact(2000000), equals('2.0M'));
+        expect(NumberFormatUtils.compact(10000000), equals('10.0M'));
+      });
+
+      test('1000 이상 100만 미만은 K 단위로 표기한다', () {
+        expect(NumberFormatUtils.compact(1000), equals('1K'));
+        expect(NumberFormatUtils.compact(1500), equals('2K'));
+        // (999999 / 1000).toStringAsFixed(0) = '1000' -> '1000K' (구분기호 없음)
+        expect(NumberFormatUtils.compact(999999), equals('1000K'));
+      });
+
+      test('1000 미만은 천 단위 구분 기호로 포맷한다', () {
+        expect(NumberFormatUtils.compact(0), equals('0'));
+        expect(NumberFormatUtils.compact(1), equals('1'));
+        expect(NumberFormatUtils.compact(999), equals('999'));
+        expect(NumberFormatUtils.compact(500), equals('500'));
+      });
+
+      test('경계값 1000에서 K 단위로 전환한다', () {
+        expect(NumberFormatUtils.compact(999), equals('999'));
+        expect(NumberFormatUtils.compact(1000), equals('1K'));
+      });
+
+      test('경계값 100만에서 M 단위로 전환한다', () {
+        // 999999: K 단위, (999999/1000).toStringAsFixed(0) = '1000' -> '1000K'
+        expect(NumberFormatUtils.compact(999999), equals('1000K'));
+        expect(NumberFormatUtils.compact(1000000), equals('1.0M'));
+      });
+
+      test('소수점 첫째 자리까지 M 단위를 표기한다', () {
+        expect(NumberFormatUtils.compact(1100000), equals('1.1M'));
+        expect(NumberFormatUtils.compact(1900000), equals('1.9M'));
+        expect(NumberFormatUtils.compact(9500000), equals('9.5M'));
+      });
+
+      test('K 단위는 소수점 없이 정수로 표기한다', () {
+        // toStringAsFixed(0) 사용으로 반올림됨
+        expect(NumberFormatUtils.compact(1499), equals('1K'));
+        expect(NumberFormatUtils.compact(1500), equals('2K'));
+        expect(NumberFormatUtils.compact(9999), equals('10K'));
+      });
+    });
   });
 }

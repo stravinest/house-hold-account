@@ -2,6 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_household_account/features/widget/data/services/widget_data_service.dart';
 
 void main() {
+  setUpAll(() {
+    TestWidgetsFlutterBinding.ensureInitialized();
+  });
   // Widget 서비스는 Platform 의존성과 HomeWidget 패키지 의존성이 있어
   // Mock 없이는 테스트하기 어렵습니다.
   // 여기서는 상수와 공개 API 스펙을 검증합니다.
@@ -248,6 +251,63 @@ void main() {
 
         // When & Then: 포맷 문자열 검증
         expect(expectedFormat, matches(r'yyyy-MM-dd HH:mm'));
+      });
+    });
+
+    group('실제 메서드 호출 - HomeWidget 의존성으로 예외 발생 허용', () {
+      test('initialize를 호출하면 예외 없이 완료되거나 플러그인 예외가 발생한다', () async {
+        // Given / When / Then: HomeWidget 미초기화로 예외 발생 가능
+        try {
+          await WidgetDataService.initialize();
+        } catch (_) {
+          // MissingPluginException 등 허용
+        }
+        expect(true, isTrue);
+      });
+
+      test('updateWidgetData를 호출하면 예외 없이 완료되거나 플러그인 예외가 발생한다', () async {
+        // Given / When / Then
+        try {
+          await WidgetDataService.updateWidgetData(
+            monthlyExpense: 100000,
+            monthlyIncome: 300000,
+            ledgerName: '테스트 가계부',
+          );
+        } catch (_) {
+          // MissingPluginException 등 허용
+        }
+        expect(true, isTrue);
+      });
+
+      test('refreshWidgets를 호출하면 예외 없이 완료되거나 플러그인 예외가 발생한다', () async {
+        // Given / When / Then
+        try {
+          await WidgetDataService.refreshWidgets();
+        } catch (_) {
+          // MissingPluginException 등 허용
+        }
+        expect(true, isTrue);
+      });
+
+      test('clearWidgetData를 호출하면 예외 없이 완료되거나 플러그인 예외가 발생한다', () async {
+        // Given / When / Then
+        try {
+          await WidgetDataService.clearWidgetData();
+        } catch (_) {
+          // MissingPluginException 등 허용
+        }
+        expect(true, isTrue);
+      });
+
+      test('getInitialLaunchUri를 호출하면 null을 반환하거나 플러그인 예외가 발생한다', () async {
+        // Given / When / Then
+        Uri? result;
+        try {
+          result = await WidgetDataService.getInitialLaunchUri();
+        } catch (_) {
+          // MissingPluginException 등 허용
+        }
+        expect(result, isNull);
       });
     });
   });

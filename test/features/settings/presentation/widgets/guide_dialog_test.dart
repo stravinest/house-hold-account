@@ -121,5 +121,99 @@ void main() {
       // Then
       expect(find.byType(Divider), findsOneWidget);
     });
+
+    testWidgets('GuideDialog.show() 정적 메서드로 다이얼로그를 표시할 수 있다', (tester) async {
+      // Given: 버튼을 탭하면 GuideDialog.show()를 호출하는 위젯
+      await tester.pumpWidget(
+        _buildTestApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () => GuideDialog.show(context),
+                  child: const Text('가이드 열기'),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // When: 버튼 탭
+      await tester.tap(find.text('가이드 열기'));
+      await tester.pumpAndSettle();
+
+      // Then: 다이얼로그가 표시된다
+      expect(find.byType(GuideDialog), findsOneWidget);
+      expect(find.text('환영합니다!'), findsOneWidget);
+    });
+
+    testWidgets('GuideDialog.show()로 표시된 다이얼로그의 확인 버튼을 탭하면 닫힌다',
+        (tester) async {
+      // Given
+      await tester.pumpWidget(
+        _buildTestApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () => GuideDialog.show(context),
+                  child: const Text('가이드 열기'),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // When: 다이얼로그 열기
+      await tester.tap(find.text('가이드 열기'));
+      await tester.pumpAndSettle();
+      expect(find.byType(GuideDialog), findsOneWidget);
+
+      // When: 확인 버튼 탭
+      await tester.tap(find.text('확인'));
+      await tester.pumpAndSettle();
+
+      // Then: 다이얼로그가 닫힌다
+      expect(find.byType(GuideDialog), findsNothing);
+    });
+
+    testWidgets('barrierDismissible이 false이다 - 배경 탭으로 닫히지 않는다', (tester) async {
+      // Given
+      await tester.pumpWidget(
+        _buildTestApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () => GuideDialog.show(context),
+                  child: const Text('가이드 열기'),
+                );
+              },
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // When: 다이얼로그 열기
+      await tester.tap(find.text('가이드 열기'));
+      await tester.pumpAndSettle();
+      expect(find.byType(GuideDialog), findsOneWidget);
+
+      // When: 다이얼로그 바깥 영역 탭 (배경 탭)
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      // Then: 다이얼로그가 여전히 표시된다 (barrierDismissible=false)
+      expect(find.byType(GuideDialog), findsOneWidget);
+
+      // 정리: 확인 버튼으로 닫기
+      await tester.tap(find.text('확인'));
+      await tester.pumpAndSettle();
+    });
   });
 }

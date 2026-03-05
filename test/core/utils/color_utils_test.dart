@@ -69,6 +69,60 @@ void main() {
         final color = ColorUtils.parseHexColor('A8D8EA');
         expect(color, equals(ColorUtils.defaultColor));
       });
+
+      test('null을 전달하면 기본 색상을 반환한다', () {
+        final color = ColorUtils.parseHexColor(null);
+        expect(color, equals(ColorUtils.defaultColor));
+      });
+
+      test('null을 전달하고 fallback을 지정하면 fallback 색상을 반환한다', () {
+        const fallback = Color(0xFFFF0000);
+        final color = ColorUtils.parseHexColor(null, fallback: fallback);
+        expect(color, equals(fallback));
+      });
+
+      test('빈 문자열에 fallback을 지정하면 fallback 색상을 반환한다', () {
+        const fallback = Color(0xFF00FF00);
+        final color = ColorUtils.parseHexColor('', fallback: fallback);
+        expect(color, equals(fallback));
+      });
+
+      test('잘못된 HEX 코드에 fallback을 지정하면 fallback 색상을 반환한다', () {
+        const fallback = Color(0xFF0000FF);
+        final color = ColorUtils.parseHexColor('#GGGGGG', fallback: fallback);
+        expect(color, equals(fallback));
+      });
+
+      test('길이가 맞지 않는 HEX 코드에 fallback을 지정하면 fallback 색상을 반환한다', () {
+        const fallback = Color(0xFFAAAAAA);
+        final color = ColorUtils.parseHexColor('#12345', fallback: fallback);
+        expect(color, equals(fallback));
+      });
+
+      test('8자리 RRGGBBAA 형식의 HEX 코드를 올바르게 파싱한다', () {
+        // #RRGGBBAA -> alpha를 앞으로 이동해서 Color 생성
+        // #FF0000FF 는 RRGGBB=FF0000, AA=FF -> Color는 AARRGGBB = 0xFFFF0000
+        final color = ColorUtils.parseHexColor('#FF0000FF');
+        expect(color, equals(const Color(0xFFFF0000)));
+      });
+
+      test('투명도가 포함된 8자리 HEX 코드를 올바르게 파싱한다', () {
+        // #A8D8EA80 -> RRGGBB=A8D8EA, AA=80 -> Color = 0x80A8D8EA
+        final color = ColorUtils.parseHexColor('#A8D8EA80');
+        expect(color, equals(const Color(0x80A8D8EA)));
+      });
+
+      test('파싱 실패(예외 발생) 시 기본 색상을 반환한다', () {
+        // 16진수로 파싱 불가능한 문자가 포함된 경우
+        final color = ColorUtils.parseHexColor('#ZZZZZZ');
+        expect(color, equals(ColorUtils.defaultColor));
+      });
+
+      test('파싱 실패 시 fallback이 있으면 fallback을 반환한다', () {
+        const fallback = Color(0xFF123456);
+        final color = ColorUtils.parseHexColor('#ZZZZZZ', fallback: fallback);
+        expect(color, equals(fallback));
+      });
     });
 
     group('colorToHex', () {

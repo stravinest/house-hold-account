@@ -1,6 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_household_account/features/ledger/presentation/widgets/user_profile_summary.dart';
+import 'package:shared_household_account/features/transaction/presentation/providers/transaction_provider.dart';
+import 'package:shared_household_account/l10n/generated/app_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   group('UserChip 위젯 테스트', () {
@@ -158,6 +165,155 @@ void main() {
 
         await tester.pumpWidget(Container());
       }
+    });
+  });
+
+  group('UserProfileSummary 위젯 테스트', () {
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    Widget buildTestWidget(AsyncValue<Map<String, dynamic>> value) {
+      return ProviderScope(
+        overrides: [
+          monthlyTotalProvider.overrideWith((ref) async {
+            return value.when(
+              data: (d) => d,
+              loading: () => throw Exception('loading'),
+              error: (e, _) => throw e,
+            );
+          }),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(body: UserProfileSummary()),
+        ),
+      );
+    }
+
+    testWidgets('사용자 데이터가 있을 때 UserChip이 렌더링된다', (tester) async {
+      // Given
+      final total = {
+        'income': 100000,
+        'expense': 50000,
+        'users': {
+          'user-1': {
+            'displayName': '홍길동',
+            'income': 100000,
+            'expense': 50000,
+            'color': '#A8D8EA',
+          },
+        },
+      };
+
+      await tester.pumpWidget(
+        buildTestWidget(AsyncValue.data(total)),
+      );
+      await tester.pumpAndSettle();
+
+      // Then: UserChip이 렌더링됨
+      expect(find.byType(UserChip), findsOneWidget);
+      expect(find.text('홍길동'), findsOneWidget);
+    });
+
+    testWidgets('사용자가 없을 때 SizedBox.shrink를 렌더링한다', (tester) async {
+      // Given
+      final total = {
+        'income': 0,
+        'expense': 0,
+        'users': <String, dynamic>{},
+      };
+
+      await tester.pumpWidget(
+        buildTestWidget(AsyncValue.data(total)),
+      );
+      await tester.pumpAndSettle();
+
+      // Then: UserChip이 없어야 함
+      expect(find.byType(UserChip), findsNothing);
+    });
+
+    testWidgets('users가 null일 때 SizedBox.shrink를 렌더링한다', (tester) async {
+      // Given
+      final total = {
+        'income': 0,
+        'expense': 0,
+        'users': null,
+      };
+
+      await tester.pumpWidget(
+        buildTestWidget(AsyncValue.data(total)),
+      );
+      await tester.pumpAndSettle();
+
+      // Then: UserChip이 없어야 함
+      expect(find.byType(UserChip), findsNothing);
+    });
+
+    testWidgets('여러 사용자가 있을 때 각각의 UserChip이 렌더링된다', (tester) async {
+      // Given
+      final total = {
+        'income': 200000,
+        'expense': 100000,
+        'users': {
+          'user-1': {
+            'displayName': '홍길동',
+            'income': 100000,
+            'expense': 50000,
+            'color': '#A8D8EA',
+          },
+          'user-2': {
+            'displayName': '김철수',
+            'income': 100000,
+            'expense': 50000,
+            'color': '#FFB6A3',
+          },
+        },
+      };
+
+      await tester.pumpWidget(
+        buildTestWidget(AsyncValue.data(total)),
+      );
+      await tester.pumpAndSettle();
+
+      // Then: 2개의 UserChip이 렌더링됨
+      expect(find.byType(UserChip), findsNWidgets(2));
+      expect(find.text('홍길동'), findsOneWidget);
+      expect(find.text('김철수'), findsOneWidget);
+    });
+
+    testWidgets('로딩 상태일 때 SizedBox(height: 60)가 렌더링된다', (tester) async {
+      // Given: 완료되지 않는 future (Completer 사용)
+      final completer = Completer<Map<String, dynamic>>();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            monthlyTotalProvider.overrideWith((ref) => completer.future),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: UserProfileSummary()),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // Then: 로딩 상태에서는 SizedBox가 렌더링됨
+      expect(find.byType(SizedBox), findsWidgets);
+
+      // 정리: completer를 완료시켜 pending 상태 해제
+      completer.complete({});
+      await tester.pumpAndSettle();
     });
   });
 }

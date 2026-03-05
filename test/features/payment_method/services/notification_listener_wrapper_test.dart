@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:notification_listener_service/notification_event.dart';
 import 'package:shared_household_account/features/notification/data/services/notification_service.dart';
 import 'package:shared_household_account/features/notification/domain/entities/notification_type.dart';
 import 'package:shared_household_account/features/payment_method/data/models/learned_push_format_model.dart';
@@ -560,5 +561,705 @@ void main() {
         )).called(1);
       },
     );
+  });
+
+  group('onNotificationReceived - 분기 처리', () {
+    late NotificationListenerWrapper wrapper;
+
+    setUp(() {
+      wrapper = NotificationListenerWrapper.forTesting(
+        paymentMethodRepository: mockPaymentMethodRepo,
+        pendingTransactionRepository: mockPendingTxRepo,
+        transactionRepository: mockTransactionRepo,
+        learnedPushFormatRepository: mockLearnedPushFormatRepo,
+        categoryMappingService: mockCategoryMappingService,
+        duplicateCheckService: mockDuplicateCheckService,
+        notificationService: mockNotificationService,
+      );
+    });
+
+    ServiceNotificationEvent _makeEvent({
+      String? packageName,
+      String? title,
+      String? content,
+      bool? hasRemoved,
+    }) {
+      return ServiceNotificationEvent(
+        packageName: packageName,
+        title: title,
+        content: content,
+        hasRemoved: hasRemoved,
+      );
+    }
+
+    test('userId가 null이면 아무것도 처리하지 않는다', () async {
+      // Given: 초기화 안 된 상태 (userId=null)
+      final event = _makeEvent(
+        packageName: 'com.kbcard.cxh.appcard',
+        content: '승인 50,000원',
+      );
+
+      // When: 알림 수신
+      await wrapper.onNotificationReceived(event);
+
+      // Then: pendingTransaction 생성이 호출되지 않아야 한다
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+
+    test('hasRemoved=true이면 처리를 건너뛴다', () async {
+      // Given: 초기화된 wrapper
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      final event = _makeEvent(
+        packageName: 'com.kbcard.cxh.appcard',
+        content: '승인 50,000원',
+        hasRemoved: true,
+      );
+
+      // When
+      await wrapper.onNotificationReceived(event);
+
+      // Then: 처리 없이 종료
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+
+    test('packageName이 비어있으면 처리를 건너뛴다', () async {
+      // Given
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      final event = _makeEvent(
+        packageName: '',
+        content: '승인 50,000원',
+      );
+
+      // When
+      await wrapper.onNotificationReceived(event);
+
+      // Then
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+
+    test('content가 비어있으면 처리를 건너뛴다', () async {
+      // Given
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      final event = _makeEvent(
+        packageName: 'com.kbcard.cxh.appcard',
+        content: '',
+      );
+
+      // When
+      await wrapper.onNotificationReceived(event);
+
+      // Then
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+
+    test('SMS 앱(com.android.mms) 알림은 처리를 건너뛴다', () async {
+      // Given
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      final event = _makeEvent(
+        packageName: 'com.android.mms',
+        content: '승인 50,000원',
+      );
+
+      // When
+      await wrapper.onNotificationReceived(event);
+
+      // Then: SMS 앱은 Kotlin이 처리하므로 Dart에서 건너뜀
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+
+    test('비금융 앱 알림은 처리를 건너뛴다', () async {
+      // Given
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      final event = _makeEvent(
+        packageName: 'com.example.randomapp',
+        content: '새 메시지가 있습니다',
+      );
+
+      // When
+      await wrapper.onNotificationReceived(event);
+
+      // Then
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+
+    test('카카오톡이지만 금융 알림톡이 아니면 처리를 건너뛴다', () async {
+      // Given
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      final event = _makeEvent(
+        packageName: 'com.kakao.talk',
+        title: '홍길동',
+        content: '오늘 저녁 뭐 먹을까요?',
+      );
+
+      // When
+      await wrapper.onNotificationReceived(event);
+
+      // Then: 일반 카카오 메시지는 건너뜀
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+
+    test('금융 앱에서 autoSave 결제수단 없이 알림이 오면 매칭 없이 종료된다', () async {
+      // Given: 결제수단 없음
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      final event = _makeEvent(
+        packageName: 'com.kbcard.cxh.appcard',
+        title: 'KB국민카드',
+        content: '승인 50,000원 스타벅스',
+      );
+
+      // When
+      await wrapper.onNotificationReceived(event);
+
+      // Then: 매칭 결제수단 없으므로 pending transaction 미생성
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+
+    test('자기 앱 패키지 알림은 처리를 건너뛴다', () async {
+      // Given
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      final event = _makeEvent(
+        packageName: 'com.household.shared.shared_household_account',
+        title: '지출 알림',
+        content: '승인 10,000원 카페',
+      );
+
+      // When
+      await wrapper.onNotificationReceived(event);
+
+      // Then: 자기 앱 알림은 건너뜀
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+  });
+
+  group('isFinancialAlimtalkForTesting - 카카오 알림톡 3중 검증', () {
+    test('금융 채널 title + 거래 키워드 + 금액 패턴 모두 있으면 true를 반환한다', () {
+      // Given: 카카오페이 금융 알림톡
+      const title = '카카오페이';
+      const content = 'KB국민카드 승인 50,000원 스타벅스';
+
+      // When
+      final result = NotificationListenerWrapper.isFinancialAlimtalkForTesting(
+        title,
+        content,
+      );
+
+      // Then
+      expect(result, isTrue);
+    });
+
+    test('title이 금융 채널이 아니면 false를 반환한다', () {
+      // Given: 일반 카카오톡 메시지
+      const title = '홍길동';
+      const content = '승인 50,000원 스타벅스';
+
+      // When
+      final result = NotificationListenerWrapper.isFinancialAlimtalkForTesting(
+        title,
+        content,
+      );
+
+      // Then
+      expect(result, isFalse);
+    });
+
+    test('거래 키워드가 없으면 false를 반환한다', () {
+      // Given: 금융 채널이지만 거래 키워드 없음
+      const title = 'KB국민카드';
+      const content = '안녕하세요 고객님';
+
+      // When
+      final result = NotificationListenerWrapper.isFinancialAlimtalkForTesting(
+        title,
+        content,
+      );
+
+      // Then
+      expect(result, isFalse);
+    });
+
+    test('금액 패턴이 없으면 false를 반환한다', () {
+      // Given: 금융 채널 + 거래 키워드 있지만 금액 없음
+      const title = '신한카드';
+      const content = '카드 승인이 완료되었습니다';
+
+      // When
+      final result = NotificationListenerWrapper.isFinancialAlimtalkForTesting(
+        title,
+        content,
+      );
+
+      // Then
+      expect(result, isFalse);
+    });
+
+    test('title이 빈 문자열이면 false를 반환한다', () {
+      // Given
+      const title = '';
+      const content = '승인 50,000원 스타벅스';
+
+      // When
+      final result = NotificationListenerWrapper.isFinancialAlimtalkForTesting(
+        title,
+        content,
+      );
+
+      // Then
+      expect(result, isFalse);
+    });
+
+    test('content가 빈 문자열이면 false를 반환한다', () {
+      // Given
+      const title = 'KB국민카드';
+      const content = '';
+
+      // When
+      final result = NotificationListenerWrapper.isFinancialAlimtalkForTesting(
+        title,
+        content,
+      );
+
+      // Then
+      expect(result, isFalse);
+    });
+
+    test('카카오뱅크 title로도 금융 알림톡을 인식한다', () {
+      // Given
+      const title = '카카오뱅크';
+      const content = '출금 15,000원 편의점';
+
+      // When
+      final result = NotificationListenerWrapper.isFinancialAlimtalkForTesting(
+        title,
+        content,
+      );
+
+      // Then
+      expect(result, isTrue);
+    });
+  });
+
+  group('isFinancialAppForTesting - 금융 앱 패키지명 판별', () {
+    test('KB Pay 패키지명은 금융 앱으로 인식한다', () {
+      expect(
+        NotificationListenerWrapper.isFinancialAppForTesting(
+          'com.kbcard.cxh.appcard',
+        ),
+        isTrue,
+      );
+    });
+
+    test('카카오페이 패키지명은 금융 앱으로 인식한다', () {
+      expect(
+        NotificationListenerWrapper.isFinancialAppForTesting(
+          'com.kakaopay.app',
+        ),
+        isTrue,
+      );
+    });
+
+    test('일반 앱 패키지명은 금융 앱으로 인식하지 않는다', () {
+      expect(
+        NotificationListenerWrapper.isFinancialAppForTesting(
+          'com.example.normalapp',
+        ),
+        isFalse,
+      );
+    });
+
+    test('삼성페이 패키지명은 금융 앱으로 인식한다', () {
+      expect(
+        NotificationListenerWrapper.isFinancialAppForTesting(
+          'com.samsung.android.spay',
+        ),
+        isTrue,
+      );
+    });
+
+    test('토스 패키지명은 금융 앱으로 인식한다', () {
+      expect(
+        NotificationListenerWrapper.isFinancialAppForTesting(
+          'viva.republica.toss',
+        ),
+        isTrue,
+      );
+    });
+  });
+
+  group('refreshPaymentMethods - 캐시 갱신', () {
+    late NotificationListenerWrapper wrapper;
+
+    setUp(() {
+      wrapper = NotificationListenerWrapper.forTesting(
+        paymentMethodRepository: mockPaymentMethodRepo,
+        pendingTransactionRepository: mockPendingTxRepo,
+        transactionRepository: mockTransactionRepo,
+        learnedPushFormatRepository: mockLearnedPushFormatRepo,
+        categoryMappingService: mockCategoryMappingService,
+        duplicateCheckService: mockDuplicateCheckService,
+        notificationService: mockNotificationService,
+      );
+    });
+
+    test('초기화 후 refreshPaymentMethods 호출 시 결제수단을 재로딩한다', () async {
+      // Given
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      when(() => mockPaymentMethodRepo.getAutoSaveEnabledPaymentMethods(
+            any(),
+            any(),
+          )).thenAnswer((_) async => []);
+
+      // When
+      await wrapper.refreshPaymentMethods();
+
+      // Then: getAutoSaveEnabledPaymentMethods가 호출되어야 한다
+      verify(() => mockPaymentMethodRepo.getAutoSaveEnabledPaymentMethods(
+            'ledger-1',
+            'user-1',
+          )).called(1);
+    });
+  });
+
+  group('processManualNotification - 수동 알림 처리', () {
+    late NotificationListenerWrapper wrapper;
+
+    setUp(() {
+      wrapper = NotificationListenerWrapper.forTesting(
+        paymentMethodRepository: mockPaymentMethodRepo,
+        pendingTransactionRepository: mockPendingTxRepo,
+        transactionRepository: mockTransactionRepo,
+        learnedPushFormatRepository: mockLearnedPushFormatRepo,
+        categoryMappingService: mockCategoryMappingService,
+        duplicateCheckService: mockDuplicateCheckService,
+        notificationService: mockNotificationService,
+      );
+    });
+
+    test('userId가 null이면 처리를 건너뛴다', () async {
+      // Given: 초기화하지 않은 상태 (userId = null)
+      // wrapper는 초기화되지 않았으므로 userId == null
+
+      // When
+      await wrapper.processManualNotification(
+        packageName: 'com.kbcard.cxh.appcard',
+        title: 'KB국민카드',
+        content: '승인 50,000원 스타벅스',
+      );
+
+      // Then: 아무것도 호출되지 않아야 한다
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+
+    test('결제수단이 없으면 processManualNotification이 아무것도 처리하지 않는다', () async {
+      // Given: 결제수단 없이 초기화
+      wrapper.initializeForTesting(
+        userId: 'user-1',
+        ledgerId: 'ledger-1',
+        autoSavePaymentMethods: [],
+        learnedFormatsCache: {},
+      );
+
+      // When
+      await wrapper.processManualNotification(
+        packageName: 'com.kbcard.cxh.appcard',
+        title: 'KB국민카드',
+        content: '승인 50,000원 스타벅스',
+      );
+
+      // Then: pending transaction이 생성되지 않아야 한다
+      verifyNever(() => mockPendingTxRepo.createPendingTransaction(
+            ledgerId: any(named: 'ledgerId'),
+            paymentMethodId: any(named: 'paymentMethodId'),
+            userId: any(named: 'userId'),
+            sourceType: any(named: 'sourceType'),
+            sourceSender: any(named: 'sourceSender'),
+            sourceContent: any(named: 'sourceContent'),
+            sourceTimestamp: any(named: 'sourceTimestamp'),
+            parsedAmount: any(named: 'parsedAmount'),
+            parsedType: any(named: 'parsedType'),
+            parsedMerchant: any(named: 'parsedMerchant'),
+            parsedCategoryId: any(named: 'parsedCategoryId'),
+            parsedDate: any(named: 'parsedDate'),
+            duplicateHash: any(named: 'duplicateHash'),
+            isDuplicate: any(named: 'isDuplicate'),
+            status: any(named: 'status'),
+            isViewed: any(named: 'isViewed'),
+          ));
+    });
+  });
+
+  group('stopListening - 리스닝 중지', () {
+    late NotificationListenerWrapper wrapper;
+
+    setUp(() {
+      wrapper = NotificationListenerWrapper.forTesting(
+        paymentMethodRepository: mockPaymentMethodRepo,
+        pendingTransactionRepository: mockPendingTxRepo,
+        transactionRepository: mockTransactionRepo,
+        learnedPushFormatRepository: mockLearnedPushFormatRepo,
+        categoryMappingService: mockCategoryMappingService,
+        duplicateCheckService: mockDuplicateCheckService,
+        notificationService: mockNotificationService,
+      );
+    });
+
+    test('stopListening 호출 후 isListening이 false가 된다', () {
+      // Given: 초기 상태
+      expect(wrapper.isListening, isFalse);
+
+      // When
+      wrapper.stopListening();
+
+      // Then
+      expect(wrapper.isListening, isFalse);
+    });
+  });
+
+  group('financialChannelKeywordsForTesting - 키워드 목록', () {
+    test('금융 채널 키워드 목록이 비어있지 않다', () {
+      final keywords =
+          NotificationListenerWrapper.financialChannelKeywordsForTesting;
+      expect(keywords, isNotEmpty);
+      expect(keywords, contains('KB국민카드'));
+      expect(keywords, contains('카카오페이'));
+    });
+
+    test('알림톡 거래 키워드 목록이 비어있지 않다', () {
+      final keywords =
+          NotificationListenerWrapper.alimtalkTransactionKeywordsForTesting;
+      expect(keywords, isNotEmpty);
+      expect(keywords, contains('승인'));
+      expect(keywords, contains('결제'));
+    });
+
+    test('금액 패턴이 원 단위 금액을 인식한다', () {
+      final pattern = NotificationListenerWrapper.amountPatternForTesting;
+      expect(pattern.hasMatch('50,000원'), isTrue);
+      expect(pattern.hasMatch('1,000,000원'), isTrue);
+      expect(pattern.hasMatch('안녕하세요'), isFalse);
+    });
   });
 }

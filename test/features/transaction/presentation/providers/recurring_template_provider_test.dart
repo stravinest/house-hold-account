@@ -460,6 +460,99 @@ void main() {
     });
   });
 
+  group('groupedRecurringTemplatesProvider', () {
+    test('템플릿이 없을 때 빈 목록을 반환한다', () async {
+      when(() => mockRepository.getAllRecurringTemplates(
+              ledgerId: any(named: 'ledgerId')))
+          .thenAnswer((_) async => []);
+
+      final result =
+          await container.read(groupedRecurringTemplatesProvider.future);
+      expect(result, isEmpty);
+    });
+
+    test('현재 유저의 템플릿이 첫 번째 그룹으로 정렬된다', () async {
+      final templates = [
+        {
+          'id': 'template-1',
+          'user_id': 'other-user',
+          'type': 'expense',
+          'amount': 10000,
+          'is_active': true,
+          'recurring_type': 'monthly',
+        },
+        {
+          'id': 'template-2',
+          'user_id': 'current-user',
+          'type': 'income',
+          'amount': 3000000,
+          'is_active': true,
+          'recurring_type': 'monthly',
+        },
+      ];
+
+      when(() => mockRepository.getAllRecurringTemplates(
+              ledgerId: any(named: 'ledgerId')))
+          .thenAnswer((_) async => templates);
+
+      final currentUserContainer = ProviderContainer(
+        overrides: [
+          transactionRepositoryProvider.overrideWithValue(mockRepository),
+          selectedLedgerIdProvider.overrideWith((ref) => 'test-ledger-id'),
+        ],
+      );
+      addTearDown(currentUserContainer.dispose);
+
+      final result =
+          await currentUserContainer.read(groupedRecurringTemplatesProvider.future);
+
+      expect(result, isNotEmpty);
+      expect(result.length, 2);
+    });
+
+    test('같은 유저의 템플릿들이 같은 그룹으로 묶인다', () async {
+      final templates = [
+        {
+          'id': 'template-1',
+          'user_id': 'user-a',
+          'type': 'expense',
+          'amount': 10000,
+          'is_active': true,
+          'recurring_type': 'monthly',
+        },
+        {
+          'id': 'template-2',
+          'user_id': 'user-a',
+          'type': 'income',
+          'amount': 20000,
+          'is_active': true,
+          'recurring_type': 'monthly',
+        },
+        {
+          'id': 'template-3',
+          'user_id': 'user-b',
+          'type': 'expense',
+          'amount': 30000,
+          'is_active': true,
+          'recurring_type': 'monthly',
+        },
+      ];
+
+      when(() => mockRepository.getAllRecurringTemplates(
+              ledgerId: any(named: 'ledgerId')))
+          .thenAnswer((_) async => templates);
+
+      final result =
+          await container.read(groupedRecurringTemplatesProvider.future);
+
+      expect(result.length, 2);
+      final userAEntry = result.firstWhere((e) => e.key == 'user-a');
+      expect(userAEntry.value.length, 2);
+      final userBEntry = result.firstWhere((e) => e.key == 'user-b');
+      expect(userBEntry.value.length, 1);
+    });
+  });
+
   group('recurringTemplatesProvider', () {
     test('selectedLedgerId가 null이면 빈 목록을 반환한다', () async {
       final nullContainer = ProviderContainer(

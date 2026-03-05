@@ -172,5 +172,64 @@ void main() {
 
       expect(callbackInvoked, false);
     });
+
+    test('Postgres 변경 이벤트 발생 시 onSettingsChanged 콜백이 호출된다', () {
+      // Given: 콜백 캡처를 위한 변수
+      var callbackInvokedCount = 0;
+      final mockChannel = MockRealtimeChannel();
+      void Function(PostgresChangePayload)? capturedCallback;
+
+      when(() => mockClient.channel('fixed_expense_settings_changes_ledger-1_user-1'))
+          .thenReturn(mockChannel);
+
+      when(() => mockChannel.onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'house',
+            table: 'fixed_expense_settings',
+            filter: any(named: 'filter'),
+            callback: any(named: 'callback'),
+          )).thenAnswer((invocation) {
+        capturedCallback = invocation.namedArguments[#callback]
+            as void Function(PostgresChangePayload);
+        return mockChannel;
+      });
+
+      when(() => mockChannel.subscribe()).thenReturn(mockChannel);
+
+      // When: 구독 등록
+      repository.subscribeSettings(
+        ledgerId: 'ledger-1',
+        userId: 'user-1',
+        onSettingsChanged: () {
+          callbackInvokedCount++;
+        },
+      );
+
+      // Then: 캡처된 콜백을 직접 호출하면 onSettingsChanged가 실행된다
+      expect(capturedCallback, isNotNull);
+      capturedCallback!(PostgresChangePayload.fromPayload({
+        'schema': 'house',
+        'table': 'fixed_expense_settings',
+        'commit_timestamp': '2024-01-01T00:00:00Z',
+        'eventType': 'UPDATE',
+        'new': <String, dynamic>{},
+        'old': <String, dynamic>{},
+        'errors': null,
+      }));
+      expect(callbackInvokedCount, 1);
+    });
+
+    test('getSettings 조회 실패 시 에러를 전파한다', () async {
+      // Given: 예외를 발생시키는 Fake
+      when(() => mockClient.from('fixed_expense_settings')).thenAnswer(
+        (_) => throw Exception('DB connection failed'),
+      );
+
+      // When & Then
+      expect(
+        () => repository.getSettings('ledger-1', 'user-1'),
+        throwsException,
+      );
+    });
   });
 }

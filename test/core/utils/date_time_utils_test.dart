@@ -1,5 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_household_account/core/utils/date_time_utils.dart';
+import 'package:shared_household_account/l10n/generated/app_localizations.dart';
 
 void main() {
   group('DateTimeUtils', () {
@@ -267,6 +271,187 @@ void main() {
         expect(loadedDate.year, fromEpoch.year);
         expect(loadedDate.month, fromEpoch.month);
         expect(loadedDate.day, fromEpoch.day);
+      });
+    });
+
+    group('nowUtcIso - UTC ISO 8601 현재 시각', () {
+      test('UTC ISO 8601 형식의 문자열을 반환한다', () {
+        final result = DateTimeUtils.nowUtcIso();
+
+        // ISO 8601 형식: 2026-02-10T05:30:00.000Z
+        expect(result, matches(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}'));
+        expect(result, endsWith('Z'));
+      });
+
+      test('현재 시각과 유사한 UTC 시각을 반환한다', () {
+        final before = DateTime.now().toUtc();
+        final result = DateTimeUtils.nowUtcIso();
+        final after = DateTime.now().toUtc();
+
+        final parsed = DateTime.parse(result);
+        expect(parsed.isUtc, isTrue);
+        expect(parsed.isAfter(before.subtract(const Duration(seconds: 1))), isTrue);
+        expect(parsed.isBefore(after.add(const Duration(seconds: 1))), isTrue);
+      });
+
+      test('반환된 문자열이 DateTime.parse로 파싱 가능하다', () {
+        final result = DateTimeUtils.nowUtcIso();
+        expect(() => DateTime.parse(result), returnsNormally);
+      });
+    });
+
+    group('toUtcIso - DateTime을 UTC ISO 변환', () {
+      test('로컬 DateTime을 UTC ISO 8601 문자열로 변환한다', () {
+        final dt = DateTime(2026, 2, 10, 14, 30, 0);
+        final result = DateTimeUtils.toUtcIso(dt);
+
+        // 반환값이 Z로 끝나야 한다
+        expect(result, endsWith('Z'));
+        expect(result, isNotEmpty);
+      });
+
+      test('UTC DateTime을 전달하면 그대로 UTC ISO 문자열을 반환한다', () {
+        final utcDt = DateTime.utc(2026, 2, 10, 5, 30, 0);
+        final result = DateTimeUtils.toUtcIso(utcDt);
+
+        expect(result, equals('2026-02-10T05:30:00.000Z'));
+      });
+
+      test('변환된 문자열이 DateTime.parse로 파싱 가능하다', () {
+        final dt = DateTime(2026, 2, 10);
+        final result = DateTimeUtils.toUtcIso(dt);
+
+        expect(() => DateTime.parse(result), returnsNormally);
+        final parsed = DateTime.parse(result);
+        expect(parsed.isUtc, isTrue);
+      });
+    });
+
+    group('toLocalDateTime - UTC를 로컬로 변환', () {
+      test('UTC DateTime을 로컬 시간으로 변환한다', () {
+        final utcDt = DateTime.utc(2026, 2, 10, 5, 30, 0);
+        final result = DateTimeUtils.toLocalDateTime(utcDt);
+
+        expect(result.isUtc, isFalse, reason: '로컬 시간이어야 한다');
+        // 로컬 변환 후 toUtc()로 다시 비교
+        expect(result.toUtc(), equals(utcDt));
+      });
+
+      test('이미 로컬인 DateTime을 전달해도 정상 동작한다', () {
+        final localDt = DateTime(2026, 2, 10, 14, 30, 0);
+        final result = DateTimeUtils.toLocalDateTime(localDt);
+
+        expect(result.isUtc, isFalse);
+      });
+    });
+
+    group('formatLocal - UTC DateTime 포맷팅', () {
+      test('UTC DateTime을 로컬 시간으로 변환 후 포맷팅한다', () {
+        final utcDt = DateTime.utc(2026, 2, 10, 0, 0, 0);
+        final format = DateFormat('yyyy-MM-dd');
+        final result = DateTimeUtils.formatLocal(utcDt, format);
+
+        // 로컬 타임존 기준으로 날짜가 포맷됨
+        final expected = format.format(utcDt.toLocal());
+        expect(result, equals(expected));
+      });
+
+      test('시간 포맷도 로컬 기준으로 올바르게 변환된다', () {
+        final utcDt = DateTime.utc(2026, 2, 10, 5, 30, 0);
+        final format = DateFormat('HH:mm');
+        final result = DateTimeUtils.formatLocal(utcDt, format);
+
+        final expected = format.format(utcDt.toLocal());
+        expect(result, equals(expected));
+      });
+    });
+
+    group('weekdayLabel - 요일 레이블', () {
+      testWidgets('1~7 모든 요일 레이블을 올바르게 반환한다', (WidgetTester tester) async {
+        late AppLocalizations l10n;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Builder(
+              builder: (context) {
+                l10n = AppLocalizations.of(context);
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(DateTimeUtils.weekdayLabel(l10n, 1), equals(l10n.calendarDayMon));
+        expect(DateTimeUtils.weekdayLabel(l10n, 2), equals(l10n.calendarDayTue));
+        expect(DateTimeUtils.weekdayLabel(l10n, 3), equals(l10n.calendarDayWed));
+        expect(DateTimeUtils.weekdayLabel(l10n, 4), equals(l10n.calendarDayThu));
+        expect(DateTimeUtils.weekdayLabel(l10n, 5), equals(l10n.calendarDayFri));
+        expect(DateTimeUtils.weekdayLabel(l10n, 6), equals(l10n.calendarDaySat));
+        expect(DateTimeUtils.weekdayLabel(l10n, 7), equals(l10n.calendarDaySun));
+      });
+
+      testWidgets('범위 외 요일 번호는 빈 문자열을 반환한다', (WidgetTester tester) async {
+        late AppLocalizations l10n;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Builder(
+              builder: (context) {
+                l10n = AppLocalizations.of(context);
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(DateTimeUtils.weekdayLabel(l10n, 0), equals(''));
+        expect(DateTimeUtils.weekdayLabel(l10n, 8), equals(''));
+        expect(DateTimeUtils.weekdayLabel(l10n, -1), equals(''));
+      });
+
+      testWidgets('DateTime.weekday 값으로 요일 레이블을 올바르게 가져온다', (WidgetTester tester) async {
+        late AppLocalizations l10n;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Builder(
+              builder: (context) {
+                l10n = AppLocalizations.of(context);
+                return const SizedBox.shrink();
+              },
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // 2026-02-09는 월요일 (weekday = 1)
+        final monday = DateTime(2026, 2, 9);
+        expect(monday.weekday, equals(1));
+        final label = DateTimeUtils.weekdayLabel(l10n, monday.weekday);
+        expect(label, equals(l10n.calendarDayMon));
       });
     });
   });

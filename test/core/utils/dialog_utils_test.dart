@@ -578,5 +578,291 @@ void main() {
         expect(result, isNull);
       });
     });
+
+    group('showCategoryDeleteConfirmation', () {
+      testWidgets('카테고리 이름이 강조 박스에 표시된다', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      DialogUtils.showCategoryDeleteConfirmation(
+                        context,
+                        categoryName: '식비',
+                      );
+                    },
+                    child: const Text('Show Dialog'),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Dialog'));
+        await tester.pumpAndSettle();
+
+        // 카테고리 이름이 표시되는지 확인
+        expect(find.text('식비'), findsOneWidget);
+        // Dialog 위젯이 표시되는지 확인
+        expect(find.byType(Dialog), findsOneWidget);
+      });
+
+      testWidgets('삭제 버튼을 누르면 true를 반환한다', (WidgetTester tester) async {
+        bool? result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () async {
+                      result = await DialogUtils.showCategoryDeleteConfirmation(
+                        context,
+                        categoryName: '교통비',
+                      );
+                    },
+                    child: const Text('Show Dialog'),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Dialog'));
+        await tester.pumpAndSettle();
+
+        // 삭제 버튼 클릭
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(Dialog)),
+        );
+        await tester.tap(find.text(l10n.commonDelete));
+        await tester.pumpAndSettle();
+
+        expect(result, equals(true));
+        expect(find.byType(Dialog), findsNothing);
+      });
+
+      testWidgets('취소 버튼을 누르면 null을 반환한다', (WidgetTester tester) async {
+        bool? result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () async {
+                      result = await DialogUtils.showCategoryDeleteConfirmation(
+                        context,
+                        categoryName: '의류',
+                      );
+                    },
+                    child: const Text('Show Dialog'),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Dialog'));
+        await tester.pumpAndSettle();
+
+        // 취소 버튼 클릭
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(Dialog)),
+        );
+        await tester.tap(find.text(l10n.commonCancel));
+        await tester.pumpAndSettle();
+
+        expect(result, isNull);
+        expect(find.byType(Dialog), findsNothing);
+      });
+
+      testWidgets('OutlinedButton과 ElevatedButton이 표시된다', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      DialogUtils.showCategoryDeleteConfirmation(
+                        context,
+                        categoryName: '여가',
+                      );
+                    },
+                    child: const Text('Show Dialog'),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Dialog'));
+        await tester.pumpAndSettle();
+
+        // 다이얼로그 내에 취소(Outlined)와 삭제(Elevated) 버튼이 있어야 한다
+        expect(find.byType(OutlinedButton), findsOneWidget);
+        expect(find.byType(ElevatedButton), findsNWidgets(2)); // Show Dialog 버튼 + 다이얼로그 삭제 버튼
+      });
+    });
+
+    group('showFixedExpenseCategoryDeleteConfirmation', () {
+      testWidgets('고정비 카테고리 이름이 강조 박스에 표시된다', (WidgetTester tester) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () {
+                      DialogUtils.showFixedExpenseCategoryDeleteConfirmation(
+                        context,
+                        categoryName: '월세',
+                      );
+                    },
+                    child: const Text('Show Dialog'),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Dialog'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('월세'), findsOneWidget);
+        expect(find.byType(Dialog), findsOneWidget);
+      });
+
+      testWidgets('삭제 버튼을 누르면 true를 반환한다', (WidgetTester tester) async {
+        bool? result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () async {
+                      result = await DialogUtils.showFixedExpenseCategoryDeleteConfirmation(
+                        context,
+                        categoryName: '공과금',
+                      );
+                    },
+                    child: const Text('Show Dialog'),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Dialog'));
+        await tester.pumpAndSettle();
+
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(Dialog)),
+        );
+        await tester.tap(find.text(l10n.commonDelete));
+        await tester.pumpAndSettle();
+
+        expect(result, equals(true));
+        expect(find.byType(Dialog), findsNothing);
+      });
+
+      testWidgets('취소 버튼을 누르면 null을 반환한다', (WidgetTester tester) async {
+        bool? result;
+
+        await tester.pumpWidget(
+          MaterialApp(
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('ko')],
+            home: Scaffold(
+              body: Builder(
+                builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () async {
+                      result = await DialogUtils.showFixedExpenseCategoryDeleteConfirmation(
+                        context,
+                        categoryName: '보험료',
+                      );
+                    },
+                    child: const Text('Show Dialog'),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Show Dialog'));
+        await tester.pumpAndSettle();
+
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(Dialog)),
+        );
+        await tester.tap(find.text(l10n.commonCancel));
+        await tester.pumpAndSettle();
+
+        expect(result, isNull);
+        expect(find.byType(Dialog), findsNothing);
+      });
+    });
   });
 }

@@ -203,4 +203,214 @@ void main() {
       // 에러 없이 완료되면 성공
     });
   });
+
+  group('LedgerRepository - addMember', () {
+    test('멤버 추가 시 올바른 데이터로 INSERT 쿼리를 실행한다', () async {
+      // Given
+      when(() => mockClient.from('ledger_members'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: []));
+
+      // When & Then: 에러 없이 완료되면 성공
+      await repository.addMember(
+        ledgerId: 'ledger-1',
+        userId: 'user-2',
+        role: 'member',
+      );
+    });
+
+    test('owner 역할로 멤버를 추가할 수 있다', () async {
+      // Given
+      when(() => mockClient.from('ledger_members'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: []));
+
+      // When & Then: 에러 없이 완료되면 성공
+      await repository.addMember(
+        ledgerId: 'ledger-1',
+        userId: 'user-3',
+        role: 'owner',
+      );
+    });
+  });
+
+  group('LedgerRepository - updateMemberRole', () {
+    test('멤버 역할 변경 시 올바른 ID로 UPDATE 쿼리를 실행한다', () async {
+      // Given
+      when(() => mockClient.from('ledger_members'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: []));
+
+      // When & Then: 에러 없이 완료되면 성공
+      await repository.updateMemberRole(
+        memberId: 'member-1',
+        role: 'admin',
+      );
+    });
+  });
+
+  group('LedgerRepository - removeMember', () {
+    test('멤버 제거 시 올바른 ID로 DELETE 쿼리를 실행한다', () async {
+      // Given
+      when(() => mockClient.from('ledger_members'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: []));
+
+      // When & Then: 에러 없이 완료되면 성공
+      await repository.removeMember('member-1');
+    });
+  });
+
+  group('LedgerRepository - getLedger (null 케이스)', () {
+    test('로그인하지 않아도 getLedger를 호출할 수 있다', () async {
+      // Given: 인증 없이도 getLedger는 호출 가능
+      when(() => mockClient.from('ledgers')).thenAnswer((_) =>
+          FakeSupabaseQueryBuilder(
+            selectData: [],
+            maybeSingleData: null,
+            hasMaybeSingleData: true,
+          ));
+
+      // When
+      final result = await repository.getLedger('nonexistent-id');
+
+      // Then
+      expect(result, isNull);
+    });
+  });
+
+  group('LedgerRepository - getLedgers (null ledger 필터링)', () {
+    test('ledger 필드가 null인 멤버 항목은 필터링된다', () async {
+      // Given: ledger가 null인 항목 포함
+      final mockData = <Map<String, dynamic>>[
+        {
+          'ledger': {
+            'id': 'ledger-1',
+            'name': '우리 가족',
+            'description': null,
+            'currency': 'KRW',
+            'owner_id': 'user-123',
+            'is_shared': false,
+            'created_at': '2024-01-01T00:00:00Z',
+            'updated_at': '2024-01-01T00:00:00Z',
+          },
+        },
+        {
+          'ledger': null, // null인 항목 - 필터링되어야 함
+        },
+      ];
+
+      when(() => mockClient.from('ledger_members'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: mockData));
+
+      // When
+      final result = await repository.getLedgers();
+
+      // Then: null인 항목은 제외
+      expect(result.length, 1);
+      expect(result[0].name, '우리 가족');
+    });
+  });
+
+  group('LedgerRepository - updateLedger (isShared 포함)', () {
+    test('isShared 값을 업데이트할 수 있다', () async {
+      // Given
+      final mockResponse = <String, dynamic>{
+        'id': 'ledger-1',
+        'name': '가계부',
+        'description': null,
+        'currency': 'KRW',
+        'owner_id': 'user-123',
+        'is_shared': true,
+        'created_at': '2024-01-01T00:00:00Z',
+        'updated_at': '2024-01-15T00:00:00Z',
+      };
+
+      when(() => mockClient.from('ledgers')).thenAnswer((_) =>
+          FakeSupabaseQueryBuilder(
+            selectData: [mockResponse],
+            singleData: mockResponse,
+          ));
+
+      // When
+      final result = await repository.updateLedger(
+        id: 'ledger-1',
+        isShared: true,
+      );
+
+      // Then
+      expect(result.isShared, isTrue);
+    });
+  });
+
+  group('LedgerRepository - createLedger (로그인 안 된 경우)', () {
+    test('로그인되지 않은 경우 예외를 던진다', () async {
+      // Given: currentUser가 null
+      when(() => mockAuth.currentUser).thenReturn(null);
+
+      // When & Then
+      expect(
+        () => repository.createLedger(name: '테스트', currency: 'KRW'),
+        throwsA(isA<Exception>()),
+      );
+    });
+  });
+
+  group('LedgerRepository - updateLedger (currency 포함)', () {
+    test('currency 값을 업데이트할 수 있다', () async {
+      // Given
+      final mockResponse = <String, dynamic>{
+        'id': 'ledger-1',
+        'name': '가계부',
+        'description': null,
+        'currency': 'USD',
+        'owner_id': 'user-123',
+        'is_shared': false,
+        'created_at': '2024-01-01T00:00:00Z',
+        'updated_at': '2024-01-15T00:00:00Z',
+      };
+
+      when(() => mockClient.from('ledgers')).thenAnswer((_) =>
+          FakeSupabaseQueryBuilder(
+            selectData: [mockResponse],
+            singleData: mockResponse,
+          ));
+
+      // When
+      final result = await repository.updateLedger(
+        id: 'ledger-1',
+        currency: 'USD',
+      );
+
+      // Then
+      expect(result.currency, 'USD');
+    });
+  });
+
+  group('LedgerRepository - LedgerMemberModel 변환', () {
+    test('getMembers 응답에서 LedgerMemberModel 리스트가 올바르게 생성된다', () async {
+      // Given: 프로필 정보가 있는 멤버 데이터
+      final mockData = <Map<String, dynamic>>[
+        {
+          'id': 'member-1',
+          'ledger_id': 'ledger-1',
+          'user_id': 'user-1',
+          'role': 'owner',
+          'created_at': '2024-01-01T00:00:00Z',
+          'profiles': {
+            'display_name': '홍길동',
+            'email': 'hong@test.com',
+            'avatar_url': null,
+          },
+        },
+      ];
+
+      when(() => mockClient.from('ledger_members'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: mockData));
+
+      // When
+      final result = await repository.getMembers('ledger-1');
+
+      // Then
+      expect(result.length, 1);
+      expect(result[0].userId, 'user-1');
+      expect(result[0].role, 'owner');
+    });
+  });
 }

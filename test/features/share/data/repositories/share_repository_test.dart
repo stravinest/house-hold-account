@@ -452,5 +452,363 @@ void main() {
       expect(result, isA<List<LedgerInvite>>());
       expect(result.length, 2);
     });
+
+    test('초대 목록이 없으면 빈 리스트를 반환한다', () async {
+      when(() => mockClient.from('ledger_invites')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(selectData: []),
+      );
+
+      final result = await repository.getSentInvites(testLedgerId);
+
+      expect(result, isEmpty);
+    });
+  });
+
+  // ================================================================
+  // hasPendingInvite
+  // ================================================================
+  group('ShareRepository - hasPendingInvite', () {
+    test('대기 중인 초대가 존재하면 true를 반환한다', () async {
+      when(() => mockClient.from('ledger_invites')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(
+          maybeSingleData: {'id': testInviteId},
+          hasMaybeSingleData: true,
+        ),
+      );
+
+      final result = await repository.hasPendingInvite(
+        ledgerId: testLedgerId,
+        email: testInviteeEmail,
+      );
+
+      expect(result, isTrue);
+    });
+
+    test('대기 중인 초대가 없으면 false를 반환한다', () async {
+      when(() => mockClient.from('ledger_invites')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(
+          hasMaybeSingleData: true,
+          maybeSingleData: null,
+        ),
+      );
+
+      final result = await repository.hasPendingInvite(
+        ledgerId: testLedgerId,
+        email: testInviteeEmail,
+      );
+
+      expect(result, isFalse);
+    });
+  });
+
+  // ================================================================
+  // getMembers
+  // ================================================================
+  group('ShareRepository - getMembers', () {
+    test('가계부의 멤버 목록을 반환한다', () async {
+      final memberList = [
+        {
+          'id': 'member-1',
+          'ledger_id': testLedgerId,
+          'user_id': testUserId,
+          'role': 'owner',
+          'created_at': '2026-01-01T00:00:00.000',
+          'profiles': {
+            'email': testUserEmail,
+            'display_name': '홍길동',
+            'avatar_url': null,
+            'color': null,
+          },
+        },
+        {
+          'id': 'member-2',
+          'ledger_id': testLedgerId,
+          'user_id': 'user-456',
+          'role': 'admin',
+          'created_at': '2026-01-02T00:00:00.000',
+          'profiles': {
+            'email': testInviteeEmail,
+            'display_name': '김철수',
+            'avatar_url': null,
+            'color': '#FF0000',
+          },
+        },
+      ];
+
+      when(() => mockClient.from('ledger_members')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(selectData: memberList),
+      );
+
+      final result = await repository.getMembers(testLedgerId);
+
+      expect(result.length, 2);
+      expect(result[0].role, 'owner');
+      expect(result[0].email, testUserEmail);
+      expect(result[1].role, 'admin');
+      expect(result[1].color, '#FF0000');
+    });
+
+    test('멤버가 없으면 빈 리스트를 반환한다', () async {
+      when(() => mockClient.from('ledger_members')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(selectData: []),
+      );
+
+      final result = await repository.getMembers(testLedgerId);
+
+      expect(result, isEmpty);
+    });
+  });
+
+  // ================================================================
+  // updateMemberRole
+  // ================================================================
+  group('ShareRepository - updateMemberRole', () {
+    test('멤버 역할 변경이 정상적으로 완료된다', () async {
+      when(() => mockClient.from('ledger_members')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(),
+      );
+
+      await expectLater(
+        repository.updateMemberRole(
+          ledgerId: testLedgerId,
+          userId: 'user-456',
+          role: 'admin',
+        ),
+        completes,
+      );
+
+      verify(() => mockClient.from('ledger_members')).called(1);
+    });
+  });
+
+  // ================================================================
+  // removeMember
+  // ================================================================
+  group('ShareRepository - removeMember', () {
+    test('멤버 제거 시 ledger_members에서 삭제하고 초대 상태를 left로 변경한다', () async {
+      // ledger_members 삭제 + profiles 조회 + ledger_invites 업데이트
+      var fromCallCount = 0;
+
+      when(() => mockClient.from('ledger_members')).thenAnswer((_) {
+        fromCallCount++;
+        return FakeSupabaseQueryBuilder();
+      });
+
+      when(() => mockClient.from('profiles')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(
+          maybeSingleData: {'email': testInviteeEmail},
+          hasMaybeSingleData: true,
+        ),
+      );
+
+      when(() => mockClient.from('ledger_invites')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(),
+      );
+
+      await expectLater(
+        repository.removeMember(
+          ledgerId: testLedgerId,
+          userId: 'user-456',
+        ),
+        completes,
+      );
+    });
+
+    test('프로필 조회 결과가 null이어도 정상 완료된다', () async {
+      when(() => mockClient.from('ledger_members')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(),
+      );
+
+      when(() => mockClient.from('profiles')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(
+          hasMaybeSingleData: true,
+          maybeSingleData: null,
+        ),
+      );
+
+      await expectLater(
+        repository.removeMember(
+          ledgerId: testLedgerId,
+          userId: 'user-456',
+        ),
+        completes,
+      );
+    });
+  });
+
+  // ================================================================
+  // rejectInvite
+  // ================================================================
+  group('ShareRepository - rejectInvite', () {
+    test('초대 거부 시 상태를 rejected로 업데이트한다', () async {
+      final inviteJson = buildInviteJson(status: 'pending');
+
+      when(() => mockClient.from('ledger_invites')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(
+          singleData: inviteJson,
+          selectData: [inviteJson],
+        ),
+      );
+
+      await expectLater(
+        repository.rejectInvite(testInviteId),
+        completes,
+      );
+
+      verify(() => mockClient.from('ledger_invites')).called(greaterThan(0));
+    });
+  });
+
+  // ================================================================
+  // leaveLedger
+  // ================================================================
+  group('ShareRepository - leaveLedger', () {
+    test('현재 로그인 사용자가 가계부를 탈퇴한다', () async {
+      when(() => mockClient.from('ledger_members')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(),
+      );
+
+      when(() => mockClient.from('profiles')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(
+          maybeSingleData: {'email': testUserEmail},
+          hasMaybeSingleData: true,
+        ),
+      );
+
+      when(() => mockClient.from('ledger_invites')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(),
+      );
+
+      await expectLater(
+        repository.leaveLedger(testLedgerId),
+        completes,
+      );
+    });
+
+    test('로그인된 사용자가 없으면 예외가 발생한다', () async {
+      when(() => mockAuth.currentUser).thenReturn(null);
+
+      expect(
+        () => repository.leaveLedger(testLedgerId),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            '예외 메시지',
+            contains('Login required'),
+          ),
+        ),
+      );
+    });
+  });
+
+  // ================================================================
+  // getReceivedInvites - 이메일이 빈 문자열인 경우
+  // ================================================================
+  group('ShareRepository - getReceivedInvites 추가 케이스', () {
+    test('사용자 이메일이 빈 문자열이면 빈 리스트를 반환한다', () async {
+      when(() => mockUser.email).thenReturn('');
+
+      final result = await repository.getReceivedInvites();
+
+      expect(result, isEmpty);
+    });
+  });
+
+  // ================================================================
+  // createInvite - 추가 케이스
+  // ================================================================
+  group('ShareRepository - createInvite 추가 케이스', () {
+    test('이미 대기 중인 초대가 있으면 예외가 발생한다', () async {
+      // findUserByEmail: 사용자 존재
+      when(
+        () => mockClient.rpc(
+          'check_user_exists_by_email',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => FakePostgrestFilterBuilder<dynamic>(
+            [{'id': 'user-456', 'email': testInviteeEmail}],
+          ));
+
+      // isAlreadyMember -> 멤버 아님
+      when(() => mockClient.from('ledger_members')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(
+          hasMaybeSingleData: true,
+          maybeSingleData: null,
+        ),
+      );
+
+      // hasPendingInvite -> 대기 중인 초대 존재
+      when(() => mockClient.from('ledger_invites')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(
+          maybeSingleData: {'id': testInviteId},
+          hasMaybeSingleData: true,
+        ),
+      );
+
+      expect(
+        () => repository.createInvite(
+          ledgerId: testLedgerId,
+          inviteeEmail: testInviteeEmail,
+        ),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            '예외 메시지',
+            contains('Invitation already sent'),
+          ),
+        ),
+      );
+    });
+
+    test('멤버 수가 최대치에 도달하면 예외가 발생한다', () async {
+      // findUserByEmail: 사용자 존재
+      when(
+        () => mockClient.rpc(
+          'check_user_exists_by_email',
+          params: any(named: 'params'),
+        ),
+      ).thenAnswer((_) => FakePostgrestFilterBuilder<dynamic>(
+            [{'id': 'user-456', 'email': testInviteeEmail}],
+          ));
+
+      var ledgerMembersCallCount = 0;
+
+      when(() => mockClient.from('ledger_members')).thenAnswer((_) {
+        ledgerMembersCallCount++;
+        if (ledgerMembersCallCount == 1) {
+          // isAlreadyMember -> 멤버 아님
+          return FakeSupabaseQueryBuilder(
+            hasMaybeSingleData: true,
+            maybeSingleData: null,
+          );
+        }
+        // getMemberCount -> 최대 멤버 수
+        return FakeSupabaseQueryBuilder(
+          selectData: [{'id': 'member-1'}, {'id': 'member-2'}],
+        );
+      });
+
+      // hasPendingInvite -> 대기 중인 초대 없음
+      when(() => mockClient.from('ledger_invites')).thenAnswer(
+        (_) => FakeSupabaseQueryBuilder(
+          hasMaybeSingleData: true,
+          maybeSingleData: null,
+        ),
+      );
+
+      expect(
+        () => repository.createInvite(
+          ledgerId: testLedgerId,
+          inviteeEmail: testInviteeEmail,
+        ),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            '예외 메시지',
+            contains('Maximum'),
+          ),
+        ),
+      );
+    });
   });
 }

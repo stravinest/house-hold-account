@@ -31,6 +31,8 @@ class FakeQueryBuilder implements Future<List<Map<String, dynamic>>> {
   FakeQueryBuilder limit(int count) => this;
   FakeQueryBuilder order(String column, {bool ascending = false}) => this;
   FakeQueryBuilder not(String column, String operator, dynamic value) => this;
+  FakeQueryBuilder insert(Map<String, dynamic> data) => this;
+  FakeQueryBuilder delete() => this;
 
   Future<dynamic> maybeSingle() async => singleResult;
   Future<Map<String, dynamic>> single() async => singleResult ?? {};
@@ -672,6 +674,298 @@ void main() {
 
         // Then: paymentMethodId 기반 매핑이 정상 동작하여 카테고리 반환
         expect(categoryId, equals('food-id'));
+      });
+    });
+
+    group('addRule - 사용자 정의 규칙 추가', () {
+      test('문자열 패턴으로 규칙을 추가하면 MerchantCategoryRule을 반환한다', () async {
+        // Given: 규칙 추가 후 DB에서 반환될 데이터
+        final ruleData = {
+          'id': 'rule-new',
+          'ledger_id': 'ledger-1',
+          'merchant_pattern': '스타벅스',
+          'category_id': 'cat-food',
+          'is_regex': false,
+          'priority': 10,
+          'created_at': '2026-01-01T00:00:00Z',
+        };
+        final rulesBuilder = FakeQueryBuilder()..singleResult = ruleData;
+        fakeClient.setupTable('merchant_category_rules', rulesBuilder);
+
+        // When
+        final result = await service.addRule(
+          ledgerId: 'ledger-1',
+          merchantPattern: '스타벅스',
+          categoryId: 'cat-food',
+          priority: 10,
+        );
+
+        // Then
+        expect(result, isA<MerchantCategoryRule>());
+        expect(result.merchantPattern, equals('스타벅스'));
+        expect(result.categoryId, equals('cat-food'));
+        expect(result.isRegex, isFalse);
+        expect(result.priority, equals(10));
+      });
+
+      test('정규식 패턴으로 규칙을 추가할 수 있다', () async {
+        // Given
+        final ruleData = {
+          'id': 'rule-regex',
+          'ledger_id': 'ledger-1',
+          'merchant_pattern': r'스타벅스|이디야',
+          'category_id': 'cat-cafe',
+          'is_regex': true,
+          'priority': 20,
+          'created_at': '2026-01-01T00:00:00Z',
+        };
+        final rulesBuilder = FakeQueryBuilder()..singleResult = ruleData;
+        fakeClient.setupTable('merchant_category_rules', rulesBuilder);
+
+        // When
+        final result = await service.addRule(
+          ledgerId: 'ledger-1',
+          merchantPattern: r'스타벅스|이디야',
+          categoryId: 'cat-cafe',
+          isRegex: true,
+          priority: 20,
+        );
+
+        // Then
+        expect(result.isRegex, isTrue);
+        expect(result.merchantPattern, equals(r'스타벅스|이디야'));
+        expect(result.priority, equals(20));
+      });
+
+      test('규칙 추가 후 캐시가 무효화된다', () async {
+        // Given: 기존 규칙 로드로 캐시를 채워두고 새 규칙 추가
+        final existingRule = {
+          'id': 'rule-old',
+          'ledger_id': 'ledger-1',
+          'merchant_pattern': '이디야',
+          'category_id': 'cat-cafe',
+          'is_regex': false,
+          'priority': 5,
+          'created_at': '2026-01-01T00:00:00Z',
+        };
+        final newRule = {
+          'id': 'rule-new',
+          'ledger_id': 'ledger-1',
+          'merchant_pattern': '투썸',
+          'category_id': 'cat-cafe',
+          'is_regex': false,
+          'priority': 5,
+          'created_at': '2026-01-01T00:00:00Z',
+        };
+        // 첫 번째 호출(findCategoryId)은 기존 규칙 반환, 두 번째(addRule)는 새 규칙 반환
+        final rulesBuilder = FakeQueryBuilder()
+          ..listResult = [existingRule]
+          ..singleResult = newRule;
+        fakeClient.setupTable('merchant_category_rules', rulesBuilder);
+        fakeClient.setupTable('categories', FakeQueryBuilder());
+
+        // 캐시 워밍업 (findCategoryId 호출로 캐시 저장)
+        await service.findCategoryId('이디야커피', 'ledger-1', useCache: true);
+
+        // When: 새 규칙 추가 (캐시 무효화 발생해야 함)
+        final result = await service.addRule(
+          ledgerId: 'ledger-1',
+          merchantPattern: '투썸',
+          categoryId: 'cat-cafe',
+        );
+
+        // Then: 새 규칙이 반환되고 에러 없이 완료
+        expect(result.merchantPattern, equals('투썸'));
+      });
+    });
+
+    group('deleteRule - 사용자 정의 규칙 삭제', () {
+      test('규칙 ID로 규칙을 삭제한다', () async {
+        // Given: delete 쿼리에 대한 응답
+        final rulesBuilder = FakeQueryBuilder()..listResult = [];
+        fakeClient.setupTable('merchant_category_rules', rulesBuilder);
+
+        // When
+        await service.deleteRule('rule-1', 'ledger-1');
+
+        // Then: 에러 없이 완료
+      });
+
+      test('규칙 삭제 후 캐시가 무효화된다', () async {
+        // Given: 기존 규칙으로 캐시를 채운 후 삭제
+        final existingRule = {
+          'id': 'rule-1',
+          'ledger_id': 'ledger-1',
+          'merchant_pattern': '스타벅스',
+          'category_id': 'cat-food',
+          'is_regex': false,
+          'priority': 10,
+          'created_at': '2026-01-01T00:00:00Z',
+        };
+        final rulesBuilder = FakeQueryBuilder()..listResult = [existingRule];
+        fakeClient.setupTable('merchant_category_rules', rulesBuilder);
+        fakeClient.setupTable('categories', FakeQueryBuilder());
+
+        // 캐시 워밍업
+        await service.findCategoryId('스타벅스', 'ledger-1', useCache: true);
+
+        // When: 규칙 삭제 (캐시 무효화 발생해야 함)
+        await service.deleteRule('rule-1', 'ledger-1');
+
+        // Then: 에러 없이 완료
+      });
+    });
+
+    group('getRules - 사용자 정의 규칙 목록 조회', () {
+      test('가계부의 사용자 정의 규칙 목록을 반환한다', () async {
+        // Given: 두 개의 규칙이 있는 가계부
+        final rulesData = [
+          {
+            'id': 'rule-1',
+            'ledger_id': 'ledger-1',
+            'merchant_pattern': '스타벅스',
+            'category_id': 'cat-food',
+            'is_regex': false,
+            'priority': 10,
+            'created_at': '2026-01-01T00:00:00Z',
+          },
+          {
+            'id': 'rule-2',
+            'ledger_id': 'ledger-1',
+            'merchant_pattern': r'버거킹|맥도날드',
+            'category_id': 'cat-food',
+            'is_regex': true,
+            'priority': 5,
+            'created_at': '2026-01-01T00:00:00Z',
+          },
+        ];
+        final rulesBuilder = FakeQueryBuilder()..listResult = rulesData;
+        fakeClient.setupTable('merchant_category_rules', rulesBuilder);
+
+        // When
+        final result = await service.getRules('ledger-1');
+
+        // Then
+        expect(result, isA<List<MerchantCategoryRule>>());
+        expect(result.length, equals(2));
+        expect(result[0].merchantPattern, equals('스타벅스'));
+        expect(result[1].isRegex, isTrue);
+      });
+
+      test('규칙이 없는 가계부는 빈 리스트를 반환한다', () async {
+        // Given
+        final rulesBuilder = FakeQueryBuilder()..listResult = [];
+        fakeClient.setupTable('merchant_category_rules', rulesBuilder);
+
+        // When
+        final result = await service.getRules('ledger-empty');
+
+        // Then
+        expect(result, isEmpty);
+      });
+    });
+
+    group('learnCategoryFromHistory - 이전 거래 기반 카테고리 학습', () {
+      test('이전 거래에서 가장 많이 사용된 카테고리를 반환한다', () async {
+        // Given: 같은 상호에서 cat-food가 3번, cat-life가 1번 사용됨
+        final transactionData = [
+          {'category_id': 'cat-food'},
+          {'category_id': 'cat-food'},
+          {'category_id': 'cat-food'},
+          {'category_id': 'cat-life'},
+        ];
+        final txBuilder = FakeQueryBuilder()..listResult = transactionData;
+        fakeClient.setupTable('transactions', txBuilder);
+
+        // When
+        final result = await service.learnCategoryFromHistory(
+          '스타벅스',
+          'ledger-1',
+        );
+
+        // Then: 가장 빈번한 cat-food 반환
+        expect(result, equals('cat-food'));
+      });
+
+      test('이전 거래가 없는 경우 null을 반환한다', () async {
+        // Given: 거래 없음
+        final txBuilder = FakeQueryBuilder()..listResult = [];
+        fakeClient.setupTable('transactions', txBuilder);
+
+        // When
+        final result = await service.learnCategoryFromHistory(
+          '처음가는가게',
+          'ledger-1',
+        );
+
+        // Then
+        expect(result, isNull);
+      });
+
+      test('빈 상호명은 null을 반환한다', () async {
+        // When
+        final result = await service.learnCategoryFromHistory('', 'ledger-1');
+
+        // Then
+        expect(result, isNull);
+      });
+
+      test('category_id가 모두 null인 거래만 있으면 null을 반환한다', () async {
+        // Given: category_id가 null인 거래만 있음
+        final transactionData = [
+          {'category_id': null},
+          {'category_id': null},
+        ];
+        final txBuilder = FakeQueryBuilder()..listResult = transactionData;
+        fakeClient.setupTable('transactions', txBuilder);
+
+        // When
+        final result = await service.learnCategoryFromHistory(
+          '모르는가게',
+          'ledger-1',
+        );
+
+        // Then
+        expect(result, isNull);
+      });
+
+      test('동점일 경우 첫 번째로 나타난 카테고리를 반환한다', () async {
+        // Given: cat-food 2번, cat-life 2번 (동점)
+        final transactionData = [
+          {'category_id': 'cat-food'},
+          {'category_id': 'cat-food'},
+          {'category_id': 'cat-life'},
+          {'category_id': 'cat-life'},
+        ];
+        final txBuilder = FakeQueryBuilder()..listResult = transactionData;
+        fakeClient.setupTable('transactions', txBuilder);
+
+        // When
+        final result = await service.learnCategoryFromHistory(
+          '스타벅스',
+          'ledger-1',
+        );
+
+        // Then: 동점 시 sort 후 첫 번째 카테고리 반환 (결정론적 순서)
+        expect(result, isNotNull);
+      });
+
+      test('단일 거래만 있는 경우 해당 카테고리를 반환한다', () async {
+        // Given: 거래 1건
+        final transactionData = [
+          {'category_id': 'cat-entertainment'},
+        ];
+        final txBuilder = FakeQueryBuilder()..listResult = transactionData;
+        fakeClient.setupTable('transactions', txBuilder);
+
+        // When
+        final result = await service.learnCategoryFromHistory(
+          'cgv강남점',
+          'ledger-1',
+        );
+
+        // Then
+        expect(result, equals('cat-entertainment'));
       });
     });
 

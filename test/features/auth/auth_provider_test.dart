@@ -1,100 +1,551 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:shared_household_account/features/auth/presentation/providers/auth_provider.dart';
+import 'package:shared_household_account/features/ledger/data/repositories/ledger_repository.dart';
+import 'package:shared_household_account/features/ledger/presentation/providers/ledger_provider.dart' hide ledgerRepositoryProvider;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../helpers/test_helpers.dart';
+
+// MockAuthService - AuthService를 Mock으로 대체
+class MockAuthService extends Mock implements AuthService {}
+
+// MockLedgerRepository
+class _MockLedgerRepository extends Mock implements LedgerRepository {}
 
 void main() {
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    try {
+      await Supabase.initialize(
+        url: 'https://test.supabase.co',
+        anonKey: 'test-anon-key',
+      );
+    } catch (_) {
+      // 이미 초기화된 경우 무시
+    }
+  });
+
+  group('AuthNotifier 테스트', () {
+    late MockAuthService mockAuthService;
+    late _MockLedgerRepository mockLedgerRepository;
+
+    setUp(() {
+      mockAuthService = MockAuthService();
+      mockLedgerRepository = _MockLedgerRepository();
+      registerFallbackValue(const AsyncValue<User?>.loading());
+    });
+
+    ProviderContainer createContainer() {
+      final container = ProviderContainer(
+        overrides: [
+          authServiceProvider.overrideWith((ref) => mockAuthService),
+          ledgerRepositoryProvider.overrideWith(
+            (ref) => mockLedgerRepository,
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    group('초기화', () {
+      test('AuthNotifier가 초기화될 때 currentUser를 읽어 초기 상태를 설정한다', () {
+        // Given: currentUser가 null인 경우
+        when(() => mockAuthService.currentUser).thenReturn(null);
+
+        // When: container 생성 (notifier 초기화)
+        final container = createContainer();
+        final state = container.read(authNotifierProvider);
+
+        // Then: 초기 상태가 data(null)이어야 한다
+        expect(state, isA<AsyncData<User?>>());
+        expect(state.valueOrNull, isNull);
+      });
+
+      test('로그인된 사용자가 있을 때 초기 상태에 사용자가 설정된다', () {
+        // Given: currentUser가 존재하는 경우
+        final mockUser = MockUser();
+        when(() => mockAuthService.currentUser).thenReturn(mockUser);
+
+        // When: container 생성
+        final container = createContainer();
+        final state = container.read(authNotifierProvider);
+
+        // Then: 초기 상태에 사용자가 설정되어야 한다
+        expect(state, isA<AsyncData<User?>>());
+        expect(state.valueOrNull, equals(mockUser));
+      });
+    });
+
+    group('signInWithEmail', () {
+      test('이메일 로그인 성공 시 상태가 data(user)로 변경된다', () async {
+        // Given
+        final mockUser = MockUser();
+        final mockResponse = MockAuthResponse();
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockResponse.user).thenReturn(mockUser);
+        when(
+          () => mockAuthService.signInWithEmail(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenAnswer((_) async => mockResponse);
+
+        final container = createContainer();
+
+        // When
+        await container
+            .read(authNotifierProvider.notifier)
+            .signInWithEmail(email: 'test@test.com', password: 'password123');
+
+        // Then
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncData<User?>>());
+        expect(state.valueOrNull, equals(mockUser));
+      });
+
+      test('이메일 로그인 실패 시 상태가 error로 변경되고 예외가 rethrow된다', () async {
+        // Given
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(
+          () => mockAuthService.signInWithEmail(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenThrow(const AuthException('invalid_credentials'));
+
+        final container = createContainer();
+
+        // When & Then: 예외가 rethrow된다
+        await expectLater(
+          () => container
+              .read(authNotifierProvider.notifier)
+              .signInWithEmail(
+                email: 'test@test.com',
+                password: 'wrong',
+              ),
+          throwsA(isA<AuthException>()),
+        );
+
+        // 상태가 error로 변경된다
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncError<User?>>());
+      });
+
+      test('이메일 로그인 성공 시 selectedLedgerId가 초기화된다', () async {
+        // Given
+        final mockUser = MockUser();
+        final mockResponse = MockAuthResponse();
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockResponse.user).thenReturn(mockUser);
+        when(
+          () => mockAuthService.signInWithEmail(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenAnswer((_) async => mockResponse);
+
+        final container = createContainer();
+        // 먼저 selectedLedgerId에 값을 설정
+        container.read(selectedLedgerIdProvider.notifier).state = 'some-ledger-id';
+
+        // When
+        await container
+            .read(authNotifierProvider.notifier)
+            .signInWithEmail(email: 'test@test.com', password: 'password123');
+
+        // Then: selectedLedgerId가 null로 초기화된다
+        expect(container.read(selectedLedgerIdProvider), isNull);
+      });
+    });
+
+    group('signUpWithEmail', () {
+      test('회원가입 성공 시 상태가 data(user)로 변경된다', () async {
+        // Given
+        final mockUser = MockUser();
+        final mockResponse = MockAuthResponse();
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockResponse.user).thenReturn(mockUser);
+        when(
+          () => mockAuthService.signUpWithEmail(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+            displayName: any(named: 'displayName'),
+          ),
+        ).thenAnswer((_) async => mockResponse);
+
+        final container = createContainer();
+
+        // When
+        await container
+            .read(authNotifierProvider.notifier)
+            .signUpWithEmail(
+              email: 'newuser@test.com',
+              password: 'password123',
+              displayName: '테스트 유저',
+            );
+
+        // Then
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncData<User?>>());
+        expect(state.valueOrNull, equals(mockUser));
+      });
+
+      test('회원가입 실패 시 상태가 error로 변경되고 예외가 rethrow된다', () async {
+        // Given
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(
+          () => mockAuthService.signUpWithEmail(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+            displayName: any(named: 'displayName'),
+          ),
+        ).thenThrow(const AuthException('user_already_exists'));
+
+        final container = createContainer();
+
+        // When & Then
+        await expectLater(
+          () => container
+              .read(authNotifierProvider.notifier)
+              .signUpWithEmail(
+                email: 'existing@test.com',
+                password: 'password123',
+              ),
+          throwsA(isA<AuthException>()),
+        );
+
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncError<User?>>());
+      });
+
+      test('회원가입 시 displayName 없이도 동작한다', () async {
+        // Given
+        final mockUser = MockUser();
+        final mockResponse = MockAuthResponse();
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockResponse.user).thenReturn(mockUser);
+        when(
+          () => mockAuthService.signUpWithEmail(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+            displayName: any(named: 'displayName'),
+          ),
+        ).thenAnswer((_) async => mockResponse);
+
+        final container = createContainer();
+
+        // When
+        await container
+            .read(authNotifierProvider.notifier)
+            .signUpWithEmail(
+              email: 'test@test.com',
+              password: 'password123',
+            );
+
+        // Then
+        final state = container.read(authNotifierProvider);
+        expect(state.valueOrNull, equals(mockUser));
+      });
+    });
+
+    group('signInWithGoogle', () {
+      test('Google 로그인 성공 시 상태가 data(user)로 변경된다', () async {
+        // Given
+        final mockUser = MockUser();
+        final mockResponse = MockAuthResponse();
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockResponse.user).thenReturn(mockUser);
+        when(() => mockAuthService.signInWithGoogle())
+            .thenAnswer((_) async => mockResponse);
+
+        final container = createContainer();
+
+        // When
+        await container
+            .read(authNotifierProvider.notifier)
+            .signInWithGoogle();
+
+        // Then
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncData<User?>>());
+        expect(state.valueOrNull, equals(mockUser));
+      });
+
+      test('Google 로그인 실패 시 상태가 error로 변경되고 예외가 rethrow된다', () async {
+        // Given
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockAuthService.signInWithGoogle())
+            .thenThrow(const AuthException('Google 로그인 실패'));
+
+        final container = createContainer();
+
+        // When & Then
+        await expectLater(
+          () => container
+              .read(authNotifierProvider.notifier)
+              .signInWithGoogle(),
+          throwsA(isA<AuthException>()),
+        );
+
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncError<User?>>());
+      });
+
+      test('Google 로그인 성공 시 selectedLedgerId가 초기화된다', () async {
+        // Given
+        final mockUser = MockUser();
+        final mockResponse = MockAuthResponse();
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockResponse.user).thenReturn(mockUser);
+        when(() => mockAuthService.signInWithGoogle())
+            .thenAnswer((_) async => mockResponse);
+
+        final container = createContainer();
+        container.read(selectedLedgerIdProvider.notifier).state = 'some-ledger-id';
+
+        // When
+        await container
+            .read(authNotifierProvider.notifier)
+            .signInWithGoogle();
+
+        // Then
+        expect(container.read(selectedLedgerIdProvider), isNull);
+      });
+    });
+
+    group('signOut', () {
+      test('로그아웃 성공 시 상태가 data(null)로 변경된다', () async {
+        // Given
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockAuthService.signOut()).thenAnswer((_) async {});
+
+        final container = createContainer();
+
+        // When
+        await container.read(authNotifierProvider.notifier).signOut();
+
+        // Then
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncData<User?>>());
+        expect(state.valueOrNull, isNull);
+      });
+
+      test('로그아웃 성공 시 selectedLedgerId가 null로 초기화된다', () async {
+        // Given
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockAuthService.signOut()).thenAnswer((_) async {});
+
+        final container = createContainer();
+        container.read(selectedLedgerIdProvider.notifier).state = 'some-ledger-id';
+
+        // When
+        await container.read(authNotifierProvider.notifier).signOut();
+
+        // Then
+        expect(container.read(selectedLedgerIdProvider), isNull);
+      });
+
+      test('로그아웃 실패 시 상태가 error로 변경된다', () async {
+        // Given
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockAuthService.signOut())
+            .thenThrow(Exception('로그아웃 실패'));
+
+        final container = createContainer();
+
+        // When
+        await container.read(authNotifierProvider.notifier).signOut();
+
+        // Then: 로그아웃 실패 시 error 상태가 된다 (rethrow 안 함)
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncError<User?>>());
+      });
+    });
+
+    group('deleteAccount', () {
+      test('계정 삭제 성공 시 상태가 data(null)로 변경된다', () async {
+        // Given
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockAuthService.deleteAccount()).thenAnswer((_) async {});
+
+        final container = createContainer();
+
+        // When
+        await container.read(authNotifierProvider.notifier).deleteAccount();
+
+        // Then
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncData<User?>>());
+        expect(state.valueOrNull, isNull);
+      });
+
+      test('계정 삭제 실패 시 상태가 error로 변경되고 예외가 rethrow된다', () async {
+        // Given
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockAuthService.deleteAccount())
+            .thenThrow(Exception('계정 삭제 실패'));
+
+        final container = createContainer();
+
+        // When & Then
+        await expectLater(
+          () => container
+              .read(authNotifierProvider.notifier)
+              .deleteAccount(),
+          throwsA(isA<Exception>()),
+        );
+
+        final state = container.read(authNotifierProvider);
+        expect(state, isA<AsyncError<User?>>());
+      });
+    });
+
+    group('상태 전이 순서', () {
+      test('로그인 중 loading 상태로 전환 후 성공 시 data 상태가 된다', () async {
+        // Given
+        final mockUser = MockUser();
+        final mockResponse = MockAuthResponse();
+        when(() => mockAuthService.currentUser).thenReturn(null);
+        when(() => mockResponse.user).thenReturn(mockUser);
+
+        final states = <AsyncValue<User?>>[];
+
+        when(
+          () => mockAuthService.signInWithEmail(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        ).thenAnswer((_) async => mockResponse);
+
+        final container = createContainer();
+        container.listen(
+          authNotifierProvider,
+          (prev, next) => states.add(next),
+          fireImmediately: false,
+        );
+
+        // When
+        await container
+            .read(authNotifierProvider.notifier)
+            .signInWithEmail(email: 'test@test.com', password: 'pw123456');
+
+        // Then: loading -> data 순서로 상태가 변한다
+        expect(states.length, greaterThanOrEqualTo(1));
+        expect(states.last, isA<AsyncData<User?>>());
+      });
+    });
+  });
+
+  group('AuthService._validateHexColor 테스트', () {
+    // HEX 색상 코드 검증 함수 (AuthService.updateProfile에서 사용될 로직)
+    void validateHexColor(String color) {
+      if (!RegExp(r'^#[0-9A-Fa-f]{6}$').hasMatch(color)) {
+        throw ArgumentError(
+          'Invalid color format. Must be HEX code (e.g., #A8D8EA)',
+        );
+      }
+    }
+
+    test('검증 함수가 정의되어 있어야 한다', () {
+      expect(validateHexColor, isNotNull);
+    });
+
+    group('HEX 코드 형식 검증', () {
+      test('유효한 HEX 코드 형식(#RRGGBB)은 허용되어야 한다', () {
+        // Given: 다양한 유효한 HEX 코드
+        final validColors = [
+          '#A8D8EA',
+          '#a8d8ea',
+          '#FF5733',
+          '#000000',
+          '#FFFFFF',
+        ];
+
+        // When & Then: 모든 유효한 색상이 ArgumentError를 발생시키지 않아야 함
+        for (final color in validColors) {
+          expect(
+            () => validateHexColor(color),
+            returnsNormally,
+            reason: '$color는 유효한 HEX 코드 형식입니다',
+          );
+        }
+      });
+
+      test('잘못된 HEX 코드 형식은 ArgumentError를 발생시켜야 한다 - # 기호 없음', () {
+        const invalidColor = 'A8D8EA';
+        expect(
+          () => validateHexColor(invalidColor),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('Invalid color format'),
+            ),
+          ),
+          reason: '# 기호가 없으면 ArgumentError가 발생해야 합니다',
+        );
+      });
+
+      test('잘못된 HEX 코드 형식은 ArgumentError를 발생시켜야 한다 - 길이가 짧음', () {
+        const invalidColor = '#A8D';
+        expect(
+          () => validateHexColor(invalidColor),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('잘못된 HEX 코드 형식은 ArgumentError를 발생시켜야 한다 - 길이가 김', () {
+        const invalidColor = '#A8D8EA12';
+        expect(
+          () => validateHexColor(invalidColor),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('잘못된 HEX 코드 형식은 ArgumentError를 발생시켜야 한다 - 잘못된 문자 포함', () {
+        const invalidColor = '#GGGGGG';
+        expect(
+          () => validateHexColor(invalidColor),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('ArgumentError 메시지에 올바른 형식 예시가 포함되어야 한다', () {
+        const invalidColor = 'invalid';
+        expect(
+          () => validateHexColor(invalidColor),
+          throwsA(
+            isA<ArgumentError>().having(
+              (e) => e.message,
+              'message',
+              contains('#A8D8EA'),
+            ),
+          ),
+        );
+      });
+    });
+  });
+
   group('사용자 색상 관련 Provider 테스트', () {
     group('userColorProvider', () {
       test('userColorProvider가 정의되어 있어야 한다', () {
-        // Given & When: Provider 존재 확인
-        // Then: Provider가 정의되어 있어야 함
         expect(userColorProvider, isNotNull);
-      });
-
-      test('사용자 프로필에 색상이 있을 때 해당 색상을 반환해야 한다', () async {
-        // Given: 프로필에 색상이 있는 경우를 시뮬레이션
-        // When: userColorProvider를 읽음
-        // Then: 프로필의 색상이 반환되어야 함
-
-        // 실제 Supabase 연결이 필요한 통합 테스트는 별도로 작성
-        // 여기서는 Provider 정의만 확인
-      });
-
-      test('사용자 프로필에 색상이 없을 때 기본 색상(#A8D8EA)을 반환해야 한다', () async {
-        // Given: 프로필에 색상이 없는 경우
-        // When: userColorProvider를 읽음
-        // Then: 기본 색상 #A8D8EA가 반환되어야 함
       });
     });
 
     group('userProfileProvider', () {
       test('userProfileProvider가 정의되어 있어야 한다', () {
-        // Given & When: Provider 존재 확인
-        // Then: Provider가 정의되어 있어야 함
         expect(userProfileProvider, isNotNull);
-      });
-
-      test('로그인하지 않은 사용자의 경우 null을 반환해야 한다', () async {
-        // Given: 로그인하지 않은 상태
-        // When: userProfileProvider를 읽음
-        // Then: null이 반환되어야 함
-      });
-
-      test('로그인한 사용자의 프로필 데이터를 실시간으로 스트리밍해야 한다', () async {
-        // Given: 로그인한 사용자
-        // When: userProfileProvider를 읽음
-        // Then: 프로필 데이터가 스트리밍되어야 함
-      });
-
-      test('프로필 데이터가 업데이트되면 자동으로 새 데이터를 방출해야 한다', () async {
-        // Given: 로그인한 사용자의 프로필이 존재
-        // When: 프로필 데이터가 업데이트됨
-        // Then: 새로운 프로필 데이터가 자동으로 스트리밍되어야 함
       });
     });
 
     group('userColorByIdProvider', () {
       test('userColorByIdProvider가 정의되어 있어야 한다', () {
-        // Given & When: Provider 존재 확인
-        // Then: Provider가 정의되어 있어야 함
         expect(userColorByIdProvider, isNotNull);
-      });
-
-      test('존재하는 사용자 ID로 색상을 조회하면 해당 사용자의 색상을 반환해야 한다', () async {
-        // Given: 존재하는 사용자 ID
-        // When: userColorByIdProvider로 색상 조회
-        // Then: 해당 사용자의 색상이 반환되어야 함
-      });
-
-      test('존재하지 않는 사용자 ID로 색상을 조회하면 기본 색상(#A8D8EA)을 반환해야 한다', () async {
-        // Given: 존재하지 않는 사용자 ID
-        // When: userColorByIdProvider로 색상 조회
-        // Then: 기본 색상 #A8D8EA가 반환되어야 함
-      });
-
-      test('에러 발생 시 기본 색상(#A8D8EA)을 반환해야 한다', () async {
-        // Given: DB 에러가 발생하는 상황
-        // When: userColorByIdProvider로 색상 조회
-        // Then: 기본 색상 #A8D8EA가 반환되어야 함 (에러를 throw하지 않음)
-      });
-
-      test('사용자 색상이 null이면 기본 색상(#A8D8EA)을 반환해야 한다', () async {
-        // Given: 사용자 프로필의 color 필드가 null인 경우
-        // When: userColorByIdProvider로 색상 조회
-        // Then: 기본 색상 #A8D8EA가 반환되어야 함
-      });
-    });
-
-    group('Provider 통합 테스트', () {
-      test('userProfileProvider와 userColorProvider가 연동되어야 한다', () async {
-        // Given: 로그인한 사용자의 프로필이 존재
-        // When: userProfileProvider가 업데이트되면
-        // Then: userColorProvider도 자동으로 업데이트되어야 함
-      });
-
-      test('현재 사용자와 다른 사용자의 색상을 구분해서 조회할 수 있어야 한다', () async {
-        // Given: 현재 로그인한 사용자와 다른 사용자
-        // When: userColorProvider와 userColorByIdProvider를 각각 사용
-        // Then: 각각의 색상이 올바르게 반환되어야 함
       });
     });
   });

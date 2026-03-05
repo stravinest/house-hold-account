@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show VoidCallback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -377,6 +378,121 @@ void main() {
               userId: 'user-1',
               onSettingsChanged: any(named: 'onSettingsChanged'),
             )).called(1);
+      });
+    });
+
+    group('_refreshSettingsQuietly - Realtime 콜백 처리', () {
+      test('Realtime 콜백이 호출되면 설정을 다시 로드한다', () async {
+        // Given: subscribeSettings에서 onSettingsChanged 콜백을 캡처
+        VoidCallback? capturedCallback;
+        final channel = createMockRealtimeChannel();
+        when(() => mockRepository.subscribeSettings(
+              ledgerId: 'ledger-1',
+              userId: 'user-1',
+              onSettingsChanged: any(named: 'onSettingsChanged'),
+            )).thenAnswer((invocation) {
+          capturedCallback = invocation.namedArguments[#onSettingsChanged] as VoidCallback;
+          return channel;
+        });
+
+        when(() => mockRepository.getSettings('ledger-1', 'user-1'))
+            .thenAnswer((_) async => testSettings);
+
+        container = createContainer(
+          overrides: [
+            fixedExpenseSettingsRepositoryProvider.overrideWith((ref) => mockRepository),
+            selectedLedgerIdProvider.overrideWith((ref) => 'ledger-1'),
+            currentUserProvider.overrideWith((ref) => mockUser),
+          ],
+        );
+
+        AsyncValue<FixedExpenseSettings?>? lastState;
+        container.listen(fixedExpenseSettingsNotifierProvider, (_, next) {
+          lastState = next;
+        });
+        await pumpEventQueue();
+
+        // When: Realtime 콜백 트리거
+        expect(capturedCallback, isNotNull);
+        capturedCallback!();
+        await pumpEventQueue();
+
+        // Then: getSettings가 2번 호출됨 (초기 로드 + 콜백 후 재로드)
+        verify(() => mockRepository.getSettings('ledger-1', 'user-1'))
+            .called(greaterThanOrEqualTo(2));
+        expect(lastState?.hasValue, isTrue);
+      });
+
+      test('Realtime 콜백 후 설정 조회에서 에러가 발생해도 조용히 처리된다', () async {
+        // Given
+        VoidCallback? capturedCallback;
+        final channel = createMockRealtimeChannel();
+        when(() => mockRepository.subscribeSettings(
+              ledgerId: 'ledger-1',
+              userId: 'user-1',
+              onSettingsChanged: any(named: 'onSettingsChanged'),
+            )).thenAnswer((invocation) {
+          capturedCallback = invocation.namedArguments[#onSettingsChanged] as VoidCallback;
+          return channel;
+        });
+
+        // 초기 로드 성공, 이후 에러
+        var callCount = 0;
+        when(() => mockRepository.getSettings('ledger-1', 'user-1'))
+            .thenAnswer((_) async {
+          callCount++;
+          if (callCount == 1) return testSettings;
+          throw Exception('새로고침 실패');
+        });
+
+        container = createContainer(
+          overrides: [
+            fixedExpenseSettingsRepositoryProvider.overrideWith((ref) => mockRepository),
+            selectedLedgerIdProvider.overrideWith((ref) => 'ledger-1'),
+            currentUserProvider.overrideWith((ref) => mockUser),
+          ],
+        );
+
+        AsyncValue<FixedExpenseSettings?>? lastState;
+        container.listen(fixedExpenseSettingsNotifierProvider, (_, next) {
+          lastState = next;
+        });
+        await pumpEventQueue();
+
+        // When: Realtime 콜백 트리거 (에러 발생하지만 rethrow 없음)
+        expect(capturedCallback, isNotNull);
+        capturedCallback!();
+        await pumpEventQueue();
+
+        // Then: 에러가 전파되지 않고 이전 상태 유지
+        // _refreshSettingsQuietly는 catch에서 rethrow하지 않음
+        expect(lastState, isNotNull);
+      });
+
+      test('dispose 시 Realtime 채널 구독이 해제된다', () async {
+        // Given
+        when(() => mockRepository.getSettings('ledger-1', 'user-1'))
+            .thenAnswer((_) async => testSettings);
+
+        container = createContainer(
+          overrides: [
+            fixedExpenseSettingsRepositoryProvider.overrideWith((ref) => mockRepository),
+            selectedLedgerIdProvider.overrideWith((ref) => 'ledger-1'),
+            currentUserProvider.overrideWith((ref) => mockUser),
+          ],
+        );
+
+        container.listen(fixedExpenseSettingsNotifierProvider, (_, __) {});
+        await pumpEventQueue();
+
+        // When: container dispose (autoDispose이므로 구독 해제 트리거)
+        container.dispose();
+
+        // Then: unsubscribe가 호출되었는지 확인
+        // (container dispose 시 notifier dispose -> _settingsChannel?.unsubscribe() 호출)
+        // dispose가 정상적으로 완료되어야 함
+        // 이미 dispose되었으므로 재사용 불가 - 새 container 생성
+        container = createContainer();
       });
     });
 

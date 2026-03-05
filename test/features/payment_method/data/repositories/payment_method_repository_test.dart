@@ -60,6 +60,89 @@ void main() {
       expect(result.length, 1);
       expect(result[0].name, 'KB카드');
     });
+
+    test('결제수단이 없는 경우 빈 리스트를 반환한다', () async {
+      when(() => mockClient.from('payment_methods'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: []));
+
+      final result = await repository.getPaymentMethods('ledger-empty');
+      expect(result, isEmpty);
+    });
+  });
+
+  group('PaymentMethodRepository - getPaymentMethodsByOwner', () {
+    test('특정 멤버의 결제수단만 조회한다', () async {
+      final mockData = [_makePaymentMethod()];
+
+      when(() => mockClient.from('payment_methods'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: mockData));
+
+      final result = await repository.getPaymentMethodsByOwner(
+        ledgerId: 'ledger-1',
+        ownerUserId: 'user-123',
+      );
+      expect(result, isA<List<PaymentMethodModel>>());
+      expect(result.length, 1);
+    });
+  });
+
+  group('PaymentMethodRepository - getSharedPaymentMethods', () {
+    test('공유 결제수단(can_auto_save=false) 조회 시 리스트를 반환한다', () async {
+      final mockData = [_makePaymentMethod(canAutoSave: false)];
+
+      when(() => mockClient.from('payment_methods'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: mockData));
+
+      final result = await repository.getSharedPaymentMethods('ledger-1');
+      expect(result, isA<List<PaymentMethodModel>>());
+      expect(result.length, 1);
+      expect(result[0].canAutoSave, false);
+    });
+  });
+
+  group('PaymentMethodRepository - getAutoCollectPaymentMethodsByOwner', () {
+    test('특정 멤버의 자동수집 결제수단(can_auto_save=true) 조회 시 리스트를 반환한다', () async {
+      final mockData = [_makePaymentMethod(canAutoSave: true)];
+
+      when(() => mockClient.from('payment_methods'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: mockData));
+
+      final result = await repository.getAutoCollectPaymentMethodsByOwner(
+        ledgerId: 'ledger-1',
+        ownerUserId: 'user-123',
+      );
+      expect(result, isA<List<PaymentMethodModel>>());
+      expect(result.length, 1);
+    });
+  });
+
+  group('PaymentMethodRepository - getPaymentMethodById', () {
+    test('ID로 단일 결제수단 조회 시 결제수단을 반환한다', () async {
+      final pm = _makePaymentMethod();
+
+      when(() => mockClient.from('payment_methods')).thenAnswer((_) =>
+          FakeSupabaseQueryBuilder(
+            selectData: [pm],
+            maybeSingleData: pm,
+            hasMaybeSingleData: true,
+          ));
+
+      final result = await repository.getPaymentMethodById('pm-1');
+      expect(result, isA<PaymentMethodModel>());
+      expect(result!.id, 'pm-1');
+    });
+
+    test('존재하지 않는 ID로 조회 시 null을 반환한다', () async {
+      when(() => mockClient.from('payment_methods')).thenAnswer((_) =>
+          FakeSupabaseQueryBuilder(
+            selectData: [],
+            hasMaybeSingleData: true,
+            maybeSingleData: null,
+          ));
+
+      final result = await repository.getPaymentMethodById('non-existent');
+      expect(result, isNull);
+    });
   });
 
   group('PaymentMethodRepository - createPaymentMethod', () {
@@ -94,6 +177,30 @@ void main() {
       expect(result.sortOrder, 4);
     });
 
+    test('기존 결제수단이 없는 경우 sort_order는 1로 생성된다', () async {
+      final newPm = _makePaymentMethod(id: 'pm-first', name: '첫번째카드', sortOrder: 1);
+
+      int callCount = 0;
+      when(() => mockClient.from('payment_methods')).thenAnswer((_) {
+        callCount++;
+        if (callCount == 1) {
+          return FakeSupabaseQueryBuilder(
+            selectData: [],
+            hasMaybeSingleData: true,
+            maybeSingleData: null,
+          );
+        }
+        return FakeSupabaseQueryBuilder(
+          selectData: [newPm],
+          singleData: newPm,
+        );
+      });
+
+      final result = await repository.createPaymentMethod(
+          ledgerId: 'ledger-1', name: '첫번째카드');
+      expect(result.sortOrder, 1);
+    });
+
     test('로그인되지 않은 경우 예외를 던진다', () async {
       when(() => mockAuth.currentUser).thenReturn(null);
       expect(
@@ -117,6 +224,15 @@ void main() {
       expect(result.length, 1);
       expect(result[0].autoSaveMode.toJson(), 'suggest');
     });
+
+    test('자동수집 비활성화(manual) 결제수단은 제외된다', () async {
+      when(() => mockClient.from('payment_methods'))
+          .thenAnswer((_) => FakeSupabaseQueryBuilder(selectData: []));
+
+      final result = await repository.getAutoSaveEnabledPaymentMethods(
+          'ledger-1', 'user-123');
+      expect(result, isEmpty);
+    });
   });
 
   group('PaymentMethodRepository - updatePaymentMethod', () {
@@ -130,6 +246,57 @@ void main() {
       final result =
           await repository.updatePaymentMethod(id: 'pm-1', name: '새 카드 이름');
       expect(result.name, '새 카드 이름');
+    });
+
+    test('색상 변경 시 올바른 색상으로 업데이트한다', () async {
+      final updatedBase = _makePaymentMethod();
+      final updatedWithColor = {
+        ...updatedBase,
+        'color': '#FF5733',
+      };
+
+      when(() => mockClient.from('payment_methods')).thenAnswer((_) =>
+          FakeSupabaseQueryBuilder(
+              selectData: [updatedWithColor], singleData: updatedWithColor));
+
+      final result =
+          await repository.updatePaymentMethod(id: 'pm-1', color: '#FF5733');
+      expect(result.color, '#FF5733');
+    });
+  });
+
+  group('PaymentMethodRepository - updateAutoSaveSettings', () {
+    test('자동저장 설정 업데이트 시 올바른 데이터로 업데이트한다', () async {
+      final updated = _makePaymentMethod(autoSaveMode: 'auto');
+
+      when(() => mockClient.from('payment_methods')).thenAnswer((_) =>
+          FakeSupabaseQueryBuilder(
+              selectData: [updated], singleData: updated));
+
+      final result = await repository.updateAutoSaveSettings(
+        id: 'pm-1',
+        autoSaveMode: 'auto',
+      );
+      expect(result, isA<PaymentMethodModel>());
+      expect(result.autoSaveMode.toJson(), 'auto');
+    });
+
+    test('기본 카테고리 ID와 함께 자동저장 설정을 업데이트한다', () async {
+      final updated = {
+        ..._makePaymentMethod(autoSaveMode: 'suggest'),
+        'default_category_id': 'cat-123',
+      };
+
+      when(() => mockClient.from('payment_methods')).thenAnswer((_) =>
+          FakeSupabaseQueryBuilder(
+              selectData: [updated], singleData: updated));
+
+      final result = await repository.updateAutoSaveSettings(
+        id: 'pm-1',
+        autoSaveMode: 'suggest',
+        defaultCategoryId: 'cat-123',
+      );
+      expect(result.defaultCategoryId, 'cat-123');
     });
   });
 
@@ -163,6 +330,18 @@ void main() {
       await repository.reorderPaymentMethods(['pm-3', 'pm-1', 'pm-2']);
       verify(() => mockClient.rpc('batch_reorder_payment_methods',
           params: any(named: 'params'))).called(1);
+    });
+
+    test('RPC가 false를 반환하면 예외를 던진다', () async {
+      when(() => mockClient.rpc('batch_reorder_payment_methods',
+              params: any(named: 'params')))
+          .thenAnswer(
+              (_) => FakePostgrestFilterBuilder<dynamic>(false));
+
+      expect(
+        () => repository.reorderPaymentMethods(['pm-1', 'pm-2']),
+        throwsA(isA<Exception>()),
+      );
     });
   });
 }

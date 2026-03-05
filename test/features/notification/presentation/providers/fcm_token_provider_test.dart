@@ -22,7 +22,7 @@ void main() {
       container.dispose();
     });
 
-    group('FcmToken', () {
+    group('FcmToken build()', () {
       test('사용자가 로그인하지 않은 경우 빈 리스트를 반환한다', () async {
         // Given: 로그인하지 않은 상태
         container = createContainer(
@@ -85,6 +85,30 @@ void main() {
         verify(() => mockRepository.getFcmTokens('test-user-id')).called(1);
       });
 
+      test('토큰 조회 중 에러 발생 시 에러 상태가 된다', () async {
+        // Given
+        final testUser = MockUser();
+        when(() => testUser.id).thenReturn('test-user-id');
+
+        when(() => mockRepository.getFcmTokens('test-user-id'))
+            .thenThrow(Exception('네트워크 오류'));
+
+        container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => testUser),
+            fcmTokenRepositoryProvider.overrideWith((ref) => mockRepository),
+          ],
+        );
+
+        // When & Then
+        await expectLater(
+          container.read(fcmTokenProvider.future),
+          throwsA(isA<Exception>()),
+        );
+      });
+    });
+
+    group('saveFcmToken()', () {
       test('saveFcmToken은 토큰을 저장하고 목록을 갱신한다', () async {
         // Given
         final testUser = MockUser();
@@ -162,6 +186,44 @@ void main() {
         );
       });
 
+      test('토큰 저장 중 에러 발생 시 에러 상태가 되고 예외를 전파한다', () async {
+        // Given
+        final testUser = MockUser();
+        when(() => testUser.id).thenReturn('test-user-id');
+
+        when(() => mockRepository.getFcmTokens('test-user-id'))
+            .thenAnswer((_) async => []);
+
+        when(
+          () => mockRepository.saveFcmToken(
+            userId: any(named: 'userId'),
+            token: any(named: 'token'),
+            deviceType: any(named: 'deviceType'),
+          ),
+        ).thenThrow(Exception('저장 실패'));
+
+        container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => testUser),
+            fcmTokenRepositoryProvider.overrideWith((ref) => mockRepository),
+          ],
+        );
+
+        // build 완료 대기
+        await container.read(fcmTokenProvider.future);
+        final notifier = container.read(fcmTokenProvider.notifier);
+
+        // When & Then
+        await expectLater(
+          () => notifier.saveFcmToken(token: 'bad-token', deviceType: 'android'),
+          throwsA(isA<Exception>()),
+        );
+
+        // 예외가 전파되었으면 성공 (state는 구현에 따라 다를 수 있음)
+      });
+    });
+
+    group('deleteFcmToken()', () {
       test('deleteFcmToken은 토큰을 삭제하고 목록을 갱신한다', () async {
         // Given
         final testUser = MockUser();
@@ -210,6 +272,56 @@ void main() {
           () => notifier.deleteFcmToken('fcm-token-1'),
           throwsA(isA<Exception>()),
         );
+      });
+
+      test('토큰 삭제 중 에러 발생 시 에러 상태가 되고 예외를 전파한다', () async {
+        // Given
+        final testUser = MockUser();
+        when(() => testUser.id).thenReturn('test-user-id');
+
+        when(() => mockRepository.getFcmTokens('test-user-id'))
+            .thenAnswer((_) async => []);
+
+        when(() => mockRepository.deleteFcmToken(any()))
+            .thenThrow(Exception('삭제 실패'));
+
+        container = createContainer(
+          overrides: [
+            currentUserProvider.overrideWith((ref) => testUser),
+            fcmTokenRepositoryProvider.overrideWith((ref) => mockRepository),
+          ],
+        );
+
+        // build 완료 대기
+        await container.read(fcmTokenProvider.future);
+        final notifier = container.read(fcmTokenProvider.notifier);
+
+        // When & Then
+        await expectLater(
+          () => notifier.deleteFcmToken('bad-token'),
+          throwsA(isA<Exception>()),
+        );
+
+        // 예외가 전파되었으면 성공 (state는 구현에 따라 다를 수 있음)
+      });
+    });
+
+    group('fcmTokenRepositoryProvider', () {
+      test('fcmTokenRepositoryProvider는 FcmTokenRepository 인스턴스를 반환한다', () {
+        // Given: 실제 provider (override 없음)
+        // FcmTokenRepository는 SupabaseConfig.client에 의존하므로
+        // mock으로 override해서 타입만 검증
+        container = createContainer(
+          overrides: [
+            fcmTokenRepositoryProvider.overrideWith((ref) => mockRepository),
+          ],
+        );
+
+        // When
+        final repo = container.read(fcmTokenRepositoryProvider);
+
+        // Then
+        expect(repo, isNotNull);
       });
     });
   });

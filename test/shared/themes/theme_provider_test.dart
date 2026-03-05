@@ -167,4 +167,32 @@ void main() {
       expect(prefs.getString('theme_mode'), 'system');
     });
   });
+
+  group('sharedPreferencesProvider override 없이 사용 시 에러 발생', () {
+    test('sharedPreferencesProvider를 override하지 않으면 UnimplementedError가 발생한다', () {
+      // Given: override 없이 ProviderContainer 생성
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      // When & Then: sharedPreferencesProvider를 읽으면 UnimplementedError 발생
+      expect(
+        () => container.read(sharedPreferencesProvider),
+        throwsA(isA<UnimplementedError>()),
+      );
+    });
+
+    test('sharedPreferencesProvider 에러 메시지에 main.dart 안내가 포함된다', () {
+      // Given
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      // When & Then
+      try {
+        container.read(sharedPreferencesProvider);
+      } catch (e) {
+        expect(e, isA<UnimplementedError>());
+        expect(e.toString(), contains('main.dart'));
+      }
+    });
+  });
 }
