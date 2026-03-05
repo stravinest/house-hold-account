@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
 import '../../../transaction/data/repositories/transaction_repository.dart';
+import '../../../transaction/presentation/providers/transaction_provider.dart';
 import '../../data/models/pending_transaction_model.dart';
 import '../../data/repositories/pending_transaction_repository.dart';
 import '../../data/services/auto_save_service.dart';
@@ -431,7 +432,7 @@ final pendingTransactionNotifierProvider =
       AsyncValue<List<PendingTransactionModel>>
     >((ref) {
       final repository = ref.watch(pendingTransactionRepositoryProvider);
-      final transactionRepository = TransactionRepository();
+      final transactionRepository = ref.watch(transactionRepositoryProvider);
       final ledgerId = ref.watch(selectedLedgerIdProvider);
       final currentUser = ref.watch(currentUserProvider);
       return PendingTransactionNotifier(

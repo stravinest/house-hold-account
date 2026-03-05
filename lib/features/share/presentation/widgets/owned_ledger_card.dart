@@ -161,7 +161,7 @@ class OwnedLedgerCard extends ConsumerWidget {
       return m.displayName ?? m.email ?? l10n.shareUnknown;
     }).toList();
 
-    return Row(
+    final row = Row(
       children: [
         Icon(Icons.people, size: 14, color: colorScheme.onSurfaceVariant),
         const SizedBox(width: 4),
@@ -177,8 +177,19 @@ class OwnedLedgerCard extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
+        if (onMemberTap != null)
+          Icon(
+            Icons.chevron_right,
+            size: 16,
+            color: colorScheme.onSurfaceVariant,
+          ),
       ],
     );
+
+    if (onMemberTap != null) {
+      return GestureDetector(onTap: onMemberTap, child: row);
+    }
+    return row;
   }
 
   Widget _buildInviteSection(BuildContext context, AppLocalizations l10n) {

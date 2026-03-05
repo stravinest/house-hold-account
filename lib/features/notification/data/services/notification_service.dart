@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../config/supabase_config.dart';
 import '../../domain/entities/notification_type.dart';
@@ -10,9 +11,19 @@ import '../../services/local_notification_service.dart';
 /// 알림 설정 확인 후 로컬 알림 표시 및 히스토리 저장
 /// 자동수집 알림 전용 (공유 가계부 알림은 Edge Function에서 처리)
 class NotificationService {
-  final _client = SupabaseConfig.client;
-  final _settingsRepository = NotificationSettingsRepository();
-  final _localNotificationService = LocalNotificationService();
+  late final SupabaseClient _client;
+  late final NotificationSettingsRepository _settingsRepository;
+  late final LocalNotificationService _localNotificationService;
+
+  NotificationService({
+    SupabaseClient? client,
+    NotificationSettingsRepository? settingsRepository,
+    LocalNotificationService? localNotificationService,
+  })  : _client = client ?? SupabaseConfig.client,
+        _settingsRepository =
+            settingsRepository ?? NotificationSettingsRepository(),
+        _localNotificationService =
+            localNotificationService ?? LocalNotificationService();
 
   /// 알림 전송 (자동수집 전용)
   ///

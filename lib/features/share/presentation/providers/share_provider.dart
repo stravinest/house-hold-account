@@ -274,64 +274,76 @@ final myOwnedLedgersWithInvitesProvider =
       final selectedLedgerId = ref.watch(selectedLedgerIdProvider);
       final repository = ref.watch(shareRepositoryProvider);
 
-      // ledgerNotifierProvider가 아직 데이터를 가지고 있지 않으면 빈 리스트 반환
-      // isLoading/hasError는 FutureProvider가 자동으로 처리
       final ledgers = ledgersAsync.valueOrNull;
       if (ledgers == null) return [];
 
-      // owner인 가계부만 필터링 (ownerId 사용)
-      final ownedLedgers = ledgers.where((ledger) {
-        return ledger.ownerId == currentUserId;
-      }).toList();
-
-      // 모든 가계부의 멤버/초대 정보를 병렬로 조회 (N+1 쿼리 방지)
-      final futures = ownedLedgers.map((ledger) async {
-        final results = await Future.wait([
-          repository.getMembers(ledger.id),
-          repository.getSentInvites(ledger.id),
-        ]);
-        return (
-          ledger,
-          results[0] as List<LedgerMember>,
-          results[1] as List<LedgerInvite>,
-        );
-      });
-
-      final allData = await Future.wait(futures);
-
-      final result = <LedgerWithInviteInfo>[];
-      for (final (ledger, members, sentInvites) in allData) {
-        // 표시할 초대 필터링 (pending, accepted, rejected - expired/left 제외)
-        final displayableInvites = sentInvites.where((i) {
-          if (i.isExpired || i.isLeft) return false;
-          return i.isPending || i.isAccepted || i.isRejected;
-        }).toList();
-
-        // pending 초대가 없어야 새 초대 가능
-        final hasPendingInvite = displayableInvites.any(
-          (i) => i.isPending && !i.isExpired,
-        );
-        final canInvite =
-            members.length < AppConstants.maxMembersPerLedger &&
-            !hasPendingInvite;
-
-        result.add(
-          LedgerWithInviteInfo(
-            ledger: ledger,
-            members: members,
-            sentInvites: displayableInvites,
-            canInvite: canInvite,
-            isCurrentLedger: ledger.id == selectedLedgerId,
-          ),
-        );
-      }
-
-      // 정렬: 현재 사용 중인 가계부 먼저, 그 다음 생성일 역순
-      result.sort((a, b) {
-        if (a.isCurrentLedger && !b.isCurrentLedger) return -1;
-        if (!a.isCurrentLedger && b.isCurrentLedger) return 1;
-        return b.ledger.createdAt.compareTo(a.ledger.createdAt);
-      });
-
-      return result;
+      return buildLedgersWithInviteInfo(
+        ledgers: ledgers,
+        currentUserId: currentUserId,
+        selectedLedgerId: selectedLedgerId,
+        repository: repository,
+      );
     });
+
+/// owner인 가계부 목록에 초대/멤버 정보를 조합하는 순수 함수 (테스트 가능)
+Future<List<LedgerWithInviteInfo>> buildLedgersWithInviteInfo({
+  required List<Ledger> ledgers,
+  required String currentUserId,
+  required String? selectedLedgerId,
+  required ShareRepository repository,
+}) async {
+  // owner인 가계부만 필터링 (ownerId 사용)
+  final ownedLedgers = ledgers.where((ledger) {
+    return ledger.ownerId == currentUserId;
+  }).toList();
+
+  // 모든 가계부의 멤버/초대 정보를 병렬로 조회 (N+1 쿼리 방지)
+  final futures = ownedLedgers.map((ledger) async {
+    final results = await Future.wait([
+      repository.getMembers(ledger.id),
+      repository.getSentInvites(ledger.id),
+    ]);
+    return (
+      ledger,
+      results[0] as List<LedgerMember>,
+      results[1] as List<LedgerInvite>,
+    );
+  });
+
+  final allData = await Future.wait(futures);
+
+  final result = <LedgerWithInviteInfo>[];
+  for (final (ledger, members, sentInvites) in allData) {
+    // 표시할 초대 필터링 (pending, accepted, rejected - expired/left 제외)
+    final displayableInvites = sentInvites.where((i) {
+      if (i.isExpired || i.isLeft) return false;
+      return i.isPending || i.isAccepted || i.isRejected;
+    }).toList();
+
+    // pending 초대가 없어야 새 초대 가능
+    final hasPendingInvite = displayableInvites.any(
+      (i) => i.isPending && !i.isExpired,
+    );
+    final canInvite =
+        members.length < AppConstants.maxMembersPerLedger && !hasPendingInvite;
+
+    result.add(
+      LedgerWithInviteInfo(
+        ledger: ledger,
+        members: members,
+        sentInvites: displayableInvites,
+        canInvite: canInvite,
+        isCurrentLedger: ledger.id == selectedLedgerId,
+      ),
+    );
+  }
+
+  // 정렬: 현재 사용 중인 가계부 먼저, 그 다음 생성일 역순
+  result.sort((a, b) {
+    if (a.isCurrentLedger && !b.isCurrentLedger) return -1;
+    if (!a.isCurrentLedger && b.isCurrentLedger) return 1;
+    return b.ledger.createdAt.compareTo(a.ledger.createdAt);
+  });
+
+  return result;
+}
