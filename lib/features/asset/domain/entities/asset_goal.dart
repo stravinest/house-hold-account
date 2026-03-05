@@ -1,3 +1,42 @@
+enum GoalType { asset, loan }
+
+enum RepaymentMethod {
+  equalPrincipalInterest,
+  equalPrincipal,
+  bullet,
+  graduated,
+}
+
+extension RepaymentMethodExtension on RepaymentMethod {
+  String toJson() {
+    switch (this) {
+      case RepaymentMethod.equalPrincipalInterest:
+        return 'equal_principal_interest';
+      case RepaymentMethod.equalPrincipal:
+        return 'equal_principal';
+      case RepaymentMethod.bullet:
+        return 'bullet';
+      case RepaymentMethod.graduated:
+        return 'graduated';
+    }
+  }
+
+  static RepaymentMethod fromJson(String value) {
+    switch (value) {
+      case 'equal_principal_interest':
+        return RepaymentMethod.equalPrincipalInterest;
+      case 'equal_principal':
+        return RepaymentMethod.equalPrincipal;
+      case 'bullet':
+        return RepaymentMethod.bullet;
+      case 'graduated':
+        return RepaymentMethod.graduated;
+      default:
+        return RepaymentMethod.equalPrincipalInterest;
+    }
+  }
+}
+
 class AssetGoal {
   final String id;
   final String ledgerId;
@@ -9,6 +48,14 @@ class AssetGoal {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String createdBy;
+  final GoalType goalType;
+  final int? loanAmount;
+  final RepaymentMethod? repaymentMethod;
+  final double? annualInterestRate;
+  final DateTime? startDate;
+  final int? monthlyPayment;
+  final bool isManualPayment;
+  final String? memo;
 
   const AssetGoal({
     required this.id,
@@ -21,6 +68,14 @@ class AssetGoal {
     required this.createdAt,
     required this.updatedAt,
     required this.createdBy,
+    this.goalType = GoalType.asset,
+    this.loanAmount,
+    this.repaymentMethod,
+    this.annualInterestRate,
+    this.startDate,
+    this.monthlyPayment,
+    this.isManualPayment = false,
+    this.memo,
   });
 
   AssetGoal copyWith({
@@ -34,6 +89,14 @@ class AssetGoal {
     DateTime? createdAt,
     DateTime? updatedAt,
     String? createdBy,
+    GoalType? goalType,
+    int? loanAmount,
+    RepaymentMethod? repaymentMethod,
+    double? annualInterestRate,
+    DateTime? startDate,
+    int? monthlyPayment,
+    bool? isManualPayment,
+    String? memo,
   }) {
     return AssetGoal(
       id: id ?? this.id,
@@ -46,6 +109,14 @@ class AssetGoal {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       createdBy: createdBy ?? this.createdBy,
+      goalType: goalType ?? this.goalType,
+      loanAmount: loanAmount ?? this.loanAmount,
+      repaymentMethod: repaymentMethod ?? this.repaymentMethod,
+      annualInterestRate: annualInterestRate ?? this.annualInterestRate,
+      startDate: startDate ?? this.startDate,
+      monthlyPayment: monthlyPayment ?? this.monthlyPayment,
+      isManualPayment: isManualPayment ?? this.isManualPayment,
+      memo: memo ?? this.memo,
     );
   }
 }

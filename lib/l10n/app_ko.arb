@@ -1739,5 +1739,56 @@
   "categoryMappingViewAll": "전체 보기",
   "categoryMappingFromTransaction": "카테고리 연결",
   "categoryMappingSuggestedKeywords": "추천 키워드",
-  "categoryMappingDirectInput": "직접 입력"
+  "categoryMappingDirectInput": "직접 입력",
+
+  "loanGoalNew": "새 대출 목표",
+  "loanGoalEdit": "대출 목표 수정",
+  "loanGoalTitle": "대출 목표",
+  "loanGoalAmount": "총 대출 금액",
+  "loanGoalCreate": "대출 목표 만들기",
+  "loanGoalUpdated": "대출 목표가 수정되었습니다",
+  "loanGoalCreated": "대출 목표가 생성되었습니다",
+
+  "repaymentMethod": "상환 방식",
+  "repaymentMethodEqualPrincipalInterest": "원리금균등상환",
+  "repaymentMethodEqualPrincipal": "원금균등상환",
+  "repaymentMethodBullet": "만기일시상환",
+  "repaymentMethodGraduated": "체증식상환",
+
+  "loanInterestRate": "연이율 (%)",
+  "loanStartDate": "대출 시작일",
+  "loanMaturityDate": "만기일",
+  "loanMonthlyPayment": "월 상환금",
+  "loanRemainingMonths": "남은 기간",
+  "loanRemainingMonthsValue": "{months}개월",
+  "@loanRemainingMonthsValue": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "loanProgress": "상환 진행률",
+  "loanManualInput": "직접 입력",
+  "loanAutoCalculate": "자동 계산",
+  "loanPeriodYears": "{years}년",
+  "@loanPeriodYears": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "loanPeriodDirect": "직접 선택",
+
+  "goalTypeSelect": "목표 유형 선택",
+  "goalTypeAsset": "자산 목표",
+  "goalTypeAssetDesc": "목표 금액을 설정하고 자산 증가를 추적합니다",
+  "goalTypeLoan": "대출 목표",
+  "goalTypeLoanDesc": "대출 상환 계획을 설정하고 진행 상황을 추적합니다",
+  "goalTitleLabel": "목표 이름",
+  "goalTitleHint": "예: 내 집 마련, 전세 대출",
+  "goalTitleRequired": "목표 이름을 입력하세요",
+  "goalMemoLabel": "메모 (선택)",
+  "goalMemoHint": "목표에 대한 메모를 입력하세요"
 }

@@ -6630,6 +6630,204 @@ abstract class AppLocalizations {
   /// In ko, this message translates to:
   /// **'직접 입력'**
   String get categoryMappingDirectInput;
+
+  /// No description provided for @loanGoalNew.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 대출 목표'**
+  String get loanGoalNew;
+
+  /// No description provided for @loanGoalEdit.
+  ///
+  /// In ko, this message translates to:
+  /// **'대출 목표 수정'**
+  String get loanGoalEdit;
+
+  /// No description provided for @loanGoalTitle.
+  ///
+  /// In ko, this message translates to:
+  /// **'대출 목표'**
+  String get loanGoalTitle;
+
+  /// No description provided for @loanGoalAmount.
+  ///
+  /// In ko, this message translates to:
+  /// **'총 대출 금액'**
+  String get loanGoalAmount;
+
+  /// No description provided for @loanGoalCreate.
+  ///
+  /// In ko, this message translates to:
+  /// **'대출 목표 만들기'**
+  String get loanGoalCreate;
+
+  /// No description provided for @loanGoalUpdated.
+  ///
+  /// In ko, this message translates to:
+  /// **'대출 목표가 수정되었습니다'**
+  String get loanGoalUpdated;
+
+  /// No description provided for @loanGoalCreated.
+  ///
+  /// In ko, this message translates to:
+  /// **'대출 목표가 생성되었습니다'**
+  String get loanGoalCreated;
+
+  /// No description provided for @repaymentMethod.
+  ///
+  /// In ko, this message translates to:
+  /// **'상환 방식'**
+  String get repaymentMethod;
+
+  /// No description provided for @repaymentMethodEqualPrincipalInterest.
+  ///
+  /// In ko, this message translates to:
+  /// **'원리금균등상환'**
+  String get repaymentMethodEqualPrincipalInterest;
+
+  /// No description provided for @repaymentMethodEqualPrincipal.
+  ///
+  /// In ko, this message translates to:
+  /// **'원금균등상환'**
+  String get repaymentMethodEqualPrincipal;
+
+  /// No description provided for @repaymentMethodBullet.
+  ///
+  /// In ko, this message translates to:
+  /// **'만기일시상환'**
+  String get repaymentMethodBullet;
+
+  /// No description provided for @repaymentMethodGraduated.
+  ///
+  /// In ko, this message translates to:
+  /// **'체증식상환'**
+  String get repaymentMethodGraduated;
+
+  /// No description provided for @loanInterestRate.
+  ///
+  /// In ko, this message translates to:
+  /// **'연이율 (%)'**
+  String get loanInterestRate;
+
+  /// No description provided for @loanStartDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'대출 시작일'**
+  String get loanStartDate;
+
+  /// No description provided for @loanMaturityDate.
+  ///
+  /// In ko, this message translates to:
+  /// **'만기일'**
+  String get loanMaturityDate;
+
+  /// No description provided for @loanMonthlyPayment.
+  ///
+  /// In ko, this message translates to:
+  /// **'월 상환금'**
+  String get loanMonthlyPayment;
+
+  /// No description provided for @loanRemainingMonths.
+  ///
+  /// In ko, this message translates to:
+  /// **'남은 기간'**
+  String get loanRemainingMonths;
+
+  /// No description provided for @loanRemainingMonthsValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{months}개월'**
+  String loanRemainingMonthsValue(int months);
+
+  /// No description provided for @loanProgress.
+  ///
+  /// In ko, this message translates to:
+  /// **'상환 진행률'**
+  String get loanProgress;
+
+  /// No description provided for @loanManualInput.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 입력'**
+  String get loanManualInput;
+
+  /// No description provided for @loanAutoCalculate.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동 계산'**
+  String get loanAutoCalculate;
+
+  /// No description provided for @loanPeriodYears.
+  ///
+  /// In ko, this message translates to:
+  /// **'{years}년'**
+  String loanPeriodYears(int years);
+
+  /// No description provided for @loanPeriodDirect.
+  ///
+  /// In ko, this message translates to:
+  /// **'직접 선택'**
+  String get loanPeriodDirect;
+
+  /// No description provided for @goalTypeSelect.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 유형 선택'**
+  String get goalTypeSelect;
+
+  /// No description provided for @goalTypeAsset.
+  ///
+  /// In ko, this message translates to:
+  /// **'자산 목표'**
+  String get goalTypeAsset;
+
+  /// No description provided for @goalTypeAssetDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 금액을 설정하고 자산 증가를 추적합니다'**
+  String get goalTypeAssetDesc;
+
+  /// No description provided for @goalTypeLoan.
+  ///
+  /// In ko, this message translates to:
+  /// **'대출 목표'**
+  String get goalTypeLoan;
+
+  /// No description provided for @goalTypeLoanDesc.
+  ///
+  /// In ko, this message translates to:
+  /// **'대출 상환 계획을 설정하고 진행 상황을 추적합니다'**
+  String get goalTypeLoanDesc;
+
+  /// No description provided for @goalTitleLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 이름'**
+  String get goalTitleLabel;
+
+  /// No description provided for @goalTitleHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'예: 내 집 마련, 전세 대출'**
+  String get goalTitleHint;
+
+  /// No description provided for @goalTitleRequired.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표 이름을 입력하세요'**
+  String get goalTitleRequired;
+
+  /// No description provided for @goalMemoLabel.
+  ///
+  /// In ko, this message translates to:
+  /// **'메모 (선택)'**
+  String get goalMemoLabel;
+
+  /// No description provided for @goalMemoHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'목표에 대한 메모를 입력하세요'**
+  String get goalMemoHint;
 }
 
 class _AppLocalizationsDelegate

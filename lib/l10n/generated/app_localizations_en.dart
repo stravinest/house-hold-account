@@ -3603,4 +3603,108 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryMappingDirectInput => 'Direct Input';
+
+  @override
+  String get loanGoalNew => 'New Loan Goal';
+
+  @override
+  String get loanGoalEdit => 'Edit Loan Goal';
+
+  @override
+  String get loanGoalTitle => 'Loan Goal';
+
+  @override
+  String get loanGoalAmount => 'Total Loan Amount';
+
+  @override
+  String get loanGoalCreate => 'Create Loan Goal';
+
+  @override
+  String get loanGoalUpdated => 'Loan goal updated';
+
+  @override
+  String get loanGoalCreated => 'Loan goal created';
+
+  @override
+  String get repaymentMethod => 'Repayment Method';
+
+  @override
+  String get repaymentMethodEqualPrincipalInterest =>
+      'Equal Principal & Interest';
+
+  @override
+  String get repaymentMethodEqualPrincipal => 'Equal Principal';
+
+  @override
+  String get repaymentMethodBullet => 'Bullet Repayment';
+
+  @override
+  String get repaymentMethodGraduated => 'Graduated Payment';
+
+  @override
+  String get loanInterestRate => 'Annual Interest Rate (%)';
+
+  @override
+  String get loanStartDate => 'Loan Start Date';
+
+  @override
+  String get loanMaturityDate => 'Maturity Date';
+
+  @override
+  String get loanMonthlyPayment => 'Monthly Payment';
+
+  @override
+  String get loanRemainingMonths => 'Remaining Period';
+
+  @override
+  String loanRemainingMonthsValue(int months) {
+    return '$months months';
+  }
+
+  @override
+  String get loanProgress => 'Repayment Progress';
+
+  @override
+  String get loanManualInput => 'Manual Input';
+
+  @override
+  String get loanAutoCalculate => 'Auto Calculate';
+
+  @override
+  String loanPeriodYears(int years) {
+    return '${years}yr';
+  }
+
+  @override
+  String get loanPeriodDirect => 'Custom';
+
+  @override
+  String get goalTypeSelect => 'Select Goal Type';
+
+  @override
+  String get goalTypeAsset => 'Asset Goal';
+
+  @override
+  String get goalTypeAssetDesc => 'Set target amount and track asset growth';
+
+  @override
+  String get goalTypeLoan => 'Loan Goal';
+
+  @override
+  String get goalTypeLoanDesc => 'Set loan repayment plan and track progress';
+
+  @override
+  String get goalTitleLabel => 'Goal Name';
+
+  @override
+  String get goalTitleHint => 'e.g., Home Purchase, Mortgage';
+
+  @override
+  String get goalTitleRequired => 'Please enter a goal name';
+
+  @override
+  String get goalMemoLabel => 'Memo (Optional)';
+
+  @override
+  String get goalMemoHint => 'Add a note about this goal';
 }

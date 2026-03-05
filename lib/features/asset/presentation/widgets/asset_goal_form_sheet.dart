@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/utils/korean_amount_formatter.dart';
 import '../../../../core/utils/snackbar_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
@@ -20,7 +21,9 @@ class AssetGoalFormSheet extends ConsumerStatefulWidget {
 }
 
 class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
+  late TextEditingController _titleController;
   late TextEditingController _amountController;
+  late TextEditingController _memoController;
   DateTime? _targetDate;
   bool _isLoading = false;
 
@@ -29,16 +32,24 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
   @override
   void initState() {
     super.initState();
+    _titleController = TextEditingController(
+      text: widget.goal?.title ?? '',
+    );
     final amount = widget.goal?.targetAmount;
     _amountController = TextEditingController(
       text: amount != null ? NumberFormat('#,###').format(amount) : '',
+    );
+    _memoController = TextEditingController(
+      text: widget.goal?.memo ?? '',
     );
     _targetDate = widget.goal?.targetDate;
   }
 
   @override
   void dispose() {
+    _titleController.dispose();
     _amountController.dispose();
+    _memoController.dispose();
     super.dispose();
   }
 
@@ -86,9 +97,13 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        _buildTitleField(l10n),
+                        const SizedBox(height: 20),
                         _buildAmountField(l10n),
                         const SizedBox(height: 20),
                         _buildTargetDateField(context, l10n),
+                        const SizedBox(height: 20),
+                        _buildMemoField(l10n),
                         const SizedBox(height: 32),
                         _buildSubmitButton(context, l10n, isEditing),
                         // 키보드 높이 + 시스템 네비게이션 바 높이 감지
@@ -146,6 +161,39 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
     );
   }
 
+  Widget _buildTitleField(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.goalTitleLabel,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _titleController,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            hintText: l10n.goalTitleHint,
+            prefixIcon: Icon(
+              Icons.flag_outlined,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return l10n.goalTitleRequired;
+            }
+            return null;
+          },
+        ),
+      ],
+    );
+  }
+
   Widget _buildAmountField(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,6 +214,7 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
             FilteringTextInputFormatter.digitsOnly,
             _AmountInputFormatter(),
           ],
+          onChanged: (_) => setState(() {}),
           style: Theme.of(
             context,
           ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -192,7 +241,25 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
             return null;
           },
         ),
+        _buildKoreanAmountLabel(_amountController.text),
       ],
+    );
+  }
+
+  Widget _buildKoreanAmountLabel(String amountText) {
+    final clean = amountText.replaceAll(RegExp(r'[^\d]'), '');
+    final amount = int.tryParse(clean) ?? 0;
+    final korean = formatKoreanAmount(amount);
+    if (korean.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, right: 4),
+      child: Text(
+        korean,
+        textAlign: TextAlign.right,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      ),
     );
   }
 
@@ -262,6 +329,37 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
                       color: colorScheme.onSurfaceVariant,
                     ),
                 ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMemoField(AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          l10n.goalMemoLabel,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          controller: _memoController,
+          maxLines: 3,
+          textInputAction: TextInputAction.done,
+          decoration: InputDecoration(
+            hintText: l10n.goalMemoHint,
+            prefixIcon: Padding(
+              padding: const EdgeInsets.only(bottom: 40),
+              child: Icon(
+                Icons.notes_outlined,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -340,19 +438,27 @@ class _AssetGoalFormSheetState extends ConsumerState<AssetGoalFormSheet> {
       final targetAmount = int.parse(amountText);
 
       if (isEditing && widget.goal != null) {
+        final memo = _memoController.text.trim().isEmpty
+            ? null
+            : _memoController.text.trim();
         final updatedGoal = widget.goal!.copyWith(
-          title: l10n.assetGoalTitle,
+          title: _titleController.text.trim(),
           targetAmount: targetAmount,
           targetDate: _targetDate,
           assetType: null,
+          memo: memo,
         );
         await notifier.updateGoal(updatedGoal);
       } else {
+        final memo = _memoController.text.trim().isEmpty
+            ? null
+            : _memoController.text.trim();
         await notifier.createGoal(
-          title: l10n.assetGoalTitle,
+          title: _titleController.text.trim(),
           targetAmount: targetAmount,
           targetDate: _targetDate,
           assetType: null,
+          memo: memo,
         );
       }
 

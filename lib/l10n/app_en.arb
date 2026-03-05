@@ -1252,5 +1252,56 @@
   "categoryMappingViewAll": "View All",
   "categoryMappingFromTransaction": "Link Category",
   "categoryMappingSuggestedKeywords": "Suggested Keywords",
-  "categoryMappingDirectInput": "Direct Input"
+  "categoryMappingDirectInput": "Direct Input",
+
+  "loanGoalNew": "New Loan Goal",
+  "loanGoalEdit": "Edit Loan Goal",
+  "loanGoalTitle": "Loan Goal",
+  "loanGoalAmount": "Total Loan Amount",
+  "loanGoalCreate": "Create Loan Goal",
+  "loanGoalUpdated": "Loan goal updated",
+  "loanGoalCreated": "Loan goal created",
+
+  "repaymentMethod": "Repayment Method",
+  "repaymentMethodEqualPrincipalInterest": "Equal Principal & Interest",
+  "repaymentMethodEqualPrincipal": "Equal Principal",
+  "repaymentMethodBullet": "Bullet Repayment",
+  "repaymentMethodGraduated": "Graduated Payment",
+
+  "loanInterestRate": "Annual Interest Rate (%)",
+  "loanStartDate": "Loan Start Date",
+  "loanMaturityDate": "Maturity Date",
+  "loanMonthlyPayment": "Monthly Payment",
+  "loanRemainingMonths": "Remaining Period",
+  "loanRemainingMonthsValue": "{months} months",
+  "@loanRemainingMonthsValue": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "loanProgress": "Repayment Progress",
+  "loanManualInput": "Manual Input",
+  "loanAutoCalculate": "Auto Calculate",
+  "loanPeriodYears": "{years}yr",
+  "@loanPeriodYears": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      }
+    }
+  },
+  "loanPeriodDirect": "Custom",
+
+  "goalTypeSelect": "Select Goal Type",
+  "goalTypeAsset": "Asset Goal",
+  "goalTypeAssetDesc": "Set target amount and track asset growth",
+  "goalTypeLoan": "Loan Goal",
+  "goalTypeLoanDesc": "Set loan repayment plan and track progress",
+  "goalTitleLabel": "Goal Name",
+  "goalTitleHint": "e.g., Home Purchase, Mortgage",
+  "goalTitleRequired": "Please enter a goal name",
+  "goalMemoLabel": "Memo (Optional)",
+  "goalMemoHint": "Add a note about this goal"
 }

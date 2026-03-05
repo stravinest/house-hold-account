@@ -3508,4 +3508,107 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get categoryMappingDirectInput => '직접 입력';
+
+  @override
+  String get loanGoalNew => '새 대출 목표';
+
+  @override
+  String get loanGoalEdit => '대출 목표 수정';
+
+  @override
+  String get loanGoalTitle => '대출 목표';
+
+  @override
+  String get loanGoalAmount => '총 대출 금액';
+
+  @override
+  String get loanGoalCreate => '대출 목표 만들기';
+
+  @override
+  String get loanGoalUpdated => '대출 목표가 수정되었습니다';
+
+  @override
+  String get loanGoalCreated => '대출 목표가 생성되었습니다';
+
+  @override
+  String get repaymentMethod => '상환 방식';
+
+  @override
+  String get repaymentMethodEqualPrincipalInterest => '원리금균등상환';
+
+  @override
+  String get repaymentMethodEqualPrincipal => '원금균등상환';
+
+  @override
+  String get repaymentMethodBullet => '만기일시상환';
+
+  @override
+  String get repaymentMethodGraduated => '체증식상환';
+
+  @override
+  String get loanInterestRate => '연이율 (%)';
+
+  @override
+  String get loanStartDate => '대출 시작일';
+
+  @override
+  String get loanMaturityDate => '만기일';
+
+  @override
+  String get loanMonthlyPayment => '월 상환금';
+
+  @override
+  String get loanRemainingMonths => '남은 기간';
+
+  @override
+  String loanRemainingMonthsValue(int months) {
+    return '$months개월';
+  }
+
+  @override
+  String get loanProgress => '상환 진행률';
+
+  @override
+  String get loanManualInput => '직접 입력';
+
+  @override
+  String get loanAutoCalculate => '자동 계산';
+
+  @override
+  String loanPeriodYears(int years) {
+    return '$years년';
+  }
+
+  @override
+  String get loanPeriodDirect => '직접 선택';
+
+  @override
+  String get goalTypeSelect => '목표 유형 선택';
+
+  @override
+  String get goalTypeAsset => '자산 목표';
+
+  @override
+  String get goalTypeAssetDesc => '목표 금액을 설정하고 자산 증가를 추적합니다';
+
+  @override
+  String get goalTypeLoan => '대출 목표';
+
+  @override
+  String get goalTypeLoanDesc => '대출 상환 계획을 설정하고 진행 상황을 추적합니다';
+
+  @override
+  String get goalTitleLabel => '목표 이름';
+
+  @override
+  String get goalTitleHint => '예: 내 집 마련, 전세 대출';
+
+  @override
+  String get goalTitleRequired => '목표 이름을 입력하세요';
+
+  @override
+  String get goalMemoLabel => '메모 (선택)';
+
+  @override
+  String get goalMemoHint => '목표에 대한 메모를 입력하세요';
 }
