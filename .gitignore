@@ -55,8 +55,13 @@ android/key.properties
 .env.*
 
 # Firebase configuration files
+google-services.json
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
+
+# Claude Code worktrees and OMC state
+.claude/worktrees/
+.omc/
 
 # Maestro test outputs
 maestro-tests/screenshots/

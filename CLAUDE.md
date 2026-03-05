@@ -251,6 +251,27 @@ Supabase PostgreSQL 사용. 마이그레이션 파일 위치: `supabase/migratio
 
 **중요: 스키마는 `house`를 사용합니다** (`lib/config/supabase_config.dart`에서 설정). 마이그레이션 작성 시 `CREATE TABLE` 등은 반드시 `house` 스키마에 생성해야 PostgREST에서 접근 가능합니다. `public` 스키마에 생성하면 앱에서 테이블을 찾을 수 없습니다.
 
+**[필수] 마이그레이션 작성 시 `house.` 스키마 접두사 규칙:**
+
+1. **모든 DDL/DML에 `house.` 접두사 필수**: `CREATE TABLE house.xxx`, `CREATE FUNCTION house.xxx()`, `INSERT INTO house.xxx` 등
+2. **함수 내부에서도 `house.` 접두사 필수**: 함수 본문의 `SELECT`, `INSERT`, `UPDATE`, `DELETE` 대상 테이블에도 반드시 `house.` 접두사 사용
+3. **pg_cron 스케줄 등록 시 `house.` 접두사 필수**: `SELECT * FROM house.함수명()` 형태로 등록. `public` 스키마 함수가 호출되면 테이블을 찾지 못함
+4. **다른 `house.` 함수 호출 시에도 접두사 필수**: 예) `house.calculate_next_recurring_date()`
+
+```sql
+-- 잘못된 예시 (스키마 누락 - public에 생성됨)
+CREATE OR REPLACE FUNCTION generate_recurring_transactions() ...
+  SELECT * FROM recurring_templates ...
+  INSERT INTO transactions ...
+
+-- 올바른 예시 (house 스키마 명시)
+CREATE OR REPLACE FUNCTION house.generate_recurring_transactions() ...
+  SELECT * FROM house.recurring_templates ...
+  INSERT INTO house.transactions ...
+```
+
+> **장애 이력 (2026-02-25~03-05)**: `public` 스키마에 함수가 생성되어 cron job이 10일간 실패. `house.` 접두사 누락이 원인.
+
 ### 주요 테이블
 
 **핵심 테이블:**
