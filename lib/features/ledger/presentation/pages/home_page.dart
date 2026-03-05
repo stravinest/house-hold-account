@@ -70,10 +70,10 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadBannerAd();
 
     // 앱 시작 시 가계부 목록 로드 및 첫 번째 가계부 자동 생성
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadBannerAd();
       _initializeLedger();
       _handleInitialTransactionType();
       _handleQuickExpense();
@@ -88,10 +88,15 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.dispose();
   }
 
-  void _loadBannerAd() {
+  Future<void> _loadBannerAd() async {
+    final adSize = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+      MediaQuery.of(context).size.width.truncate(),
+    );
+    if (adSize == null) return;
+
     _bannerAd = BannerAd(
       adUnitId: AdService.bannerAdUnitId,
-      size: AdSize.banner,
+      size: adSize,
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
@@ -109,12 +114,15 @@ class _HomePageState extends ConsumerState<HomePage> {
           if (_adRetryCount < _maxAdRetries) {
             _adRetryCount++;
             Future.delayed(const Duration(seconds: 60), () {
+              // ignore: unawaited_futures
               if (mounted) _loadBannerAd();
             });
           }
         },
       ),
-    )..load();
+    );
+    // ignore: unawaited_futures
+    _bannerAd!.load();
   }
 
   void _handleInitialTransactionType() {
@@ -418,12 +426,9 @@ class _HomePageState extends ConsumerState<HomePage> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: Center(
-                child: SizedBox(
-                  width: _bannerAd!.size.width.toDouble(),
-                  height: _bannerAd!.size.height.toDouble(),
-                  child: AdWidget(ad: _bannerAd!),
-                ),
+              child: SizedBox(
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(key: ValueKey(_bannerAd!.hashCode), ad: _bannerAd!),
               ),
             ),
         ],
