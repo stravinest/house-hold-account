@@ -921,6 +921,7 @@
   },
   "assetTitle": "자산",
   "assetTotal": "총 자산",
+  "assetIncludeLoanRepayment": "대출 상환금 포함",
   "assetChange": "자산 변화",
   "assetCategoryDistribution": "카테고리별 분포",
   "assetList": "자산 목록",

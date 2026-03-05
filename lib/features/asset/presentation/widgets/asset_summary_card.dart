@@ -3,14 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
+import '../providers/asset_provider.dart';
 
-/// A card widget that displays the total asset amount and monthly change.
-///
-/// Features:
-/// - Shows total asset amount with formatted currency
-/// - Displays monthly change with color-coded arrow (green for positive, red for negative)
-/// - "Set Goal" button when no goal exists
-/// - Asset goal section with progress tracking when goals exist
 class AssetSummaryCard extends ConsumerWidget {
   final int totalAmount;
   final int monthlyChange;
@@ -28,12 +22,19 @@ class AssetSummaryCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final numberFormat = NumberFormat('#,###');
     final isPositive = monthlyChange >= 0;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final includeLoanRepayment = ref.watch(includeLoanRepaymentProvider);
+    final loanRepaidAmount = ref.watch(totalLoanRepaidAmountProvider);
+    final displayTotal = includeLoanRepayment
+        ? totalAmount + loanRepaidAmount
+        : totalAmount;
 
     return Container(
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainer,
+        color: colorScheme.surfaceContainer,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
@@ -59,7 +60,7 @@ class AssetSummaryCard extends ConsumerWidget {
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
-              '${numberFormat.format(totalAmount)}${l10n.transactionAmountUnit}',
+              '${numberFormat.format(displayTotal)}${l10n.transactionAmountUnit}',
               style: const TextStyle(
                 fontSize: 32,
                 color: Color(0xFF2E7D32),
@@ -92,6 +93,47 @@ class AssetSummaryCard extends ConsumerWidget {
               ),
             ],
           ),
+          if (loanRepaidAmount > 0) ...[
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => ref.read(includeLoanRepaymentProvider.notifier).toggle(),
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: Checkbox(
+                      value: includeLoanRepayment,
+                      onChanged: (_) =>
+                          ref.read(includeLoanRepaymentProvider.notifier).toggle(),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      l10n.assetIncludeLoanRepayment,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  if (includeLoanRepayment)
+                    Text(
+                      '+${numberFormat.format(loanRepaidAmount)}${l10n.transactionAmountUnit}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.tertiary,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );

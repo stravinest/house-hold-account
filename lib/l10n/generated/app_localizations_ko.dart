@@ -2007,6 +2007,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get assetTotal => '총 자산';
 
   @override
+  String get assetIncludeLoanRepayment => '대출 상환금 포함';
+
+  @override
   String get assetChange => '자산 변화';
 
   @override

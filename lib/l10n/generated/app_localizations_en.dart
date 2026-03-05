@@ -2057,6 +2057,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get assetTotal => 'Total Assets';
 
   @override
+  String get assetIncludeLoanRepayment => 'Include Loan Repayment';
+
+  @override
   String get assetChange => 'Asset Change';
 
   @override

@@ -682,6 +682,7 @@
   },
   "assetTitle": "Asset",
   "assetTotal": "Total Assets",
+  "assetIncludeLoanRepayment": "Include Loan Repayment",
   "assetChange": "Asset Change",
   "assetCategoryDistribution": "Category Distribution",
   "assetList": "Asset List",

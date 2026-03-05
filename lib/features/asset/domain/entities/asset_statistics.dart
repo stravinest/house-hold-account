@@ -71,6 +71,16 @@ class CategoryAsset extends Equatable {
   ];
 }
 
+class YearlyAsset extends Equatable {
+  final int year;
+  final int amount;
+
+  const YearlyAsset({required this.year, required this.amount});
+
+  @override
+  List<Object?> get props => [year, amount];
+}
+
 class AssetItem extends Equatable {
   final String id;
   final String title;

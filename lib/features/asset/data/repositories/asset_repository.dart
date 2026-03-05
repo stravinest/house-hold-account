@@ -41,12 +41,21 @@ class AssetRepository {
   AssetRepository({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
-  Future<int> getTotalAssets({required String ledgerId}) async {
-    final response = await _client
+  Future<int> getTotalAssets({
+    required String ledgerId,
+    String? userId,
+  }) async {
+    var query = _client
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)
         .eq('type', 'asset');
+
+    if (userId != null) {
+      query = query.eq('user_id', userId);
+    }
+
+    final response = await query;
 
     int total = 0;
     for (final row in response as List) {
@@ -60,17 +69,24 @@ class AssetRepository {
     required String ledgerId,
     required int year,
     required int month,
+    String? userId,
   }) async {
     final startDate = DateTime(year, month, 1);
     final endDate = DateTime(year, month + 1, 0);
 
-    final response = await _client
+    var query = _client
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)
         .eq('type', 'asset')
         .gte('date', startDate.toIso8601String().split('T').first)
         .lte('date', endDate.toIso8601String().split('T').first);
+
+    if (userId != null) {
+      query = query.eq('user_id', userId);
+    }
+
+    final response = await query;
 
     int change = 0;
     for (final row in response as List) {
@@ -84,18 +100,24 @@ class AssetRepository {
   Future<List<MonthlyAsset>> getMonthlyAssets({
     required String ledgerId,
     int months = 6,
+    String? userId,
   }) async {
     final now = DateTime.now();
     final endOfCurrentMonth = DateTime(now.year, now.month + 1, 0);
 
     // 단일 쿼리로 전체 자산 거래 조회 (현재 월까지)
-    final response = await _client
+    var query = _client
         .from('transactions')
         .select('amount, date')
         .eq('ledger_id', ledgerId)
         .eq('type', 'asset')
-        .lte('date', endOfCurrentMonth.toIso8601String().split('T').first)
-        .order('date', ascending: true);
+        .lte('date', endOfCurrentMonth.toIso8601String().split('T').first);
+
+    if (userId != null) {
+      query = query.eq('user_id', userId);
+    }
+
+    final response = await query.order('date', ascending: true);
 
     // 월별 누적 계산을 위한 준비
     final results = <MonthlyAsset>[];
@@ -137,8 +159,9 @@ class AssetRepository {
 
   Future<List<CategoryAsset>> getAssetsByCategory({
     required String ledgerId,
+    String? userId,
   }) async {
-    final response = await _client
+    var query = _client
         .from('transactions')
         .select('''
           id,
@@ -153,8 +176,13 @@ class AssetRepository {
           )
         ''')
         .eq('ledger_id', ledgerId)
-        .eq('type', 'asset')
-        .order('date', ascending: false);
+        .eq('type', 'asset');
+
+    if (userId != null) {
+      query = query.eq('user_id', userId);
+    }
+
+    final response = await query.order('date', ascending: false);
 
     final Map<String, List<Map<String, dynamic>>> groupedByCategory = {};
 
@@ -337,6 +365,7 @@ class AssetRepository {
     required String ledgerId,
     String? assetType,
     List<String>? categoryIds,
+    String? userId,
   }) async {
     try {
       var query = _client
@@ -347,6 +376,10 @@ class AssetRepository {
 
       if (categoryIds != null && categoryIds.isNotEmpty) {
         query = query.inFilter('category_id', categoryIds);
+      }
+
+      if (userId != null) {
+        query = query.eq('user_id', userId);
       }
 
       final response = await query;
@@ -365,29 +398,33 @@ class AssetRepository {
   // 자산 통계 - 병렬 쿼리로 최적화 (연결 오류 시 재시도)
   Future<AssetStatistics> getEnhancedStatistics({
     required String ledgerId,
+    String? userId,
   }) async {
     try {
       final now = DateTime.now();
 
       // 독립적인 쿼리들을 병렬로 실행 (연결 오류 시 재시도)
+      // 카테고리별 자산은 assetFilteredByCategoryProvider에서 별도로 조회하므로 제외
       final results = await _retryOnConnectionError(
         () => Future.wait([
-          getTotalAssets(ledgerId: ledgerId),
+          getTotalAssets(ledgerId: ledgerId, userId: userId),
           getMonthlyChange(
             ledgerId: ledgerId,
             year: now.year,
             month: now.month,
+            userId: userId,
           ),
           _getTotalAssetsUntil(
             ledgerId: ledgerId,
             date: DateTime(now.year, now.month, 0),
+            userId: userId,
           ),
           _getTotalAssetsUntil(
             ledgerId: ledgerId,
             date: DateTime(now.year - 1, now.month + 1, 0),
+            userId: userId,
           ),
-          getMonthlyAssets(ledgerId: ledgerId),
-          getAssetsByCategory(ledgerId: ledgerId),
+          getMonthlyAssets(ledgerId: ledgerId, userId: userId),
         ]),
       );
 
@@ -396,7 +433,6 @@ class AssetRepository {
       final lastMonthTotal = results[2] as int;
       final yearAgoTotal = results[3] as int;
       final monthly = results[4] as List<MonthlyAsset>;
-      final byCategory = results[5] as List<CategoryAsset>;
 
       final monthlyChangeRate = lastMonthTotal == 0
           ? 0.0
@@ -412,7 +448,7 @@ class AssetRepository {
         monthlyChangeRate: monthlyChangeRate,
         annualGrowthRate: annualGrowthRate,
         monthly: monthly,
-        byCategory: byCategory,
+        byCategory: const [],
       );
     } catch (e, st) {
       Error.throwWithStackTrace(Exception('Failed to load statistics: $e'), st);
@@ -422,13 +458,20 @@ class AssetRepository {
   Future<int> _getTotalAssetsUntil({
     required String ledgerId,
     required DateTime date,
+    String? userId,
   }) async {
-    final response = await _client
+    var query = _client
         .from('transactions')
         .select('amount')
         .eq('ledger_id', ledgerId)
         .eq('type', 'asset')
         .lte('date', date.toIso8601String().split('T').first);
+
+    if (userId != null) {
+      query = query.eq('user_id', userId);
+    }
+
+    final response = await query;
 
     int total = 0;
     for (final row in response as List) {
@@ -436,5 +479,55 @@ class AssetRepository {
     }
 
     return total;
+  }
+
+  // 연도별 누적 자산 - 단일 쿼리로 최적화
+  Future<List<YearlyAsset>> getYearlyAssets({
+    required String ledgerId,
+    int years = 6,
+    String? userId,
+  }) async {
+    final now = DateTime.now();
+    final endOfCurrentYear = DateTime(now.year, 12, 31);
+
+    var query = _client
+        .from('transactions')
+        .select('amount, date')
+        .eq('ledger_id', ledgerId)
+        .eq('type', 'asset')
+        .lte('date', endOfCurrentYear.toIso8601String().split('T').first);
+
+    if (userId != null) {
+      query = query.eq('user_id', userId);
+    }
+
+    final response = await query.order('date', ascending: true);
+
+    final results = <YearlyAsset>[];
+    int runningTotal = 0;
+
+    final targetYears = <int>[];
+    for (int i = years - 1; i >= 0; i--) {
+      targetYears.add(now.year - i);
+    }
+
+    int txIndex = 0;
+    final transactions = response as List;
+
+    for (final targetYear in targetYears) {
+      final endOfYear = DateTime(targetYear, 12, 31);
+
+      while (txIndex < transactions.length) {
+        final txDate = DateTime.parse(transactions[txIndex]['date'] as String);
+        if (txDate.isAfter(endOfYear)) break;
+
+        runningTotal += (transactions[txIndex]['amount'] as int);
+        txIndex++;
+      }
+
+      results.add(YearlyAsset(year: targetYear, amount: runningTotal));
+    }
+
+    return results;
   }
 }

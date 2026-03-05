@@ -6,6 +6,7 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/asset_goal.dart';
 import '../providers/asset_goal_provider.dart';
 import 'asset_goal_form_sheet.dart';
+import 'loan_goal_form_sheet.dart';
 
 class AssetGoalActionButtons extends ConsumerWidget {
   final AssetGoal goal;
@@ -44,7 +45,10 @@ class AssetGoalActionButtons extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => AssetGoalFormSheet(goal: goal),
+      backgroundColor: Colors.transparent,
+      builder: (context) => goal.goalType == GoalType.loan
+          ? LoanGoalFormSheet(goal: goal)
+          : AssetGoalFormSheet(goal: goal),
     );
   }
 

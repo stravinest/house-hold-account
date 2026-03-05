@@ -3842,6 +3842,12 @@ abstract class AppLocalizations {
   /// **'총 자산'**
   String get assetTotal;
 
+  /// No description provided for @assetIncludeLoanRepayment.
+  ///
+  /// In ko, this message translates to:
+  /// **'대출 상환금 포함'**
+  String get assetIncludeLoanRepayment;
+
   /// No description provided for @assetChange.
   ///
   /// In ko, this message translates to:

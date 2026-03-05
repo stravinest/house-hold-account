@@ -1,38 +1,146 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/utils/number_format_utils.dart';
 import '../../../../l10n/generated/app_localizations.dart';
-import '../../domain/entities/asset_statistics.dart';
+import '../../../statistics/domain/entities/statistics_entities.dart';
+import '../providers/asset_provider.dart';
 
-class AssetLineChart extends StatelessWidget {
-  final List<MonthlyAsset> monthly;
-
-  const AssetLineChart({super.key, required this.monthly});
+class AssetLineChart extends ConsumerWidget {
+  const AssetLineChart({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final period = ref.watch(assetChartPeriodProvider);
 
-    if (monthly.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Text(
-            l10n.assetNoAssetData,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+    if (period == TrendPeriod.yearly) {
+      return _buildYearlyChart(context, ref, l10n, theme);
+    }
+    return _buildMonthlyChart(context, ref, l10n, theme);
+  }
+
+  Widget _buildMonthlyChart(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
+    final monthlyAsync = ref.watch(assetMonthlyChartProvider);
+
+    return monthlyAsync.when(
+      data: (monthly) {
+        if (monthly.isEmpty) {
+          return _buildEmptyState(l10n, theme);
+        }
+
+        final amounts = monthly.map((m) => m.amount).toList();
+        final maxY = _calculateMaxY(amounts);
+        final minY = _calculateMinY(amounts);
+        final spots = _buildSpots(amounts);
+
+        return _buildChart(
+          theme: theme,
+          spots: spots,
+          dataLength: monthly.length,
+          maxY: maxY,
+          minY: minY,
+          bottomTitleBuilder: (index) {
+            if (index >= 0 && index < monthly.length) {
+              return l10n.statisticsMonthLabel(monthly[index].month);
+            }
+            return null;
+          },
+          tooltipBuilder: (index) {
+            if (index >= 0 && index < monthly.length) {
+              final item = monthly[index];
+              return '${item.year}.${item.month.toString().padLeft(2, '0')}\n${NumberFormatUtils.currency.format(item.amount)}';
+            }
+            return null;
+          },
+        );
+      },
+      loading: () => const AspectRatio(
+        aspectRatio: 1.7,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Center(child: Text(e.toString())),
+    );
+  }
+
+  Widget _buildYearlyChart(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    ThemeData theme,
+  ) {
+    final yearlyAsync = ref.watch(assetYearlyChartProvider);
+
+    return yearlyAsync.when(
+      data: (yearly) {
+        if (yearly.isEmpty) {
+          return _buildEmptyState(l10n, theme);
+        }
+
+        final amounts = yearly.map((y) => y.amount).toList();
+        final maxY = _calculateMaxY(amounts);
+        final minY = _calculateMinY(amounts);
+        final spots = _buildSpots(amounts);
+
+        return _buildChart(
+          theme: theme,
+          spots: spots,
+          dataLength: yearly.length,
+          maxY: maxY,
+          minY: minY,
+          bottomTitleBuilder: (index) {
+            if (index >= 0 && index < yearly.length) {
+              return l10n.statisticsYearLabel(yearly[index].year);
+            }
+            return null;
+          },
+          tooltipBuilder: (index) {
+            if (index >= 0 && index < yearly.length) {
+              final item = yearly[index];
+              return '${item.year}\n${NumberFormatUtils.currency.format(item.amount)}';
+            }
+            return null;
+          },
+        );
+      },
+      loading: () => const AspectRatio(
+        aspectRatio: 1.7,
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Center(child: Text(e.toString())),
+    );
+  }
+
+  Widget _buildEmptyState(AppLocalizations l10n, ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Text(
+          l10n.assetNoAssetData,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
           ),
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    final maxY = _calculateMaxY();
-    final minY = _calculateMinY();
-    final spots = _buildSpots();
-
+  Widget _buildChart({
+    required ThemeData theme,
+    required List<FlSpot> spots,
+    required int dataLength,
+    required double maxY,
+    required double minY,
+    required String? Function(int index) bottomTitleBuilder,
+    required String? Function(int index) tooltipBuilder,
+  }) {
     return AspectRatio(
       aspectRatio: 1.7,
       child: Padding(
@@ -75,12 +183,12 @@ class AssetLineChart extends StatelessWidget {
                   reservedSize: 30,
                   getTitlesWidget: (value, meta) {
                     final index = value.toInt();
-                    if (index >= 0 && index < monthly.length) {
-                      final item = monthly[index];
+                    final title = bottomTitleBuilder(index);
+                    if (title != null) {
                       return Padding(
                         padding: const EdgeInsets.only(top: 8),
                         child: Text(
-                          l10n.statisticsMonthLabel(item.month),
+                          title,
                           style: theme.textTheme.bodySmall,
                         ),
                       );
@@ -117,7 +225,7 @@ class AssetLineChart extends StatelessWidget {
             gridData: FlGridData(
               show: true,
               drawVerticalLine: false,
-              horizontalInterval: maxY / 4,
+              horizontalInterval: maxY > 0 ? maxY / 4 : 25,
               getDrawingHorizontalLine: (value) {
                 return FlLine(
                   color: theme.colorScheme.outlineVariant.withValues(
@@ -128,7 +236,7 @@ class AssetLineChart extends StatelessWidget {
               },
             ),
             minX: 0,
-            maxX: (monthly.length - 1).toDouble(),
+            maxX: (dataLength - 1).toDouble(),
             minY: minY,
             maxY: maxY,
             lineTouchData: LineTouchData(
@@ -138,10 +246,10 @@ class AssetLineChart extends StatelessWidget {
                 getTooltipItems: (touchedSpots) {
                   return touchedSpots.map((spot) {
                     final index = spot.x.toInt();
-                    if (index >= 0 && index < monthly.length) {
-                      final item = monthly[index];
+                    final text = tooltipBuilder(index);
+                    if (text != null) {
                       return LineTooltipItem(
-                        '${item.year}.${item.month.toString().padLeft(2, '0')}\n${NumberFormatUtils.currency.format(item.amount)}원',
+                        text,
                         TextStyle(
                           color: theme.colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
@@ -159,16 +267,11 @@ class AssetLineChart extends StatelessWidget {
     );
   }
 
-  double _calculateMaxY() {
-    if (monthly.isEmpty) return 100;
+  double _calculateMaxY(List<int> amounts) {
+    if (amounts.isEmpty) return 100;
 
-    final maxAmount = monthly
-        .map((m) => m.amount)
-        .reduce((a, b) => a > b ? a : b);
-
-    final minAmount = monthly
-        .map((m) => m.amount)
-        .reduce((a, b) => a < b ? a : b);
+    final maxAmount = amounts.reduce((a, b) => a > b ? a : b);
+    final minAmount = amounts.reduce((a, b) => a < b ? a : b);
 
     if (maxAmount <= 0) return 100;
 
@@ -179,12 +282,10 @@ class AssetLineChart extends StatelessWidget {
     return (maxAmount * 1.2).ceilToDouble();
   }
 
-  double _calculateMinY() {
-    if (monthly.isEmpty) return 0;
+  double _calculateMinY(List<int> amounts) {
+    if (amounts.isEmpty) return 0;
 
-    final minAmount = monthly
-        .map((m) => m.amount)
-        .reduce((a, b) => a < b ? a : b);
+    final minAmount = amounts.reduce((a, b) => a < b ? a : b);
 
     if (minAmount < 0) {
       return (minAmount * 1.2).floorToDouble();
@@ -193,10 +294,10 @@ class AssetLineChart extends StatelessWidget {
     return 0;
   }
 
-  List<FlSpot> _buildSpots() {
+  List<FlSpot> _buildSpots(List<int> amounts) {
     return List.generate(
-      monthly.length,
-      (index) => FlSpot(index.toDouble(), monthly[index].amount.toDouble()),
+      amounts.length,
+      (index) => FlSpot(index.toDouble(), amounts[index].toDouble()),
     );
   }
 }

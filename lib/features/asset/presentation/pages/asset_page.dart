@@ -7,13 +7,18 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart';
 import '../../../../shared/widgets/skeleton_loading.dart';
 import '../../../ledger/presentation/providers/ledger_provider.dart';
+import '../../../share/presentation/providers/share_provider.dart';
+import '../../../statistics/presentation/providers/statistics_provider.dart';
+import '../../../statistics/presentation/widgets/common/member_tabs.dart';
 import '../../domain/entities/asset_goal.dart';
+import '../../domain/entities/asset_statistics.dart';
 import '../providers/asset_goal_provider.dart';
 import '../providers/asset_provider.dart';
 import '../widgets/asset_category_list.dart';
 import '../widgets/asset_donut_chart.dart';
 import '../widgets/asset_goal_form_sheet.dart';
 import '../widgets/asset_line_chart.dart';
+import '../widgets/asset_period_dropdown.dart';
 import '../widgets/asset_summary_card.dart';
 import '../widgets/goal_type_selector.dart';
 import '../widgets/loan_goal_card.dart';
@@ -31,6 +36,9 @@ class AssetPage extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: () async {
         ref.invalidate(assetStatisticsProvider);
+        ref.invalidate(assetMonthlyChartProvider);
+        ref.invalidate(assetYearlyChartProvider);
+        ref.invalidate(assetFilteredByCategoryProvider);
         await ref.read(assetStatisticsProvider.future);
       },
       child: statisticsAsync.when(
@@ -52,18 +60,11 @@ class AssetPage extends ConsumerWidget {
               const SizedBox(height: 16),
               _SectionCard(
                 title: l10n.assetChange,
-                child: AssetLineChart(monthly: statistics.monthly),
+                filter: const AssetPeriodDropdown(),
+                child: const AssetLineChart(),
               ),
               const SizedBox(height: 16),
-              _SectionCard(
-                title: l10n.assetCategoryDistribution,
-                child: AssetDonutChart(byCategory: statistics.byCategory),
-              ),
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: l10n.assetList,
-                child: AssetCategoryList(assetStatistics: statistics),
-              ),
+              const _FilteredCategorySection(),
               const SizedBox(height: 80),
             ],
           ),
@@ -297,14 +298,13 @@ Future<void> _confirmAndDeleteGoal(
   if (confirmed == true && context.mounted) {
     final notifier = ref.read(assetGoalNotifierProvider(ledgerId).notifier);
     await notifier.deleteGoal(goal.id);
-    ref.invalidate(assetGoalsProvider);
     if (context.mounted) {
       SnackBarUtils.showSuccess(context, l10n.assetGoalDeleted);
     }
   }
 }
 
-// 자산 목표 섹션: assetOnlyGoalsProvider로 자산 목표만 필터링하여 리스트 표시
+// 자산 목표 섹션: assetGoalNotifierProvider를 직접 watch하여 자산 목표만 필터링
 class _AssetGoalSection extends ConsumerWidget {
   final String ledgerId;
 
@@ -312,10 +312,11 @@ class _AssetGoalSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final assetGoalsAsync = ref.watch(assetOnlyGoalsProvider);
+    final allGoalsAsync = ref.watch(assetGoalNotifierProvider(ledgerId));
 
-    return assetGoalsAsync.when(
-      data: (goals) {
+    return allGoalsAsync.when(
+      data: (allGoals) {
+        final goals = allGoals.where((g) => g.goalType == GoalType.asset).toList();
         if (goals.isEmpty) return const SizedBox.shrink();
         return Column(
           children: goals.map((goal) {
@@ -329,7 +330,9 @@ class _AssetGoalSection extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (e, _) => const SizedBox.shrink(),
+      error: (e, _) {
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -361,22 +364,19 @@ class _AssetGoalItem extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    final colorScheme = Theme.of(context).colorScheme;
     final currentAmountAsync = ref.watch(assetGoalCurrentAmountProvider(goal));
     final progress = ref.watch(assetGoalProgressProvider(goal));
+    final remainingDays = ref.watch(assetGoalRemainingDaysProvider(goal));
 
     return currentAmountAsync.when(
       data: (currentAmount) {
-        final numberFormat = NumberFormat('#,###');
         final remaining = goal.targetAmount - currentAmount;
-        final progressPercent = (progress * 100).clamp(0, 100);
-        final colorScheme = Theme.of(context).colorScheme;
-        final progressColor = progress >= 1.0
-            ? colorScheme.primary
-            : colorScheme.error;
+        final clampedProgress = progress.clamp(0.0, 1.0);
+        final progressColor = colorScheme.primary;
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainer,
             borderRadius: BorderRadius.circular(16),
@@ -388,124 +388,181 @@ class _AssetGoalItem extends ConsumerWidget {
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 헤더: 배지 + 제목 + 수정/삭제
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withAlpha(26),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.flag_outlined,
+                            size: 14,
                             color: colorScheme.primary,
-                            borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Icon(Icons.flag, size: 20, color: colorScheme.onPrimary),
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            goal.title,
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          const SizedBox(width: 4),
+                          Text(
+                            l10n.assetGoalTitle,
+                            style: TextStyle(
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
+                              color: colorScheme.primary,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        goal.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                      ],
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: onEdit,
-                        icon: Icon(Icons.edit, size: 20, color: colorScheme.onSurfaceVariant),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                        tooltip: l10n.tooltipEdit,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      IconButton(
-                        onPressed: onDelete,
-                        icon: Icon(Icons.delete, size: 20, color: colorScheme.error),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                        tooltip: l10n.tooltipDelete,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                '${numberFormat.format(goal.targetAmount)}${l10n.transactionAmountUnit}',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    l10n.assetGoalCurrentWithAmount('${numberFormat.format(currentAmount)}${l10n.transactionAmountUnit}'),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                  ),
-                  Text(
-                    l10n.assetGoalTargetWithAmount('${numberFormat.format(goal.targetAmount)}${l10n.transactionAmountUnit}'),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                height: 12,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  color: colorScheme.outlineVariant,
-                ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final clampedProgress = progress.clamp(0.0, 1.0);
-                    final displayProgress = progress >= 0.01 ? clampedProgress : 0.01;
-                    return Align(
-                      alignment: Alignment.centerLeft,
-                      child: Container(
-                        width: constraints.maxWidth * displayProgress,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(6),
-                          color: progressColor,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: colorScheme.errorContainer,
-                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Text(
-                      l10n.assetGoalAchievementPercent(progressPercent.toStringAsFixed(1)),
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: colorScheme.onErrorContainer),
+                    IconButton(
+                      onPressed: onEdit,
+                      icon: const Icon(Icons.edit_outlined),
+                      iconSize: 20,
+                      tooltip: l10n.tooltipEdit,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
                     ),
-                  ),
-                  if (remaining > 0)
+                    IconButton(
+                      onPressed: onDelete,
+                      icon: const Icon(Icons.delete_outline),
+                      iconSize: 20,
+                      tooltip: l10n.tooltipDelete,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 36,
+                        minHeight: 36,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // 목표 금액
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      l10n.assetGoalRemainingWithUnit('${numberFormat.format(remaining)}${l10n.transactionAmountUnit}'),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                      l10n.assetGoalTargetAmount,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                ],
-              ),
-            ],
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatCurrency(goal.targetAmount),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                // 달성률 + 프로그래스 바
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      l10n.assetGoalAchievementRate,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      '${(clampedProgress * 100).toStringAsFixed(1)}%',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: progressColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: clampedProgress,
+                    minHeight: 8,
+                    backgroundColor: colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // 상세 정보
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _buildInfoItem(
+                      context,
+                      icon: Icons.account_balance_wallet_outlined,
+                      label: l10n.assetGoalCurrentAmount,
+                      value: _formatCurrency(currentAmount),
+                    ),
+                    if (remaining > 0)
+                      _buildInfoItem(
+                        context,
+                        icon: Icons.trending_up,
+                        label: l10n.assetGoalTargetAmount,
+                        value: _formatCurrency(goal.targetAmount),
+                      ),
+                    if (goal.targetDate != null)
+                      _buildInfoItem(
+                        context,
+                        icon: Icons.flag_outlined,
+                        label: l10n.assetGoalDateOptional,
+                        value: DateFormat('yyyy.MM.dd').format(goal.targetDate!),
+                      ),
+                    if (remainingDays != null && remainingDays > 0)
+                      _buildInfoItem(
+                        context,
+                        icon: Icons.access_time,
+                        label: 'D-Day',
+                        value: l10n.assetGoalDaysRemaining(remainingDays),
+                      ),
+                    if (progress >= 1.0)
+                      _buildInfoItem(
+                        context,
+                        icon: Icons.check_circle_outline,
+                        label: l10n.assetGoalCompleted,
+                        value: l10n.assetGoalCompleted,
+                        isHighlighted: true,
+                      ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -513,9 +570,55 @@ class _AssetGoalItem extends ConsumerWidget {
       error: (e, _) => const SizedBox.shrink(),
     );
   }
+
+  Widget _buildInfoItem(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    bool isHighlighted = false,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final bgColor = isHighlighted
+        ? colorScheme.primary.withAlpha(20)
+        : colorScheme.surfaceContainerHighest;
+    final labelColor = isHighlighted
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 11, color: labelColor),
+              const SizedBox(width: 3),
+              Text(label, style: TextStyle(fontSize: 10, color: labelColor)),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatCurrency(int amount) {
+    return '₩${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
+  }
 }
 
-// 대출 목표 섹션: loanGoalsProvider로 대출 목표만 필터링하여 표시
+// 대출 목표 섹션: assetGoalNotifierProvider를 직접 watch하여 대출 목표만 필터링
 class _LoanGoalSection extends ConsumerWidget {
   final String ledgerId;
 
@@ -523,10 +626,11 @@ class _LoanGoalSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final loanGoalsAsync = ref.watch(loanGoalsProvider);
+    final allGoalsAsync = ref.watch(assetGoalNotifierProvider(ledgerId));
 
-    return loanGoalsAsync.when(
-      data: (goals) {
+    return allGoalsAsync.when(
+      data: (allGoals) {
+        final goals = allGoals.where((g) => g.goalType == GoalType.loan).toList();
         if (goals.isEmpty) return const SizedBox.shrink();
         return Column(
           children: goals.map((goal) {
@@ -606,11 +710,159 @@ class _AddGoalButton extends StatelessWidget {
   }
 }
 
+// 유저 필터가 적용된 카테고리별 분포 + 자산 목록 섹션
+class _FilteredCategorySection extends ConsumerWidget {
+  const _FilteredCategorySection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    final filteredCategoryAsync = ref.watch(assetFilteredByCategoryProvider);
+    final isShared = ref.watch(isSharedLedgerProvider);
+
+    // 탭 전환 시 이전 데이터를 유지하여 스크롤 위치가 초기화되지 않도록 함
+    final byCategory = filteredCategoryAsync.valueOrNull;
+    final isLoading = filteredCategoryAsync.isLoading;
+    final hasError = filteredCategoryAsync.hasError;
+
+    if (byCategory == null && isLoading) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainer,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (hasError && byCategory == null) {
+      return Center(
+        child: Text(l10n.errorWithMessage(
+          filteredCategoryAsync.error.toString(),
+        )),
+      );
+    }
+
+    final data = byCategory ?? [];
+
+    return Column(
+      children: [
+        // 카테고리별 분포 카드
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0D000000),
+                blurRadius: 8,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.assetCategoryDistribution,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  AnimatedOpacity(
+                    opacity: isLoading ? 0.5 : 1.0,
+                    duration: const Duration(milliseconds: 200),
+                    child: AssetDonutChart(byCategory: data),
+                  ),
+                  if (isShared) ...[
+                    const SizedBox(height: 16),
+                    _buildMemberTabs(ref),
+                  ],
+                ],
+              ),
+              if (isLoading)
+                Positioned.fill(
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface.withAlpha(180),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        // 자산 목록 카드
+        AnimatedOpacity(
+          opacity: isLoading ? 0.5 : 1.0,
+          duration: const Duration(milliseconds: 200),
+          child: _SectionCard(
+            title: l10n.assetList,
+            child: AssetCategoryList(
+              assetStatistics: AssetStatistics(
+                totalAmount: data.fold(0, (sum, c) => sum + c.amount),
+                monthlyChange: 0,
+                monthlyChangeRate: 0,
+                annualGrowthRate: 0,
+                monthly: const [],
+                byCategory: data,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMemberTabs(WidgetRef ref) {
+    final membersAsync = ref.watch(currentLedgerMembersProvider);
+    final sharedState = ref.watch(assetSharedStateProvider);
+
+    return membersAsync.when(
+      data: (members) {
+        if (members.length < 2) return const SizedBox.shrink();
+
+        return MemberTabs(
+          members: members,
+          sharedState: sharedState,
+          onStateChanged: (newState) {
+            ref.read(assetSharedStateProvider.notifier).state = newState;
+          },
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+    );
+  }
+}
+
 class _SectionCard extends StatelessWidget {
   final String title;
+  final Widget? filter;
   final Widget child;
 
-  const _SectionCard({required this.title, required this.child});
+  const _SectionCard({
+    required this.title,
+    this.filter,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -633,11 +885,17 @@ class _SectionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              if (filter != null) filter!,
+            ],
           ),
           const SizedBox(height: 16),
           child,
