@@ -10,12 +10,34 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:supabase/supabase.dart';
 
-const supabaseUrl = 'https://qcpjxxgnqdbngyepevmt.supabase.co';
-const supabaseAnonKey =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjcGp4eGducWRibmd5ZXBldm10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg0NjQ4OTUsImV4cCI6MjA4NDA0MDg5NX0.mrf-mE_mzR04NyhUWqJZmaOsDk4CwTcvedQv4HIxoOo';
+// 환경변수에서 로드 (.env 파일 또는 시스템 환경변수)
+final supabaseUrl = Platform.environment['SUPABASE_URL'] ?? _loadFromDotenv('SUPABASE_URL');
+final supabaseAnonKey = Platform.environment['SUPABASE_ANON_KEY'] ?? _loadFromDotenv('SUPABASE_ANON_KEY');
+final testEmail = Platform.environment['TEST_EMAIL'] ?? _loadFromDotenv('TEST_EMAIL');
+final testPassword = Platform.environment['TEST_PASSWORD'] ?? _loadFromDotenv('TEST_PASSWORD');
 
-const testEmail = 'user1@test.com';
-const testPassword = 'testpass123';
+/// .env 파일에서 환경변수를 로드하는 헬퍼 함수
+String _loadFromDotenv(String key) {
+  final envFile = File('.env');
+  if (!envFile.existsSync()) {
+    throw StateError(
+      '$key 환경변수가 설정되지 않았습니다. '
+      '.env 파일을 생성하거나 환경변수를 설정하세요.',
+    );
+  }
+  final lines = envFile.readAsLinesSync();
+  for (final line in lines) {
+    final trimmed = line.trim();
+    if (trimmed.startsWith('#') || !trimmed.contains('=')) continue;
+    final idx = trimmed.indexOf('=');
+    if (trimmed.substring(0, idx).trim() == key) {
+      return trimmed.substring(idx + 1).trim();
+    }
+  }
+  throw StateError(
+    '$key 환경변수가 .env 파일에 없습니다.',
+  );
+}
 
 int _passed = 0;
 int _failed = 0;
