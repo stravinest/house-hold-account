@@ -21,6 +21,9 @@ class AssetGoalModel extends AssetGoal {
     super.monthlyPayment,
     super.isManualPayment,
     super.memo,
+    super.extraRepaidAmount,
+    super.previousInterestRate,
+    super.rateChangedAt,
   });
 
   factory AssetGoalModel.fromJson(Map<String, dynamic> json) {
@@ -54,6 +57,11 @@ class AssetGoalModel extends AssetGoal {
       monthlyPayment: json['monthly_payment'] as int?,
       isManualPayment: json['is_manual_payment'] as bool? ?? false,
       memo: json['memo'] as String?,
+      extraRepaidAmount: json['extra_repaid_amount'] as int? ?? 0,
+      previousInterestRate: (json['previous_interest_rate'] as num?)?.toDouble(),
+      rateChangedAt: json['rate_changed_at'] != null
+          ? DateTime.parse(json['rate_changed_at'] as String)
+          : null,
     );
   }
 
@@ -103,6 +111,11 @@ class AssetGoalModel extends AssetGoal {
       if (monthlyPayment != null) 'monthly_payment': monthlyPayment,
       'is_manual_payment': isManualPayment,
       if (memo != null) 'memo': memo,
+      'extra_repaid_amount': extraRepaidAmount,
+      if (previousInterestRate != null)
+        'previous_interest_rate': previousInterestRate,
+      if (rateChangedAt != null)
+        'rate_changed_at': rateChangedAt!.toIso8601String().split('T')[0],
     };
   }
 
@@ -124,6 +137,11 @@ class AssetGoalModel extends AssetGoal {
       'monthly_payment': monthlyPayment,
       'is_manual_payment': isManualPayment,
       'memo': memo,
+      'extra_repaid_amount': extraRepaidAmount,
+      if (previousInterestRate != null)
+        'previous_interest_rate': previousInterestRate,
+      if (rateChangedAt != null)
+        'rate_changed_at': rateChangedAt!.toIso8601String().split('T')[0],
     };
   }
 }

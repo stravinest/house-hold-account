@@ -189,11 +189,95 @@ final assetOnlyGoalsProvider = FutureProvider<List<AssetGoal>>((ref) async {
   return goals.where((g) => g.goalType == GoalType.asset).toList();
 });
 
-// 대출 목표의 자동 계산된 월 상환금 (isManualPayment=true이면 monthlyPayment 직접 사용)
-final loanMonthlyPaymentProvider = Provider.family<int, AssetGoal>((
+// 대출 목표의 현재 잔여 원금 (추가상환 반영)
+final loanRemainingBalanceProvider = Provider.family<int, AssetGoal>((
   ref,
   goal,
 ) {
+  if (goal.goalType != GoalType.loan) return 0;
+  final loanAmount = goal.loanAmount ?? 0;
+  final rate = goal.annualInterestRate ?? 0.0;
+  final method =
+      goal.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
+  final startDate = goal.startDate;
+  final targetDate = goal.targetDate;
+  if (startDate == null || targetDate == null || loanAmount <= 0) return 0;
+
+  final now = DateTime.now();
+  final totalMonths =
+      LoanCalculatorService.calculateMonthsBetween(startDate, targetDate);
+  final elapsedMonths =
+      LoanCalculatorService.calculateMonthsBetween(startDate, now);
+  if (totalMonths <= 0 || elapsedMonths <= 0) return loanAmount;
+
+  final remaining = LoanCalculatorService.calculateRemainingBalance(
+    loanAmount: loanAmount,
+    annualInterestRate: rate,
+    totalMonths: totalMonths,
+    elapsedMonths: elapsedMonths,
+    method: method,
+  );
+  return (remaining - goal.extraRepaidAmount).clamp(0, loanAmount);
+});
+
+// 추가상환 반영 예상 만기일 (추가상환 없으면 null)
+final loanEstimatedMaturityProvider = Provider.family<DateTime?, AssetGoal>((
+  ref,
+  goal,
+) {
+  if (goal.goalType != GoalType.loan || goal.extraRepaidAmount <= 0) {
+    return null;
+  }
+  final loanAmount = goal.loanAmount ?? 0;
+  final rate = goal.annualInterestRate ?? 0.0;
+  final method =
+      goal.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
+  final startDate = goal.startDate;
+  final targetDate = goal.targetDate;
+  if (startDate == null || targetDate == null || loanAmount <= 0) return null;
+
+  final now = DateTime.now();
+  final totalMonths =
+      LoanCalculatorService.calculateMonthsBetween(startDate, targetDate);
+  final elapsedMonths =
+      LoanCalculatorService.calculateMonthsBetween(startDate, now);
+  if (totalMonths <= 0 || elapsedMonths <= 0) return null;
+
+  final remainingBalance = LoanCalculatorService.calculateRemainingBalance(
+    loanAmount: loanAmount,
+    annualInterestRate: rate,
+    totalMonths: totalMonths,
+    elapsedMonths: elapsedMonths,
+    method: method,
+  );
+
+  final currentMonthlyPayment = LoanCalculatorService.calculateMonthlyPayment(
+    loanAmount: loanAmount,
+    annualInterestRate: rate,
+    totalMonths: totalMonths,
+    method: method,
+    currentMonth: elapsedMonths + 1,
+  );
+
+  final newMonths = LoanCalculatorService.calculateNewMaturityMonths(
+    remainingBalance: remainingBalance,
+    extraRepayment: goal.extraRepaidAmount,
+    annualInterestRate: rate,
+    currentMonthlyPayment: currentMonthlyPayment,
+    method: method,
+    originalLoanAmount: loanAmount,
+    originalTotalMonths: totalMonths,
+  );
+
+  if (newMonths < 0) return null;
+  if (newMonths == 0) return now;
+
+  // day를 1로 고정하여 월 오버플로우 방지
+  return DateTime(now.year, now.month + newMonths, 1);
+});
+
+// 대출 목표의 자동 계산된 월 상환금 (isManualPayment=true이면 monthlyPayment 직접 사용)
+final loanMonthlyPaymentProvider = Provider.family<int, AssetGoal>((ref, goal) {
   if (goal.goalType != GoalType.loan) return 0;
 
   // 수동 입력 모드이면 저장된 값 반환
@@ -203,16 +287,15 @@ final loanMonthlyPaymentProvider = Provider.family<int, AssetGoal>((
 
   final loanAmount = goal.loanAmount ?? 0;
   final annualInterestRate = goal.annualInterestRate ?? 0.0;
-  final method =
-      goal.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
+  final method = goal.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
 
   // 개월 수: startDate ~ targetDate
   int totalMonths = 0;
   if (goal.startDate != null && goal.targetDate != null) {
-    final start = goal.startDate!;
-    final end = goal.targetDate!;
-    totalMonths =
-        (end.year - start.year) * 12 + (end.month - start.month);
+    totalMonths = LoanCalculatorService.calculateMonthsBetween(
+      goal.startDate!,
+      goal.targetDate!,
+    );
   }
 
   if (totalMonths <= 0 || loanAmount <= 0) return 0;
@@ -220,10 +303,10 @@ final loanMonthlyPaymentProvider = Provider.family<int, AssetGoal>((
   // 현재 몇 회차인지 계산 (원금균등/체증식에서 사용)
   int currentMonth = 1;
   if (goal.startDate != null) {
-    final now = DateTime.now();
-    currentMonth =
-        (now.year - goal.startDate!.year) * 12 +
-        (now.month - goal.startDate!.month) +
+    currentMonth = LoanCalculatorService.calculateMonthsBetween(
+          goal.startDate!,
+          DateTime.now(),
+        ) +
         1;
     if (currentMonth < 1) currentMonth = 1;
     if (currentMonth > totalMonths) currentMonth = totalMonths;

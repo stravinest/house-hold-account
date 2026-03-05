@@ -254,6 +254,17 @@ class AssetRepository {
         createdAt: goal.createdAt,
         updatedAt: goal.updatedAt,
         createdBy: goal.createdBy,
+        goalType: goal.goalType,
+        loanAmount: goal.loanAmount,
+        repaymentMethod: goal.repaymentMethod,
+        annualInterestRate: goal.annualInterestRate,
+        startDate: goal.startDate,
+        monthlyPayment: goal.monthlyPayment,
+        isManualPayment: goal.isManualPayment,
+        memo: goal.memo,
+        extraRepaidAmount: goal.extraRepaidAmount,
+        previousInterestRate: goal.previousInterestRate,
+        rateChangedAt: goal.rateChangedAt,
       );
 
       final response = await _client
@@ -286,6 +297,17 @@ class AssetRepository {
         createdAt: goal.createdAt,
         updatedAt: goal.updatedAt,
         createdBy: goal.createdBy,
+        goalType: goal.goalType,
+        loanAmount: goal.loanAmount,
+        repaymentMethod: goal.repaymentMethod,
+        annualInterestRate: goal.annualInterestRate,
+        startDate: goal.startDate,
+        monthlyPayment: goal.monthlyPayment,
+        isManualPayment: goal.isManualPayment,
+        memo: goal.memo,
+        extraRepaidAmount: goal.extraRepaidAmount,
+        previousInterestRate: goal.previousInterestRate,
+        rateChangedAt: goal.rateChangedAt,
       );
 
       // RLS 정책: 가계부 멤버라면 누구나 수정 가능하도록 DB 정책 수정됨

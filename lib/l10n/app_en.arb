@@ -1293,6 +1293,39 @@
     }
   },
   "loanPeriodDirect": "Custom",
+  "loanRemainingBalance": "Remaining Balance",
+  "loanExtraRepayment": "Extra Repayment",
+  "loanExtraRepaymentHint": "Enter extra repayment amount",
+  "loanNewEstimatedMaturity": "New Estimated Maturity",
+  "loanShortenedPeriod": "Shortened Period",
+  "loanInterestSaved": "Interest Saved",
+  "loanRateChangeInfo": "Rate Change Info",
+  "loanPreviousRate": "Previous Rate",
+  "loanNewMonthlyPayment": "New Monthly Payment",
+  "loanPaymentChange": "Payment Change",
+  "loanExtraRepaymentExceedsBalance": "Extra repayment exceeds remaining balance",
+  "loanMaturityNoChange": "Bullet repayment: maturity date does not change",
+  "loanRemainingInterest": "Remaining Total Interest",
+  "loanElapsedMonths": "Elapsed Period",
+  "loanElapsedMonthsValue": "{months} months",
+  "@loanElapsedMonthsValue": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "loanShortenedPeriodValue": "{years}y {months}m",
+  "@loanShortenedPeriodValue": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
 
   "goalTypeSelect": "Select Goal Type",
   "goalTypeAsset": "Asset Goal",

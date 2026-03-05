@@ -3583,6 +3583,58 @@ class AppLocalizationsKo extends AppLocalizations {
   String get loanPeriodDirect => '직접 선택';
 
   @override
+  String get loanRemainingBalance => '잔여 원금';
+
+  @override
+  String get loanExtraRepayment => '추가상환';
+
+  @override
+  String get loanExtraRepaymentHint => '추가상환 금액 입력';
+
+  @override
+  String get loanNewEstimatedMaturity => '새 예상 만기일';
+
+  @override
+  String get loanShortenedPeriod => '단축 기간';
+
+  @override
+  String get loanInterestSaved => '절약 이자';
+
+  @override
+  String get loanRateChangeInfo => '금리 변경 정보';
+
+  @override
+  String get loanPreviousRate => '이전 이율';
+
+  @override
+  String get loanNewMonthlyPayment => '새 월 상환금';
+
+  @override
+  String get loanPaymentChange => '변동액';
+
+  @override
+  String get loanExtraRepaymentExceedsBalance => '추가상환 금액이 잔여 원금을 초과합니다';
+
+  @override
+  String get loanMaturityNoChange => '만기일시상환은 만기일이 변동되지 않습니다';
+
+  @override
+  String get loanRemainingInterest => '잔여 총 이자';
+
+  @override
+  String get loanElapsedMonths => '경과 기간';
+
+  @override
+  String loanElapsedMonthsValue(int months) {
+    return '$months개월';
+  }
+
+  @override
+  String loanShortenedPeriodValue(int years, int months) {
+    return '$years년 $months개월';
+  }
+
+  @override
   String get goalTypeSelect => '목표 유형 선택';
 
   @override

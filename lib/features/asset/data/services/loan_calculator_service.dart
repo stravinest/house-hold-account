@@ -3,6 +3,21 @@ import 'dart:math';
 import '../../domain/entities/asset_goal.dart';
 
 class LoanCalculatorService {
+  // 상수
+  static const int _maxSimulationMonths = 1200; // 시뮬레이션 최대 개월 수 (100년)
+  static const double _rateChangeThreshold = 0.001; // 이율 변경 감지 임계값
+
+  // 두 날짜 간 개월 수 계산 유틸리티
+  static int calculateMonthsBetween(DateTime start, DateTime end) {
+    return (end.year - start.year) * 12 + (end.month - start.month);
+  }
+
+  // 이율 변경 여부 판단
+  static bool isRateChanged(double? oldRate, double? newRate) {
+    if (oldRate == null || newRate == null) return false;
+    return (oldRate - newRate).abs() > _rateChangeThreshold;
+  }
+
   // 월 상환금 계산
   // currentMonth: 원금균등/체증식에서 몇 회차인지 (기본값 1)
   static int calculateMonthlyPayment({
@@ -183,7 +198,12 @@ class LoanCalculatorService {
       case RepaymentMethod.graduated:
         int total = 0;
         for (int i = 1; i <= totalMonths; i++) {
-          total += _calcGraduated(loanAmount, annualInterestRate, totalMonths, i);
+          total += _calcGraduated(
+            loanAmount,
+            annualInterestRate,
+            totalMonths,
+            i,
+          );
         }
         return total - loanAmount;
     }
@@ -229,7 +249,10 @@ class LoanCalculatorService {
         double totalRepaid = 0;
         for (int i = 1; i <= months; i++) {
           final payment = _calcGraduated(
-            loanAmount, annualInterestRate, totalMonths, i,
+            loanAmount,
+            annualInterestRate,
+            totalMonths,
+            i,
           );
           final interest = remainingPrincipal * r;
           final principal = payment - interest;
@@ -274,6 +297,256 @@ class LoanCalculatorService {
       totalMonths -= 1;
     }
     return totalMonths < 0 ? 0 : totalMonths;
+  }
+
+  // 잔여 원금 계산
+  // B = P * [(1+r)^N - (1+r)^k] / [(1+r)^N - 1] (원리금균등)
+  // B = P - (P/N) * k (원금균등)
+  // B = P (만기일시)
+  // 체증식: 시뮬레이션으로 각 월 원금상환분 합산 후 차감
+  static int calculateRemainingBalance({
+    required int loanAmount,
+    required double annualInterestRate,
+    required int totalMonths,
+    required int elapsedMonths,
+    required RepaymentMethod method,
+  }) {
+    if (elapsedMonths <= 0) return loanAmount;
+    if (elapsedMonths >= totalMonths) {
+      if (method == RepaymentMethod.bullet) return loanAmount;
+      return 0;
+    }
+
+    switch (method) {
+      case RepaymentMethod.equalPrincipalInterest:
+        if (annualInterestRate == 0) {
+          return (loanAmount - (loanAmount / totalMonths) * elapsedMonths)
+              .round();
+        }
+        final r = annualInterestRate / 100 / 12;
+        final compoundedN = powN(1 + r, totalMonths);
+        final compoundedK = powN(1 + r, elapsedMonths);
+        final remaining =
+            loanAmount * (compoundedN - compoundedK) / (compoundedN - 1);
+        return remaining.round();
+
+      case RepaymentMethod.equalPrincipal:
+        final repaid = (loanAmount / totalMonths) * elapsedMonths;
+        return (loanAmount - repaid).round();
+
+      case RepaymentMethod.bullet:
+        return loanAmount;
+
+      case RepaymentMethod.graduated:
+        final r = annualInterestRate / 100 / 12;
+        double remainingPrincipal = loanAmount.toDouble();
+        for (int i = 1; i <= elapsedMonths; i++) {
+          final payment = _calcGraduated(
+            loanAmount,
+            annualInterestRate,
+            totalMonths,
+            i,
+          );
+          final interest = remainingPrincipal * r;
+          final principal = payment - interest;
+          remainingPrincipal -= principal > 0 ? principal : 0;
+          if (remainingPrincipal < 0) remainingPrincipal = 0;
+        }
+        return remainingPrincipal.round();
+    }
+  }
+
+  // 금리 변경 후 새 월상환금 계산
+  // 잔여원금 기반으로 새 이율에 따른 월상환금 재계산
+  static int calculateNewMonthlyPaymentAfterRateChange({
+    required int remainingBalance,
+    required double newAnnualInterestRate,
+    required int remainingMonths,
+    required RepaymentMethod method,
+  }) {
+    return calculateMonthlyPayment(
+      loanAmount: remainingBalance,
+      annualInterestRate: newAnnualInterestRate,
+      totalMonths: remainingMonths,
+      method: method,
+    );
+  }
+
+  // 추가상환 시 새 만기 개월 수 계산
+  // 원리금균등: n = -ln(1 - B_actual*r/M) / ln(1+r)
+  // 원금균등: ceil(B_actual / 월원금)
+  // 만기일시: -1 (만기 변동 없음)
+  // 체증식: 시뮬레이션 역산 (originalLoanAmount 기반 스케줄 사용)
+  // 계산 불가 시 -1 반환
+  static int calculateNewMaturityMonths({
+    required int remainingBalance,
+    required int extraRepayment,
+    required double annualInterestRate,
+    required int currentMonthlyPayment,
+    required RepaymentMethod method,
+    int? originalLoanAmount,
+    int? originalTotalMonths,
+  }) {
+    final actualBalance = remainingBalance - extraRepayment;
+    if (actualBalance <= 0) return 0;
+
+    switch (method) {
+      case RepaymentMethod.equalPrincipalInterest:
+        if (annualInterestRate == 0) {
+          if (currentMonthlyPayment <= 0) return -1;
+          return (actualBalance / currentMonthlyPayment).ceil();
+        }
+        final r = annualInterestRate / 100 / 12;
+        final m = currentMonthlyPayment.toDouble();
+        // M > B_actual * r 이어야 계산 가능
+        if (m <= actualBalance * r) return -1;
+        final n = -log(1 - actualBalance * r / m) / log(1 + r);
+        return n.ceil();
+
+      case RepaymentMethod.equalPrincipal:
+        if (currentMonthlyPayment <= 0) return -1;
+        // 원금균등에서 월 원금분 = 원래 잔여원금 기준 월 원금
+        // 기존 월상환금에서 이자를 제외한 원금부분 추정
+        final r = annualInterestRate / 100 / 12;
+        final interest = remainingBalance * r;
+        final monthlyPrincipal = currentMonthlyPayment - interest;
+        if (monthlyPrincipal <= 0) return -1;
+        return (actualBalance / monthlyPrincipal).ceil();
+
+      case RepaymentMethod.bullet:
+        return -1;
+
+      case RepaymentMethod.graduated:
+        // 시뮬레이션으로 역산 (원래 대출 조건 기반 스케줄 사용)
+        final r = annualInterestRate / 100 / 12;
+        double remaining = actualBalance.toDouble();
+        final loanBase = originalLoanAmount ?? remainingBalance;
+        final monthBase = originalTotalMonths ?? _maxSimulationMonths;
+        double prevRemaining = remaining;
+        int month = 0;
+        while (remaining > 0 && month < _maxSimulationMonths) {
+          month++;
+          final payment = _calcGraduated(
+            loanBase,
+            annualInterestRate,
+            monthBase,
+            month,
+          );
+          final interestPart = remaining * r;
+          final principal = payment - interestPart;
+          remaining -= principal > 0 ? principal : 0;
+          // 잔액이 증가하면 상환 불가 - 조기 탈출
+          if (month > 1 && remaining >= prevRemaining) return -1;
+          prevRemaining = remaining;
+        }
+        return month >= _maxSimulationMonths ? -1 : month;
+    }
+  }
+
+  // 추가상환 시 절약되는 이자 계산
+  // 원래 잔여이자 - 추가상환 후 잔여이자
+  // preCalculatedNewMonths: 외부에서 이미 계산한 새 만기 개월 수 (중복 계산 방지)
+  static int calculateInterestSaved({
+    required int remainingBalance,
+    required int extraRepayment,
+    required double annualInterestRate,
+    required int currentMonthlyPayment,
+    required int originalRemainingMonths,
+    required RepaymentMethod method,
+    int? preCalculatedNewMonths,
+  }) {
+    if (extraRepayment <= 0 || annualInterestRate == 0) return 0;
+
+    // 원래 잔여이자 계산 (시뮬레이션)
+    final originalInterest = _simulateTotalInterest(
+      remainingBalance,
+      annualInterestRate,
+      currentMonthlyPayment,
+      originalRemainingMonths,
+      method,
+    );
+
+    // 추가상환 후 잔여이자 계산
+    final actualBalance = remainingBalance - extraRepayment;
+    if (actualBalance <= 0) return originalInterest;
+
+    final newRemainingMonths = preCalculatedNewMonths ?? calculateNewMaturityMonths(
+      remainingBalance: remainingBalance,
+      extraRepayment: extraRepayment,
+      annualInterestRate: annualInterestRate,
+      currentMonthlyPayment: currentMonthlyPayment,
+      method: method,
+    );
+
+    final effectiveMonths = newRemainingMonths > 0
+        ? newRemainingMonths
+        : originalRemainingMonths;
+
+    final newInterest = _simulateTotalInterest(
+      actualBalance,
+      annualInterestRate,
+      currentMonthlyPayment,
+      effectiveMonths,
+      method,
+    );
+
+    final saved = originalInterest - newInterest;
+    return saved > 0 ? saved : 0;
+  }
+
+  // 잔여이자 시뮬레이션 (내부 헬퍼)
+  static int _simulateTotalInterest(
+    int balance,
+    double annualInterestRate,
+    int monthlyPayment,
+    int months,
+    RepaymentMethod method,
+  ) {
+    final r = annualInterestRate / 100 / 12;
+    double remaining = balance.toDouble();
+    double totalInterest = 0;
+
+    switch (method) {
+      case RepaymentMethod.equalPrincipalInterest:
+        for (int i = 0; i < months && remaining > 0; i++) {
+          final interest = remaining * r;
+          totalInterest += interest;
+          final principal = monthlyPayment - interest;
+          remaining -= principal;
+          if (remaining < 0) remaining = 0;
+        }
+        return totalInterest.round();
+
+      case RepaymentMethod.equalPrincipal:
+        final monthlyPrincipal = balance / months;
+        for (int i = 0; i < months && remaining > 0; i++) {
+          final interest = remaining * r;
+          totalInterest += interest;
+          remaining -= monthlyPrincipal;
+          if (remaining < 0) remaining = 0;
+        }
+        return totalInterest.round();
+
+      case RepaymentMethod.bullet:
+        // 매월 이자만 납부
+        return (balance * r * months).round();
+
+      case RepaymentMethod.graduated:
+        for (int i = 1; i <= months && remaining > 0; i++) {
+          final interest = remaining * r;
+          totalInterest += interest;
+          final payment = _calcGraduated(
+            balance,
+            annualInterestRate,
+            months,
+            i,
+          );
+          final principal = payment - interest;
+          remaining -= principal > 0 ? principal : 0;
+          if (remaining < 0) remaining = 0;
+        }
+        return totalInterest.round();
+    }
   }
 
   // RepaymentMethod -> 문자열

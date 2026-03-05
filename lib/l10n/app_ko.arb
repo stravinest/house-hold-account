@@ -1780,6 +1780,39 @@
     }
   },
   "loanPeriodDirect": "직접 선택",
+  "loanRemainingBalance": "잔여 원금",
+  "loanExtraRepayment": "추가상환",
+  "loanExtraRepaymentHint": "추가상환 금액 입력",
+  "loanNewEstimatedMaturity": "새 예상 만기일",
+  "loanShortenedPeriod": "단축 기간",
+  "loanInterestSaved": "절약 이자",
+  "loanRateChangeInfo": "금리 변경 정보",
+  "loanPreviousRate": "이전 이율",
+  "loanNewMonthlyPayment": "새 월 상환금",
+  "loanPaymentChange": "변동액",
+  "loanExtraRepaymentExceedsBalance": "추가상환 금액이 잔여 원금을 초과합니다",
+  "loanMaturityNoChange": "만기일시상환은 만기일이 변동되지 않습니다",
+  "loanRemainingInterest": "잔여 총 이자",
+  "loanElapsedMonths": "경과 기간",
+  "loanElapsedMonthsValue": "{months}개월",
+  "@loanElapsedMonthsValue": {
+    "placeholders": {
+      "months": {
+        "type": "int"
+      }
+    }
+  },
+  "loanShortenedPeriodValue": "{years}년 {months}개월",
+  "@loanShortenedPeriodValue": {
+    "placeholders": {
+      "years": {
+        "type": "int"
+      },
+      "months": {
+        "type": "int"
+      }
+    }
+  },
 
   "goalTypeSelect": "목표 유형 선택",
   "goalTypeAsset": "자산 목표",

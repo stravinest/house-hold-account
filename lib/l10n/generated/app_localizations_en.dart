@@ -3679,6 +3679,60 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loanPeriodDirect => 'Custom';
 
   @override
+  String get loanRemainingBalance => 'Remaining Balance';
+
+  @override
+  String get loanExtraRepayment => 'Extra Repayment';
+
+  @override
+  String get loanExtraRepaymentHint => 'Enter extra repayment amount';
+
+  @override
+  String get loanNewEstimatedMaturity => 'New Estimated Maturity';
+
+  @override
+  String get loanShortenedPeriod => 'Shortened Period';
+
+  @override
+  String get loanInterestSaved => 'Interest Saved';
+
+  @override
+  String get loanRateChangeInfo => 'Rate Change Info';
+
+  @override
+  String get loanPreviousRate => 'Previous Rate';
+
+  @override
+  String get loanNewMonthlyPayment => 'New Monthly Payment';
+
+  @override
+  String get loanPaymentChange => 'Payment Change';
+
+  @override
+  String get loanExtraRepaymentExceedsBalance =>
+      'Extra repayment exceeds remaining balance';
+
+  @override
+  String get loanMaturityNoChange =>
+      'Bullet repayment: maturity date does not change';
+
+  @override
+  String get loanRemainingInterest => 'Remaining Total Interest';
+
+  @override
+  String get loanElapsedMonths => 'Elapsed Period';
+
+  @override
+  String loanElapsedMonthsValue(int months) {
+    return '$months months';
+  }
+
+  @override
+  String loanShortenedPeriodValue(int years, int months) {
+    return '${years}y ${months}m';
+  }
+
+  @override
   String get goalTypeSelect => 'Select Goal Type';
 
   @override

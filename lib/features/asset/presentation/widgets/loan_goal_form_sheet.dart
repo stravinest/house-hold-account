@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +29,7 @@ class _LoanGoalFormSheetState extends ConsumerState<LoanGoalFormSheet> {
   late TextEditingController _interestRateController;
   late TextEditingController _monthlyPaymentController;
   late TextEditingController _memoController;
+  late TextEditingController _extraRepaymentController;
 
   RepaymentMethod _repaymentMethod = RepaymentMethod.equalPrincipalInterest;
   DateTime? _startDate;
@@ -34,6 +37,7 @@ class _LoanGoalFormSheetState extends ConsumerState<LoanGoalFormSheet> {
   bool _isManualPayment = false;
   bool _isLoading = false;
   int? _selectedPeriodYears;
+  Timer? _extraRepaymentDebounce;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -60,6 +64,7 @@ class _LoanGoalFormSheetState extends ConsumerState<LoanGoalFormSheet> {
     _memoController = TextEditingController(
       text: goal?.memo ?? '',
     );
+    _extraRepaymentController = TextEditingController();
     _repaymentMethod =
         goal?.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
     _startDate = goal?.startDate;
@@ -83,7 +88,56 @@ class _LoanGoalFormSheetState extends ConsumerState<LoanGoalFormSheet> {
     _interestRateController.dispose();
     _monthlyPaymentController.dispose();
     _memoController.dispose();
+    _extraRepaymentController.dispose();
+    _extraRepaymentDebounce?.cancel();
     super.dispose();
+  }
+
+  // 경과 개월 수 (시작일~현재)
+  int get _elapsedMonths {
+    final start = widget.goal?.startDate ?? _startDate;
+    if (start == null) return 0;
+    final months = LoanCalculatorService.calculateMonthsBetween(
+      start,
+      DateTime.now(),
+    );
+    return months < 0 ? 0 : months;
+  }
+
+  // 잔여 원금 계산
+  int? get _remainingBalance {
+    final goal = widget.goal;
+    if (goal == null) return null;
+    final loanAmount = goal.loanAmount;
+    if (loanAmount == null || loanAmount <= 0) return null;
+    final rate = goal.annualInterestRate ?? 0.0;
+    final start = goal.startDate;
+    final maturity = goal.targetDate;
+    final method =
+        goal.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
+    if (start == null || maturity == null) return null;
+    final total = LoanCalculatorService.calculateMonthsBetween(start, maturity);
+    if (total <= 0) return null;
+    final elapsed = _elapsedMonths;
+    final base = LoanCalculatorService.calculateRemainingBalance(
+      loanAmount: loanAmount,
+      annualInterestRate: rate,
+      totalMonths: total,
+      elapsedMonths: elapsed,
+      method: method,
+    );
+    // 기존 추가상환분 반영
+    final extraRepaid = goal.extraRepaidAmount;
+    final adjusted = base - extraRepaid;
+    return adjusted < 0 ? 0 : adjusted;
+  }
+
+  // 현재 입력된 이율이 기존 이율과 다른지
+  bool get _isRateChanged {
+    if (widget.goal == null) return false;
+    final originalRate = widget.goal!.annualInterestRate;
+    final newRate = double.tryParse(_interestRateController.text);
+    return LoanCalculatorService.isRateChanged(originalRate, newRate);
   }
 
   // 자동 계산된 월 상환금
@@ -157,11 +211,19 @@ class _LoanGoalFormSheetState extends ConsumerState<LoanGoalFormSheet> {
                         _buildRepaymentMethodField(context, l10n),
                         const SizedBox(height: 20),
                         _buildInterestRateField(l10n),
+                        if (isEditing && _isRateChanged) ...[
+                          const SizedBox(height: 12),
+                          _buildRateChangeInfoCard(context, l10n),
+                        ],
                         const SizedBox(height: 20),
                         _buildStartDateField(context, l10n),
                         const SizedBox(height: 20),
                         _buildMaturityDateField(context, l10n),
                         const SizedBox(height: 20),
+                        if (isEditing) ...[
+                          _buildExtraRepaymentSection(context, l10n),
+                          const SizedBox(height: 20),
+                        ],
                         _buildMonthlyPaymentField(context, l10n),
                         const SizedBox(height: 20),
                         _buildMemoField(l10n),
@@ -740,6 +802,352 @@ class _LoanGoalFormSheetState extends ConsumerState<LoanGoalFormSheet> {
     );
   }
 
+  Widget _buildRateChangeInfoCard(BuildContext context, AppLocalizations l10n) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final goal = widget.goal!;
+    final remaining = _remainingBalance;
+    if (remaining == null) return const SizedBox.shrink();
+
+    final newRate = double.tryParse(_interestRateController.text);
+    if (newRate == null) return const SizedBox.shrink();
+
+    final originalRate = goal.annualInterestRate ?? 0.0;
+    final maturity = goal.targetDate;
+    final start = goal.startDate;
+    if (maturity == null || start == null) return const SizedBox.shrink();
+
+    final totalMonths = LoanCalculatorService.calculateMonthsBetween(
+      start,
+      maturity,
+    );
+    final remainingMonths =
+        LoanCalculatorService.calculateRemainingMonths(endDate: maturity);
+    final method =
+        goal.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
+
+    final originalMonthly =
+        goal.monthlyPayment ??
+        LoanCalculatorService.calculateMonthlyPayment(
+          loanAmount: goal.loanAmount ?? 0,
+          annualInterestRate: originalRate,
+          totalMonths: totalMonths,
+          method: method,
+        );
+
+    final effectiveRemaining = remainingMonths > 0 ? remainingMonths : 1;
+    final newMonthly =
+        LoanCalculatorService.calculateNewMonthlyPaymentAfterRateChange(
+      remainingBalance: remaining,
+      newAnnualInterestRate: newRate,
+      remainingMonths: effectiveRemaining,
+      method: method,
+    );
+
+    final paymentDiff = newMonthly - originalMonthly;
+    final diffColor =
+        paymentDiff > 0 ? colorScheme.error : colorScheme.tertiary;
+    final diffPrefix = paymentDiff > 0 ? '+' : '';
+
+    final remainingInterest = LoanCalculatorService.calculateTotalInterest(
+      loanAmount: remaining,
+      annualInterestRate: newRate,
+      totalMonths: effectiveRemaining,
+      method: method,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.tertiaryContainer.withAlpha(80),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.tertiary.withAlpha(60)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.loanRateChangeInfo,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: colorScheme.tertiary,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _buildInfoRow(context, l10n.loanPreviousRate, '${originalRate.toStringAsFixed(2)}% → ${newRate.toStringAsFixed(2)}%'),
+          const SizedBox(height: 6),
+          _buildInfoRow(context, l10n.loanRemainingBalance, '₩${NumberFormat('#,###').format(remaining)}'),
+          const SizedBox(height: 6),
+          _buildInfoRow(
+            context,
+            l10n.loanNewMonthlyPayment,
+            '₩${NumberFormat('#,###').format(newMonthly)}',
+          ),
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(l10n.loanPaymentChange, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+              Text(
+                '$diffPrefix₩${NumberFormat('#,###').format(paymentDiff.abs())}',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: diffColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          _buildInfoRow(context, l10n.loanRemainingInterest, '₩${NumberFormat('#,###').format(remainingInterest)}'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExtraRepaymentSection(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final remaining = _remainingBalance;
+    final extraText = _extraRepaymentController.text.replaceAll(',', '');
+    final extraAmount = int.tryParse(extraText) ?? 0;
+    final showInfo = extraAmount > 0 && remaining != null;
+    final goal = widget.goal!;
+    final maturity = goal.targetDate;
+    final start = goal.startDate;
+    final method =
+        goal.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
+
+    int? newMaturityMonths;
+    int? interestSaved;
+    int? shortenedMonths;
+    DateTime? newMaturityDate;
+
+    if (showInfo && maturity != null && start != null) {
+      final totalMonths = LoanCalculatorService.calculateMonthsBetween(
+        start,
+        maturity,
+      );
+      final remainingMonths =
+          LoanCalculatorService.calculateRemainingMonths(endDate: maturity);
+      final rate = goal.annualInterestRate ?? 0.0;
+      final currentMonthly =
+          goal.monthlyPayment ??
+          LoanCalculatorService.calculateMonthlyPayment(
+            loanAmount: goal.loanAmount ?? 0,
+            annualInterestRate: rate,
+            totalMonths: totalMonths,
+            method: method,
+          );
+      final effectiveRemaining = remainingMonths > 0 ? remainingMonths : 1;
+
+      if (method != RepaymentMethod.bullet) {
+        newMaturityMonths = LoanCalculatorService.calculateNewMaturityMonths(
+          remainingBalance: remaining,
+          extraRepayment: extraAmount,
+          annualInterestRate: rate,
+          currentMonthlyPayment: currentMonthly,
+          method: method,
+          originalLoanAmount: goal.loanAmount,
+          originalTotalMonths: totalMonths,
+        );
+
+        // 사전 계산된 만기 개월 수를 전달하여 중복 계산 방지
+        interestSaved = LoanCalculatorService.calculateInterestSaved(
+          remainingBalance: remaining,
+          extraRepayment: extraAmount,
+          annualInterestRate: rate,
+          currentMonthlyPayment: currentMonthly,
+          originalRemainingMonths: effectiveRemaining,
+          method: method,
+          preCalculatedNewMonths: newMaturityMonths,
+        );
+
+        if (newMaturityMonths != null && newMaturityMonths > 0) {
+          // day를 1로 고정하여 월 오버플로우 방지
+          final now = DateTime.now();
+          newMaturityDate = DateTime(
+            now.year,
+            now.month + newMaturityMonths,
+            1,
+          );
+          shortenedMonths = remainingMonths - newMaturityMonths;
+        }
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildLabel(l10n.loanExtraRepayment),
+        const SizedBox(height: 8),
+        if (remaining != null)
+          _buildRemainingBalanceChip(context, l10n, remaining),
+        TextFormField(
+          controller: _extraRepaymentController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            _AmountInputFormatter(),
+          ],
+          onChanged: (_) {
+            _extraRepaymentDebounce?.cancel();
+            _extraRepaymentDebounce = Timer(
+              const Duration(milliseconds: 300),
+              () {
+                if (mounted) setState(() {});
+              },
+            );
+          },
+          decoration: InputDecoration(
+            hintText: l10n.loanExtraRepaymentHint,
+            prefixIcon: Icon(
+              Icons.add_circle_outline,
+              color: colorScheme.tertiary,
+            ),
+            suffixText: l10n.transactionAmountUnit,
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) return null;
+            final clean = value.replaceAll(',', '');
+            final amount = int.tryParse(clean) ?? 0;
+            if (remaining != null && amount > remaining) {
+              return l10n.loanExtraRepaymentExceedsBalance;
+            }
+            return null;
+          },
+        ),
+        _buildKoreanAmountLabel(_extraRepaymentController.text),
+        if (showInfo && method == RepaymentMethod.bullet) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.loanMaturityNoChange,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        if (showInfo &&
+            method != RepaymentMethod.bullet &&
+            newMaturityDate != null)
+          _buildExtraRepaymentInfoCard(
+            context,
+            l10n,
+            remaining!,
+            extraAmount,
+            newMaturityDate,
+            shortenedMonths,
+            interestSaved,
+          ),
+      ],
+    );
+  }
+
+  // 잔여 원금 표시 칩
+  Widget _buildRemainingBalanceChip(
+    BuildContext context,
+    AppLocalizations l10n,
+    int remaining,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withAlpha(128),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          children: [
+            Text(
+              l10n.loanRemainingBalance,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '₩${NumberFormat('#,###').format(remaining)}',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 추가상환 결과 정보 카드
+  Widget _buildExtraRepaymentInfoCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    int remaining,
+    int extraAmount,
+    DateTime newMaturityDate,
+    int? shortenedMonths,
+    int? interestSaved,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: colorScheme.tertiaryContainer.withAlpha(60),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          children: [
+            _buildInfoRow(
+              context,
+              l10n.loanRemainingBalance,
+              '₩${NumberFormat('#,###').format(remaining - extraAmount)}',
+            ),
+            const SizedBox(height: 6),
+            _buildInfoRow(
+              context,
+              l10n.loanNewEstimatedMaturity,
+              DateFormat('yyyy년 MM월').format(newMaturityDate),
+            ),
+            if (shortenedMonths != null && shortenedMonths > 0) ...[
+              const SizedBox(height: 6),
+              _buildInfoRow(
+                context,
+                l10n.loanShortenedPeriod,
+                l10n.loanShortenedPeriodValue(
+                  shortenedMonths ~/ 12,
+                  shortenedMonths % 12,
+                ),
+              ),
+            ],
+            if (interestSaved != null && interestSaved > 0) ...[
+              const SizedBox(height: 6),
+              _buildInfoRow(
+                context,
+                l10n.loanInterestSaved,
+                '₩${NumberFormat('#,###').format(interestSaved)}',
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant)),
+        Text(value, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600)),
+      ],
+    );
+  }
+
   Widget _buildMemoField(AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -827,7 +1235,31 @@ class _LoanGoalFormSheetState extends ConsumerState<LoanGoalFormSheet> {
           : _memoController.text.trim();
 
       if (isEditing && widget.goal != null) {
-        final updated = widget.goal!.copyWith(
+        final originalGoal = widget.goal!;
+
+        // 추가상환 금액 계산 (총 합계가 대출원금 초과 방지)
+        final extraText = _extraRepaymentController.text.replaceAll(',', '');
+        final extraRepayment = int.tryParse(extraText) ?? 0;
+        final maxExtra = (originalGoal.loanAmount ?? 0) -
+            originalGoal.extraRepaidAmount;
+        final clampedExtra = extraRepayment.clamp(0, maxExtra > 0 ? maxExtra : 0);
+        final newExtraRepaid = originalGoal.extraRepaidAmount + clampedExtra;
+
+        // 이율 변경 이력 기록
+        final originalRate = originalGoal.annualInterestRate;
+        double? previousInterestRate = originalGoal.previousInterestRate;
+        DateTime? rateChangedAt = originalGoal.rateChangedAt;
+        if (_isRateChanged && originalRate != null) {
+          previousInterestRate = originalRate;
+          rateChangedAt = DateTime.now();
+        }
+
+        // 이율 변경 시 자동모드면 새 이율 기반 월상환금 재계산
+        if (_isRateChanged && !_isManualPayment) {
+          monthlyPayment = _calculatedMonthlyPayment;
+        }
+
+        final updated = originalGoal.copyWith(
           title: _titleController.text.trim(),
           loanAmount: loanAmount,
           targetAmount: loanAmount,
@@ -839,6 +1271,9 @@ class _LoanGoalFormSheetState extends ConsumerState<LoanGoalFormSheet> {
           isManualPayment: _isManualPayment,
           goalType: GoalType.loan,
           memo: memo,
+          extraRepaidAmount: newExtraRepaid,
+          previousInterestRate: previousInterestRate,
+          rateChangedAt: rateChangedAt,
         );
         await notifier.updateGoal(updated);
       } else {

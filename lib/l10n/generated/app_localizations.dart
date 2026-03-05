@@ -6769,6 +6769,102 @@ abstract class AppLocalizations {
   /// **'직접 선택'**
   String get loanPeriodDirect;
 
+  /// No description provided for @loanRemainingBalance.
+  ///
+  /// In ko, this message translates to:
+  /// **'잔여 원금'**
+  String get loanRemainingBalance;
+
+  /// No description provided for @loanExtraRepayment.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가상환'**
+  String get loanExtraRepayment;
+
+  /// No description provided for @loanExtraRepaymentHint.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가상환 금액 입력'**
+  String get loanExtraRepaymentHint;
+
+  /// No description provided for @loanNewEstimatedMaturity.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 예상 만기일'**
+  String get loanNewEstimatedMaturity;
+
+  /// No description provided for @loanShortenedPeriod.
+  ///
+  /// In ko, this message translates to:
+  /// **'단축 기간'**
+  String get loanShortenedPeriod;
+
+  /// No description provided for @loanInterestSaved.
+  ///
+  /// In ko, this message translates to:
+  /// **'절약 이자'**
+  String get loanInterestSaved;
+
+  /// No description provided for @loanRateChangeInfo.
+  ///
+  /// In ko, this message translates to:
+  /// **'금리 변경 정보'**
+  String get loanRateChangeInfo;
+
+  /// No description provided for @loanPreviousRate.
+  ///
+  /// In ko, this message translates to:
+  /// **'이전 이율'**
+  String get loanPreviousRate;
+
+  /// No description provided for @loanNewMonthlyPayment.
+  ///
+  /// In ko, this message translates to:
+  /// **'새 월 상환금'**
+  String get loanNewMonthlyPayment;
+
+  /// No description provided for @loanPaymentChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'변동액'**
+  String get loanPaymentChange;
+
+  /// No description provided for @loanExtraRepaymentExceedsBalance.
+  ///
+  /// In ko, this message translates to:
+  /// **'추가상환 금액이 잔여 원금을 초과합니다'**
+  String get loanExtraRepaymentExceedsBalance;
+
+  /// No description provided for @loanMaturityNoChange.
+  ///
+  /// In ko, this message translates to:
+  /// **'만기일시상환은 만기일이 변동되지 않습니다'**
+  String get loanMaturityNoChange;
+
+  /// No description provided for @loanRemainingInterest.
+  ///
+  /// In ko, this message translates to:
+  /// **'잔여 총 이자'**
+  String get loanRemainingInterest;
+
+  /// No description provided for @loanElapsedMonths.
+  ///
+  /// In ko, this message translates to:
+  /// **'경과 기간'**
+  String get loanElapsedMonths;
+
+  /// No description provided for @loanElapsedMonthsValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{months}개월'**
+  String loanElapsedMonthsValue(int months);
+
+  /// No description provided for @loanShortenedPeriodValue.
+  ///
+  /// In ko, this message translates to:
+  /// **'{years}년 {months}개월'**
+  String loanShortenedPeriodValue(int years, int months);
+
   /// No description provided for @goalTypeSelect.
   ///
   /// In ko, this message translates to:

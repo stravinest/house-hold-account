@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../l10n/generated/app_localizations.dart';
 import '../../../../shared/themes/design_tokens.dart' as tokens;
 import '../../data/services/loan_calculator_service.dart';
 import '../../domain/entities/asset_goal.dart';
+import '../providers/asset_goal_provider.dart';
 
-class LoanGoalCard extends StatelessWidget {
+class LoanGoalCard extends ConsumerWidget {
   final AssetGoal goal;
   final VoidCallback? onTap;
   final VoidCallback? onEdit;
@@ -21,7 +23,7 @@ class LoanGoalCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -31,6 +33,10 @@ class LoanGoalCard extends StatelessWidget {
     final monthlyPayment = _resolveMonthlyPayment();
     final progress = _resolveProgress();
     final remainingMonths = _resolveRemainingMonths();
+    final actualRemainingBalance = ref.watch(
+      loanRemainingBalanceProvider(goal),
+    );
+    final estimatedMaturity = ref.watch(loanEstimatedMaturityProvider(goal));
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -67,6 +73,8 @@ class LoanGoalCard extends StatelessWidget {
                 remainingMonths,
                 startDate,
                 targetDate,
+                actualRemainingBalance,
+                estimatedMaturity,
               ),
             ],
           ),
@@ -168,12 +176,25 @@ class LoanGoalCard extends StatelessWidget {
             ],
           ),
         ),
-        if (goal.repaymentMethod != null)
-          _buildChip(
-            context,
-            icon: Icons.sync_alt,
-            label: _repaymentMethodLabel(context, goal.repaymentMethod!),
-          ),
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: [
+            if (goal.extraRepaidAmount > 0)
+              _buildChip(
+                context,
+                icon: Icons.add_circle_outline,
+                label: l10n.loanExtraRepayment,
+                isHighlighted: true,
+              ),
+            if (goal.repaymentMethod != null)
+              _buildChip(
+                context,
+                icon: Icons.sync_alt,
+                label: _repaymentMethodLabel(context, goal.repaymentMethod!),
+              ),
+          ],
+        ),
       ],
     );
   }
@@ -233,7 +254,12 @@ class LoanGoalCard extends StatelessWidget {
     int remainingMonths,
     DateTime? startDate,
     DateTime? targetDate,
+    int actualRemainingBalance,
+    DateTime? estimatedMaturity,
   ) {
+    final previousRate = goal.previousInterestRate;
+    final currentRate = goal.annualInterestRate;
+
     return Wrap(
       spacing: 8,
       runSpacing: 6,
@@ -245,12 +271,21 @@ class LoanGoalCard extends StatelessWidget {
             label: l10n.loanMonthlyPayment,
             value: _formatCurrency(monthlyPayment),
           ),
-        if (goal.annualInterestRate != null)
+        if (currentRate != null)
           _buildInfoItem(
             context,
             icon: Icons.percent,
             label: l10n.loanInterestRate,
-            value: '${goal.annualInterestRate!.toStringAsFixed(2)}%',
+            value: previousRate != null
+                ? '${previousRate.toStringAsFixed(2)}% → ${currentRate.toStringAsFixed(2)}%'
+                : '${currentRate.toStringAsFixed(2)}%',
+          ),
+        if (actualRemainingBalance > 0)
+          _buildInfoItem(
+            context,
+            icon: Icons.account_balance_wallet_outlined,
+            label: l10n.loanRemainingBalance,
+            value: _formatCurrency(actualRemainingBalance),
           ),
         if (remainingMonths > 0)
           _buildInfoItem(
@@ -273,6 +308,14 @@ class LoanGoalCard extends StatelessWidget {
             label: l10n.loanMaturityDate,
             value: DateFormat('yyyy.MM.dd').format(targetDate),
           ),
+        if (estimatedMaturity != null)
+          _buildInfoItem(
+            context,
+            icon: Icons.flag,
+            label: l10n.loanNewEstimatedMaturity,
+            value: DateFormat('yyyy.MM.dd').format(estimatedMaturity),
+            isHighlighted: true,
+          ),
       ],
     );
   }
@@ -282,12 +325,20 @@ class LoanGoalCard extends StatelessWidget {
     required IconData icon,
     required String label,
     required String value,
+    bool isHighlighted = false,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final bgColor = isHighlighted
+        ? colorScheme.tertiary.withAlpha(20)
+        : colorScheme.surfaceContainerHighest;
+    final labelColor = isHighlighted
+        ? colorScheme.tertiary
+        : colorScheme.onSurfaceVariant;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest,
+        color: bgColor,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -296,15 +347,9 @@ class LoanGoalCard extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 11, color: colorScheme.onSurfaceVariant),
+              Icon(icon, size: 11, color: labelColor),
               const SizedBox(width: 3),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
+              Text(label, style: TextStyle(fontSize: 10, color: labelColor)),
             ],
           ),
           const SizedBox(height: 2),
@@ -321,9 +366,12 @@ class LoanGoalCard extends StatelessWidget {
     BuildContext context, {
     required IconData icon,
     required String label,
+    bool isHighlighted = false,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final chipColor = colorScheme.onSurfaceVariant;
+    final chipColor = isHighlighted
+        ? colorScheme.tertiary
+        : colorScheme.onSurfaceVariant;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
@@ -335,10 +383,7 @@ class LoanGoalCard extends StatelessWidget {
         children: [
           Icon(icon, size: 12, color: chipColor),
           const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: chipColor),
-          ),
+          Text(label, style: TextStyle(fontSize: 11, color: chipColor)),
         ],
       ),
     );
@@ -348,19 +393,19 @@ class LoanGoalCard extends StatelessWidget {
     final startDate = goal.startDate;
     final targetDate = goal.targetDate;
     final loanAmount = goal.loanAmount ?? 0;
-    final method = goal.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
+    final method =
+        goal.repaymentMethod ?? RepaymentMethod.equalPrincipalInterest;
     if (startDate == null || loanAmount <= 0) return 0.0;
 
     final now = DateTime.now();
     final elapsedMonths =
-        (now.year - startDate.year) * 12 + (now.month - startDate.month);
+        LoanCalculatorService.calculateMonthsBetween(startDate, now);
     if (elapsedMonths <= 0) return 0.0;
 
     int totalMonths = 0;
     if (targetDate != null) {
       totalMonths =
-          (targetDate.year - startDate.year) * 12 +
-          (targetDate.month - startDate.month);
+          LoanCalculatorService.calculateMonthsBetween(startDate, targetDate);
     }
     if (totalMonths <= 0) return 0.0;
 
@@ -372,7 +417,8 @@ class LoanGoalCard extends StatelessWidget {
       method: method,
     );
 
-    return (cumulativeRepaid / loanAmount).clamp(0.0, 1.0);
+    final totalRepaid = cumulativeRepaid + goal.extraRepaidAmount;
+    return (totalRepaid / loanAmount).clamp(0.0, 1.0);
   }
 
   int _resolveRemainingMonths() {
@@ -413,10 +459,7 @@ class LoanGoalCard extends StatelessWidget {
     );
   }
 
-  String _repaymentMethodLabel(
-    BuildContext context,
-    RepaymentMethod method,
-  ) {
+  String _repaymentMethodLabel(BuildContext context, RepaymentMethod method) {
     final l10n = AppLocalizations.of(context);
     switch (method) {
       case RepaymentMethod.equalPrincipalInterest:

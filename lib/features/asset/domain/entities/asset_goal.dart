@@ -56,6 +56,9 @@ class AssetGoal {
   final int? monthlyPayment;
   final bool isManualPayment;
   final String? memo;
+  final int extraRepaidAmount;
+  final double? previousInterestRate;
+  final DateTime? rateChangedAt;
 
   const AssetGoal({
     required this.id,
@@ -76,6 +79,9 @@ class AssetGoal {
     this.monthlyPayment,
     this.isManualPayment = false,
     this.memo,
+    this.extraRepaidAmount = 0,
+    this.previousInterestRate,
+    this.rateChangedAt,
   });
 
   AssetGoal copyWith({
@@ -97,6 +103,9 @@ class AssetGoal {
     int? monthlyPayment,
     bool? isManualPayment,
     String? memo,
+    int? extraRepaidAmount,
+    double? previousInterestRate,
+    DateTime? rateChangedAt,
   }) {
     return AssetGoal(
       id: id ?? this.id,
@@ -117,6 +126,9 @@ class AssetGoal {
       monthlyPayment: monthlyPayment ?? this.monthlyPayment,
       isManualPayment: isManualPayment ?? this.isManualPayment,
       memo: memo ?? this.memo,
+      extraRepaidAmount: extraRepaidAmount ?? this.extraRepaidAmount,
+      previousInterestRate: previousInterestRate ?? this.previousInterestRate,
+      rateChangedAt: rateChangedAt ?? this.rateChangedAt,
     );
   }
 }
