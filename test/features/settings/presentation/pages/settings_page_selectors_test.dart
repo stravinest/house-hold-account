@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_household_account/features/auth/presentation/providers/auth_provider.dart';
 import 'package:shared_household_account/features/settings/presentation/pages/settings_page.dart';
 import 'package:shared_household_account/features/settings/presentation/providers/app_update_provider.dart';
@@ -19,6 +20,9 @@ class _FakeAppUpdateNone extends AppUpdate {
 
 // AuthService 가짜 구현 (성공)
 class _FakeAuthServiceSuccess extends Fake implements AuthService {
+  @override
+  User? get currentUser => null;
+
   @override
   Future<void> updateProfile({
     String? displayName,
@@ -41,6 +45,9 @@ class _FakeAuthServiceSuccess extends Fake implements AuthService {
 
 // AuthService 가짜 구현 (비밀번호 변경 실패)
 class _FakeAuthServicePasswordFail extends Fake implements AuthService {
+  @override
+  User? get currentUser => null;
+
   @override
   Future<void> updateProfile({
     String? displayName,
@@ -65,6 +72,9 @@ class _FakeAuthServicePasswordFail extends Fake implements AuthService {
 
 // AuthService 가짜 구현 (탈퇴 실패)
 class _FakeAuthServiceDeleteFail extends Fake implements AuthService {
+  @override
+  User? get currentUser => null;
+
   @override
   Future<void> updateProfile({
     String? displayName,

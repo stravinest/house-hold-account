@@ -574,7 +574,6 @@ void main() {
 
       expect(find.byType(InstallmentInputWidget), findsOneWidget);
     });
-  });
 
     testWidgets('미리보기 상태에서 FilledButton.icon 탭 시 _applyInstallment가 호출된다 (L140-146 커버)', (tester) async {
       // Given: 할부 모드 활성화, 금액/개월 수 입력 후 미리보기 표시 상태
