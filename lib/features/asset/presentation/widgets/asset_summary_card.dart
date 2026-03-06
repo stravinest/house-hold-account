@@ -49,9 +49,9 @@ class AssetSummaryCard extends ConsumerWidget {
         children: [
           Text(
             l10n.assetTotal,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Color(0xFF44483E),
+              color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.normal,
             ),
           ),
@@ -61,9 +61,9 @@ class AssetSummaryCard extends ConsumerWidget {
             alignment: Alignment.centerLeft,
             child: Text(
               '${numberFormat.format(displayTotal)}${l10n.transactionAmountUnit}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 32,
-                color: Color(0xFF2E7D32),
+                color: colorScheme.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -75,8 +75,8 @@ class AssetSummaryCard extends ConsumerWidget {
                 isPositive ? Icons.arrow_upward : Icons.arrow_downward,
                 size: 16,
                 color: isPositive
-                    ? const Color(0xFF2E7D32)
-                    : const Color(0xFFBA1A1A),
+                    ? colorScheme.primary
+                    : colorScheme.error,
               ),
               const SizedBox(width: 6),
               Text(
@@ -86,8 +86,8 @@ class AssetSummaryCard extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 13,
                   color: isPositive
-                      ? const Color(0xFF2E7D32)
-                      : const Color(0xFFBA1A1A),
+                      ? colorScheme.primary
+                      : colorScheme.error,
                   fontWeight: FontWeight.normal,
                 ),
               ),

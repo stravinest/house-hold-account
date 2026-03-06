@@ -11,7 +11,6 @@ import '../../../share/presentation/providers/share_provider.dart';
 import '../../../statistics/presentation/providers/statistics_provider.dart';
 import '../../../statistics/presentation/widgets/common/member_tabs.dart';
 import '../../domain/entities/asset_goal.dart';
-import '../../domain/entities/asset_statistics.dart';
 import '../providers/asset_goal_provider.dart';
 import '../providers/asset_provider.dart';
 import '../widgets/asset_category_list.dart';
@@ -765,46 +764,25 @@ class _FilteredCategorySection extends ConsumerWidget {
               ),
             ],
           ),
-          child: Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.assetCategoryDistribution,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  AnimatedOpacity(
-                    opacity: isLoading ? 0.5 : 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: AssetDonutChart(byCategory: data),
-                  ),
-                  if (isShared) ...[
-                    const SizedBox(height: 16),
-                    _buildMemberTabs(ref),
-                  ],
-                ],
-              ),
-              if (isLoading)
-                Positioned.fill(
-                  child: Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface.withAlpha(180),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                  ),
+              Text(
+                l10n.assetCategoryDistribution,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+              const SizedBox(height: 16),
+              AnimatedOpacity(
+                opacity: isLoading ? 0.5 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                child: AssetDonutChart(byCategory: data),
+              ),
+              if (isShared) ...[
+                const SizedBox(height: 16),
+                _buildMemberTabs(ref),
+              ],
             ],
           ),
         ),
@@ -815,16 +793,7 @@ class _FilteredCategorySection extends ConsumerWidget {
           duration: const Duration(milliseconds: 200),
           child: _SectionCard(
             title: l10n.assetList,
-            child: AssetCategoryList(
-              assetStatistics: AssetStatistics(
-                totalAmount: data.fold(0, (sum, c) => sum + c.amount),
-                monthlyChange: 0,
-                monthlyChangeRate: 0,
-                annualGrowthRate: 0,
-                monthly: const [],
-                byCategory: data,
-              ),
-            ),
+            child: AssetCategoryList(byCategory: data),
           ),
         ),
       ],

@@ -6,9 +6,9 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../domain/entities/asset_statistics.dart';
 
 class AssetCategoryList extends StatelessWidget {
-  final AssetStatistics assetStatistics;
+  final List<CategoryAsset> byCategory;
 
-  const AssetCategoryList({super.key, required this.assetStatistics});
+  const AssetCategoryList({super.key, required this.byCategory});
 
   Color _parseColor(String? colorString) {
     if (colorString == null) return const Color(0xFF9E9E9E);
@@ -25,7 +25,6 @@ class AssetCategoryList extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
 
-    final byCategory = assetStatistics.byCategory;
     if (byCategory.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(32),
@@ -44,7 +43,7 @@ class AssetCategoryList extends StatelessWidget {
     final sortedCategories = List<CategoryAsset>.from(byCategory)
       ..sort((a, b) => b.amount.compareTo(a.amount));
 
-    final totalAmount = assetStatistics.totalAmount.toDouble();
+    final totalAmount = byCategory.fold(0, (sum, c) => sum + c.amount).toDouble();
 
     return Column(
       children: sortedCategories.asMap().entries.map((entry) {
