@@ -394,6 +394,7 @@
   "transactionQuickExpense": "Quick Expense",
   "transactionExpenseAdded": "Expense added",
   "transactionAmountRequired": "Please enter an amount",
+  "transactionAmountExceedsLimit": "Amount must be 10 trillion or less",
   "transactionTitleRequired": "Please enter a title",
   "transactionCategoryLoadError": "Failed to load categories",
   "transactionNoTitle": "No title",

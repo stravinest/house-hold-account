@@ -221,8 +221,8 @@ class _AssetLineChartState extends ConsumerState<AssetLineChart> {
       aspectRatio: 1.7,
       child: Padding(
         padding: const EdgeInsets.only(
-          right: 18,
-          left: 12,
+          right: 12,
+          left: 8,
           top: 24,
           bottom: 12,
         ),
@@ -329,6 +329,7 @@ class _AssetLineChartState extends ConsumerState<AssetLineChart> {
             minY: minY,
             maxY: maxY,
             lineTouchData: LineTouchData(
+              touchSpotThreshold: 20,
               touchCallback: (event, response) {
                 if (event is! FlTapUpEvent && event is! FlPanUpdateEvent) {
                   return;

@@ -67,10 +67,16 @@ class AssetDonutChart extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                '${NumberFormatUtils.currency.format(totalAmount)}${l10n.transactionAmountUnit}',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 110),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${NumberFormatUtils.currency.format(totalAmount)}${l10n.transactionAmountUnit}',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ],

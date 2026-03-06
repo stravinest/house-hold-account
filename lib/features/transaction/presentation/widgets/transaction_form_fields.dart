@@ -113,10 +113,18 @@ class AmountInputField extends StatelessWidget {
         counterText: '',
       ),
       maxLength: 18, // 콤마 포함 약 14~15자리 숫자 제한
-      validator: (v) =>
-          !isInstallmentMode && (v == null || v.isEmpty || v == '0')
-          ? l10n.transactionAmountRequired
-          : null,
+      validator: (v) {
+        if (!isInstallmentMode && (v == null || v.isEmpty || v == '0')) {
+          return l10n.transactionAmountRequired;
+        }
+        if (v != null && v.isNotEmpty) {
+          final parsed = int.tryParse(v.replaceAll(RegExp(r'[^\d]'), ''));
+          if (parsed != null && parsed > 9999999999999) {
+            return l10n.transactionAmountExceedsLimit;
+          }
+        }
+        return null;
+      },
     );
   }
 }

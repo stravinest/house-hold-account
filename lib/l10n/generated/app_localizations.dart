@@ -2312,6 +2312,12 @@ abstract class AppLocalizations {
   /// **'금액을 입력해주세요'**
   String get transactionAmountRequired;
 
+  /// No description provided for @transactionAmountExceedsLimit.
+  ///
+  /// In ko, this message translates to:
+  /// **'금액은 10조원 이하로 입력해주세요'**
+  String get transactionAmountExceedsLimit;
+
   /// No description provided for @transactionTitleRequired.
   ///
   /// In ko, this message translates to:

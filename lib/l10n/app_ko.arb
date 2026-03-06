@@ -505,6 +505,7 @@
   "transactionQuickExpense": "빠른 지출 추가",
   "transactionExpenseAdded": "지출이 추가되었습니다",
   "transactionAmountRequired": "금액을 입력해주세요",
+  "transactionAmountExceedsLimit": "금액은 10조원 이하로 입력해주세요",
   "transactionTitleRequired": "제목을 입력해주세요",
   "transactionCategoryLoadError": "카테고리를 불러올 수 없습니다",
   "transactionNoTitle": "제목 없음",

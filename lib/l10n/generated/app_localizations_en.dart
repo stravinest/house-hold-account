@@ -1213,6 +1213,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionAmountRequired => 'Please enter an amount';
 
   @override
+  String get transactionAmountExceedsLimit =>
+      'Amount must be 10 trillion or less';
+
+  @override
   String get transactionTitleRequired => 'Please enter a title';
 
   @override

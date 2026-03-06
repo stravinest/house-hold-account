@@ -1191,6 +1191,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get transactionAmountRequired => '금액을 입력해주세요';
 
   @override
+  String get transactionAmountExceedsLimit => '금액은 10조원 이하로 입력해주세요';
+
+  @override
   String get transactionTitleRequired => '제목을 입력해주세요';
 
   @override
