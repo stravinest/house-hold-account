@@ -177,23 +177,8 @@ class SharedCategorySummaryCard extends ConsumerWidget {
         ],
         const SizedBox(height: 12),
 
-        // 진행 바 (100%)
-        Container(
-          height: 32,
-          decoration: BoxDecoration(
-            color: typeColor.withValues(alpha: 0.85),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          alignment: Alignment.center,
-          child: const Text(
-            '100%',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.normal,
-              color: Colors.white,
-            ),
-          ),
-        ),
+        // 사용자별 비율 바
+        _buildUserRatioBar(users, totalAmount, typeColor),
         const SizedBox(height: 12),
 
         // 사용자별 내역
@@ -250,6 +235,72 @@ class SharedCategorySummaryCard extends ConsumerWidget {
           );
         }),
       ],
+    );
+  }
+
+  Widget _buildUserRatioBar(
+    List<UserCategoryStatistics> users,
+    int totalAmount,
+    Color typeColor,
+  ) {
+    if (users.length <= 1) {
+      return Container(
+        height: 32,
+        decoration: BoxDecoration(
+          color: users.isNotEmpty
+              ? ColorUtils.parseHexColor(
+                  users.first.userColor,
+                  fallback: typeColor,
+                )
+              : typeColor,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        alignment: Alignment.center,
+        child: const Text(
+          '100%',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.normal,
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: SizedBox(
+        height: 32,
+        child: Row(
+          children: users.map((user) {
+            final ratio = totalAmount > 0
+                ? user.totalAmount / totalAmount
+                : 0.0;
+            final color = ColorUtils.parseHexColor(
+              user.userColor,
+              fallback: const Color(0xFF9E9E9E),
+            );
+
+            return Expanded(
+              flex: (ratio * 1000).round().clamp(1, 1000),
+              child: Container(
+                color: color,
+                alignment: Alignment.center,
+                child: ratio >= 0.1
+                    ? Text(
+                        '${(ratio * 100).toStringAsFixed(0)}%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
+              ),
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 
