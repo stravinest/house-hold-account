@@ -336,6 +336,15 @@ class TransactionDetailSheet extends ConsumerWidget {
       }
     }
 
+    if (transaction.isAutoCollected) {
+      badges.add(const SizedBox(width: Spacing.sm));
+      badges.add(_buildClassificationBadge(
+        l10n.classificationAutoCollected,
+        backgroundColor: colorScheme.secondaryContainer,
+        textColor: colorScheme.secondary,
+      ));
+    }
+
     return _buildDetailRowBase(
       context,
       icon: Icons.layers,

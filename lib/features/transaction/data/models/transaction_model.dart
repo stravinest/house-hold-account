@@ -22,6 +22,7 @@ class TransactionModel extends Transaction {
     super.isAsset = false,
     super.maturityDate,
     super.recurringTemplateId,
+    super.sourceType,
     required super.createdAt,
     required super.updatedAt,
     super.categoryName,
@@ -71,6 +72,7 @@ class TransactionModel extends Transaction {
           ? DateTimeUtils.parseLocalDate(json['maturity_date'] as String)
           : null,
       recurringTemplateId: json['recurring_template_id'] as String?,
+      sourceType: json['source_type'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       categoryName: category?['name'] as String?,
@@ -116,6 +118,7 @@ class TransactionModel extends Transaction {
           ? DateTimeUtils.toLocalDateOnly(maturityDate!)
           : null,
       'recurring_template_id': recurringTemplateId,
+      'source_type': sourceType,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };

@@ -2432,6 +2432,12 @@ abstract class AppLocalizations {
   /// **'고정비'**
   String get classificationFixedExpense;
 
+  /// No description provided for @classificationAutoCollected.
+  ///
+  /// In ko, this message translates to:
+  /// **'자동수집'**
+  String get classificationAutoCollected;
+
   /// No description provided for @maturityDateSelect.
   ///
   /// In ko, this message translates to:

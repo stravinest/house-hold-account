@@ -1253,6 +1253,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get classificationFixedExpense => '고정비';
 
   @override
+  String get classificationAutoCollected => '자동수집';
+
+  @override
   String get maturityDateSelect => '만기일 선택';
 
   @override

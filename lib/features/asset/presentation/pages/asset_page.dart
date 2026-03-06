@@ -38,6 +38,9 @@ class AssetPage extends ConsumerWidget {
         ref.invalidate(assetMonthlyChartProvider);
         ref.invalidate(assetYearlyChartProvider);
         ref.invalidate(assetFilteredByCategoryProvider);
+        ref.invalidate(assetMonthlyChartWithLoanProvider);
+        ref.invalidate(assetYearlyChartWithLoanProvider);
+        ref.invalidate(assetFilteredByCategoryWithLoanProvider);
         await ref.read(assetStatisticsProvider.future);
       },
       child: statisticsAsync.when(
@@ -717,7 +720,7 @@ class _FilteredCategorySection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final filteredCategoryAsync = ref.watch(assetFilteredByCategoryProvider);
+    final filteredCategoryAsync = ref.watch(assetFilteredByCategoryWithLoanProvider);
     final isShared = ref.watch(isSharedLedgerProvider);
 
     // 탭 전환 시 이전 데이터를 유지하여 스크롤 위치가 초기화되지 않도록 함

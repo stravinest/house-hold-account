@@ -7,28 +7,41 @@ import '../../../../l10n/generated/app_localizations.dart';
 import '../../../statistics/domain/entities/statistics_entities.dart';
 import '../providers/asset_provider.dart';
 
-class AssetLineChart extends ConsumerWidget {
+class AssetLineChart extends ConsumerStatefulWidget {
   const AssetLineChart({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AssetLineChart> createState() => _AssetLineChartState();
+}
+
+class _AssetLineChartState extends ConsumerState<AssetLineChart> {
+  int? _selectedIndex;
+  TrendPeriod? _previousPeriod;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final period = ref.watch(assetChartPeriodProvider);
 
-    if (period == TrendPeriod.yearly) {
-      return _buildYearlyChart(context, ref, l10n, theme);
+    // 기간 전환 시 선택 인덱스 리셋
+    if (_previousPeriod != null && _previousPeriod != period) {
+      _selectedIndex = null;
     }
-    return _buildMonthlyChart(context, ref, l10n, theme);
+    _previousPeriod = period;
+
+    if (period == TrendPeriod.yearly) {
+      return _buildYearlyChart(context, l10n, theme);
+    }
+    return _buildMonthlyChart(context, l10n, theme);
   }
 
   Widget _buildMonthlyChart(
     BuildContext context,
-    WidgetRef ref,
     AppLocalizations l10n,
     ThemeData theme,
   ) {
-    final monthlyAsync = ref.watch(assetMonthlyChartProvider);
+    final monthlyAsync = ref.watch(assetMonthlyChartWithLoanProvider);
 
     return monthlyAsync.when(
       data: (monthly) {
@@ -41,12 +54,20 @@ class AssetLineChart extends ConsumerWidget {
         final minY = _calculateMinY(amounts);
         final spots = _buildSpots(amounts);
 
-        return _buildChart(
+        // 초기 선택: 마지막 데이터 포인트
+        final effectiveIndex =
+            _selectedIndex?.clamp(0, monthly.length - 1) ?? monthly.length - 1;
+
+        return _buildChartWithHeader(
           theme: theme,
           spots: spots,
           dataLength: monthly.length,
           maxY: maxY,
           minY: minY,
+          selectedIndex: effectiveIndex,
+          selectedLabel:
+              '${monthly[effectiveIndex].year}.${monthly[effectiveIndex].month.toString().padLeft(2, '0')}',
+          selectedAmount: amounts[effectiveIndex],
           bottomTitleBuilder: (index) {
             if (index >= 0 && index < monthly.length) {
               return l10n.statisticsMonthLabel(monthly[index].month);
@@ -72,11 +93,10 @@ class AssetLineChart extends ConsumerWidget {
 
   Widget _buildYearlyChart(
     BuildContext context,
-    WidgetRef ref,
     AppLocalizations l10n,
     ThemeData theme,
   ) {
-    final yearlyAsync = ref.watch(assetYearlyChartProvider);
+    final yearlyAsync = ref.watch(assetYearlyChartWithLoanProvider);
 
     return yearlyAsync.when(
       data: (yearly) {
@@ -89,12 +109,19 @@ class AssetLineChart extends ConsumerWidget {
         final minY = _calculateMinY(amounts);
         final spots = _buildSpots(amounts);
 
-        return _buildChart(
+        // 초기 선택: 마지막 데이터 포인트
+        final effectiveIndex =
+            _selectedIndex?.clamp(0, yearly.length - 1) ?? yearly.length - 1;
+
+        return _buildChartWithHeader(
           theme: theme,
           spots: spots,
           dataLength: yearly.length,
           maxY: maxY,
           minY: minY,
+          selectedIndex: effectiveIndex,
+          selectedLabel: '${yearly[effectiveIndex].year}',
+          selectedAmount: amounts[effectiveIndex],
           bottomTitleBuilder: (index) {
             if (index >= 0 && index < yearly.length) {
               return l10n.statisticsYearLabel(yearly[index].year);
@@ -132,12 +159,61 @@ class AssetLineChart extends ConsumerWidget {
     );
   }
 
+  Widget _buildChartWithHeader({
+    required ThemeData theme,
+    required List<FlSpot> spots,
+    required int dataLength,
+    required double maxY,
+    required double minY,
+    required int selectedIndex,
+    required String selectedLabel,
+    required int selectedAmount,
+    required String? Function(int index) bottomTitleBuilder,
+    required String? Function(int index) tooltipBuilder,
+  }) {
+    return Column(
+      children: [
+        // 선택된 시점 + 금액 표시
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Column(
+            children: [
+              Text(
+                selectedLabel,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              Text(
+                NumberFormatUtils.currency.format(selectedAmount),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+        _buildChart(
+          theme: theme,
+          spots: spots,
+          dataLength: dataLength,
+          maxY: maxY,
+          minY: minY,
+          selectedIndex: selectedIndex,
+          bottomTitleBuilder: bottomTitleBuilder,
+          tooltipBuilder: tooltipBuilder,
+        ),
+      ],
+    );
+  }
+
   Widget _buildChart({
     required ThemeData theme,
     required List<FlSpot> spots,
     required int dataLength,
     required double maxY,
     required double minY,
+    required int selectedIndex,
     required String? Function(int index) bottomTitleBuilder,
     required String? Function(int index) tooltipBuilder,
   }) {
@@ -161,10 +237,11 @@ class AssetLineChart extends ConsumerWidget {
                 dotData: FlDotData(
                   show: true,
                   getDotPainter: (spot, percent, barData, index) {
+                    final isSelected = selectedIndex == index;
                     return FlDotCirclePainter(
-                      radius: 4,
+                      radius: isSelected ? 6 : 4,
                       color: theme.colorScheme.primary,
-                      strokeWidth: 2,
+                      strokeWidth: isSelected ? 3 : 2,
                       strokeColor: theme.colorScheme.surface,
                     );
                   },
@@ -185,11 +262,23 @@ class AssetLineChart extends ConsumerWidget {
                     final index = value.toInt();
                     final title = bottomTitleBuilder(index);
                     if (title != null) {
-                      return Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          title,
-                          style: theme.textTheme.bodySmall,
+                      final isSelected = selectedIndex == index;
+                      return GestureDetector(
+                        onTap: () =>
+                            setState(() => _selectedIndex = index),
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            title,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ),
                       );
                     }
@@ -240,6 +329,16 @@ class AssetLineChart extends ConsumerWidget {
             minY: minY,
             maxY: maxY,
             lineTouchData: LineTouchData(
+              touchCallback: (event, response) {
+                if (event is! FlTapUpEvent && event is! FlPanUpdateEvent) {
+                  return;
+                }
+                if (response?.lineBarSpots != null &&
+                    response!.lineBarSpots!.isNotEmpty) {
+                  setState(() =>
+                      _selectedIndex = response.lineBarSpots!.first.x.toInt());
+                }
+              },
               touchTooltipData: LineTouchTooltipData(
                 getTooltipColor: (_) =>
                     theme.colorScheme.surfaceContainerHighest,

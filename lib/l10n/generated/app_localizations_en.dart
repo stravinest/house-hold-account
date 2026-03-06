@@ -1275,6 +1275,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get classificationFixedExpense => 'Fixed';
 
   @override
+  String get classificationAutoCollected => 'Auto';
+
+  @override
   String get maturityDateSelect => 'Select Maturity Date';
 
   @override

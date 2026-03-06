@@ -21,6 +21,7 @@ class Transaction extends Equatable {
   final bool isAsset;
   final DateTime? maturityDate;
   final String? recurringTemplateId;
+  final String? sourceType;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -56,6 +57,7 @@ class Transaction extends Equatable {
     this.isAsset = false,
     this.maturityDate,
     this.recurringTemplateId,
+    this.sourceType,
     required this.createdAt,
     required this.updatedAt,
     this.categoryName,
@@ -102,6 +104,7 @@ class Transaction extends Equatable {
           ? DateTime.parse(json['maturity_date'] as String)
           : null,
       recurringTemplateId: json['recurring_template_id'] as String?,
+      sourceType: json['source_type'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       categoryName: category?['name'] as String?,
@@ -120,6 +123,8 @@ class Transaction extends Equatable {
   bool get isIncome => type == 'income';
   bool get isExpense => type == 'expense';
   bool get isAssetType => type == 'asset';
+  bool get isAutoCollected =>
+      sourceType == 'sms' || sourceType == 'notification';
   bool get isAssetTransaction => type == 'asset' && isAsset == true;
 
   // 할부 거래 여부 (title에 "할부" 포함 + 반복거래 + 종료일 있음)
@@ -187,6 +192,7 @@ class Transaction extends Equatable {
     bool? isAsset,
     DateTime? maturityDate,
     String? recurringTemplateId,
+    String? sourceType,
     DateTime? createdAt,
     DateTime? updatedAt,
     String? categoryName,
@@ -221,6 +227,7 @@ class Transaction extends Equatable {
       isAsset: isAsset ?? this.isAsset,
       maturityDate: maturityDate ?? this.maturityDate,
       recurringTemplateId: recurringTemplateId ?? this.recurringTemplateId,
+      sourceType: sourceType ?? this.sourceType,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       categoryName: categoryName ?? this.categoryName,
@@ -261,6 +268,7 @@ class Transaction extends Equatable {
     isAsset,
     maturityDate,
     recurringTemplateId,
+    sourceType,
     createdAt,
     updatedAt,
   ];

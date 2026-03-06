@@ -414,6 +414,7 @@
   "classificationExpense": "Expense",
   "classificationAsset": "Asset",
   "classificationFixedExpense": "Fixed",
+  "classificationAutoCollected": "Auto",
   "maturityDateSelect": "Select Maturity Date",
   "installmentInfoRequired": "Please enter installment information",
   "installmentLabel": "Installment",

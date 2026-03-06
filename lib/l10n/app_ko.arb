@@ -532,6 +532,7 @@
   "classificationExpense": "지출",
   "classificationAsset": "자산",
   "classificationFixedExpense": "고정비",
+  "classificationAutoCollected": "자동수집",
   "maturityDateSelect": "만기일 선택",
   "installmentInfoRequired": "할부 정보를 입력해주세요",
   "installmentLabel": "할부",
